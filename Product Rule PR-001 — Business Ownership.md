@@ -1,72 +1,22 @@
-# Product Rule PR-001 — Business Ownership
+This section documents all fixed decisions for AFAB, so there is no ambiguity during development.
 
-## One User = One Business (Version 1)
+## Fixed Decisions
 
-In Version 1 of AFAB, each registered user owns and manages exactly one business.
+* One User = One Business (Version 1) — see `Product Rule PR-001`.
+* Every financial record belongs to a `business`, not directly to a `user` — see PR-004. The database schema enforces this via a dedicated `businesses` table (see `AFAB-architecture-plan.md`, Section 4).
+* AI is excluded from the MVP entirely (PR-002).
+* AI is, and will remain, self-hosted only. AFAB will never call a third-party AI API (OpenAI, Claude, Gemini, or otherwise) — even in future versions. Any future AI feature is served by AFAB's own trained models via an internal-only service.
+* Web-first application; no native mobile app in V1.
+* Backend: Spring Boot 4.1, Java 21 (LTS).
+* Frontend: Next.js 16 (App Router), shadcn/ui, TailwindCSS.
+* Database: PostgreSQL 18, accessed via Spring Data JPA (Hibernate) with native SQL for reporting/aggregation queries.
+* Migrations: Flyway.
+* API: RESTful, versioned under `/api/v1`, contract published via OpenAPI (springdoc-openapi) and consumed by the frontend as a generated typed client.
+* Auth: Spring Security + JWT (access + refresh tokens), proxied through Next.js as a backend-for-frontend layer so the browser never talks to the API directly.
+* Repositories: two separate repos, `afab-backend` and `afab-frontend`, connected only by the OpenAPI contract.
+* Team: Farouk owns the backend, Jamil owns the frontend.
 
-All financial data—including income, expenses, budgets, savings goals, investments, reports, and notifications—belongs exclusively to that single business.
+## Assumptions
 
-This design simplifies the user experience, reduces development complexity, and enables a faster delivery of the MVP while maintaining a scalable architecture.
-
-### Future Expansion
-
-The database and application architecture should be designed so that multi-business support can be introduced in a future version with minimal architectural changes.
-
-Future versions may allow:
-
-* One user managing multiple businesses.
-* Switching between businesses.
-* Team collaboration.
-* Business-specific user roles and permissions.
-
-These capabilities are intentionally excluded from Version 1.
-
-
-### database
-
-
-User
- ├── Business A
- ├── Business B
- ├── Business C
-
- we'll have:
-
- User
-   │
-   ▼
-Business
-   │
-   ├── Income
-   ├── Expenses
-   ├── Budgets
-   ├── Savings Goals
-   ├── Investments
-   └── Reports
-
-
-Future-Proof Architecture
-
-Even though Version 1 supports one business, we'll still create a dedicated businesses table instead of storing business information directly in the users table.
-
-For example:
-
-users
--------
-id
-name
-email
-password
-
-businesses
-----------
-id
-user_id
-name
-currency
-country
-timezone
-created_at
-
-
-
+* No production data exists yet, so switching the original draft's stack (Laravel/MySQL/React) to Spring Boot/PostgreSQL/Next.js is a zero-cost decision made before implementation began.
+* The brand identity (colors, typography, UI feel) defined in `AFAB_Project_Summary.md` is unaffected by the stack change and remains the source of truth.
