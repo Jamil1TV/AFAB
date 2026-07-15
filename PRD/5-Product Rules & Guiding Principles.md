@@ -96,7 +96,7 @@ Efficient database queries, pagination, caching, lazy loading, and optimized fro
 
 All core business logic should be exposed through RESTful APIs.
 
-The React frontend must communicate exclusively with the Laravel backend through authenticated API endpoints.
+The Next.js frontend must communicate exclusively with the Spring Boot backend through authenticated API endpoints.
 
 This ensures future compatibility with mobile applications and third-party integrations.
 
