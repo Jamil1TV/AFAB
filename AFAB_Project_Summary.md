@@ -52,29 +52,31 @@ A complete branding package has been created using Leonardo AI.
 
 ## Backend
 
--   Laravel 12
--   PHP 8.4
--   MySQL
--   Laravel Sanctum
+-   Spring Boot 4.1
+-   Java 21 (LTS)
+-   PostgreSQL 18
+-   Spring Security (JWT)
 -   REST API
--   Eloquent ORM
+-   Spring Data JPA (Hibernate), native SQL for reporting queries
+-   Flyway migrations
 
 ## Frontend
 
--   React 19
--   Vite
+-   Next.js 16 (App Router)
+-   shadcn/ui
 -   Tailwind CSS
--   React Router
--   Axios
+-   TanStack Query (client-side server-state) + React Server Components
 -   React Hook Form
 -   Zod
--   TanStack Query
--   Heroicons
--   Recharts
+-   lucide-react
+-   Recharts (via shadcn charts)
+
+No global client-side store (Redux) is used. Server state lives in TanStack Query; UI-only state uses React state/context, with a small Zustand store only if a specific cross-cutting concern needs one.
 
 ## Deployment
 
--   Docker-ready
+-   Docker-ready (Docker Compose: PostgreSQL, MinIO, Mailpit)
+-   Two repos: `afab-backend`, `afab-frontend`, connected by an OpenAPI contract
 -   Environment configuration
 -   Git-friendly project structure
 
@@ -82,12 +84,18 @@ A complete branding package has been created using Leonardo AI.
 
 # AI Roadmap
 
-The AI Assistant is **not included in the MVP**.
+The AI Assistant is **not included in the MVP**, and AFAB will **never call a third-party AI API**, in the MVP or any future version.
 
-Excluded: - Chatbot - OpenAI API - Claude API - Gemini API - AI
-Recommendations
+Permanently excluded: - Chatbot via third-party API - OpenAI API - Claude
+API - Gemini API - Any external AI/LLM vendor
 
-Only placeholders should be prepared for future integration.
+Future AI features (spending insights, smart categorization, forecasting,
+receipt OCR) will be served by AFAB's own self-hosted/self-trained models,
+run via an internal-only service — see `AFAB-architecture-plan.md`,
+Section 14.
+
+Only placeholders should be prepared for now, ready for that self-hosted
+service later.
 
 ------------------------------------------------------------------------
 
@@ -201,37 +209,37 @@ Manual tracking only: - Stocks - Crypto - Mutual Funds - Real Estate
 
 -   Controllers
 -   Services
--   Repositories
--   Policies
--   Form Requests
--   API Resources
--   Events
--   Jobs
--   Middleware
+-   Repositories (Spring Data JPA)
+-   DTOs / Validation (Jakarta Bean Validation)
+-   Security Filters (Spring Security)
+-   Scheduled Jobs (recurring transactions)
+-   Global Exception Handling
 
 ## Frontend
 
 ``` text
+app/
 components/
-pages/
-layouts/
 hooks/
-services/
-context/
-routes/
-utils/
+lib/
+styles/
 ```
 
-Feature-based organization is recommended.
+Feature-based organization is recommended (package-by-feature on the
+backend, route-group-by-feature under `app/` on the frontend).
 
 ------------------------------------------------------------------------
 
 # Database
 
-Entities: - Users - Income - Expenses - Categories - Budgets - Savings
-Goals - Investments - Notifications - User Settings
+Entities: - Users - Businesses - Income - Expenses - Categories - Budgets
+- Savings Goals - Investments - Notifications - User Settings
 
-Include: - Relationships - Foreign Keys - Indexes - Migrations
+Every financial entity (Income, Expenses, Categories, Budgets, Savings
+Goals, Investments, Notifications) belongs to a Business, not directly to
+a User — see `Product Rule PR-001` and PR-004.
+
+Include: - Relationships - Foreign Keys - Indexes - Migrations (Flyway)
 
 ------------------------------------------------------------------------
 
@@ -250,13 +258,13 @@ Status Codes - Error Handling
 
 # Security
 
--   Laravel Sanctum
--   CSRF Protection
--   Authorization Policies
+-   Spring Security + JWT (access + refresh tokens)
+-   Next.js BFF proxy (browser never talks to the API directly; no public
+    CORS surface on the backend)
 -   Rate Limiting
--   Password Hashing
+-   Password Hashing (BCrypt)
 -   XSS Protection
--   SQL Injection Prevention
+-   SQL Injection Prevention (parameterized queries via JPA/native SQL)
 
 ------------------------------------------------------------------------
 
@@ -294,8 +302,8 @@ Before implementation:
 8.  Component List
 9.  Development Roadmap
 10. Milestones
-11. Laravel Packages
-12. React Packages
+11. Backend (Java/Spring) Packages
+12. Frontend (Next.js) Packages
 13. Future AI Integration Plan
 
 Claude should wait for approval after each milestone before continuing.
