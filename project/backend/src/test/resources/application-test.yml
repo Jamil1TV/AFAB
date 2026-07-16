@@ -1,0 +1,24 @@
+# ── Spring Boot test profile ──
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/afab_test
+    username: afab_user
+    password: afab_secret_2026
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+
+afab:
+  jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LWZvci1hZmFiLXVuaXQtdGVzdHMtb25seQ==
+    access-expiration-ms: 900000
+    refresh-expiration-ms: 604800000
+  minio:
+    endpoint: http://localhost:9000
+    access-key: test
+    secret-key: test
+    bucket: test-bucket
+  mail:
+    from: test@afab.local

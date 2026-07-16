@@ -1,0 +1,97 @@
+# ═══════════════════════════════════════════════
+# AFAB Backend — Application Configuration
+# ═══════════════════════════════════════════════
+
+spring:
+  application:
+    name: afab-backend
+
+  # ── Database ──────────────────────────────────
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:afab}
+    username: ${POSTGRES_USER:afab_user}
+    password: ${POSTGRES_PASSWORD:afab_secret_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  # ── JPA / Hibernate ───────────────────────────
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  # ── Flyway ────────────────────────────────────
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ── Mail ──────────────────────────────────────
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+  # ── Redis ─────────────────────────────────────
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+
+
+# ── Server ────────────────────────────────────────
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+
+# ── JWT Configuration ─────────────────────────────
+afab:
+  jwt:
+    secret: ${JWT_SECRET:b3BlbnNlc2FtZS1hZmFiLXN1cGVyLXNlY3JldC1rZXktMjAyNi1qd3QtdG9rZW4tc2lnbmluZy1rZXk=}
+    access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+  # ── MinIO ───────────────────────────────────────
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:afab_minio_access}
+    secret-key: ${MINIO_SECRET_KEY:afab_minio_secret_2026}
+    bucket: ${MINIO_BUCKET:afab-receipts}
+
+  # ── Mail ────────────────────────────────────────
+  mail:
+    from: ${MAIL_FROM:noreply@afab.local}
+
+# ── OpenAPI / Swagger ─────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# ── Logging ───────────────────────────────────────
+logging:
+  level:
+    com.afab: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+    org.flywaydb: INFO
