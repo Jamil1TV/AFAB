@@ -1,0 +1,31 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "balance": "Current Balance",
+    "expenses": "Monthly Expenses",
+    "income": "Monthly Income",
+    "notifications": "Notifications",
+    "settings": "Settings"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggleAriaLabel": "Theme mode"
+  },
+  "marketing": {
+    "landing": {
+      "badge": "AFAB Platform",
+      "title": "AI Finance Assistant for Business",
+      "subtitle": "A premium financial operations experience for modern teams. Track spending, monitor goals, and prepare smarter decisions with AI-ready insights.",
+      "primaryAction": "Open Dashboard",
+      "secondaryAction": "Explore Features"
+    }
+  }
+}
