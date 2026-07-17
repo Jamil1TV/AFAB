@@ -2,14 +2,14 @@ package com.afab;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
- * AFAB — AI Finance Assistant for Business
- * Main application entry point.
+ * AFAB — AI Finance Assistant for Business.
+ * Entry point for the Spring Boot 4.1 backend.
  */
 @SpringBootApplication
-@EnableScheduling
+@EnableAsync
 public class AfabApplication {
 
     public static void main(String[] args) {

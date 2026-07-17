@@ -1,5 +1,6 @@
 package com.afab.business;
 
+import com.afab.common.entity.BaseEntity;
 import com.afab.user.User;
 import jakarta.persistence.*;
 
@@ -7,12 +8,10 @@ import java.time.Instant;
 
 /**
  * Business entity — every user owns exactly one business in V1.
- * All financial records (income, expenses, budgets, etc.) belong to a Business, not a User.
- * This implements Product Rules PR-001 and PR-004.
  */
 @Entity
 @Table(name = "businesses")
-public class Business {
+public class Business extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,34 +36,20 @@ public class Business {
     @Column(name = "fiscal_year_start_month", nullable = false)
     private Integer fiscalYearStartMonth = 1;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    @Column(nullable = false)
+    private String status = "ACTIVE";
 
-    @Column(name = "updated_at")
-    private Instant updatedAt;
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     // ── Constructors ────────────────────────────
 
-    public Business() {
-    }
+    public Business() {}
 
     public Business(User user, String name, String currency) {
         this.user = user;
         this.name = name;
         this.currency = currency;
-    }
-
-    // ── JPA Lifecycle ───────────────────────────
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = Instant.now();
-        this.updatedAt = Instant.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = Instant.now();
     }
 
     // ── Getters & Setters ───────────────────────
@@ -125,11 +110,9 @@ public class Business {
         this.fiscalYearStartMonth = fiscalYearStartMonth;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
+    public Instant getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
 }

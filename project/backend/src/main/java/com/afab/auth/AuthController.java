@@ -3,55 +3,113 @@ package com.afab.auth;
 import com.afab.auth.dto.AuthResponse;
 import com.afab.auth.dto.LoginRequest;
 import com.afab.auth.dto.RegisterRequest;
-import com.afab.common.response.ApiResponse;
+import com.afab.auth.dto.TokenRefreshRequest;
+import io.github.bucket4j.Bandwidth;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.Refill;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * Authentication REST controller.
- * All endpoints are public (permitAll in SecurityConfig).
- */
+import java.time.Duration;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
     private final AuthService authService;
+    
+    // Rate Limiting Bucket: 5 requests per minute for auth endpoints
+    private final Bucket authBucket;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
+        
+        Bandwidth limit = Bandwidth.classic(5, Refill.greedy(5, Duration.ofMinutes(1)));
+        this.authBucket = Bucket.builder()
+                .addLimit(limit)
+                .build();
     }
 
-    /**
-     * Register a new user account with a business.
-     */
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse response = authService.register(request);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(ApiResponse.success("Registration successful.", response));
+    public ResponseEntity<?> register(
+            @Valid @RequestBody RegisterRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        if (!authBucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+        }
+
+        try {
+            AuthResponse response = authService.register(
+                    request,
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+            return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    /**
-     * Authenticate and receive JWT tokens.
-     */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(ApiResponse.success("Login successful.", response));
+    public ResponseEntity<?> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        if (!authBucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+        }
+
+        try {
+            AuthResponse response = authService.login(
+                    request,
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
     }
 
-    /**
-     * Logout — invalidate refresh token.
-     * TODO: Implement refresh token revocation in Phase 2.
-     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(
+            @Valid @RequestBody TokenRefreshRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        try {
+            AuthResponse response = authService.refreshToken(
+                    request.getRefreshToken(),
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid or expired refresh token");
+        }
+    }
+
     @PostMapping("/logout")
-    public ResponseEntity<ApiResponse<Void>> logout() {
-        return ResponseEntity.ok(ApiResponse.success("Logged out successfully."));
+    public ResponseEntity<?> logout(
+            @Valid @RequestBody TokenRefreshRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        authService.logout(
+                request.getRefreshToken(),
+                getClientIp(httpRequest),
+                httpRequest.getHeader("User-Agent")
+        );
+        return ResponseEntity.ok().build();
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null) {
+            return request.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0];
     }
 }
