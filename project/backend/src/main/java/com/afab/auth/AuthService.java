@@ -67,6 +67,7 @@ public class AuthService {
         Business business = new Business();
         business.setUser(user);
         business.setName(request.getBusinessName());
+        business.setCurrency("USD"); // Default currency required by DB constraint
         business = businessRepository.save(business);
 
         auditService.logSecurityEvent(user, "REGISTER_SUCCESS", ipAddress, userAgent, "{\"businessName\":\"" + request.getBusinessName() + "\"}");
@@ -125,7 +126,7 @@ public class AuthService {
         });
     }
 
-    private AuthResponse buildAuthResponse(User user, Long businessId, String ipAddress, String userAgent) {
+    private AuthResponse buildAuthResponse(User user, UUID businessId, String ipAddress, String userAgent) {
         var userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String accessToken = jwtService.generateToken(userDetails);
 

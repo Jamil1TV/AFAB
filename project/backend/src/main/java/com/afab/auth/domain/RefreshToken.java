@@ -2,6 +2,7 @@ package com.afab.auth.domain;
 
 import com.afab.user.User;
 import jakarta.persistence.*;
+import java.util.UUID;
 
 import java.time.Instant;
 
@@ -14,8 +15,8 @@ import java.time.Instant;
 public class RefreshToken {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -54,8 +55,8 @@ public class RefreshToken {
 
     // ── Getters & Setters ───────────────────────
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }

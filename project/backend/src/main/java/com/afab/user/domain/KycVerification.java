@@ -3,6 +3,7 @@ package com.afab.user.domain;
 import com.afab.common.entity.BaseEntity;
 import com.afab.user.User;
 import jakarta.persistence.*;
+import java.util.UUID;
 
 import java.time.Instant;
 
@@ -14,8 +15,8 @@ import java.time.Instant;
 public class KycVerification extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
@@ -51,8 +52,8 @@ public class KycVerification extends BaseEntity {
 
     // ── Getters & Setters ───────────────────────
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }

@@ -2,6 +2,7 @@ package com.afab.user;
 
 import com.afab.common.entity.BaseEntity;
 import jakarta.persistence.*;
+import java.util.UUID;
 
 import java.time.Instant;
 
@@ -14,8 +15,8 @@ import java.time.Instant;
 public class User extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;
@@ -69,8 +70,8 @@ public class User extends BaseEntity {
 
     // ── Getters & Setters ───────────────────────
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public String getFirstName() { return firstName; }
     public void setFirstName(String firstName) { this.firstName = firstName; }

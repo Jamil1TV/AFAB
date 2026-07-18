@@ -1,5 +1,7 @@
 package com.afab.auth.dto;
 
+import java.util.UUID;
+
 public class AuthResponse {
     private String accessToken;
     private String refreshToken;
@@ -16,13 +18,13 @@ public class AuthResponse {
     public UserDto getUser() { return user; }
 
     public static class UserDto {
-        private Long id;
+        private UUID id;
         private String firstName;
         private String lastName;
         private String email;
-        private Long businessId;
+        private UUID businessId;
 
-        public UserDto(Long id, String firstName, String lastName, String email, Long businessId) {
+        public UserDto(UUID id, String firstName, String lastName, String email, UUID businessId) {
             this.id = id;
             this.firstName = firstName;
             this.lastName = lastName;
@@ -30,10 +32,10 @@ public class AuthResponse {
             this.businessId = businessId;
         }
 
-        public Long getId() { return id; }
+        public UUID getId() { return id; }
         public String getFirstName() { return firstName; }
         public String getLastName() { return lastName; }
         public String getEmail() { return email; }
-        public Long getBusinessId() { return businessId; }
+        public UUID getBusinessId() { return businessId; }
     }
 }

@@ -4,6 +4,7 @@ import com.afab.user.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.util.UUID;
 
 import java.time.Instant;
 
@@ -15,8 +16,8 @@ import java.time.Instant;
 public class AuditLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -29,7 +30,7 @@ public class AuditLog {
     private String entityType;
 
     @Column(name = "entity_id")
-    private Long entityId;
+    private UUID entityId;
 
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
@@ -53,7 +54,7 @@ public class AuditLog {
 
     public AuditLog() {}
 
-    public AuditLog(User user, String action, String entityType, Long entityId, String ipAddress, String userAgent, String details) {
+    public AuditLog(User user, String action, String entityType, UUID entityId, String ipAddress, String userAgent, String details) {
         this.user = user;
         this.action = action;
         this.entityType = entityType;
@@ -65,8 +66,8 @@ public class AuditLog {
 
     // ── Getters & Setters ───────────────────────
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
@@ -77,8 +78,8 @@ public class AuditLog {
     public String getEntityType() { return entityType; }
     public void setEntityType(String entityType) { this.entityType = entityType; }
 
-    public Long getEntityId() { return entityId; }
-    public void setEntityId(Long entityId) { this.entityId = entityId; }
+    public UUID getEntityId() { return entityId; }
+    public void setEntityId(UUID entityId) { this.entityId = entityId; }
 
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }

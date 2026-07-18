@@ -1,5 +1,6 @@
 package com.afab.security;
 
+import java.util.UUID;
 import com.afab.security.domain.AuditLog;
 import com.afab.security.domain.AuditLogRepository;
 import com.afab.user.User;
@@ -20,9 +21,8 @@ public class AuditService {
     }
 
     /**
-     * Asynchronously logs a security event.
+     * Logs a security event.
      */
-    @Async
     public void logSecurityEvent(User user, String action, String ipAddress, String userAgent, String details) {
         try {
             AuditLog auditLog = new AuditLog(user, action, "USER", user != null ? user.getId() : null, ipAddress, userAgent, details);
@@ -33,8 +33,7 @@ public class AuditService {
         }
     }
 
-    @Async
-    public void logBusinessEvent(User user, String action, Long businessId, String details) {
+    public void logBusinessEvent(User user, String action, UUID businessId, String details) {
         try {
             AuditLog auditLog = new AuditLog(user, action, "BUSINESS", businessId, null, null, details);
             auditLogRepository.save(auditLog);
