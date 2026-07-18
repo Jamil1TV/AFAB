@@ -7,6 +7,7 @@ import { routing } from '@/i18n/routing';
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import "../globals.css";
 
 /* ──────────────────────────────────────────────────────
@@ -73,6 +74,7 @@ export default async function RootLayout({
       lang={locale}
       dir={dir}
       suppressHydrationWarning
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${poppins.variable} ${geistMono.variable}`}
     >
       <body className="min-h-screen bg-background font-sans antialiased">
@@ -85,6 +87,7 @@ export default async function RootLayout({
           >
             <TooltipProvider>
               {children}
+              <ScrollToTop />
               <Toaster />
             </TooltipProvider>
           </ThemeProvider>

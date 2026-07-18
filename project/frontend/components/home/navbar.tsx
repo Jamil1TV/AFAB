@@ -39,6 +39,7 @@ export function Navbar() {
                 src="/assets/logo.png" 
                 alt="AFAB Logo" 
                 fill
+                sizes="40px"
                 className="object-cover scale-[1.15]"
                 priority
               />
