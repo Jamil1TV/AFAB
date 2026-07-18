@@ -1,0 +1,429 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ──────────────────────────────────────────────────────
+   AFAB Design System — "AFAB Project UI"
+   Extracted from Stitch mockups (ChatGPT-generated screens)
+   Fonts: Inter (primary) + Poppins (headlines)
+   Primary: Vibrant Purple (#7c3aed)
+   Border Radius: 12px rounded
+   ────────────────────────────────────────────────────── */
+
+@theme inline {
+  /* ── Fonts ── */
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+
+  /* ── Color tokens (Tailwind v4 bridging) ── */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* ── Chart colors ── */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* ── Sidebar colors ── */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* ── AFAB Semantic Colors ── */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+
+  /* ── Radius (12px base — rounded modern cards) ── */
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.33);
+  --radius-2xl: calc(var(--radius) * 1.67);
+  --radius-3xl: calc(var(--radius) * 2);
+  --radius-4xl: calc(var(--radius) * 2.67);
+}
+
+/* ══════════════════════════════════════════════════════
+   LIGHT MODE — AFAB Project UI
+   Background: #f8f9fb (soft cool gray)
+   Cards: #ffffff
+   Primary: Vibrant Purple #7c3aed
+   Sidebar: White with purple active states
+   ══════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Core surface ── */
+  --background: #f8f9fb;
+  --foreground: #1a1a2e;
+
+  /* ── Card / Popover ── */
+  --card: #ffffff;
+  --card-foreground: #1a1a2e;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a2e;
+
+  /* ── Primary: Vibrant Purple ── */
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+
+  /* ── Secondary: Soft Purple ── */
+  --secondary: #f3f0ff;
+  --secondary-foreground: #7c3aed;
+
+  /* ── Muted ── */
+  --muted: #f1f3f9;
+  --muted-foreground: #64748b;
+
+  /* ── Accent ── */
+  --accent: #f3f0ff;
+  --accent-foreground: #7c3aed;
+
+  /* ── Destructive (Error) ── */
+  --destructive: #ef4444;
+
+  /* ── Borders & Inputs ── */
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --ring: #7c3aed;
+
+  /* ── Radius: 12px base ── */
+  --radius: 0.75rem;
+
+  /* ── Chart palette (multi-color from mockups) ── */
+  --chart-1: #7c3aed;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #3b82f6;
+  --chart-5: #ec4899;
+
+  /* ── Sidebar ── */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #64748b;
+  --sidebar-primary: #7c3aed;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f0ff;
+  --sidebar-accent-foreground: #7c3aed;
+  --sidebar-border: #f1f3f9;
+  --sidebar-ring: #7c3aed;
+
+  /* ── AFAB Semantic: Success / Warning / Info ── */
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #1a1a2e;
+  --info: #3b82f6;
+  --info-foreground: #ffffff;
+}
+
+/* ══════════════════════════════════════════════════════
+   DARK MODE — AFAB Project UI
+   Background: #0a0e1a (ultra-deep dark)
+   Sidebar: #0f1420 (dark navy panel)
+   Cards: #131825 (raised dark surface)
+   Primary: Same purple, brighter in dark context
+   ══════════════════════════════════════════════════════ */
+
+.dark {
+  /* ── Core surface ── */
+  --background: #0a0e1a;
+  --foreground: #e2e8f0;
+
+  /* ── Card / Popover ── */
+  --card: #131825;
+  --card-foreground: #e2e8f0;
+  --popover: #131825;
+  --popover-foreground: #e2e8f0;
+
+  /* ── Primary: Bright Purple ── */
+  --primary: #8b5cf6;
+  --primary-foreground: #ffffff;
+
+  /* ── Secondary: Dark Purple Tint ── */
+  --secondary: #1e1b4b;
+  --secondary-foreground: #c4b5fd;
+
+  /* ── Muted ── */
+  --muted: #1a1f2e;
+  --muted-foreground: #94a3b8;
+
+  /* ── Accent ── */
+  --accent: #1e1b4b;
+  --accent-foreground: #c4b5fd;
+
+  /* ── Destructive ── */
+  --destructive: #ef4444;
+
+  /* ── Borders & Inputs ── */
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #8b5cf6;
+
+  /* ── Chart palette ── */
+  --chart-1: #8b5cf6;
+  --chart-2: #34d399;
+  --chart-3: #fbbf24;
+  --chart-4: #60a5fa;
+  --chart-5: #f472b6;
+
+  /* ── Sidebar ── */
+  --sidebar: #0f1420;
+  --sidebar-foreground: #94a3b8;
+  --sidebar-primary: #8b5cf6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e1b4b;
+  --sidebar-accent-foreground: #c4b5fd;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #8b5cf6;
+
+  /* ── AFAB Semantic ── */
+  --success: #34d399;
+  --success-foreground: #064e3b;
+  --warning: #fbbf24;
+  --warning-foreground: #78350f;
+  --info: #60a5fa;
+  --info-foreground: #1e3a5f;
+}
+
+/* ══════════════════════════════════════════════════════
+   BASE LAYER STYLES
+   ══════════════════════════════════════════════════════ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-variant-numeric: tabular-nums;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   AFAB TYPOGRAPHY SYSTEM
+   Inter (body/labels) + Poppins (headlines)
+   ══════════════════════════════════════════════════════ */
+
+@layer base {
+  /* Display Large: Hero financial numbers */
+  .text-display-lg {
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 56px;
+    letter-spacing: -0.02em;
+  }
+
+  /* Headline Large: Page titles */
+  .text-headline-lg {
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 40px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Headline Large Mobile */
+  .text-headline-lg-mobile {
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 36px;
+  }
+
+  /* Headline Medium: Card/Section titles */
+  .text-headline-md {
+    font-family: "Poppins", "Inter", sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Body Large: Primary content */
+  .text-body-lg {
+    font-family: "Inter", sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 28px;
+  }
+
+  /* Body Medium: Standard content */
+  .text-body-md {
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+  }
+
+  /* Label Medium: Form labels, table headers */
+  .text-label-md {
+    font-family: "Inter", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: 0.01em;
+  }
+
+  /* Label Small: Timestamps, meta */
+  .text-label-sm {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+    letter-spacing: 0.03em;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   STAT CARD TOP ACCENT BORDERS (from mockups)
+   Purple, blue, green, orange top stripes
+   ══════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .stat-accent-purple {
+    border-top: 3px solid #7c3aed;
+  }
+  .stat-accent-blue {
+    border-top: 3px solid #3b82f6;
+  }
+  .stat-accent-green {
+    border-top: 3px solid #10b981;
+  }
+  .stat-accent-orange {
+    border-top: 3px solid #f59e0b;
+  }
+  .stat-accent-pink {
+    border-top: 3px solid #ec4899;
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   ELEVATION SYSTEM
+   ══════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .elevation-1 {
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: var(--radius);
+  }
+
+  .elevation-2 {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background: var(--card);
+    border-radius: var(--radius);
+  }
+
+  .elevation-hover {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .elevation-hover:hover {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+                0 4px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: translateY(-1px);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   AFAB COMPONENT UTILITIES
+   ══════════════════════════════════════════════════════ */
+
+@layer utilities {
+  /* Purple gradient button (Upgrade, CTA) */
+  .bg-gradient-purple {
+    background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%);
+    color: #ffffff;
+  }
+
+  /* AI gradient (purple to emerald) */
+  .bg-ai-gradient {
+    background: linear-gradient(135deg, #7c3aed 0%, #10b981 100%);
+    color: #ffffff;
+  }
+
+  /* Glass effect for sidebar/modals */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .dark .glass {
+    background: rgba(15, 20, 32, 0.7);
+  }
+
+  /* Insight card positive border */
+  .insight-positive {
+    border-left: 3px solid var(--success);
+  }
+  .insight-negative {
+    border-left: 3px solid var(--destructive);
+  }
+
+  /* Status chips with low-opacity backgrounds */
+  .chip-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+  }
+  .chip-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+  }
+  .chip-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--destructive);
+  }
+  .chip-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--info);
+  }
+  .chip-purple {
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--primary);
+  }
+
+  /* Sidebar active state glow */
+  .sidebar-active-glow {
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.3);
+  }
+}

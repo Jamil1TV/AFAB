@@ -1,0 +1,41 @@
+{
+  "nav": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "howItWorks": "How it works",
+    "resources": "Resources",
+    "about": "About",
+    "login": "Log In",
+    "getStarted": "Get Started",
+    "menu": "Menu"
+  },
+  "footer": {
+    "cta_title": "Ready to take control of your finances?",
+    "cta_subtitle": "Join thousands of businesses using AFAB to grow smarter.",
+    "getStartedFree": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "copyright": "© 2024 AFAB. All rights reserved.",
+    "product": "Product",
+    "company": "Company",
+    "legal": "Legal",
+    "features": "Features",
+    "pricing": "Pricing",
+    "integrations": "Integrations",
+    "changelog": "Changelog",
+    "aboutUs": "About Us",
+    "careers": "Careers",
+    "blog": "Blog",
+    "contact": "Contact",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "cookies": "Cookie Policy"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "language": {
+    "switchTo": "العربية"
+  }
+}

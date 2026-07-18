@@ -1,0 +1,41 @@
+{
+  "nav": {
+    "features": "المميزات",
+    "pricing": "الأسعار",
+    "howItWorks": "كيف يعمل",
+    "resources": "الموارد",
+    "about": "حولنا",
+    "login": "تسجيل الدخول",
+    "getStarted": "ابدأ الآن",
+    "menu": "القائمة"
+  },
+  "footer": {
+    "cta_title": "هل أنت مستعد للسيطرة على أموالك؟",
+    "cta_subtitle": "انضم لآلاف الشركات التي تستخدم AFAB للنمو بذكاء.",
+    "getStartedFree": "ابدأ مجاناً",
+    "watchDemo": "شاهد العرض",
+    "copyright": "© ٢٠٢٤ AFAB. جميع الحقوق محفوظة.",
+    "product": "المنتج",
+    "company": "الشركة",
+    "legal": "قانوني",
+    "features": "المميزات",
+    "pricing": "الأسعار",
+    "integrations": "التكاملات",
+    "changelog": "سجل التغييرات",
+    "aboutUs": "من نحن",
+    "careers": "الوظائف",
+    "blog": "المدونة",
+    "contact": "اتصل بنا",
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الخدمة",
+    "cookies": "سياسة ملفات تعريف الارتباط"
+  },
+  "theme": {
+    "light": "فاتح",
+    "dark": "داكن",
+    "system": "النظام"
+  },
+  "language": {
+    "switchTo": "English"
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "badge": "مساعد مالي ذكي للأعمال",
+    "title_line1": "إدارة مالية،",
+    "title_line2": "أعيد ابتكارها بالذكاء الاصطناعي.",
+    "subtitle": "AFAB يحلل بياناتك، يتنبأ بالتدفق النقدي، ويقدم لك نصائح مالية قبل حدوث المشاكل.",
+    "getStartedFree": "ابدأ مجاناً",
+    "watchDemo": "شاهد العرض",
+    "trustedBy": "موثوق من قبل أكثر من ١٢,٠٠٠ صاحب عمل"
+  },
+  "logos": {
+    "title": "محبوب من الشركات حول العالم"
+  },
+  "features": {
+    "title": "ميزات قوية لتنمية",
+    "titleHighlight": "عملك",
+    "viewAll": "عرض جميع الميزات",
+    "aiInsights": "رؤى ذكية",
+    "aiInsightsDesc": "توصيات ذكية لتحسين أموالك.",
+    "smartBudget": "ميزانية ذكية",
+    "smartBudgetDesc": "أنشئ ميزانيات تعمل فعلاً لصالحك.",
+    "expenseTracking": "تتبع المصروفات",
+    "expenseTrackingDesc": "تتبع كل مصروف في الوقت الحقيقي.",
+    "invoiceGenerator": "مولّد الفواتير",
+    "invoiceGeneratorDesc": "أنشئ وأرسل فواتير احترافية في ثوانٍ.",
+    "profitPrediction": "توقع الأرباح",
+    "profitPredictionDesc": "الذكاء الاصطناعي يتنبأ بأرباحك واتجاهاتك المستقبلية.",
+    "cashFlow": "تحليل التدفق النقدي",
+    "cashFlowDesc": "راقب التدفق النقدي وكن دائماً في المقدمة."
+  },
+  "howItWorks": {
+    "title": "كيف",
+    "titleHighlight": "يعمل",
+    "step1Title": "اربط عملك",
+    "step1Desc": "اربط بنكك بأمان وادمج بياناتك.",
+    "step2Title": "ارفع بياناتك",
+    "step2Desc": "ارفع الفواتير والإيصالات والمستندات المالية.",
+    "step3Title": "الذكاء الاصطناعي يحلل كل شيء",
+    "step3Desc": "يعالج الذكاء الاصطناعي بياناتك ويقدم رؤى.",
+    "step4Title": "نمّي عملك",
+    "step4Desc": "اتخذ قرارات أذكى وزد أرباحك."
+  },
+  "stats": {
+    "trustedTitle": "موثوق من آلاف أصحاب الأعمال",
+    "activeUsers": "مستخدم نشط",
+    "activeUsersValue": "+١٢ ألف",
+    "satisfactionRate": "نسبة الرضا",
+    "satisfactionRateValue": "٩٨٪",
+    "appRating": "تقييم التطبيق",
+    "appRatingValue": "٤.٩/٥"
+  },
+  "testimonial": {
+    "quote": "AFAB غيّر طريقة إدارتي لأموالي. ساعدتني رؤى الذكاء الاصطناعي في توفير ٢,٣٠٠ دولار في شهر واحد فقط!",
+    "name": "سارة جونسون",
+    "role": "صاحبة مطعم"
+  }
+}

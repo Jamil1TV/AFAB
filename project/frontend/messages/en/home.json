@@ -1,0 +1,57 @@
+{
+  "hero": {
+    "badge": "AI Finance Assistant for Business",
+    "title_line1": "Finance Management,",
+    "title_line2": "Reinvented by AI.",
+    "subtitle": "AFAB analyzes your data, predicts your cash flow, and gives you financial advice before problems happen.",
+    "getStartedFree": "Get Started Free",
+    "watchDemo": "Watch Demo",
+    "trustedBy": "Trusted by 12,000+ business owners"
+  },
+  "logos": {
+    "title": "Loved by businesses worldwide"
+  },
+  "features": {
+    "title": "Powerful features to grow your",
+    "titleHighlight": "business",
+    "viewAll": "View all features",
+    "aiInsights": "AI Insights",
+    "aiInsightsDesc": "Smart recommendations to improve your finances.",
+    "smartBudget": "Smart Budget",
+    "smartBudgetDesc": "Create budgets that actually work for you.",
+    "expenseTracking": "Expense Tracking",
+    "expenseTrackingDesc": "Track every expense in real time.",
+    "invoiceGenerator": "Invoice Generator",
+    "invoiceGeneratorDesc": "Create & send professional invoices in seconds.",
+    "profitPrediction": "Profit Prediction",
+    "profitPredictionDesc": "AI predicts your future profits and trends.",
+    "cashFlow": "Cash Flow Analysis",
+    "cashFlowDesc": "See your cash flow and stay ahead."
+  },
+  "howItWorks": {
+    "title": "How it",
+    "titleHighlight": "works",
+    "step1Title": "Connect your business",
+    "step1Desc": "Securely connect your bank and integrate your data.",
+    "step2Title": "Upload your data",
+    "step2Desc": "Upload invoices, receipts, and financial documents.",
+    "step3Title": "AI analyzes everything",
+    "step3Desc": "Our AI processes your data and provides insights.",
+    "step4Title": "Grow your business",
+    "step4Desc": "Make smarter decisions and increase your profit."
+  },
+  "stats": {
+    "trustedTitle": "Trusted by thousands of business owners",
+    "activeUsers": "Active Users",
+    "activeUsersValue": "12K+",
+    "satisfactionRate": "Satisfaction Rate",
+    "satisfactionRateValue": "98%",
+    "appRating": "App Rating",
+    "appRatingValue": "4.9/5"
+  },
+  "testimonial": {
+    "quote": "AFAB changed how I manage my finances. The AI insights helped me save $2,300 in just one month!",
+    "name": "Sarah Johnson",
+    "role": "Restaurant Owner"
+  }
+}
