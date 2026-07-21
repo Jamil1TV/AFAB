@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Play } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DashboardMockup } from "./dashboard-mockup";
+import { Link } from "@/i18n/routing";
 
 export function HeroSection() {
   const t = useTranslations("Home.hero");
@@ -65,9 +66,11 @@ export function HeroSection() {
 
             {/* CTA Buttons */}
             <div className="mt-10 flex flex-wrap items-center justify-center lg:justify-start gap-4">
-              <button className="relative inline-flex items-center justify-center rounded-xl bg-[#7c3aed] dark:bg-[#8b5cf6] px-8 py-[14px] text-[15px] font-bold text-white transition-all duration-200 hover:bg-[#6d28d9] dark:hover:bg-[#7c3aed] shadow-[0_4px_14px_rgba(124,58,237,0.35)] dark:shadow-[0_0_25px_rgba(139,92,246,0.4)]">
-                {t("getStartedFree")}
-              </button>
+              <Link href="/signup">
+                <button className="relative inline-flex items-center justify-center rounded-xl bg-[#7c3aed] dark:bg-[#8b5cf6] px-8 py-[14px] text-[15px] font-bold text-white transition-all duration-200 hover:bg-[#6d28d9] dark:hover:bg-[#7c3aed] shadow-[0_4px_14px_rgba(124,58,237,0.35)] dark:shadow-[0_0_25px_rgba(139,92,246,0.4)]">
+                  {t("getStartedFree")}
+                </button>
+              </Link>
               <button className="inline-flex items-center justify-center gap-2.5 rounded-xl border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-transparent px-8 py-[14px] text-[15px] font-bold text-gray-900 dark:text-white transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/[0.04] shadow-sm dark:shadow-none">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-900 dark:bg-white">
                   <Play className="h-3 w-3 fill-white text-white dark:fill-gray-900 dark:text-gray-900 ml-[1px]" />

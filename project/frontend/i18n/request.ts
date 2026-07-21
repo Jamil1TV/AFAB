@@ -11,12 +11,16 @@ export default getRequestConfig(async ({ requestLocale }) => {
   // Merge all per-screen translation files into one messages object
   const common = (await import(`../messages/${locale}/common.json`)).default;
   const home = (await import(`../messages/${locale}/home.json`)).default;
+  const auth = (await import(`../messages/${locale}/auth.json`)).default;
+  const dashboard = (await import(`../messages/${locale}/dashboard.json`)).default;
 
   return {
     locale,
     messages: {
       Common: common,
       Home: home,
+      Auth: auth,
+      Dashboard: dashboard,
     }
   };
 });

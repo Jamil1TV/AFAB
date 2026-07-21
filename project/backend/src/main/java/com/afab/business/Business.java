@@ -26,7 +26,7 @@ public class Business extends BaseEntity {
     private String name;
 
     @Column(nullable = false, length = 3)
-    private String currency;
+    private String currency = "USD";
 
     @Column(length = 100)
     private String country;

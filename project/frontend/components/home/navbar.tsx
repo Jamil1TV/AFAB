@@ -76,12 +76,16 @@ export function Navbar() {
               <Globe className="h-4 w-4" />
               {tLang("switchTo")}
             </Button>
-            <Button variant="outline" size="sm" className="rounded-full px-6 border-gray-700 bg-transparent hover:bg-white/5">
-              {t("login")}
-            </Button>
-            <Button size="sm" className="rounded-full bg-[#8b5cf6] hover:bg-[#8b5cf6]/90 px-6 text-white font-medium border-0">
-              {t("getStarted")}
-            </Button>
+            <Link href="/login">
+              <Button variant="outline" size="sm" className="rounded-full px-6 border-gray-700 bg-transparent hover:bg-white/5">
+                {t("login")}
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="sm" className="rounded-full bg-[#8b5cf6] hover:bg-[#8b5cf6]/90 px-6 text-white font-medium border-0">
+                {t("getStarted")}
+              </Button>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -140,17 +144,21 @@ export function Navbar() {
 
               {/* Action Buttons */}
               <div className="flex flex-col gap-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full h-11 rounded-xl text-[15px] font-semibold border-gray-200 dark:border-gray-800 bg-transparent text-foreground hover:bg-gray-50 dark:hover:bg-gray-900"
-                >
-                  {t("login")}
-                </Button>
-                <Button 
-                  className="w-full h-11 rounded-xl text-[15px] font-semibold bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
-                >
-                  {t("getStarted")}
-                </Button>
+                <Link href="/login" className="w-full" onClick={() => setMobileOpen(false)}>
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-11 rounded-xl text-[15px] font-semibold border-gray-200 dark:border-gray-800 bg-transparent text-foreground hover:bg-gray-50 dark:hover:bg-gray-900"
+                  >
+                    {t("login")}
+                  </Button>
+                </Link>
+                <Link href="/signup" className="w-full" onClick={() => setMobileOpen(false)}>
+                  <Button 
+                    className="w-full h-11 rounded-xl text-[15px] font-semibold bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                  >
+                    {t("getStarted")}
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>

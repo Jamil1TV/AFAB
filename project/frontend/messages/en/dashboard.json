@@ -1,0 +1,77 @@
+{
+  "welcome": {
+    "title": "Good Morning, Ahmed 👋",
+    "subtitle": "Here's what's happening with your business today."
+  },
+  "sidebar": {
+    "freePlan": "FREE PLAN",
+    "overview": "Overview",
+    "transactions": "Transactions",
+    "expenses": "Expenses",
+    "revenue": "Revenue",
+    "invoices": "Invoices",
+    "customers": "Customers",
+    "reports": "Reports",
+    "workspace": "WORKSPACE",
+    "aiAssistant": "AI Assistant",
+    "calendar": "Calendar",
+    "settings": "Settings",
+    "new": "New",
+    "upgradeTitle": "Upgrade to Pro",
+    "upgradeDesc": "Unlock AI insights, custom reports, and unlimited invoices.",
+    "upgradeBtn": "Upgrade Now",
+    "owner": "Owner"
+  },
+  "header": {
+    "search": "Search transactions, invoices, or customers...",
+    "thisMonth": "This Month",
+    "create": "Create"
+  },
+  "kpi": {
+    "vsLastMonth": "vs last month",
+    "totalRevenue": "Total Revenue",
+    "totalExpenses": "Total Expenses",
+    "netProfit": "Net Profit",
+    "cashFlow": "Cash Flow"
+  },
+  "charts": {
+    "revenueTitle": "Revenue & Expenses",
+    "revenueSubtitle": "Your cash flow over the last 7 days",
+    "revenueLabel": "Revenue",
+    "expensesLabel": "Expenses",
+    "categoriesTitle": "Expense Categories",
+    "total": "Total"
+  },
+  "ai": {
+    "title": "AI Assistant Insights",
+    "premium": "Premium",
+    "insight1Title": "High Marketing Spend",
+    "insight1Desc": "Marketing expenses are up 42% this month. Consider optimizing your Google Ads campaigns to improve ROI.",
+    "insight2Title": "Unused Subscriptions",
+    "insight2Desc": "We noticed 3 software subscriptions haven't been used in 60+ days. Canceling could save $340/mo.",
+    "askBtn": "Ask AI Assistant"
+  },
+  "transactions": {
+    "title": "Recent Transactions",
+    "viewAll": "View all"
+  },
+  "reminders": {
+    "title": "Upcoming Reminders",
+    "viewAll": "View all"
+  },
+  "customers": {
+    "title": "Top Customers",
+    "viewAll": "View all",
+    "revenue": "in revenue"
+  },
+  "banner": {
+    "pro": "AFAB Pro",
+    "title": "Supercharge your financial insights",
+    "desc": "Get unlimited AI assistant queries, custom reports, multi-currency support, and priority customer success.",
+    "unlimitedAI": "Unlimited AI",
+    "customReports": "Custom Reports",
+    "apiAccess": "API Access",
+    "upgradeBtn": "Upgrade Now",
+    "price": "Starting at $29/mo. Cancel anytime."
+  }
+}
