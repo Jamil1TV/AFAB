@@ -25,6 +25,6 @@ export default function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Match only internationalized pathnames
-  matcher: ['/', '/(ar|en)/:path*']
+  // Match all pathnames to allow next-intl and auth proxy to catch bare routes like /dashboard and /login
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };

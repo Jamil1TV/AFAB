@@ -1,9 +1,6 @@
 package com.afab.auth;
 
-import com.afab.auth.dto.AuthResponse;
-import com.afab.auth.dto.LoginRequest;
-import com.afab.auth.dto.RegisterRequest;
-import com.afab.auth.dto.TokenRefreshRequest;
+import com.afab.auth.dto.*;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import io.github.bucket4j.Refill;
@@ -104,6 +101,85 @@ public class AuthController {
         );
         return ResponseEntity.ok().build();
     }
+
+    // ── Email Verification ─────────────────────────────────
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<?> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        try {
+            authService.verifyEmail(
+                    request.getEmail(),
+                    request.getCode(),
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<?> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request
+    ) {
+        if (!authBucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+        }
+        try {
+            authService.resendVerificationEmail(request.getEmail());
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // ── Password Reset ─────────────────────────────────────
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        if (!authBucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+        }
+        
+        // We always return OK to prevent email enumeration
+        authService.forgotPassword(
+                request.getEmail(),
+                getClientIp(httpRequest),
+                httpRequest.getHeader("User-Agent")
+        );
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(
+            @Valid @RequestBody ResetPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        if (!authBucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+        }
+        try {
+            authService.resetPassword(
+                    request.getEmail(),
+                    request.getCode(),
+                    request.getNewPassword(),
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // ── Utils ─────────────────────────────────────────────
 
     private String getClientIp(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");

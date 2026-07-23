@@ -1,0 +1,12 @@
+{
+  "pageTitle": "404 Not Found",
+  "pageSubtitle": "The page you're looking for doesn't exist or has been moved.",
+  "bigNumber": "404",
+  "bigTitle": "Page Not Found",
+  "description": "Sorry, the page you're looking for doesn't exist or has been moved.",
+  "goHome": "Go Back Home",
+  "goDashboard": "Go to Dashboard",
+  "needHelp": "Need help?",
+  "contactSupport": "Contact Support",
+  "sidebarNavUnavailable": "Navigation unavailable in 404 mode."
+}
