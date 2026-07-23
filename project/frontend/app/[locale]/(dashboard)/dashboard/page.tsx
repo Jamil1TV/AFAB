@@ -10,8 +10,9 @@ import { TopCustomers } from "@/components/dashboard/TopCustomers";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 import { useState, useEffect } from "react";
 import { DashboardService } from "@/lib/api/dashboard";
-import { DollarSign, CreditCard, TrendingUp, Wallet, Loader2 } from "lucide-react";
+import { DollarSign, CreditCard, TrendingUp, Wallet } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { AfabLoader } from "@/components/ui/afab-loader";
 
 export default function DashboardPage() {
   const tWelcome = useTranslations("Dashboard.welcome");
@@ -30,7 +31,7 @@ export default function DashboardPage() {
   if (loading || !data) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-[#8b5cf6]" />
+        <AfabLoader size="lg" text="Loading dashboard data..." />
       </div>
     );
   }

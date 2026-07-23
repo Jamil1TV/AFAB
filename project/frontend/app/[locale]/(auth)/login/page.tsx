@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/routing";
+import { Link, useRouter } from "@/i18n/routing";
 import { motion } from "framer-motion";
+import { AuthService } from "@/lib/api/auth";
+import { AfabLoader } from "@/components/ui/afab-loader";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
@@ -17,15 +18,28 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
-    // ... auth logic
-    setTimeout(() => {
+
+    try {
+      const res = await AuthService.login({ email, password });
+      
+      if (!res.user.emailVerified) {
+        router.push("/verify-email");
+      } else if (!res.user.onboardingComplete) {
+        router.push("/onboarding");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch (err: any) {
+      setError(err.message || t("loginFailed") || "Invalid credentials");
+    } finally {
       setLoading(false);
-      router.push("/dashboard");
-    }, 1000);
+    }
   };
 
   // Animation Variants
@@ -85,6 +99,18 @@ export default function LoginPage() {
         <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">{t("loginSubtitle")}</p>
       </motion.div>
 
+      {/* Error Alert */}
+      {error && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 flex items-center gap-2.5 rounded-[12px] bg-red-50 p-3.5 text-[13px] font-medium text-red-600 border border-red-200/60 dark:bg-red-950/30 dark:border-red-800/40 dark:text-red-400"
+        >
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </motion.div>
+      )}
+
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <motion.div variants={itemVariants}>
@@ -99,7 +125,8 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11"
+              disabled={loading}
+              className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11 disabled:opacity-60"
             />
           </div>
         </motion.div>
@@ -116,7 +143,8 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-[44px] text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-[44px] rtl:pr-11"
+              disabled={loading}
+              className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-[44px] text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-[44px] rtl:pr-11 disabled:opacity-60"
             />
             <button
               type="button"
@@ -155,10 +183,17 @@ export default function LoginPage() {
             whileHover={{ scale: 1.015 }}
             whileTap={{ scale: 0.985 }}
             type="submit"
-            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] bg-[#7c3aed] py-[12px] text-[15px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] hover:shadow-[#7c3aed]/40 dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed] dark:shadow-[#8b5cf6]/10 dark:hover:shadow-[#8b5cf6]/30"
+            disabled={loading}
+            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] bg-[#7c3aed] py-[12px] text-[15px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] hover:shadow-[#7c3aed]/40 dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed] dark:shadow-[#8b5cf6]/10 dark:hover:shadow-[#8b5cf6]/30 disabled:opacity-70"
           >
-            <span>{t("loginButton")}</span>
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+            {loading ? (
+              <AfabLoader size="xs" />
+            ) : (
+              <>
+                <span>{t("loginButton")}</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
+              </>
+            )}
           </motion.button>
         </motion.div>
       </form>
@@ -180,6 +215,7 @@ export default function LoginPage() {
         <motion.button 
           whileHover={{ scale: 1.015 }}
           whileTap={{ scale: 0.985 }}
+          type="button"
           className="flex w-full items-center justify-center gap-3 rounded-[14px] border border-gray-200 bg-white py-[12px] text-[14px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow dark:border-[#2A3042] dark:bg-[#111522]/80 dark:text-gray-300 dark:hover:bg-[#1A2035] dark:hover:shadow-none"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -8,10 +8,11 @@ export default function proxy(req: NextRequest) {
   const token = req.cookies.get('accessToken')?.value;
   const { pathname } = req.nextUrl;
 
-  // Protect the dashboard routes
+  // Protected routes
   const isDashboardRoute = pathname.includes('/dashboard');
+  const isOnboardingRoute = pathname.includes('/onboarding');
 
-  if (isDashboardRoute && !token) {
+  if ((isDashboardRoute || isOnboardingRoute) && !token) {
     // Extract locale or fallback to default
     const segments = pathname.split('/');
     const locale = (segments[1] === 'ar' || segments[1] === 'en') ? segments[1] : routing.defaultLocale;

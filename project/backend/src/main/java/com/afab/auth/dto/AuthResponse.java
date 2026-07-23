@@ -23,15 +23,19 @@ public class AuthResponse {
         private String lastName;
         private String email;
         private UUID businessId;
+        private String avatarUrl;
         private boolean emailVerified;
+        private boolean onboardingComplete;
 
-        public UserDto(UUID id, String firstName, String lastName, String email, UUID businessId, boolean emailVerified) {
+        public UserDto(UUID id, String firstName, String lastName, String email, UUID businessId, String avatarUrl, boolean emailVerified, boolean onboardingComplete) {
             this.id = id;
             this.firstName = firstName;
             this.lastName = lastName;
             this.email = email;
             this.businessId = businessId;
+            this.avatarUrl = avatarUrl;
             this.emailVerified = emailVerified;
+            this.onboardingComplete = onboardingComplete;
         }
 
         public UUID getId() { return id; }
@@ -39,6 +43,8 @@ public class AuthResponse {
         public String getLastName() { return lastName; }
         public String getEmail() { return email; }
         public UUID getBusinessId() { return businessId; }
+        public String getAvatarUrl() { return avatarUrl; }
         public boolean isEmailVerified() { return emailVerified; }
+        public boolean isOnboardingComplete() { return onboardingComplete; }
     }
 }

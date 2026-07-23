@@ -83,7 +83,6 @@ services:
     environment:
       POSTGRES_HOST: postgres
       MINIO_ENDPOINT: http://minio:9000
-      MAIL_HOST: mailpit
       REDIS_HOST: redis
       DEBUG: "true"
     ports:

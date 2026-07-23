@@ -30,6 +30,9 @@ public class User extends BaseEntity {
     @Column(name = "phone_number", unique = true)
     private String phoneNumber;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -84,6 +87,9 @@ public class User extends BaseEntity {
 
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }

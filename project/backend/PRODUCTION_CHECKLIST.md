@@ -30,3 +30,8 @@ The database has `two_factor_enabled` and `two_factor_secret` columns ready.
 ### 5. Rotate Secrets
 - [ ] Generate a completely random, massive `JWT_SECRET` for production and ensure it is injected via environment variables (never hardcoded).
 - [ ] Update all MinIO/S3 and PostgreSQL passwords.
+
+### 6. Strict CORS Configuration
+The current `CorsConfig.java` allows `http://localhost:3000` and `http://localhost:3001` for development.
+- [ ] Update `CorsConfig.java` to strictly allow ONLY your production frontend domains (e.g., `https://afab.com`, `https://app.afab.com`).
+- [ ] Maintain `setAllowCredentials(true)` only if absolutely required for cross-origin cookies, although the current Next.js proxy design uses HTTP headers (`Authorization: Bearer <token>`) for backend communication.

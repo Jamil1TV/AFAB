@@ -1,61 +1,69 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1/auth";
+import { fetchClient } from "./client";
+import { AuthResponseData, AuthStore } from "@/lib/auth-store";
+
+export interface RegisterPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: String;
+  businessName: string;
+}
+
+export interface LoginPayload {
+  email: string;
+  password: String;
+}
 
 export class AuthService {
-  static async register(data: any) {
-    const response = await fetch(`${API_URL}/register`, {
+  static async register(payload: RegisterPayload): Promise<AuthResponseData> {
+    const res = await fetchClient("/auth/register", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
+      requireAuth: false,
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Registration failed");
-    }
-
-    const dataResp = await response.json();
-    if (typeof window !== "undefined" && dataResp.accessToken) {
-      localStorage.setItem("accessToken", dataResp.accessToken);
-      document.cookie = `accessToken=${dataResp.accessToken}; path=/; max-age=86400; SameSite=Lax`;
-      
-      // Optional: store refresh token if present
-      if (dataResp.refreshToken) {
-        localStorage.setItem("refreshToken", dataResp.refreshToken);
-        document.cookie = `refreshToken=${dataResp.refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-      }
-    }
-
-    return dataResp;
+    AuthStore.setAuth(res);
+    return res;
   }
 
-  static async login(data: any) {
-    const response = await fetch(`${API_URL}/login`, {
+  static async login(payload: LoginPayload): Promise<AuthResponseData> {
+    const res = await fetchClient("/auth/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
+      requireAuth: false,
     });
+    AuthStore.setAuth(res);
+    return res;
+  }
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(errorText || "Login failed");
-    }
+  static async verifyEmail(email: string, code: string): Promise<void> {
+    await fetchClient("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ email, code }),
+      requireAuth: false,
+    });
+    AuthStore.updateUser({ emailVerified: true });
+  }
 
-    const dataResp = await response.json();
-    if (typeof window !== "undefined" && dataResp.accessToken) {
-      localStorage.setItem("accessToken", dataResp.accessToken);
-      document.cookie = `accessToken=${dataResp.accessToken}; path=/; max-age=86400; SameSite=Lax`;
-      
-      // Optional: store refresh token if present
-      if (dataResp.refreshToken) {
-        localStorage.setItem("refreshToken", dataResp.refreshToken);
-        document.cookie = `refreshToken=${dataResp.refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+  static async resendVerification(email: string): Promise<void> {
+    await fetchClient("/auth/resend-verification", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      requireAuth: false,
+    });
+  }
+
+  static async logout(): Promise<void> {
+    const refreshToken = AuthStore.getRefreshToken();
+    if (refreshToken) {
+      try {
+        await fetchClient("/auth/logout", {
+          method: "POST",
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch (err) {
+        console.error("Logout request failed:", err);
       }
     }
-
-    return dataResp;
+    AuthStore.clearAuth();
   }
 }

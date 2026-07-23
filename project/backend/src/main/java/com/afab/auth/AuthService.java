@@ -73,6 +73,7 @@ public class AuthService {
         user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setAvatarUrl("https://api.dicebear.com/7.x/avataaars/svg?seed=" + request.getEmail());
         user = userRepository.save(user);
 
         Business business = new Business();
@@ -253,10 +254,13 @@ public class AuthService {
         );
         refreshTokenRepository.save(refreshToken);
 
+        Business business = businessRepository.findById(businessId).orElse(null);
+        boolean onboardingComplete = business != null && business.isOnboardingComplete();
+
         return new AuthResponse(
                 accessToken,
                 refreshTokenString,
-                new AuthResponse.UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), businessId, user.getEmailVerifiedAt() != null)
+                new AuthResponse.UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), businessId, user.getAvatarUrl(), user.getEmailVerifiedAt() != null, onboardingComplete)
         );
     }
 

@@ -12,7 +12,7 @@ export function ExpenseCategories({ categories }: { categories: any[] }) {
       
       <div className="flex-1 flex flex-col sm:flex-row items-center gap-6">
         <div className="relative h-40 w-40 shrink-0">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <PieChart>
               <Pie
                 data={categories || []}
@@ -27,7 +27,7 @@ export function ExpenseCategories({ categories }: { categories: any[] }) {
                 ))}
               </Pie>
               <Tooltip 
-                formatter={(value: number) => `$${value}`}
+                formatter={(value: any) => [`$${value}`, '']}
                 contentStyle={{ 
                   backgroundColor: 'rgba(12, 16, 28, 0.9)', 
                   borderColor: 'rgba(255, 255, 255, 0.1)',

@@ -37,6 +37,12 @@ public class Business extends BaseEntity {
     @Column(name = "fiscal_year_start_month", nullable = false)
     private Integer fiscalYearStartMonth = 1;
 
+    @Column(length = 100)
+    private String industry;
+
+    @Column(name = "business_type", length = 50)
+    private String businessType;
+
     @Column(nullable = false)
     private String status = "ACTIVE";
 
@@ -111,9 +117,23 @@ public class Business extends BaseEntity {
         this.fiscalYearStartMonth = fiscalYearStartMonth;
     }
 
+    public String getIndustry() { return industry; }
+    public void setIndustry(String industry) { this.industry = industry; }
+
+    public String getBusinessType() { return businessType; }
+    public void setBusinessType(String businessType) { this.businessType = businessType; }
+
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
     public Instant getDeletedAt() { return deletedAt; }
     public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
+    /**
+     * Onboarding is considered complete when country and timezone are filled.
+     */
+    public boolean isOnboardingComplete() {
+        return country != null && !country.isBlank()
+                && timezone != null && !timezone.isBlank();
+    }
 }
