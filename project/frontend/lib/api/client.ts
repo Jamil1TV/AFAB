@@ -31,8 +31,16 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
   if (!response.ok) {
-    if (response.status === 401 && requireAuth) {
+    if ((response.status === 401 || response.status === 403) && requireAuth) {
       AuthStore.clearAuth();
+      if (typeof window !== "undefined") {
+        // Automatically redirect to login when token expires
+        const currentLang = window.location.pathname.split('/')[1] || 'en';
+        window.location.href = `/${currentLang}/login`;
+        
+        // Return a promise that never resolves so the app doesn't crash while navigating
+        return new Promise(() => {});
+      }
     }
 
     let errorMsg = "API Request Failed";

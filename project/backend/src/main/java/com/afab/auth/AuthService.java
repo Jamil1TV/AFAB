@@ -184,7 +184,7 @@ public class AuthService {
         String otp = generateNumericOtp(6);
         VerificationToken token = new VerificationToken(
                 user,
-                otp, // TODO: In a production super-secure environment, hash this OTP before saving
+                otp,
                 VerificationToken.TokenType.EMAIL_VERIFICATION,
                 Instant.now().plus(15, ChronoUnit.MINUTES)
         );
@@ -250,7 +250,8 @@ public class AuthService {
                 user,
                 refreshTokenString,
                 Instant.now().plusMillis(refreshTokenExpirationMs),
-                userAgent != null && userAgent.length() > 255 ? userAgent.substring(0, 255) : userAgent
+                userAgent != null && userAgent.length() > 255 ? userAgent.substring(0, 255) : userAgent,
+                ipAddress
         );
         refreshTokenRepository.save(refreshToken);
 
@@ -271,5 +272,28 @@ public class AuthService {
             sb.append(random.nextInt(10));
         }
         return sb.toString();
+    }
+
+    // ── Change Password ────────────────────────────────
+
+    @Transactional
+    public void changePassword(String email, String currentPassword, String newPassword, String ipAddress, String userAgent) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            auditService.logSecurityEvent(user, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent, "Invalid current password");
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordChangedAt(Instant.now());
+        userRepository.save(user);
+
+        // Revoke all other refresh tokens so other sessions are logged out
+        refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
+
+        auditService.logSecurityEvent(user, "PASSWORD_CHANGED", ipAddress, userAgent, null);
     }
 }

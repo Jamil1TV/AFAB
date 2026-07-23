@@ -3,6 +3,7 @@
 import { useId } from "react";
 import { LucideIcon } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area } from "recharts";
+import { ChartContainer } from "@/components/ui/chart-container";
 import { useTranslations } from "next-intl";
 
 interface KpiCardProps {
@@ -55,8 +56,8 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
         </div>
 
         {/* Mini Chart */}
-        <div className="h-12 w-24 opacity-60 transition-opacity duration-300 group-hover:opacity-100">
-          <ResponsiveContainer width="100%" height="100%">
+        <ChartContainer className="h-12 w-24 opacity-60 transition-opacity duration-300 group-hover:opacity-100">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -75,7 +76,7 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
               />
             </AreaChart>
           </ResponsiveContainer>
-        </div>
+        </ChartContainer>
       </div>
     </div>
   );

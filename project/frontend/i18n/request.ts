@@ -14,6 +14,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const auth = (await import(`../messages/${locale}/auth.json`)).default;
   const dashboard = (await import(`../messages/${locale}/dashboard.json`)).default;
   const notFound = (await import(`../messages/${locale}/not-found.json`)).default;
+  const settings = (await import(`../messages/${locale}/settings.json`)).default;
 
   return {
     locale,
@@ -23,6 +24,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Auth: auth,
       Dashboard: dashboard,
       NotFound: notFound,
+      Settings: settings,
+      settings: settings,
     }
   };
 });

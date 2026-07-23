@@ -4,6 +4,7 @@ import { Search, Bell, Plus, Calendar as CalendarIcon, Menu, Globe } from "lucid
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/routing";
+import { useSidebar } from "@/components/dashboard/Sidebar";
 
 export function DashboardHeader() {
   const locale = useLocale();
@@ -11,6 +12,7 @@ export function DashboardHeader() {
   const tHeader = useTranslations("Dashboard.header");
   const router = useRouter();
   const pathname = usePathname();
+  const { setMobileOpen } = useSidebar();
 
   const toggleLanguage = () => {
     const nextLocale = locale === "en" ? "ar" : "en";
@@ -18,9 +20,12 @@ export function DashboardHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-4 border-b border-gray-200 dark:border-gray-800/60 bg-white/80 dark:bg-[#080c18]/80 px-4 backdrop-blur-md sm:gap-6 sm:px-6">
-      {/* Mobile menu trigger (hidden on desktop) */}
-      <button className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] lg:hidden">
+    <header className="z-30 flex h-16 shrink-0 items-center gap-4 border-b border-gray-200 dark:border-gray-800/60 bg-white/80 dark:bg-[#080c18]/80 px-4 backdrop-blur-md sm:gap-6 sm:px-6">
+      {/* Mobile menu trigger */}
+      <button 
+        onClick={() => setMobileOpen(true)}
+        className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] lg:hidden"
+      >
         <Menu className="h-5 w-5" />
       </button>
 

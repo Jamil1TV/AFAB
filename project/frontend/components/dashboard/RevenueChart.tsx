@@ -1,6 +1,7 @@
 "use client";
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { ChartContainer } from "@/components/ui/chart-container";
 import { useTranslations } from "next-intl";
 
 export function RevenueChart({ data }: { data: any[] }) {
@@ -25,7 +26,7 @@ export function RevenueChart({ data }: { data: any[] }) {
         </div>
       </div>
 
-      <div className="h-[300px] w-full">
+      <ChartContainer className="h-[300px] w-full">
         <ResponsiveContainer width="100%" height="100%" minHeight={300} minWidth={0}>
           <AreaChart data={data || []} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
             <defs>
@@ -84,7 +85,7 @@ export function RevenueChart({ data }: { data: any[] }) {
             />
           </AreaChart>
         </ResponsiveContainer>
-      </div>
+      </ChartContainer>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { fetchClient } from "./client";
 
-// ── Mock data for UI testing when backend is unavailable ──
+// ── Mock data for UI testing since backend dashboard endpoint doesn't exist yet ──
 const MOCK_DASHBOARD_DATA = {
   kpiData: {
     revenue: { value: "$48,350", change: "+12.5%", isPositive: true },
@@ -43,34 +43,64 @@ const MOCK_DASHBOARD_DATA = {
   ],
 };
 
-const MOCK_USER_PROFILE = {
-  id: 1,
-  name: "Ahmed J.",
-  email: "ahmed@acme.com",
-  workspaceName: "Acme Corp",
-  planType: "Free Plan",
-};
-
 export class DashboardService {
   static async getSummary() {
     try {
       return await fetchClient("/dashboard/summary");
-    } catch {
-      // Return mock data when backend is unavailable
-      console.warn("[AFAB] Backend unavailable — using mock dashboard data");
+    } catch (error) {
+      // Endpoint doesn't exist yet, fallback to mock data
+      console.warn("[AFAB] Backend dashboard endpoint unavailable — using mock dashboard data");
       return MOCK_DASHBOARD_DATA;
     }
   }
+}
+
+export interface UserProfile {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  workspaceName: string;
+  planType: string;
+  avatarUrl?: string;
+  enableAiInsights?: boolean;
+  compactMode?: boolean;
+  autoCategorizeTransactions?: boolean;
+  showTips?: boolean;
+}
+
+export interface BusinessProfile {
+  id?: string;
+  name: string;
+  country?: string;
+  currency?: string;
+  timezone?: string;
+  fiscalYearStartMonth?: number;
+  industry?: string;
+  businessType?: string;
+  businessEmail?: string;
+  phoneNumber?: string;
+  website?: string;
+  taxId?: string;
+  addressLine?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  description?: string;
+  logoUrl?: string;
+  status?: string;
+  onboardingComplete?: boolean;
+  dateFormat?: string;
+  numberFormat?: string;
 }
 
 export class UserService {
   static async getProfile() {
     try {
       return await fetchClient("/user/me");
-    } catch {
-      // Return mock profile when backend is unavailable
-      console.warn("[AFAB] Backend unavailable — using mock user profile");
-      return MOCK_USER_PROFILE;
+    } catch (error) {
+      console.error("[AFAB] Failed to fetch user profile", error);
+      throw error;
     }
   }
 }

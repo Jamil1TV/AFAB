@@ -16,12 +16,6 @@ import org.springframework.stereotype.Service;
  * - Gmail (development)
  * - Mailtrap (testing)
  * - Mailpit (local Docker)
- *
- * ┌──────────────────────────────────────────────────────────────────┐
- * │  TODO [PRODUCTION]: Replace this with a production-grade         │
- * │  transactional email provider (AWS SES, SendGrid, Resend).       │
- * │  See EmailService.java interface for the swap guide.             │
- * └──────────────────────────────────────────────────────────────────┘
  */
 @Service
 public class SmtpEmailServiceImpl implements EmailService {

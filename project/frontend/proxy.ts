@@ -4,21 +4,36 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
 
-export default function proxy(req: NextRequest) {
+export default function middleware(req: NextRequest) {
   const token = req.cookies.get('accessToken')?.value;
   const { pathname } = req.nextUrl;
 
-  // Protected routes
+  // Extract locale from the path if present, otherwise use default
+  const segments = pathname.split('/');
+  const localeSegment = segments[1];
+  const hasLocale = routing.locales.includes(localeSegment as any);
+  const locale = hasLocale ? localeSegment : routing.defaultLocale;
+
+  // Define route types
   const isDashboardRoute = pathname.includes('/dashboard');
   const isOnboardingRoute = pathname.includes('/onboarding');
+  const isSettingsRoute = pathname.includes('/settings');
+  const isAuthRoute = pathname.includes('/login') || pathname.includes('/signup');
+  const isHomeRoute = pathname === '/' || (hasLocale && pathname === `/${locale}`);
+  
+  // Protected routes require authentication
+  const isProtectedRoute = isDashboardRoute || isOnboardingRoute || isSettingsRoute;
 
-  if ((isDashboardRoute || isOnboardingRoute) && !token) {
-    // Extract locale or fallback to default
-    const segments = pathname.split('/');
-    const locale = (segments[1] === 'ar' || segments[1] === 'en') ? segments[1] : routing.defaultLocale;
-    
+  // 1. Logged out user attempting to access a protected route
+  if (isProtectedRoute && !token) {
     const loginUrl = new URL(`/${locale}/login`, req.url);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // 2. Logged in user attempting to access auth or home page
+  if ((isAuthRoute || isHomeRoute) && token) {
+    const dashboardUrl = new URL(`/${locale}/dashboard`, req.url);
+    return NextResponse.redirect(dashboardUrl);
   }
 
   // Continue with next-intl routing
@@ -26,6 +41,6 @@ export default function proxy(req: NextRequest) {
 }
 
 export const config = {
-  // Match all pathnames to allow next-intl and auth proxy to catch bare routes like /dashboard and /login
+  // Match all pathnames except internal Next.js paths and static files
   matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };

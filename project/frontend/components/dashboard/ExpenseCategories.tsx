@@ -1,6 +1,7 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { ChartContainer } from "@/components/ui/chart-container";
 import { useTranslations } from "next-intl";
 
 export function ExpenseCategories({ categories }: { categories: any[] }) {
@@ -12,7 +13,8 @@ export function ExpenseCategories({ categories }: { categories: any[] }) {
       
       <div className="flex-1 flex flex-col sm:flex-row items-center gap-6">
         <div className="relative h-40 w-40 shrink-0">
-          <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+          <ChartContainer className="h-full w-full">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
             <PieChart>
               <Pie
                 data={categories || []}
@@ -38,7 +40,8 @@ export function ExpenseCategories({ categories }: { categories: any[] }) {
                 itemStyle={{ color: '#fff' }}
               />
             </PieChart>
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          </ChartContainer>
           
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-xl font-bold text-gray-900 dark:text-white">$9,420</span>

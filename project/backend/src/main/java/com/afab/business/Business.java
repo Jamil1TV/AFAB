@@ -43,11 +43,47 @@ public class Business extends BaseEntity {
     @Column(name = "business_type", length = 50)
     private String businessType;
 
+    @Column(name = "business_email")
+    private String businessEmail;
+
+    @Column(name = "phone_number", length = 50)
+    private String phoneNumber;
+
+    @Column(length = 255)
+    private String website;
+
+    @Column(name = "tax_id", length = 100)
+    private String taxId;
+
+    @Column(name = "address_line", columnDefinition = "TEXT")
+    private String addressLine;
+
+    @Column(length = 100)
+    private String city;
+
+    @Column(length = 100)
+    private String state;
+
+    @Column(name = "postal_code", length = 20)
+    private String postalCode;
+
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
+    @Column(name = "logo_url", length = 500)
+    private String logoUrl;
+
     @Column(nullable = false)
     private String status = "ACTIVE";
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Column(name = "date_format", length = 50)
+    private String dateFormat = "MM/DD/YYYY";
+
+    @Column(name = "number_format", length = 50)
+    private String numberFormat = "US";
 
     // ── Constructors ────────────────────────────
 
@@ -126,8 +162,44 @@ public class Business extends BaseEntity {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public String getBusinessEmail() { return businessEmail; }
+    public void setBusinessEmail(String businessEmail) { this.businessEmail = businessEmail; }
+
+    public String getPhoneNumber() { return phoneNumber; }
+    public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public String getWebsite() { return website; }
+    public void setWebsite(String website) { this.website = website; }
+
+    public String getTaxId() { return taxId; }
+    public void setTaxId(String taxId) { this.taxId = taxId; }
+
+    public String getAddressLine() { return addressLine; }
+    public void setAddressLine(String addressLine) { this.addressLine = addressLine; }
+
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
+
+    public String getState() { return state; }
+    public void setState(String state) { this.state = state; }
+
+    public String getPostalCode() { return postalCode; }
+    public void setPostalCode(String postalCode) { this.postalCode = postalCode; }
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public String getLogoUrl() { return logoUrl; }
+    public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
+
     public Instant getDeletedAt() { return deletedAt; }
     public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
+    public String getDateFormat() { return dateFormat; }
+    public void setDateFormat(String dateFormat) { this.dateFormat = dateFormat; }
+
+    public String getNumberFormat() { return numberFormat; }
+    public void setNumberFormat(String numberFormat) { this.numberFormat = numberFormat; }
 
     /**
      * Onboarding is considered complete when country and timezone are filled.

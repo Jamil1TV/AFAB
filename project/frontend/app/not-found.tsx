@@ -54,7 +54,7 @@ export default function NotFoundPage() {
   };
 
   return (
-    <html lang={locale} dir={isArabic ? 'rtl' : 'ltr'} className={`${inter.variable} ${poppins.variable} ${geistMono.variable}`}>
+    <html lang={locale} dir={isArabic ? 'rtl' : 'ltr'} suppressHydrationWarning className={`${inter.variable} ${poppins.variable} ${geistMono.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <ThemeProvider
             attribute="class"

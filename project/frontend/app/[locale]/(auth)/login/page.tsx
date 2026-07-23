@@ -30,10 +30,10 @@ export default function LoginPage() {
       
       if (!res.user.emailVerified) {
         router.push("/verify-email");
-      } else if (!res.user.onboardingComplete) {
-        router.push("/onboarding");
-      } else {
+      } else if (res.user.onboardingComplete) {
         router.push("/dashboard");
+      } else {
+        router.push("/onboarding");
       }
     } catch (err: any) {
       setError(err.message || t("loginFailed") || "Invalid credentials");

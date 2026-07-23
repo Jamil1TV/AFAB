@@ -57,8 +57,23 @@ public class User extends BaseEntity {
     @Column(name = "last_login_ip")
     private String lastLoginIp;
 
+    @Column(name = "password_changed_at")
+    private Instant passwordChangedAt;
+
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Column(name = "enable_ai_insights")
+    private Boolean enableAiInsights = true;
+
+    @Column(name = "compact_mode")
+    private Boolean compactMode = false;
+
+    @Column(name = "auto_categorize_transactions")
+    private Boolean autoCategorizeTransactions = true;
+
+    @Column(name = "show_tips")
+    private Boolean showTips = true;
 
     // ── Constructors ────────────────────────────
 
@@ -115,6 +130,21 @@ public class User extends BaseEntity {
     public String getLastLoginIp() { return lastLoginIp; }
     public void setLastLoginIp(String lastLoginIp) { this.lastLoginIp = lastLoginIp; }
 
+    public Instant getPasswordChangedAt() { return passwordChangedAt; }
+    public void setPasswordChangedAt(Instant passwordChangedAt) { this.passwordChangedAt = passwordChangedAt; }
+
     public Instant getDeletedAt() { return deletedAt; }
     public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
+    public Boolean getEnableAiInsights() { return enableAiInsights; }
+    public void setEnableAiInsights(Boolean enableAiInsights) { this.enableAiInsights = enableAiInsights; }
+
+    public Boolean getCompactMode() { return compactMode; }
+    public void setCompactMode(Boolean compactMode) { this.compactMode = compactMode; }
+
+    public Boolean getAutoCategorizeTransactions() { return autoCategorizeTransactions; }
+    public void setAutoCategorizeTransactions(Boolean autoCategorizeTransactions) { this.autoCategorizeTransactions = autoCategorizeTransactions; }
+
+    public Boolean getShowTips() { return showTips; }
+    public void setShowTips(Boolean showTips) { this.showTips = showTips; }
 }

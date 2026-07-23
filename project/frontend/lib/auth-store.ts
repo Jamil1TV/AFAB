@@ -28,7 +28,7 @@ export class AuthStore {
     localStorage.setItem(USER_KEY, JSON.stringify(data.user));
 
     // Also set accessToken in cookie for middleware / proxy.ts
-    document.cookie = `accessToken=${data.accessToken}; path=/; max-age=604800; SameSite=Lax`;
+    document.cookie = `accessToken=${data.accessToken}; path=/; max-age=1800; SameSite=Lax`;
   }
 
   static clearAuth() {

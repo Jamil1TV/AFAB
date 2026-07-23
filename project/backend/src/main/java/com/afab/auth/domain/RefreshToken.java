@@ -34,6 +34,9 @@ public class RefreshToken {
     @Column(name = "device_info")
     private String deviceInfo;
 
+    @Column(name = "ip_address", length = 45)
+    private String ipAddress;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -46,11 +49,12 @@ public class RefreshToken {
 
     public RefreshToken() {}
 
-    public RefreshToken(User user, String tokenHash, Instant expiresAt, String deviceInfo) {
+    public RefreshToken(User user, String tokenHash, Instant expiresAt, String deviceInfo, String ipAddress) {
         this.user = user;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
         this.deviceInfo = deviceInfo;
+        this.ipAddress = ipAddress;
     }
 
     // ── Getters & Setters ───────────────────────
@@ -72,6 +76,9 @@ public class RefreshToken {
 
     public String getDeviceInfo() { return deviceInfo; }
     public void setDeviceInfo(String deviceInfo) { this.deviceInfo = deviceInfo; }
+
+    public String getIpAddress() { return ipAddress; }
+    public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
 
     public Instant getCreatedAt() { return createdAt; }
 }

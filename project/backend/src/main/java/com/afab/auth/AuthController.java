@@ -3,7 +3,6 @@ package com.afab.auth;
 import com.afab.auth.dto.*;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Refill;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,7 +23,7 @@ public class AuthController {
     public AuthController(AuthService authService) {
         this.authService = authService;
         
-        Bandwidth limit = Bandwidth.classic(5, Refill.greedy(5, Duration.ofMinutes(1)));
+        Bandwidth limit = Bandwidth.builder().capacity(5).refillGreedy(5, Duration.ofMinutes(1)).build();
         this.authBucket = Bucket.builder()
                 .addLimit(limit)
                 .build();
@@ -169,6 +168,32 @@ public class AuthController {
             authService.resetPassword(
                     request.getEmail(),
                     request.getCode(),
+                    request.getNewPassword(),
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // ── Change Password ─────────────────────────────────
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @Valid @RequestBody com.afab.auth.dto.ChangePasswordRequest request,
+            HttpServletRequest httpRequest,
+            org.springframework.security.core.Authentication authentication
+    ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        try {
+            authService.changePassword(
+                    authentication.getName(),
+                    request.getCurrentPassword(),
                     request.getNewPassword(),
                     getClientIp(httpRequest),
                     httpRequest.getHeader("User-Agent")
