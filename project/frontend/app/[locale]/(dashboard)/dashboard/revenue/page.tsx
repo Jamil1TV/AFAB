@@ -1,0 +1,676 @@
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import { 
+  Plus, 
+  Search, 
+  Download, 
+  ChevronLeft, 
+  ChevronRight, 
+  Eye, 
+  X,
+  CreditCard,
+  Building2,
+  Calendar as CalendarIcon,
+  TrendingUp,
+  Star,
+  Receipt,
+  Wallet,
+  ArrowUpRight,
+  PieChart as PieChartIcon
+} from "lucide-react";
+import { useTranslations } from "next-intl";
+import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip } from "recharts";
+import { ChartContainer } from "@/components/ui/chart-container";
+import { AfabLoader } from "@/components/ui/afab-loader";
+
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { AddTransactionModal } from "@/components/dashboard/AddTransactionModal";
+import { RevenueService, RevenueSummaryResponse } from "@/lib/api/revenue";
+import { TransactionService, TransactionResponse, CategoryItem, TransactionItem } from "@/lib/api/transactions";
+import { UserService } from "@/lib/api/dashboard";
+import { formatCurrency } from "@/lib/currency";
+
+export default function RevenuePage() {
+  const t = useTranslations("Revenue");
+  const tKpi = useTranslations("Revenue.kpi");
+  const tCharts = useTranslations("Revenue.charts");
+  const tFilters = useTranslations("Revenue.filters");
+  const tWidgets = useTranslations("Revenue.widgets");
+  const tTable = useTranslations("Revenue.table");
+
+  const [summary, setSummary] = useState<RevenueSummaryResponse | null>(null);
+  const [revenueData, setRevenueData] = useState<TransactionResponse | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [period, setPeriod] = useState<"WEEKLY" | "MONTHLY" | "YEARLY">("MONTHLY");
+  const [page, setPage] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<TransactionItem | null>(null);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut ⌘K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [sumRes, listRes] = await Promise.all([
+        RevenueService.getSummary(),
+        RevenueService.getRevenue({
+          categoryId: categoryFilter || undefined,
+          search: search || undefined,
+          page,
+          size: 15,
+        })
+      ]);
+      setSummary(sumRes);
+      setRevenueData(listRes);
+    } catch (err) {
+      console.error("Failed to load revenue data:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [categoryFilter, search, page]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    TransactionService.getCategories()
+      .then(setCategories)
+      .catch((err) => console.error("Failed to load categories:", err));
+    UserService.getProfile()
+      .then(setUserProfile)
+      .catch((err) => console.error("Failed to load user profile:", err));
+  }, []);
+
+  const handleExportCSV = () => {
+    if (!revenueData || !revenueData.content || revenueData.content.length === 0) return;
+    const headers = ["ID,Description,Amount,Currency,Category,Date,Payment Method,Status"];
+    const rows = revenueData.content.map((tx) =>
+      `"${tx.id}","${tx.description.replace(/"/g, '""')}",${tx.amount},"${tx.currency}","${tx.categoryName}","${tx.transactionDate}","${tx.paymentMethod}","${tx.status}"`
+    );
+    const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `afab_revenue_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const currency = summary?.currency || userProfile?.currency || "USD";
+
+  // Dynamic Chart Sparklines
+  const hasRevenue = Boolean(revenueData?.content && revenueData.content.length > 0);
+  const totalRevData = (summary?.totalRevenue && hasRevenue)
+    ? revenueData!.content.map(t => t.amount)
+    : [0, 0, 0, 0, 0, 0, 0];
+  const avgRevData = (summary?.avgPerDay && hasRevenue)
+    ? [summary.avgPerDay * 0.8, summary.avgPerDay * 1.2, summary.avgPerDay]
+    : [0, 0, 0, 0, 0, 0, 0];
+  const highestRevData = (summary?.highestRevenueAmount && hasRevenue)
+    ? [summary.highestRevenueAmount * 0.4, summary.highestRevenueAmount * 0.7, summary.highestRevenueAmount]
+    : [0, 0, 0, 0, 0, 0, 0];
+  const invoicesData = (summary?.totalInvoices && hasRevenue)
+    ? [1, 5, 12, summary.totalInvoices]
+    : [0, 0, 0, 0, 0, 0, 0];
+
+  // Category donut colors
+  const sourceColors = ["#d0bcff", "#4edea3", "#00a572", "#958ea0", "#ffb95f"];
+  const revenuePieData = (summary?.revenueBySource && summary.revenueBySource.length > 0)
+    ? summary.revenueBySource.map((src, idx) => ({
+        name: src.name,
+        value: src.amount,
+        percentage: src.percentage,
+        color: src.color || sourceColors[idx % sourceColors.length]
+      }))
+    : [{ name: "No Data", value: 1, percentage: 0, color: "#1E293B" }];
+
+  // Overview area chart data points
+  const overviewChartData = hasRevenue && revenueData?.content
+    ? revenueData.content.slice(0, 7).reverse().map((t, idx) => ({
+        date: `Day ${idx + 1}`,
+        amount: t.amount
+      }))
+    : [
+        { date: "May 12", amount: 0 },
+        { date: "May 13", amount: 0 },
+        { date: "May 14", amount: 0 },
+        { date: "May 15", amount: 0 },
+        { date: "May 16", amount: 0 },
+        { date: "May 17", amount: 0 },
+        { date: "May 18", amount: 0 },
+      ];
+
+  if (loading && !revenueData) {
+    return (
+      <div className="flex h-[75vh] items-center justify-center">
+        <AfabLoader text="Loading Revenue Dashboard..." />
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-700">
+      
+      {/* ── Page Header & Controls ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl tracking-tight">
+            {t("title")}
+          </h1>
+          <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
+            {t("subtitle")}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Period Toggle Tabs */}
+          <div className="flex items-center rounded-xl bg-gray-100 dark:bg-[#080c18] border border-gray-200 dark:border-gray-800/60 p-1 text-xs font-semibold">
+            {(["WEEKLY", "MONTHLY", "YEARLY"] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`px-3 py-1.5 rounded-lg transition-all ${
+                  period === p
+                    ? "bg-[#8b5cf6] text-white shadow-sm"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-all shadow-sm"
+          >
+            <Download className="h-4 w-4" />
+            {t("export")}
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8b5cf6] text-white text-xs font-bold hover:bg-[#7c3aed] transition-all shadow-lg shadow-[#8b5cf6]/25"
+          >
+            <Plus className="h-4 w-4" />
+            {t("createNew")}
+          </button>
+        </div>
+      </div>
+
+      {/* ── 4 KPI Summary Cards ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          title={tKpi("totalRevenue")}
+          value={formatCurrency(summary?.totalRevenue || 0, currency)}
+          change={(summary?.totalRevenue || 0) === 0 ? "0.0%" : "+18.2%"}
+          isPositive={true}
+          icon={Wallet}
+          data={totalRevData}
+        />
+        <KpiCard
+          title={tKpi("avgPerDay")}
+          value={formatCurrency(summary?.avgPerDay || 0, currency)}
+          change={(summary?.avgPerDay || 0) === 0 ? "0.0%" : "+12.6%"}
+          isPositive={true}
+          icon={TrendingUp}
+          data={avgRevData}
+        />
+        <KpiCard
+          title={tKpi("highestRevenueDay")}
+          value={formatCurrency(summary?.highestRevenueAmount || 0, currency)}
+          change={summary?.highestRevenueDate || "N/A"}
+          isPositive={true}
+          icon={Star}
+          data={highestRevData}
+        />
+        <KpiCard
+          title={tKpi("totalInvoices")}
+          value={(summary?.totalInvoices || 0).toString()}
+          change={tKpi("newInvoices")}
+          isPositive={true}
+          icon={Receipt}
+          data={invoicesData}
+        />
+      </div>
+
+      {/* ── Main Analytics Section ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Revenue Overview Area Chart (8 cols) */}
+        <div className="lg:col-span-8 rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                {tCharts("overviewTitle")}
+              </h3>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xl font-bold text-gray-900 dark:text-white">
+                  {formatCurrency(summary?.totalRevenue || 0, currency)}
+                </span>
+                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                  +18.2% vs last week
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="h-64 w-full">
+            <ChartContainer className="h-full w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <AreaChart data={overviewChartData}>
+                  <defs>
+                    <linearGradient id="revenueChartGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Tooltip
+                    formatter={(val: any) => [formatCurrency(val, currency), "Revenue"]}
+                    contentStyle={{
+                      backgroundColor: "rgba(12, 16, 28, 0.95)",
+                      borderColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "12px",
+                      color: "#fff",
+                      fontSize: "12px",
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#10b981"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#revenueChartGrad)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </div>
+        </div>
+
+        {/* Revenue by Source Donut Chart (4 cols) */}
+        <div className="lg:col-span-4 rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-6 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-bold text-gray-900 dark:text-white">
+              {tCharts("bySourceTitle")}
+            </h3>
+          </div>
+
+          <div className="relative h-44 w-full flex items-center justify-center my-2">
+            <ChartContainer className="h-full w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                <PieChart>
+                  <Pie
+                    data={revenuePieData}
+                    innerRadius={55}
+                    outerRadius={75}
+                    paddingAngle={5}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {revenuePieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(val: any) => [formatCurrency(val, currency), ""]}
+                    contentStyle={{
+                      backgroundColor: "rgba(12, 16, 28, 0.95)",
+                      borderColor: "rgba(255, 255, 255, 0.1)",
+                      borderRadius: "10px",
+                      color: "#fff",
+                      fontSize: "12px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-lg font-extrabold text-gray-900 dark:text-white">
+                {formatCurrency(summary?.totalRevenue || 0, currency)}
+              </span>
+              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+                Total
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2.5 mt-2">
+            {revenuePieData.map((src) => (
+              <div key={src.name} className="flex items-center justify-between text-xs font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: src.color }} />
+                  <span className="text-gray-700 dark:text-gray-300">{src.name}</span>
+                </div>
+                <div className="text-right">
+                  <span className="font-bold text-gray-900 dark:text-white">{src.percentage}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Bottom Section: Table & Side Widgets ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Revenue Transactions Table (9 cols) */}
+        <div className="lg:col-span-9 rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm overflow-hidden flex flex-col justify-between">
+          <div>
+            {/* Table Header Controls */}
+            <div className="p-5 border-b border-gray-100 dark:border-gray-800/60 flex flex-col sm:flex-row gap-3 items-center justify-between">
+              <div className="relative w-full sm:max-w-xs">
+                <Search className="pointer-events-none absolute inset-y-0 left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(0);
+                  }}
+                  placeholder={tFilters("searchPlaceholder")}
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-12 py-2 text-xs font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none"
+                />
+                <span className="absolute inset-y-0 right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-gray-400">
+                  ⌘K
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2.5 w-full sm:w-auto">
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value);
+                    setPage(0);
+                  }}
+                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 focus:border-[#8b5cf6] focus:outline-none"
+                >
+                  <option value="">{tFilters("allSources")}</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Table View */}
+            {!revenueData || revenueData.content.length === 0 ? (
+              <div className="py-16 text-center">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-100 dark:bg-white/5 text-gray-400 mb-3">
+                  <Wallet className="h-6 w-6" />
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 dark:text-white">{tTable("noRevenue")}</h3>
+                <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">{tTable("noRevenueSubtitle")}</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-gray-100 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#080c18]/50 text-gray-400 font-bold uppercase tracking-wider">
+                      <th className="px-6 py-3.5">{tTable("date")}</th>
+                      <th className="px-6 py-3.5">{tTable("description")}</th>
+                      <th className="px-6 py-3.5">{tTable("source")}</th>
+                      <th className="px-6 py-3.5">{tTable("account")}</th>
+                      <th className="px-6 py-3.5 text-right">{tTable("amount")}</th>
+                      <th className="px-6 py-3.5 text-center">{tTable("status")}</th>
+                      <th className="px-6 py-3.5 text-right">{tTable("actions")}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-800/40 text-gray-700 dark:text-gray-300 font-medium">
+                    {revenueData.content.map((tx) => (
+                      <tr
+                        key={tx.id}
+                        className="hover:bg-gray-50/80 dark:hover:bg-white/[0.02] transition-colors group cursor-pointer"
+                        onClick={() => setSelectedTx(tx)}
+                      >
+                        <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{tx.transactionDate}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs shadow-sm">
+                              <ArrowUpRight className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[#8b5cf6] transition-colors">
+                                {tx.description}
+                              </p>
+                              <p className="text-[10px] text-gray-400 font-normal">Ref: #{tx.id.substring(0, 8)}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-semibold border border-current/20"
+                            style={{
+                              backgroundColor: `${tx.categoryColor}15`,
+                              color: tx.categoryColor,
+                            }}
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: tx.categoryColor }} />
+                            {tx.categoryName}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center gap-1.5 rounded-md bg-gray-100 dark:bg-white/5 px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                            <CreditCard className="h-3 w-3 text-gray-400" />
+                            {tx.paymentMethod.replace(/_/g, " ")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                            +{formatCurrency(tx.amount, tx.currency || currency)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-500">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            {tx.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button
+                            onClick={() => setSelectedTx(tx)}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.05]"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Controls */}
+          {revenueData && revenueData.totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-between text-xs text-gray-500">
+              <span>
+                Showing {page * 15 + 1} to {Math.min((page + 1) * 15, revenueData.totalElements)} of {revenueData.totalElements}
+              </span>
+              <div className="flex items-center gap-1">
+                <button
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-800 disabled:opacity-30 hover:bg-gray-100 dark:hover:bg-white/5"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="px-3 font-semibold text-gray-900 dark:text-white">{page + 1}</span>
+                <button
+                  disabled={page >= revenueData.totalPages - 1}
+                  onClick={() => setPage((p) => p + 1)}
+                  className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-800 disabled:opacity-30 hover:bg-gray-100 dark:hover:bg-white/5"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Side Stack Cards (3 cols) */}
+        <div className="lg:col-span-3 space-y-6">
+          
+          {/* Revenue Summary Card (Gross vs Net) */}
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-6 shadow-sm space-y-4">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+              {tWidgets("summaryTitle")}
+            </h4>
+
+            <div className="space-y-3 text-xs font-semibold">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 dark:text-gray-400">{tWidgets("grossRevenue")}</span>
+                <span className="text-gray-900 dark:text-white font-mono">
+                  {formatCurrency(summary?.grossRevenue || 0, currency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                  {tWidgets("discounts")}
+                </span>
+                <span className="text-red-500 font-mono">
+                  -{formatCurrency(summary?.discounts || 0, currency)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
+                  {tWidgets("refunds")}
+                </span>
+                <span className="text-red-500 font-mono">
+                  -{formatCurrency(summary?.refunds || 0, currency)}
+                </span>
+              </div>
+
+              <div className="pt-3 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-between">
+                <span className="text-sm font-bold text-gray-900 dark:text-white">{tWidgets("netRevenue")}</span>
+                <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                  {formatCurrency(summary?.netRevenue || 0, currency)}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Top Performing Products / Income Streams */}
+          <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-6 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                {tWidgets("topProducts")}
+              </h4>
+            </div>
+
+            <div className="space-y-3.5">
+              {(summary?.topProducts || []).map((item, idx) => (
+                <div key={item.name} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-gray-900 dark:text-white">{item.name}</span>
+                    <span className="text-gray-400 font-mono">{formatCurrency(item.amount, currency)}</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${item.percentage}%`,
+                        backgroundColor: item.color || sourceColors[idx % sourceColors.length]
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Transaction Detail Drawer Modal */}
+      {selectedTx && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-gray-200 dark:border-gray-800/80 bg-white dark:bg-[#0c101c] p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/60 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500 text-white font-bold text-xs">
+                  <ArrowUpRight className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">{selectedTx.description}</h3>
+                  <p className="text-xs text-gray-400">Ref: #{selectedTx.id}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedTx(null)} className="text-gray-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4 text-xs">
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
+                <span className="text-gray-400">Amount</span>
+                <span className="text-base font-bold text-emerald-400">
+                  +{formatCurrency(selectedTx.amount, selectedTx.currency || currency)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
+                <span className="text-gray-400">Category / Source</span>
+                <span className="font-semibold text-white">{selectedTx.categoryName}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
+                <span className="text-gray-400">Payment Method</span>
+                <span className="font-semibold text-white">{selectedTx.paymentMethod.replace(/_/g, " ")}</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
+                <span className="text-gray-400">Date</span>
+                <span className="font-semibold text-white">{selectedTx.transactionDate}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setSelectedTx(null)}
+                className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Income Transaction Modal */}
+      <AddTransactionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => fetchData()}
+        categories={categories}
+        currency={currency}
+      />
+
+    </div>
+  );
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { SettingsService } from "@/lib/api/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,13 +10,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertCircle, LogOut, CheckCircle2, ChevronRight, Download, Trash2, CalendarDays, DollarSign } from "lucide-react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { cn } from "@/lib/utils";
+import { AlertCircle, CheckCircle2, ChevronRight, Download, Trash2, CalendarDays } from "lucide-react";
 
 export function GeneralSettings({ profile, business }: { profile: any, business: any }) {
   const t = useTranslations("settings");
-  
+
   const [formData, setFormData] = useState({
     name: business?.name || "",
     businessEmail: business?.businessEmail || "",
@@ -38,7 +36,6 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Helper to extract initials
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.[0] || ""}${lastName?.[0] || ""}`.toUpperCase();
   };
@@ -49,7 +46,6 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
     setSuccess(false);
 
     try {
-      // 1. Update Business Settings
       await SettingsService.updateBusiness(business.id, {
         name: formData.name,
         businessEmail: formData.businessEmail,
@@ -60,7 +56,6 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
         numberFormat: formData.numberFormat,
       });
 
-      // 2. Update User Preferences
       await SettingsService.updateProfile({
         enableAiInsights: userPrefs.enableAiInsights,
         compactMode: userPrefs.compactMode,
@@ -83,7 +78,6 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
 
   return (
     <div className="space-y-8 pb-10">
-      {/* Left Form Content */}
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
@@ -107,22 +101,25 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
           </div>
         )}
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 dark:border-gray-700">
+        {/* Business Settings Card */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-600">
              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Business Settings</h3>
           </div>
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label>{t("general.businessName")}</Label>
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.businessName")}</Label>
                 <Input
+                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t("general.businessEmail")}</Label>
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.businessEmail")}</Label>
                 <Input
+                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
                   type="email"
                   value={formData.businessEmail}
                   onChange={(e) => setFormData({ ...formData, businessEmail: e.target.value })}
@@ -130,139 +127,152 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
                 />
               </div>
 
+              {/* Currency Dropdown with Scroll */}
               <div className="space-y-2">
-                <Label>{t("general.currency")}</Label>
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.currency")}</Label>
                 <Select
                   value={formData.currency}
                   onValueChange={(val) => setFormData({ ...formData, currency: val })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
                     <SelectValue placeholder="Select Currency" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                    <SelectItem value="DZD">DZD - Algerian Dinar</SelectItem>
+                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                    <SelectItem value="QAR">QAR - Qatari Riyal (ر.ق)</SelectItem>
+                    <SelectItem value="AED">AED - UAE Dirham (د.إ)</SelectItem>
+                    <SelectItem value="SAR">SAR - Saudi Riyal (ر.س)</SelectItem>
+                    <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
+                    <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                    <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
+                    <SelectItem value="DZD">DZD - Algerian Dinar (د.ج)</SelectItem>
+                    <SelectItem value="KWD">KWD - Kuwaiti Dinar (د.ك)</SelectItem>
+                    <SelectItem value="BHD">BHD - Bahraini Dinar (د.ب)</SelectItem>
+                    <SelectItem value="OMR">OMR - Omani Rial (ر.ع.)</SelectItem>
+                    <SelectItem value="CAD">CAD - Canadian Dollar ($)</SelectItem>
+                    <SelectItem value="AUD">AUD - Australian Dollar ($)</SelectItem>
+                    <SelectItem value="JPY">JPY - Japanese Yen (¥)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Timezone Dropdown with Scroll */}
               <div className="space-y-2">
-                <Label>{t("general.timezone")}</Label>
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.timezone")}</Label>
                 <Select
                   value={formData.timezone}
                   onValueChange={(val) => setFormData({ ...formData, timezone: val })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
                     <SelectValue placeholder="Select Timezone" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                    <SelectItem value="Asia/Qatar">Asia/Qatar (GMT+3 - Qatar Time)</SelectItem>
+                    <SelectItem value="Asia/Dubai">Asia/Dubai (GMT+4 - UAE Time)</SelectItem>
+                    <SelectItem value="Asia/Riyadh">Asia/Riyadh (GMT+3 - Saudi Time)</SelectItem>
                     <SelectItem value="UTC">UTC (Universal Time Coordinated)</SelectItem>
-                    <SelectItem value="America/New_York">EST / EDT (New York)</SelectItem>
-                    <SelectItem value="Europe/London">GMT / BST (London)</SelectItem>
-                    <SelectItem value="Africa/Algiers">CET (Algiers)</SelectItem>
+                    <SelectItem value="America/New_York">America/New_York (EST / EDT)</SelectItem>
+                    <SelectItem value="Europe/London">Europe/London (GMT / BST)</SelectItem>
+                    <SelectItem value="Africa/Algiers">Africa/Algiers (CET)</SelectItem>
+                    <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
+                    <SelectItem value="Australia/Sydney">Australia/Sydney (AEST)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Fiscal Year Start Dropdown with Scroll */}
               <div className="space-y-2 md:col-span-2">
-                <Label>{t("general.fiscalYearStart")}</Label>
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.fiscalYearStart")}</Label>
                 <Select
                   value={formData.fiscalYearStartMonth}
                   onValueChange={(val) => setFormData({ ...formData, fiscalYearStartMonth: val })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white w-full md:w-64">
                     <SelectValue placeholder="Select Month" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">January</SelectItem>
-                    <SelectItem value="4">April</SelectItem>
-                    <SelectItem value="7">July</SelectItem>
-                    <SelectItem value="10">October</SelectItem>
+                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                    <SelectItem value="1">1 - January</SelectItem>
+                    <SelectItem value="2">2 - February</SelectItem>
+                    <SelectItem value="3">3 - March</SelectItem>
+                    <SelectItem value="4">4 - April</SelectItem>
+                    <SelectItem value="5">5 - May</SelectItem>
+                    <SelectItem value="6">6 - June</SelectItem>
+                    <SelectItem value="7">7 - July</SelectItem>
+                    <SelectItem value="8">8 - August</SelectItem>
+                    <SelectItem value="9">9 - September</SelectItem>
+                    <SelectItem value="10">10 - October</SelectItem>
+                    <SelectItem value="11">11 - November</SelectItem>
+                    <SelectItem value="12">12 - December</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500 mt-1">{t("general.fiscalYearHelper")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("general.fiscalYearHelper")}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-             <div className="bg-primary/10 p-2 rounded-lg text-primary">
+        {/* Regional Formats Card: Date Format & Number Format Side-by-Side */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-600 flex items-center gap-3">
+             <div className="bg-[#8b5cf6]/10 p-2 rounded-lg text-[#8b5cf6]">
                 <CalendarDays className="w-5 h-5" />
              </div>
-             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Date Format</h3>
+             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Regional Formats</h3>
           </div>
           <div className="p-6">
-             <RadioGroup 
-                value={formData.dateFormat} 
-                onValueChange={(val) => setFormData({ ...formData, dateFormat: val })}
-                className="grid grid-cols-1 md:grid-cols-3 gap-4"
-             >
-                <div className={cn(
-                  "flex items-center space-x-2 border rounded-lg p-4 cursor-pointer transition-all",
-                  formData.dateFormat === "MM/DD/YYYY" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
-                )} onClick={() => setFormData({ ...formData, dateFormat: "MM/DD/YYYY" })}>
-                  <RadioGroupItem value="MM/DD/YYYY" id="date-1" />
-                  <Label htmlFor="date-1" className="flex-1 cursor-pointer font-medium">MM/DD/YYYY<br/><span className="text-gray-500 font-normal text-xs mt-1 block">12/31/2026</span></Label>
-                </div>
-                <div className={cn(
-                  "flex items-center space-x-2 border rounded-lg p-4 cursor-pointer transition-all",
-                  formData.dateFormat === "DD/MM/YYYY" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
-                )} onClick={() => setFormData({ ...formData, dateFormat: "DD/MM/YYYY" })}>
-                  <RadioGroupItem value="DD/MM/YYYY" id="date-2" />
-                  <Label htmlFor="date-2" className="flex-1 cursor-pointer font-medium">DD/MM/YYYY<br/><span className="text-gray-500 font-normal text-xs mt-1 block">31/12/2026</span></Label>
-                </div>
-                <div className={cn(
-                  "flex items-center space-x-2 border rounded-lg p-4 cursor-pointer transition-all",
-                  formData.dateFormat === "YYYY-MM-DD" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
-                )} onClick={() => setFormData({ ...formData, dateFormat: "YYYY-MM-DD" })}>
-                  <RadioGroupItem value="YYYY-MM-DD" id="date-3" />
-                  <Label htmlFor="date-3" className="flex-1 cursor-pointer font-medium">YYYY-MM-DD<br/><span className="text-gray-500 font-normal text-xs mt-1 block">2026-12-31</span></Label>
-                </div>
-             </RadioGroup>
-          </div>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="p-6 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
-             <div className="bg-primary/10 p-2 rounded-lg text-primary">
-                <DollarSign className="w-5 h-5" />
-             </div>
-             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Number Format</h3>
-          </div>
-          <div className="p-6">
-             <RadioGroup 
-                value={formData.numberFormat} 
-                onValueChange={(val) => setFormData({ ...formData, numberFormat: val })}
-                className="grid grid-cols-1 md:grid-cols-2 gap-4"
-             >
-                <div className={cn(
-                  "flex items-center space-x-2 border rounded-lg p-4 cursor-pointer transition-all",
-                  formData.numberFormat === "US" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
-                )} onClick={() => setFormData({ ...formData, numberFormat: "US" })}>
-                  <RadioGroupItem value="US" id="num-1" />
-                  <Label htmlFor="num-1" className="flex-1 cursor-pointer font-medium">1,234,567.89<br/><span className="text-gray-500 font-normal text-xs mt-1 block">US Standard (Comma separator, dot decimal)</span></Label>
-                </div>
-                <div className={cn(
-                  "flex items-center space-x-2 border rounded-lg p-4 cursor-pointer transition-all",
-                  formData.numberFormat === "EU" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
-                )} onClick={() => setFormData({ ...formData, numberFormat: "EU" })}>
-                  <RadioGroupItem value="EU" id="num-2" />
-                  <Label htmlFor="num-2" className="flex-1 cursor-pointer font-medium">1.234.567,89<br/><span className="text-gray-500 font-normal text-xs mt-1 block">EU Standard (Dot separator, comma decimal)</span></Label>
-                </div>
-             </RadioGroup>
+              {/* Date Format Scrollable Select */}
+              <div className="space-y-2">
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">Date Format</Label>
+                <Select
+                  value={formData.dateFormat}
+                  onValueChange={(val) => setFormData({ ...formData, dateFormat: val })}
+                >
+                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
+                    <SelectValue placeholder="Select Date Format" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                    <SelectItem value="MM/DD/YYYY">MM/DD/YYYY (12/31/2026 - US)</SelectItem>
+                    <SelectItem value="DD/MM/YYYY">DD/MM/YYYY (31/12/2026 - International)</SelectItem>
+                    <SelectItem value="YYYY-MM-DD">YYYY-MM-DD (2026-12-31 - ISO)</SelectItem>
+                    <SelectItem value="DD-MM-YYYY">DD-MM-YYYY (31-12-2026)</SelectItem>
+                    <SelectItem value="MMM DD, YYYY">MMM DD, YYYY (Dec 31, 2026)</SelectItem>
+                    <SelectItem value="DD MMM YYYY">DD MMM YYYY (31 Dec 2026)</SelectItem>
+                    <SelectItem value="YYYY/MM/DD">YYYY/MM/DD (2026/12/31)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Number Format Scrollable Select */}
+              <div className="space-y-2">
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">Number Format</Label>
+                <Select
+                  value={formData.numberFormat}
+                  onValueChange={(val) => setFormData({ ...formData, numberFormat: val })}
+                >
+                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
+                    <SelectValue placeholder="Select Number Format" />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                    <SelectItem value="US">1,234,567.89 (US Standard)</SelectItem>
+                    <SelectItem value="EU">1.234.567,89 (EU Standard)</SelectItem>
+                    <SelectItem value="SI">1 234 567,89 (Space separator)</SelectItem>
+                    <SelectItem value="DOT">1,234,567·89 (Middle dot)</SelectItem>
+                    <SelectItem value="RAW">1234567.89 (Plain)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+            </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-4 mt-8 pt-4">
-          <Button variant="outline" className="min-w-[120px]">Cancel</Button>
+          <Button variant="outline" className="min-w-[120px] border-gray-200 dark:border-gray-600">Cancel</Button>
           <Button
             onClick={handleSave}
             disabled={isLoading}
-            className="bg-primary hover:bg-primary/90 text-white min-w-[140px]"
+            className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white min-w-[140px]"
           >
             {isLoading ? <AfabLoader size="sm" /> : t("saveChanges")}
           </Button>
@@ -272,12 +282,12 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
       {/* Account & Preferences */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Account Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden relative">
-          <div className="h-24 bg-gradient-to-r from-primary/20 to-primary/5"></div>
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden relative">
+          <div className="h-24 bg-gradient-to-r from-[#8b5cf6]/20 to-[#8b5cf6]/5"></div>
           <div className="px-6 pb-6 text-center -mt-12 relative z-10">
             <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white dark:border-gray-800 shadow-sm bg-white">
               <AvatarImage src={profile?.avatarUrl} />
-              <AvatarFallback className="text-2xl bg-primary/10 text-primary font-bold">
+              <AvatarFallback className="text-2xl bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold">
                 {getInitials(profile?.firstName, profile?.lastName)}
               </AvatarFallback>
             </Avatar>
@@ -285,14 +295,14 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
               {profile?.firstName} {profile?.lastName}
             </h3>
             <p className="text-gray-500 text-sm mb-6">{profile?.email}</p>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full border-gray-200 dark:border-gray-600">
               {t("account.editProfile")}
             </Button>
           </div>
         </div>
 
         {/* Preferences */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-6 text-lg">{t("preferences.title")}</h3>
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
@@ -305,7 +315,7 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
                 onCheckedChange={(c) => handlePrefChange('enableAiInsights', c)} 
               />
             </div>
-            
+
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">Compact Mode</p>
@@ -342,15 +352,15 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
         </div>
 
         {/* Other Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6">
           <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">{t("otherSettings.title")}</h3>
           <div className="space-y-1">
              <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors -mx-3">
               <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                 <Download className="w-5 h-5" />
-                <p className="text-sm font-medium group-hover:text-primary transition-colors">{t("otherSettings.exportData")}</p>
+                <p className="text-sm font-medium group-hover:text-[#8b5cf6] transition-colors">{t("otherSettings.exportData")}</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />
+              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#8b5cf6] transition-colors" />
             </div>
             <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors -mx-3">
               <div className="flex items-center gap-3 text-red-600 dark:text-red-400">

@@ -1,0 +1,46 @@
+{
+  "title": "Expenses",
+  "subtitle": "Track, manage, and optimize all your business expenses.",
+  "createExpense": "Create New Expense",
+  "export": "Export",
+  "kpi": {
+    "totalExpenses": "Total Expenses",
+    "avgPerDay": "Avg per Day",
+    "highestExpense": "Highest Expense",
+    "categories": "Categories",
+    "recurring": "Recurring",
+    "vsLastMonth": "vs last month",
+    "ofTotal": "of total",
+    "newThisMonth": "new this month"
+  },
+  "charts": {
+    "overviewTitle": "Expenses Overview",
+    "categoryTitle": "By Category",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month"
+  },
+  "filters": {
+    "searchPlaceholder": "Search expenses...",
+    "allCategories": "All Categories",
+    "allStatuses": "All Statuses",
+    "completed": "Completed",
+    "pending": "Pending"
+  },
+  "widgets": {
+    "topCategories": "Spending Categories",
+    "viewAll": "View all",
+    "recurring": "Recurring Subscriptions"
+  },
+  "table": {
+    "date": "Date",
+    "description": "Description",
+    "category": "Category",
+    "account": "Account",
+    "amount": "Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "noExpenses": "No expenses found",
+    "noExpensesSubtitle": "Adjust your search filters or record your first business expense."
+  }
+}

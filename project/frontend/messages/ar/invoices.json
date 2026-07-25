@@ -1,0 +1,40 @@
+{
+  "title": "الفواتير",
+  "subtitle": "أنشئ وأرسل ودر فواتير العملاء الخاصة بأعمالك بسهولة.",
+  "createInvoice": "إنشاء فاتورة جديدة",
+  "export": "تصدير CSV",
+  "kpi": {
+    "totalInvoices": "إجمالي الفواتير",
+    "paidInvoices": "الفواتير المدفوعة",
+    "pendingInvoices": "الفواتير المعلقة",
+    "overdueInvoices": "الفواتير المتأخرة",
+    "totalInvoiceAmount": "إجمالي قيمة الفواتير",
+    "vsLastMonth": "مقارنة بالشهر الماضي"
+  },
+  "filters": {
+    "searchPlaceholder": "البحث في الفواتير أو اسم العميل...",
+    "allStatus": "جميع الحالات",
+    "allCustomers": "جميع العملاء",
+    "allDueDates": "جميع تواريخ الاستحقاق"
+  },
+  "widgets": {
+    "summaryTitle": "ملخص الفواتير",
+    "upcomingDue": "مستحقة القريب العاجل",
+    "paid": "مدفوعة",
+    "pending": "معلقة",
+    "overdue": "متأخرة",
+    "viewAll": "عرض الكل"
+  },
+  "table": {
+    "invoiceId": "رقم الفاتورة",
+    "customer": "العميل",
+    "date": "تاريخ الإصدار",
+    "dueDate": "تاريخ الاستحقاق",
+    "amount": "المبلغ",
+    "status": "الحالة",
+    "balance": "المبلغ المتبقي",
+    "actions": "الإجراءات",
+    "noInvoices": "لم يتم العثور على فواتير",
+    "noInvoicesSubtitle": "جرب تعديل خيارات البحث أو اضغط على 'إنشاء فاتورة جديدة'."
+  }
+}

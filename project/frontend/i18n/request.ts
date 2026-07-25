@@ -16,6 +16,9 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const notFound = (await import(`../messages/${locale}/not-found.json`)).default;
   const settings = (await import(`../messages/${locale}/settings.json`)).default;
   const transactions = (await import(`../messages/${locale}/transactions.json`)).default;
+  const expenses = (await import(`../messages/${locale}/expenses.json`)).default;
+  const revenue = (await import(`../messages/${locale}/revenue.json`)).default;
+  const invoices = (await import(`../messages/${locale}/invoices.json`)).default;
 
   return {
     locale,
@@ -29,6 +32,12 @@ export default getRequestConfig(async ({ requestLocale }) => {
       settings: settings,
       Transactions: transactions,
       transactions: transactions,
+      Expenses: expenses,
+      expenses: expenses,
+      Revenue: revenue,
+      revenue: revenue,
+      Invoices: invoices,
+      invoices: invoices,
     }
   };
 });

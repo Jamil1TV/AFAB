@@ -1,0 +1,48 @@
+{
+  "title": "الإيرادات",
+  "subtitle": "تتبع دخلك وحلل أداء الإيرادات والأرباح لأعمالك.",
+  "createNew": "إضافة إيراد جديد",
+  "export": "تصدير CSV",
+  "kpi": {
+    "totalRevenue": "إجمالي الإيرادات",
+    "avgPerDay": "المعدل اليومي",
+    "highestRevenueDay": "أعلى يوم إيرادات",
+    "totalInvoices": "إجمالي الفواتير والمدفوعات",
+    "vsLastWeek": "مقارنة بالأسبوع الماضي",
+    "vsLastMonth": "مقارنة بالشهر الماضي",
+    "newInvoices": "فواتير جديدة"
+  },
+  "charts": {
+    "overviewTitle": "نظرة عامة على الإيرادات",
+    "bySourceTitle": "الإيرادات حسب المصدر",
+    "thisWeek": "هذا الأسبوع",
+    "thisMonth": "هذا الشهر",
+    "lastMonth": "الشهر الماضي"
+  },
+  "filters": {
+    "searchPlaceholder": "البحث في الإيرادات...",
+    "allSources": "جميع المصادر",
+    "paid": "مدفوع",
+    "pending": "قيد الانتظار"
+  },
+  "widgets": {
+    "summaryTitle": "ملخص الإيرادات",
+    "grossRevenue": "إجمالي الإيرادات (Gross)",
+    "discounts": "الخصومات",
+    "refunds": "المبالغ المستردة",
+    "netRevenue": "صافي الإيرادات (Net)",
+    "topProducts": "أعلى المنتجات والخدمات إيراداً",
+    "viewAll": "عرض الكل"
+  },
+  "table": {
+    "date": "التاريخ",
+    "description": "الوصف",
+    "source": "المصدر",
+    "account": "الحساب / وسيلة الدفع",
+    "amount": "المبلغ",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "noRevenue": "لم يتم العثور على سجلات إيرادات",
+    "noRevenueSubtitle": "جرب تعديل خيارات البحث أو قم بتسجيل أول عملية دخل لأعمالك."
+  }
+}

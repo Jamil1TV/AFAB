@@ -1,0 +1,46 @@
+{
+  "title": "المصروفات",
+  "subtitle": "تتبع وإدارة وتحسين جميع المصروفات والنفقات الخاصة بأعمالك.",
+  "createExpense": "إضافة مصروف جديد",
+  "export": "تصدير CSV",
+  "kpi": {
+    "totalExpenses": "إجمالي المصروفات",
+    "avgPerDay": "المعدل اليومي",
+    "highestExpense": "أعلى مصروف",
+    "categories": "الفئات",
+    "recurring": "الاشتراكات المتكررة",
+    "vsLastMonth": "مقارنة بالشهر الماضي",
+    "ofTotal": "من الإجمالي",
+    "newThisMonth": "جديد هذا الشهر"
+  },
+  "charts": {
+    "overviewTitle": "نظرة عامة على المصروفات",
+    "categoryTitle": "حسب الفئة",
+    "thisWeek": "هذا الأسبوع",
+    "thisMonth": "هذا الشهر",
+    "lastMonth": "الشهر الماضي"
+  },
+  "filters": {
+    "searchPlaceholder": "البحث في المصروفات...",
+    "allCategories": "جميع الفئات",
+    "allStatuses": "جميع الحالات",
+    "completed": "مكتمل",
+    "pending": "قيد الانتظار"
+  },
+  "widgets": {
+    "topCategories": "فئات الإنفاق الرئيسية",
+    "viewAll": "عرض الكل",
+    "recurring": "الاشتراكات والمدفوعات المتكررة"
+  },
+  "table": {
+    "date": "التاريخ",
+    "description": "الوصف",
+    "category": "الفئة",
+    "account": "الحساب / وسيلة الدفع",
+    "amount": "المبلغ",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "noExpenses": "لم يتم العثور على مصروفات",
+    "noExpensesSubtitle": "جرب تعديل خيارات البحث أو قم بتسجيل أول مصروف لأعمالك."
+  }
+}

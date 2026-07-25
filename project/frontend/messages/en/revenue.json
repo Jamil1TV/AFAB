@@ -1,0 +1,48 @@
+{
+  "title": "Revenue",
+  "subtitle": "Track your income and analyze revenue performance.",
+  "createNew": "Create New Revenue Entry",
+  "export": "Export CSV",
+  "kpi": {
+    "totalRevenue": "Total Revenue",
+    "avgPerDay": "Average per Day",
+    "highestRevenueDay": "Highest Revenue Day",
+    "totalInvoices": "Total Invoices",
+    "vsLastWeek": "vs last week",
+    "vsLastMonth": "vs last month",
+    "newInvoices": "new invoices"
+  },
+  "charts": {
+    "overviewTitle": "Revenue Overview",
+    "bySourceTitle": "Revenue by Source",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "lastMonth": "Last Month"
+  },
+  "filters": {
+    "searchPlaceholder": "Search revenue...",
+    "allSources": "All Sources",
+    "paid": "Paid",
+    "pending": "Pending"
+  },
+  "widgets": {
+    "summaryTitle": "Revenue Summary",
+    "grossRevenue": "Gross Revenue",
+    "discounts": "Discounts",
+    "refunds": "Refunds",
+    "netRevenue": "Net Revenue",
+    "topProducts": "Top Products & Streams",
+    "viewAll": "View all"
+  },
+  "table": {
+    "date": "Date",
+    "description": "Description",
+    "source": "Source",
+    "account": "Account",
+    "amount": "Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "noRevenue": "No revenue records found",
+    "noRevenueSubtitle": "Adjust your search filters or record your first income transaction."
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "title": "Invoices",
+  "subtitle": "Create, send, and manage your customer invoices.",
+  "createInvoice": "Create Invoice",
+  "export": "Export CSV",
+  "kpi": {
+    "totalInvoices": "Total Invoices",
+    "paidInvoices": "Paid Invoices",
+    "pendingInvoices": "Pending Invoices",
+    "overdueInvoices": "Overdue Invoices",
+    "totalInvoiceAmount": "Total Invoice Amount",
+    "vsLastMonth": "vs last month"
+  },
+  "filters": {
+    "searchPlaceholder": "Search by invoice, customer...",
+    "allStatus": "All Status",
+    "allCustomers": "All Customers",
+    "allDueDates": "All Due Dates"
+  },
+  "widgets": {
+    "summaryTitle": "Invoice Summary",
+    "upcomingDue": "Upcoming Due",
+    "paid": "Paid",
+    "pending": "Pending",
+    "overdue": "Overdue",
+    "viewAll": "View all"
+  },
+  "table": {
+    "invoiceId": "Invoice ID",
+    "customer": "Customer",
+    "date": "Date",
+    "dueDate": "Due Date",
+    "amount": "Amount",
+    "status": "Status",
+    "balance": "Balance",
+    "actions": "Actions",
+    "noInvoices": "No invoices found",
+    "noInvoicesSubtitle": "Adjust your search filters or click 'Create Invoice' to create your first entry."
+  }
+}
