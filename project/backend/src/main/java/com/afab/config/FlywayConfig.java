@@ -24,10 +24,13 @@ public class FlywayConfig {
 
     @Bean(initMethod = "migrate")
     public Flyway flyway(DataSource dataSource) {
-        return Flyway.configure()
+        Flyway flyway = Flyway.configure()
                 .dataSource(url, user, password)
                 .locations(locations)
                 .baselineOnMigrate(true)
                 .load();
+        flyway.repair();
+        return flyway;
     }
 }
+

@@ -67,6 +67,8 @@ server:
 
 # ── Custom Config ─────────────────────────────────
 afab:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001}
   jwt:
     secret: ${JWT_SECRET:b3BlbnNlc2FtZS1hZmFiLXN1cGVyLXNlY3JldC1rZXktMjAyNi1qd3QtdG9rZW4tc2lnbmluZy1rZXk=}
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}

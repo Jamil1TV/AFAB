@@ -31,6 +31,17 @@ export class AuthStore {
     document.cookie = `accessToken=${data.accessToken}; path=/; max-age=1800; SameSite=Lax`;
   }
 
+  static setAccessToken(newToken: string) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(ACCESS_TOKEN_KEY, newToken);
+    document.cookie = `accessToken=${newToken}; path=/; max-age=1800; SameSite=Lax`;
+  }
+
+  static setRefreshToken(newRefreshToken: string) {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+  }
+
   static clearAuth() {
     if (typeof window === "undefined") return;
 

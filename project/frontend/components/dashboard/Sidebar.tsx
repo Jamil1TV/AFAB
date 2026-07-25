@@ -25,12 +25,13 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 
 interface UserProfile {
-  id: number;
+  id: number | string;
   firstName: string;
   lastName: string;
   email: string;
-  workspaceName: string;
-  planType: string;
+  businessName?: string;
+  workspaceName?: string;
+  planType?: string;
   avatarUrl?: string;
 }
 
@@ -149,7 +150,7 @@ export function Sidebar() {
             </div>
             {!collapsed && (
               <div className="flex flex-col overflow-hidden">
-                <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{profile?.workspaceName || "Acme Corp"}</span>
+                <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{profile?.businessName || profile?.workspaceName || "My Business"}</span>
                 <span className="truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{profile?.planType || tSidebar("freePlan")}</span>
               </div>
             )}

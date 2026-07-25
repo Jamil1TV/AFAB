@@ -18,8 +18,11 @@ interface KpiCardProps {
 export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: KpiCardProps) {
   const tKpi = useTranslations("Dashboard.kpi");
   const gradientId = useId();
-  // Create mock data for the mini chart
-  const chartData = data.map((val, i) => ({ value: val, index: i }));
+  
+  const isZero = !data || data.length === 0 || data.every((val) => val === 0);
+  const chartData = (data && data.length > 0 ? data : [0, 0, 0, 0, 0, 0, 0]).map((val, i) => ({ value: val, index: i }));
+
+  const strokeColor = isZero ? "#6b7280" : isPositive ? "#10b981" : "#ef4444";
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[#8b5cf6]/5">
@@ -42,7 +45,9 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
           <div className="mt-1 flex items-center gap-1.5">
             <span
               className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ${
-                isPositive
+                isZero
+                  ? "bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400"
+                  : isPositive
                   ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
                   : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
               }`}
@@ -61,15 +66,16 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0.3} />
-                  <stop offset="95%" stopColor={isPositive ? "#10b981" : "#ef4444"} stopOpacity={0} />
+                  <stop offset="5%" stopColor={strokeColor} stopOpacity={isZero ? 0.05 : 0.3} />
+                  <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <Area
                 type="monotone"
                 dataKey="value"
-                stroke={isPositive ? "#10b981" : "#ef4444"}
-                strokeWidth={2}
+                stroke={strokeColor}
+                strokeWidth={isZero ? 1.5 : 2}
+                strokeDasharray={isZero ? "4 4" : undefined}
                 fillOpacity={1}
                 fill={`url(#${gradientId})`}
                 isAnimationActive={false}

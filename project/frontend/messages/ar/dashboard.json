@@ -1,6 +1,12 @@
 {
   "welcome": {
-    "title": "صباح الخير، أحمد 👋",
+    "title": "صباح الخير، {name} 👋",
+    "goodMorning": "صباح الخير، {name} 👋",
+    "goodAfternoon": "مساء الخير، {name} 👋",
+    "goodEvening": "مساء الخير، {name} 👋",
+    "goodMorningGeneric": "صباح الخير 👋",
+    "goodAfternoonGeneric": "مساء الخير 👋",
+    "goodEveningGeneric": "مساء الخير 👋",
     "subtitle": "إليك ما يحدث في عملك اليوم."
   },
   "sidebar": {

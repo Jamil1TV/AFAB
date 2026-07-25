@@ -161,11 +161,11 @@ public class AuthService {
             throw new IllegalArgumentException("Email is already verified");
         }
 
-        VerificationToken token = verificationTokenRepository.findValidToken(code, VerificationToken.TokenType.EMAIL_VERIFICATION, Instant.now())
+        VerificationToken token = verificationTokenRepository.findLatestValidToken(user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION, Instant.now())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired verification code"));
 
-        if (!token.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Invalid verification code");
+        if (!passwordEncoder.matches(code, token.getToken())) {
+            throw new IllegalArgumentException("Invalid or expired verification code");
         }
 
         token.setUsedAt(Instant.now());
@@ -182,9 +182,10 @@ public class AuthService {
         verificationTokenRepository.invalidateAllUserTokens(user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION, Instant.now());
 
         String otp = generateNumericOtp(6);
+        String hashedOtp = passwordEncoder.encode(otp);
         VerificationToken token = new VerificationToken(
                 user,
-                otp,
+                hashedOtp,
                 VerificationToken.TokenType.EMAIL_VERIFICATION,
                 Instant.now().plus(15, ChronoUnit.MINUTES)
         );
@@ -201,9 +202,10 @@ public class AuthService {
             verificationTokenRepository.invalidateAllUserTokens(user.getId(), VerificationToken.TokenType.PASSWORD_RESET, Instant.now());
 
             String otp = generateNumericOtp(6);
+            String hashedOtp = passwordEncoder.encode(otp);
             VerificationToken token = new VerificationToken(
                     user,
-                    otp,
+                    hashedOtp,
                     VerificationToken.TokenType.PASSWORD_RESET,
                     Instant.now().plus(15, ChronoUnit.MINUTES)
             );
@@ -220,11 +222,11 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid request"));
 
-        VerificationToken token = verificationTokenRepository.findValidToken(code, VerificationToken.TokenType.PASSWORD_RESET, Instant.now())
+        VerificationToken token = verificationTokenRepository.findLatestValidToken(user.getId(), VerificationToken.TokenType.PASSWORD_RESET, Instant.now())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset code"));
 
-        if (!token.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("Invalid reset code");
+        if (!passwordEncoder.matches(code, token.getToken())) {
+            throw new IllegalArgumentException("Invalid or expired reset code");
         }
 
         token.setUsedAt(Instant.now());

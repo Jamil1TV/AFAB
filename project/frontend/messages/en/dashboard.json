@@ -1,6 +1,12 @@
 {
   "welcome": {
-    "title": "Good Morning, Ahmed 👋",
+    "title": "Good Morning, {name} 👋",
+    "goodMorning": "Good Morning, {name} 👋",
+    "goodAfternoon": "Good Afternoon, {name} 👋",
+    "goodEvening": "Good Evening, {name} 👋",
+    "goodMorningGeneric": "Good Morning 👋",
+    "goodAfternoonGeneric": "Good Afternoon 👋",
+    "goodEveningGeneric": "Good Evening 👋",
     "subtitle": "Here's what's happening with your business today."
   },
   "sidebar": {

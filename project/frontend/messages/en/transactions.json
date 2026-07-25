@@ -1,0 +1,63 @@
+{
+  "title": "Transactions",
+  "subtitle": "Manage, filter, and track all business inflows and outflows.",
+  "addTransaction": "Add Transaction",
+  "export": "Export CSV",
+  "kpi": {
+    "totalInflow": "Total Inflow",
+    "totalOutflow": "Total Outflow",
+    "netBalance": "Net Balance",
+    "totalCount": "Total Transactions"
+  },
+  "periods": {
+    "weekly": "WEEKLY",
+    "monthly": "MONTHLY",
+    "yearly": "YEARLY"
+  },
+  "filters": {
+    "searchPlaceholder": "Search transactions by description...",
+    "searchShortcut": "⌘K",
+    "allTypes": "All Types",
+    "income": "Inflow",
+    "expense": "Outflow",
+    "allCategories": "All Categories",
+    "allStatuses": "All Statuses",
+    "completed": "Completed",
+    "pending": "Pending",
+    "cancelled": "Cancelled"
+  },
+  "table": {
+    "description": "Description",
+    "category": "Category",
+    "date": "Date",
+    "method": "Payment Method",
+    "amount": "Amount",
+    "status": "Status",
+    "actions": "Actions",
+    "noTransactions": "No transactions found",
+    "noTransactionsSubtitle": "Try adjusting your filters or click 'Add Transaction' to record your first entry."
+  },
+  "modal": {
+    "title": "Add New Transaction",
+    "subtitle": "Record a new income or expense for your business ledger.",
+    "incomeTab": "Income (+)",
+    "expenseTab": "Expense (-)",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "e.g. Client Payment - Acme Corp",
+    "amountLabel": "Amount",
+    "amountPlaceholder": "0.00",
+    "categoryLabel": "Category",
+    "selectCategory": "Select category",
+    "dateLabel": "Date",
+    "methodLabel": "Payment Method",
+    "bankTransfer": "Bank Transfer",
+    "card": "Credit/Debit Card",
+    "cash": "Cash",
+    "other": "Other",
+    "notesLabel": "Notes (Optional)",
+    "notesPlaceholder": "Additional context or reference ID...",
+    "cancel": "Cancel",
+    "submit": "Record Transaction",
+    "saving": "Saving..."
+  }
+}

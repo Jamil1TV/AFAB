@@ -1,0 +1,63 @@
+{
+  "title": "المعاملات المالية",
+  "subtitle": "إدارة وتصفية ومتابعة جميع التدفقات المالية الواردة والصادرة.",
+  "addTransaction": "إضافة معاملة",
+  "export": "تصدير CSV",
+  "kpi": {
+    "totalInflow": "إجمالي الوارد",
+    "totalOutflow": "إجمالي المنصرف",
+    "netBalance": "صافي الرصيد",
+    "totalCount": "إجمالي المعاملات"
+  },
+  "periods": {
+    "weekly": "أسبوعي",
+    "monthly": "شهري",
+    "yearly": "سنوي"
+  },
+  "filters": {
+    "searchPlaceholder": "ابحث عن المعاملات حسب الوصف...",
+    "searchShortcut": "⌘K",
+    "allTypes": "جميع الأنواع",
+    "income": "وارد (Inflow)",
+    "expense": "صادر (Outflow)",
+    "allCategories": "جميع الفئات",
+    "allStatuses": "جميع الحالات",
+    "completed": "مكتملة",
+    "pending": "معلقة",
+    "cancelled": "ملغاة"
+  },
+  "table": {
+    "description": "الوصف",
+    "category": "الفئة",
+    "date": "التاريخ",
+    "method": "طريقة الدفع",
+    "amount": "المبلغ",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "noTransactions": "لم يتم العثور على معاملات",
+    "noTransactionsSubtitle": "جرب تعديل الفلاتر أو انقر على 'إضافة معاملة' لتسجيل أول قيد."
+  },
+  "modal": {
+    "title": "إضافة معاملة جديدة",
+    "subtitle": "تسجيل إيراد أو مصروف جديد في دفتر الحسابات الخاص بك.",
+    "incomeTab": "إيراد (+)",
+    "expenseTab": "مصروف (-)",
+    "descriptionLabel": "الوصف",
+    "descriptionPlaceholder": "مثال: دفع عميل - شركة الأمل",
+    "amountLabel": "المبلغ",
+    "amountPlaceholder": "0.00",
+    "categoryLabel": "الفئة",
+    "selectCategory": "اختر الفئة",
+    "dateLabel": "التاريخ",
+    "methodLabel": "طريقة الدفع",
+    "bankTransfer": "تحويل بنكي",
+    "card": "بطاقة ائتمان/خصم",
+    "cash": "نقداً",
+    "other": "أخرى",
+    "notesLabel": "ملاحظات (اختياري)",
+    "notesPlaceholder": "سياق إضافي أو رقم المرجع...",
+    "cancel": "إلغاء",
+    "submit": "تسجيل المعاملة",
+    "saving": "جاري الحفظ..."
+  }
+}

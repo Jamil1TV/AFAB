@@ -1,9 +1,8 @@
-"use client";
-
 import { ArrowUpRight } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { formatCurrency } from "@/lib/currency";
 
-export function TopCustomers({ customers }: { customers: any[] }) {
+export function TopCustomers({ customers, currency = "USD" }: { customers: any[]; currency?: string }) {
   const tCust = useTranslations("Dashboard.customers");
 
   return (
@@ -35,7 +34,7 @@ export function TopCustomers({ customers }: { customers: any[] }) {
             <div className="text-right flex items-center gap-4">
               <div>
                 <div className="text-sm font-bold text-gray-900 dark:text-white">
-                  ${customer.revenue.toLocaleString()}
+                  {formatCurrency(customer.revenue, currency)}
                 </div>
                 <div className="text-[10px] text-gray-500">{tCust("revenue")}</div>
               </div>

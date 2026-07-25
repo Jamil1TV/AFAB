@@ -15,6 +15,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const dashboard = (await import(`../messages/${locale}/dashboard.json`)).default;
   const notFound = (await import(`../messages/${locale}/not-found.json`)).default;
   const settings = (await import(`../messages/${locale}/settings.json`)).default;
+  const transactions = (await import(`../messages/${locale}/transactions.json`)).default;
 
   return {
     locale,
@@ -26,6 +27,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
       NotFound: notFound,
       Settings: settings,
       settings: settings,
+      Transactions: transactions,
+      transactions: transactions,
     }
   };
 });
