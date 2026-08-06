@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import { motion } from "framer-motion";
 import { AuthService } from "@/lib/api/auth";
+import { ApiError } from "@/lib/api/client";
 import { AfabLoader } from "@/components/ui/afab-loader";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
@@ -18,11 +20,36 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Maps backend error codes to user-friendly translated messages.
+   */
+  const getErrorMessage = (err: unknown): string => {
+    if (err instanceof ApiError) {
+      switch (err.code) {
+        case "EMAIL_NOT_FOUND":
+          return t("errorEmailNotFound");
+        case "INVALID_PASSWORD":
+          return t("errorInvalidPassword");
+        case "ACCOUNT_DISABLED":
+          return t("errorAccountDisabled");
+        case "ACCOUNT_LOCKED":
+          return t("errorAccountLocked");
+        case "RATE_LIMITED":
+          return t("errorRateLimited");
+        case "NETWORK_ERROR":
+          return t("errorNetworkFailure");
+        default:
+          return err.message || t("errorServerFailure");
+      }
+    }
+
+    // Non-API errors (e.g. JSON parse failure, unexpected throws)
+    return t("errorServerFailure");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
 
     try {
@@ -35,8 +62,9 @@ export default function LoginPage() {
       } else {
         router.push("/onboarding");
       }
-    } catch (err: any) {
-      setError(err.message || t("loginFailed") || "Invalid credentials");
+    } catch (err: unknown) {
+      const message = getErrorMessage(err);
+      toast.error(message, { duration: 4000 });
     } finally {
       setLoading(false);
     }
@@ -99,18 +127,6 @@ export default function LoginPage() {
         <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">{t("loginSubtitle")}</p>
       </motion.div>
 
-      {/* Error Alert */}
-      {error && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-5 flex items-center gap-2.5 rounded-[12px] bg-red-50 p-3.5 text-[13px] font-medium text-red-600 border border-red-200/60 dark:bg-red-950/30 dark:border-red-800/40 dark:text-red-400"
-        >
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span>{error}</span>
-        </motion.div>
-      )}
-
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <motion.div variants={itemVariants}>
@@ -126,6 +142,8 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              autoComplete="email"
+              id="login-email"
               className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11 disabled:opacity-60"
             />
           </div>
@@ -144,11 +162,14 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
+              autoComplete="current-password"
+              id="login-password"
               className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-[44px] text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-[44px] rtl:pr-11 disabled:opacity-60"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10 rtl:left-4 rtl:right-auto"
             >
               {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
@@ -163,6 +184,7 @@ export default function LoginPage() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
+                id="login-remember"
                 className="peer h-[18px] w-[18px] cursor-pointer appearance-none rounded-[4px] border border-gray-300 checked:border-[#7c3aed] checked:bg-[#7c3aed] transition-all dark:border-[#303850] dark:bg-[#111522] dark:checked:border-[#8b5cf6] dark:checked:bg-[#8b5cf6]"
               />
               <svg className="absolute h-3 w-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity duration-200" viewBox="0 0 14 10" fill="none">
@@ -184,6 +206,7 @@ export default function LoginPage() {
             whileTap={{ scale: 0.985 }}
             type="submit"
             disabled={loading}
+            id="login-submit"
             className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] bg-[#7c3aed] py-[12px] text-[15px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] hover:shadow-[#7c3aed]/40 dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed] dark:shadow-[#8b5cf6]/10 dark:hover:shadow-[#8b5cf6]/30 disabled:opacity-70"
           >
             {loading ? (
@@ -216,6 +239,7 @@ export default function LoginPage() {
           whileHover={{ scale: 1.015 }}
           whileTap={{ scale: 0.985 }}
           type="button"
+          id="login-google"
           className="flex w-full items-center justify-center gap-3 rounded-[14px] border border-gray-200 bg-white py-[12px] text-[14px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow dark:border-[#2A3042] dark:bg-[#111522]/80 dark:text-gray-300 dark:hover:bg-[#1A2035] dark:hover:shadow-none"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

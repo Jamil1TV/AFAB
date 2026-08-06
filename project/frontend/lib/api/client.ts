@@ -6,6 +6,22 @@ interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
 }
 
+/**
+ * Structured error from the backend API.
+ * Carries the error code for frontend-specific handling.
+ */
+export class ApiError extends Error {
+  code: string;
+  status: number;
+
+  constructor(message: string, code: string, status: number) {
+    super(message);
+    this.name = "ApiError";
+    this.code = code;
+    this.status = status;
+  }
+}
+
 async function tryRefreshToken(): Promise<boolean> {
   const refreshToken = AuthStore.getRefreshToken();
   if (!refreshToken) return false;
@@ -55,7 +71,18 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
     }
   }
 
-  let response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  let response: Response;
+
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  } catch {
+    // Network failure — server unreachable, DNS error, CORS, etc.
+    throw new ApiError(
+      "Unable to connect to the server. Please try again.",
+      "NETWORK_ERROR",
+      0
+    );
+  }
 
   if (!response.ok) {
     // Attempt transparent token refresh on 401/403 for authenticated endpoints
@@ -70,7 +97,15 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
             Authorization: `Bearer ${newToken}`,
           },
         };
-        response = await fetch(`${API_BASE_URL}${endpoint}`, retryConfig);
+        try {
+          response = await fetch(`${API_BASE_URL}${endpoint}`, retryConfig);
+        } catch {
+          throw new ApiError(
+            "Unable to connect to the server. Please try again.",
+            "NETWORK_ERROR",
+            0
+          );
+        }
       }
     }
 
@@ -87,21 +122,33 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
         }
       }
 
-      let errorMsg = "API Request Failed";
+      // Parse structured error response from backend
+      let errorCode = "UNKNOWN_ERROR";
+      let errorMsg = "Something went wrong. Please try again later.";
+
       try {
         const errorText = await response.text();
-        // Parse JSON if possible
         try {
           const parsed = JSON.parse(errorText);
-          errorMsg = parsed.message || parsed.error || errorText;
+          // Backend returns { success, code, message } via ErrorResponse
+          if (parsed.code) {
+            errorCode = parsed.code;
+          }
+          if (parsed.message) {
+            errorMsg = parsed.message;
+          } else if (parsed.error) {
+            errorMsg = parsed.error;
+          }
         } catch {
-          errorMsg = errorText || errorMsg;
+          if (errorText) {
+            errorMsg = errorText;
+          }
         }
       } catch {
-        // fallback
+        // fallback — keep default message
       }
 
-      throw new Error(errorMsg);
+      throw new ApiError(errorMsg, errorCode, response.status);
     }
   }
 

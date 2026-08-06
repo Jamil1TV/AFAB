@@ -41,17 +41,16 @@ spring:
 
   # ── Mail ──────────────────────────────────────
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
+    host: ${MAIL_HOST:mailpit}
+    port: ${MAIL_PORT:1025}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: true
+          auth: ${MAIL_SMTP_AUTH:false}
           starttls:
-            enable: true
-            required: true
+            enable: ${MAIL_STARTTLS_ENABLE:false}
 
   # ── Redis ─────────────────────────────────────
   data:
@@ -73,6 +72,9 @@ afab:
     secret: ${JWT_SECRET:b3BlbnNlc2FtZS1hZmFiLXN1cGVyLXNlY3JldC1rZXktMjAyNi1qd3QtdG9rZW4tc2lnbmluZy1rZXk=}
     access-expiration-ms: ${JWT_ACCESS_EXPIRATION_MS:900000}
     refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+  frontend-url: ${FRONTEND_URL:http://localhost:3000}
+  password-reset:
+    expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:15}
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:afab_minio_access}

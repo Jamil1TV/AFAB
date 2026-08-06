@@ -104,7 +104,7 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
         {/* Business Settings Card */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
           <div className="p-6 border-b border-gray-200 dark:border-gray-600">
-             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Business Settings</h3>
+             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("general.businessSettings")}</h3>
           </div>
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -216,14 +216,14 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
              <div className="bg-[#8b5cf6]/10 p-2 rounded-lg text-[#8b5cf6]">
                 <CalendarDays className="w-5 h-5" />
              </div>
-             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Regional Formats</h3>
+             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("general.regionalFormats")}</h3>
           </div>
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
               {/* Date Format Scrollable Select */}
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300 font-semibold">Date Format</Label>
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.dateFormat")}</Label>
                 <Select
                   value={formData.dateFormat}
                   onValueChange={(val) => setFormData({ ...formData, dateFormat: val })}
@@ -245,7 +245,7 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
 
               {/* Number Format Scrollable Select */}
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300 font-semibold">Number Format</Label>
+                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.numberFormat")}</Label>
                 <Select
                   value={formData.numberFormat}
                   onValueChange={(val) => setFormData({ ...formData, numberFormat: val })}
@@ -268,7 +268,7 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
         </div>
 
         <div className="flex justify-end gap-4 mt-8 pt-4">
-          <Button variant="outline" className="min-w-[120px] border-gray-200 dark:border-gray-600">Cancel</Button>
+          <Button variant="outline" className="min-w-[120px] border-gray-200 dark:border-gray-600">{t("general.cancel")}</Button>
           <Button
             onClick={handleSave}
             disabled={isLoading}
@@ -307,8 +307,8 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Enable AI Insights</p>
-                <p className="text-xs text-gray-500 mt-1">Get smart suggestions for categorization and cash flow.</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.aiInsights")}</p>
+                <p className="text-xs text-gray-500 mt-1">{t("preferences.aiInsightsDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.enableAiInsights} 
@@ -318,8 +318,8 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Compact Mode</p>
-                <p className="text-xs text-gray-500 mt-1">Decrease padding in tables to fit more information.</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.compactMode")}</p>
+                <p className="text-xs text-gray-500 mt-1">{t("preferences.compactModeDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.compactMode} 
@@ -329,8 +329,8 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Auto-categorize</p>
-                <p className="text-xs text-gray-500 mt-1">Automatically categorize recurring transactions.</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.autoCategorie")}</p>
+                <p className="text-xs text-gray-500 mt-1">{t("preferences.autoCategorieDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.autoCategorizeTransactions} 
@@ -340,8 +340,8 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
 
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900 dark:text-white">Show Tips & Tutorials</p>
-                <p className="text-xs text-gray-500 mt-1">Show helpful tooltips when navigating new features.</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.showTips")}</p>
+                <p className="text-xs text-gray-500 mt-1">{t("preferences.showTipsDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.showTips} 

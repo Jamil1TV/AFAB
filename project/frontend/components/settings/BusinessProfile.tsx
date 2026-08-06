@@ -88,9 +88,32 @@ export function BusinessProfile({ business }: { business: any }) {
                 <Image src={formData.logoUrl} alt="Logo" fill className="object-cover" unoptimized />
               </div>
               <div className="space-y-2">
-                <Button variant="outline" className="gap-2 border-gray-200 dark:border-gray-600">
+                <input
+                  type="file"
+                  id="logo-upload-input"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        if (typeof reader.result === "string") {
+                          setFormData(prev => ({ ...prev, logoUrl: reader.result as string }));
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="gap-2 border-gray-200 dark:border-gray-600"
+                  onClick={() => document.getElementById("logo-upload-input")?.click()}
+                >
                   <Upload className="w-4 h-4" />
-                  {t("businessProfile.uploadDocument")}
+                  {t("businessProfile.uploadLogo")}
                 </Button>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.logoHelper")}</p>
               </div>

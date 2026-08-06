@@ -84,6 +84,10 @@ services:
       POSTGRES_HOST: postgres
       MINIO_ENDPOINT: http://minio:9000
       REDIS_HOST: redis
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
       DEBUG: "true"
     ports:
       - "${SERVER_PORT:-8080}:8080"

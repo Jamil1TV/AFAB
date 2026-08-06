@@ -1,9 +1,6 @@
 package com.afab.auth;
 
-import com.afab.auth.domain.RefreshToken;
-import com.afab.auth.domain.RefreshTokenRepository;
-import com.afab.auth.domain.VerificationToken;
-import com.afab.auth.domain.VerificationTokenRepository;
+import com.afab.auth.domain.*;
 import com.afab.auth.dto.AuthResponse;
 import com.afab.auth.dto.LoginRequest;
 import com.afab.auth.dto.RegisterRequest;
@@ -16,14 +13,21 @@ import com.afab.user.User;
 import com.afab.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.HexFormat;
 import java.util.Random;
 import java.util.UUID;
 
@@ -34,6 +38,7 @@ public class AuthService {
     private final BusinessRepository businessRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final VerificationTokenRepository verificationTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -44,9 +49,17 @@ public class AuthService {
     @Value("${afab.jwt.refresh-expiration-ms}")
     private long refreshTokenExpirationMs;
 
+    @Value("${afab.frontend-url}")
+    private String frontendUrl;
+
+    @Value("${afab.password-reset.expiration-minutes}")
+    private int passwordResetExpirationMinutes;
+
     public AuthService(UserRepository userRepository, BusinessRepository businessRepository,
                        RefreshTokenRepository refreshTokenRepository,
-                       VerificationTokenRepository verificationTokenRepository, PasswordEncoder passwordEncoder,
+                       VerificationTokenRepository verificationTokenRepository,
+                       PasswordResetTokenRepository passwordResetTokenRepository,
+                       PasswordEncoder passwordEncoder,
                        JwtService jwtService, AuthenticationManager authenticationManager,
                        UserDetailsService userDetailsService, AuditService auditService,
                        EmailService emailService) {
@@ -54,6 +67,7 @@ public class AuthService {
         this.businessRepository = businessRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.verificationTokenRepository = verificationTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -90,13 +104,42 @@ public class AuthService {
         return buildAuthResponse(user, business.getId(), ipAddress, userAgent);
     }
 
+    /**
+     * Login with structured error handling.
+     * Throws typed Spring Security exceptions that the controller maps to specific error codes.
+     *
+     * Exception mapping:
+     * - UsernameNotFoundException → EMAIL_NOT_FOUND
+     * - BadCredentialsException  → INVALID_PASSWORD
+     * - DisabledException        → ACCOUNT_DISABLED
+     */
     @Transactional
     public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        // 1) Check if user exists first — so we can distinguish "no account" from "wrong password"
+        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (user == null) {
+            throw new UsernameNotFoundException("No account exists with this email.");
+        }
 
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow();
+        // 2) Check account status before attempting authentication
+        if (!"ACTIVE".equals(user.getStatus())) {
+            throw new DisabledException("Your account has been disabled.");
+        }
+
+        // 3) Authenticate — this throws BadCredentialsException if password is wrong
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (DisabledException e) {
+            // Re-throw with our message (UserDetailsService might also throw this)
+            throw new DisabledException("Your account has been disabled.");
+        } catch (BadCredentialsException e) {
+            auditService.logSecurityEvent(user, "LOGIN_FAILED_BAD_PASSWORD", ipAddress, userAgent, null);
+            throw new BadCredentialsException("Incorrect password.");
+        }
+
+        // 4) Success — update login metadata
         user.setLastLoginAt(Instant.now());
         user.setLastLoginIp(ipAddress);
         userRepository.save(user);
@@ -194,7 +237,7 @@ public class AuthService {
         emailService.sendVerificationOtp(user.getEmail(), user.getFirstName(), otp);
     }
 
-    // ── Password Reset Flow ────────────────────────────
+    // ── Password Reset Flow (OTP-based — existing) ────────────────────────────
 
     @Transactional
     public void forgotPassword(String email, String ipAddress, String userAgent) {
@@ -241,6 +284,124 @@ public class AuthService {
         auditService.logSecurityEvent(user, "PASSWORD_RESET_COMPLETED", ipAddress, userAgent, null);
     }
 
+    // ── Password Reset Flow (Link/Token-based — new) ────────────────────────
+
+    /**
+     * Generates a cryptographically random URL token, stores its SHA-256 hash,
+     * and sends a password reset link to the user's email.
+     * Always returns silently to prevent email enumeration.
+     */
+    @Transactional
+    public void forgotPasswordLink(String email, String ipAddress, String userAgent) {
+        userRepository.findByEmail(email).ifPresent(user -> {
+            // Invalidate all existing tokens for this user
+            passwordResetTokenRepository.invalidateAllUserTokens(user.getId(), Instant.now());
+
+            // Generate a cryptographically random token
+            String rawToken = UUID.randomUUID().toString();
+            String tokenHash = sha256(rawToken);
+
+            PasswordResetToken resetToken = new PasswordResetToken(
+                    user,
+                    tokenHash,
+                    Instant.now().plus(passwordResetExpirationMinutes, ChronoUnit.MINUTES)
+            );
+            passwordResetTokenRepository.save(resetToken);
+
+            // Build reset link
+            String resetLink = frontendUrl + "/en/reset-password?token=" + rawToken;
+
+            emailService.sendPasswordResetLink(user.getEmail(), user.getFirstName(), resetLink);
+            auditService.logSecurityEvent(user, "PASSWORD_RESET_LINK_REQUESTED", ipAddress, userAgent, null);
+        });
+        // Silent return to prevent email enumeration
+    }
+
+    /**
+     * Validates a password reset token without consuming it.
+     * Returns the validation status.
+     *
+     * @return "VALID", "EXPIRED", or "INVALID"
+     */
+    @Transactional(readOnly = true)
+    public String validateResetToken(String rawToken) {
+        String tokenHash = sha256(rawToken);
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(tokenHash)
+                .orElse(null);
+
+        if (resetToken == null) {
+            return "INVALID";
+        }
+
+        if (resetToken.isUsed()) {
+            return "INVALID";
+        }
+
+        if (resetToken.isExpired()) {
+            return "EXPIRED";
+        }
+
+        return "VALID";
+    }
+
+    /**
+     * Resets the user's password using a URL token.
+     * Validates the token, updates the password, invalidates the token,
+     * and revokes all refresh tokens.
+     */
+    @Transactional
+    public void resetPasswordByToken(String rawToken, String newPassword, String ipAddress, String userAgent) {
+        String tokenHash = sha256(rawToken);
+        PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new IllegalArgumentException("INVALID_TOKEN"));
+
+        if (resetToken.isUsed()) {
+            throw new IllegalArgumentException("INVALID_TOKEN");
+        }
+
+        if (resetToken.isExpired()) {
+            throw new IllegalArgumentException("TOKEN_EXPIRED");
+        }
+
+        // Mark token as used
+        resetToken.setUsedAt(Instant.now());
+        passwordResetTokenRepository.save(resetToken);
+
+        // Update password
+        User user = resetToken.getUser();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordChangedAt(Instant.now());
+        userRepository.save(user);
+
+        // Revoke all refresh tokens for security
+        refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
+
+        auditService.logSecurityEvent(user, "PASSWORD_RESET_BY_TOKEN_COMPLETED", ipAddress, userAgent, null);
+    }
+
+    // ── Change Password ────────────────────────────────
+
+    @Transactional
+    public void changePassword(String email, String currentPassword, String newPassword, String ipAddress, String userAgent) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            auditService.logSecurityEvent(user, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent, "Invalid current password");
+            throw new IllegalArgumentException("Current password is incorrect");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordChangedAt(Instant.now());
+        userRepository.save(user);
+
+        // Revoke all other refresh tokens so other sessions are logged out
+        refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
+
+        auditService.logSecurityEvent(user, "PASSWORD_CHANGED", ipAddress, userAgent, null);
+    }
+
     // ── Utility Methods ────────────────────────────────
 
     private AuthResponse buildAuthResponse(User user, UUID businessId, String ipAddress, String userAgent) {
@@ -276,26 +437,16 @@ public class AuthService {
         return sb.toString();
     }
 
-    // ── Change Password ────────────────────────────────
-
-    @Transactional
-    public void changePassword(String email, String currentPassword, String newPassword, String ipAddress, String userAgent) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        // Verify current password
-        if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            auditService.logSecurityEvent(user, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent, "Invalid current password");
-            throw new IllegalArgumentException("Current password is incorrect");
+    /**
+     * Computes SHA-256 hash of the input string and returns it as a hex string.
+     */
+    private String sha256(String input) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
         }
-
-        user.setPasswordHash(passwordEncoder.encode(newPassword));
-        user.setPasswordChangedAt(Instant.now());
-        userRepository.save(user);
-
-        // Revoke all other refresh tokens so other sessions are logged out
-        refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
-
-        auditService.logSecurityEvent(user, "PASSWORD_CHANGED", ipAddress, userAgent, null);
     }
 }

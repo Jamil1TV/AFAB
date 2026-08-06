@@ -7,6 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
@@ -35,7 +39,8 @@ public class AuthController {
             HttpServletRequest httpRequest
     ) {
         if (!authBucket.tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
         }
 
         try {
@@ -46,7 +51,8 @@ public class AuthController {
             );
             return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("REGISTRATION_FAILED", e.getMessage()));
         }
     }
 
@@ -56,7 +62,8 @@ public class AuthController {
             HttpServletRequest httpRequest
     ) {
         if (!authBucket.tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
         }
 
         try {
@@ -66,8 +73,21 @@ public class AuthController {
                     httpRequest.getHeader("User-Agent")
             );
             return ResponseEntity.ok(response);
+        } catch (UsernameNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ErrorResponse.error("EMAIL_NOT_FOUND", "No account exists with this email."));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ErrorResponse.error("INVALID_PASSWORD", "Incorrect password."));
+        } catch (DisabledException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorResponse.error("ACCOUNT_DISABLED", "Your account has been disabled."));
+        } catch (LockedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorResponse.error("ACCOUNT_LOCKED", "Your account has been locked."));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ErrorResponse.error("SERVER_ERROR", "Something went wrong. Please try again later."));
         }
     }
 
@@ -84,7 +104,8 @@ public class AuthController {
             );
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid or expired refresh token");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorResponse.error("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token."));
         }
     }
 
@@ -98,7 +119,7 @@ public class AuthController {
                 getClientIp(httpRequest),
                 httpRequest.getHeader("User-Agent")
         );
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ErrorResponse.success("Logged out successfully."));
     }
 
     // ── Email Verification ─────────────────────────────────
@@ -115,9 +136,10 @@ public class AuthController {
                     getClientIp(httpRequest),
                     httpRequest.getHeader("User-Agent")
             );
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ErrorResponse.success("Email verified successfully."));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("VERIFICATION_FAILED", e.getMessage()));
         }
     }
 
@@ -126,17 +148,19 @@ public class AuthController {
             @Valid @RequestBody ResendVerificationRequest request
     ) {
         if (!authBucket.tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
         }
         try {
             authService.resendVerificationEmail(request.getEmail());
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ErrorResponse.success("Verification code sent."));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("RESEND_FAILED", e.getMessage()));
         }
     }
 
-    // ── Password Reset ─────────────────────────────────────
+    // ── Password Reset (OTP-based — existing) ─────────────────────────────────
 
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(
@@ -144,7 +168,8 @@ public class AuthController {
             HttpServletRequest httpRequest
     ) {
         if (!authBucket.tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
         }
         
         // We always return OK to prevent email enumeration
@@ -153,7 +178,7 @@ public class AuthController {
                 getClientIp(httpRequest),
                 httpRequest.getHeader("User-Agent")
         );
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ErrorResponse.success("If an account with that email exists, a reset code has been sent."));
     }
 
     @PostMapping("/reset-password")
@@ -162,7 +187,8 @@ public class AuthController {
             HttpServletRequest httpRequest
     ) {
         if (!authBucket.tryConsume(1)) {
-            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Rate limit exceeded");
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
         }
         try {
             authService.resetPassword(
@@ -172,9 +198,77 @@ public class AuthController {
                     getClientIp(httpRequest),
                     httpRequest.getHeader("User-Agent")
             );
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ErrorResponse.success("Password has been reset successfully."));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("RESET_FAILED", e.getMessage()));
+        }
+    }
+
+    // ── Password Reset (Link/Token-based — new) ───────────────────────────────
+
+    @PostMapping("/forgot-password-link")
+    public ResponseEntity<?> forgotPasswordLink(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        if (!authBucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
+        }
+
+        // Always return same response to prevent email enumeration
+        authService.forgotPasswordLink(
+                request.getEmail(),
+                getClientIp(httpRequest),
+                httpRequest.getHeader("User-Agent")
+        );
+        return ResponseEntity.ok(ErrorResponse.success("If an account with that email exists, a password reset link has been sent."));
+    }
+
+    @PostMapping("/validate-reset-token")
+    public ResponseEntity<?> validateResetToken(
+            @Valid @RequestBody ValidateTokenRequest request
+    ) {
+        String status = authService.validateResetToken(request.getToken());
+
+        return switch (status) {
+            case "VALID" -> ResponseEntity.ok(ErrorResponse.success("Token is valid."));
+            case "EXPIRED" -> ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("TOKEN_EXPIRED", "This reset link has expired."));
+            default -> ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("INVALID_TOKEN", "Invalid reset link."));
+        };
+    }
+
+    @PostMapping("/reset-password-token")
+    public ResponseEntity<?> resetPasswordByToken(
+            @Valid @RequestBody ResetPasswordByTokenRequest request,
+            HttpServletRequest httpRequest
+    ) {
+        if (!authBucket.tryConsume(1)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
+        }
+
+        try {
+            authService.resetPasswordByToken(
+                    request.getToken(),
+                    request.getPassword(),
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+            return ResponseEntity.ok(ErrorResponse.success("Password has been reset successfully."));
+        } catch (IllegalArgumentException e) {
+            String code = e.getMessage();
+            return switch (code) {
+                case "TOKEN_EXPIRED" -> ResponseEntity.badRequest()
+                        .body(ErrorResponse.error("TOKEN_EXPIRED", "This reset link has expired."));
+                case "INVALID_TOKEN" -> ResponseEntity.badRequest()
+                        .body(ErrorResponse.error("INVALID_TOKEN", "Invalid reset link."));
+                default -> ResponseEntity.badRequest()
+                        .body(ErrorResponse.error("RESET_FAILED", "Password reset failed. Please try again."));
+            };
         }
     }
 
@@ -187,7 +281,8 @@ public class AuthController {
             org.springframework.security.core.Authentication authentication
     ) {
         if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ErrorResponse.error("UNAUTHORIZED", "You must be logged in to change your password."));
         }
 
         try {
@@ -198,9 +293,10 @@ public class AuthController {
                     getClientIp(httpRequest),
                     httpRequest.getHeader("User-Agent")
             );
-            return ResponseEntity.ok().build();
+            return ResponseEntity.ok(ErrorResponse.success("Password changed successfully."));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("CHANGE_PASSWORD_FAILED", e.getMessage()));
         }
     }
 
