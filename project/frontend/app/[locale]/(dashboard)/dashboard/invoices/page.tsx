@@ -27,6 +27,7 @@ import { AfabLoader } from "@/components/ui/afab-loader";
 
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { AddTransactionModal } from "@/components/dashboard/AddTransactionModal";
+import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { InvoiceService, InvoiceSummaryResponse } from "@/lib/api/invoices";
 import { TransactionService, TransactionResponse, CategoryItem, TransactionItem } from "@/lib/api/transactions";
 import { UserService } from "@/lib/api/dashboard";
@@ -172,21 +173,7 @@ export default function InvoicesPage() {
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Period Toggle Tabs */}
-          <div className="flex items-center rounded-xl bg-gray-100 dark:bg-[#080c18] border border-gray-200 dark:border-gray-800/60 p-1 text-xs font-semibold">
-            {(["WEEKLY", "MONTHLY", "YEARLY"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
-                  period === p
-                    ? "bg-[#8b5cf6] text-white shadow-sm"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
+          <PeriodSelector value={period} onChange={setPeriod} />
 
           <button
             onClick={handleExportCSV}

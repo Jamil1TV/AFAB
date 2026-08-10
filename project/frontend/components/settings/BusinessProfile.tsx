@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 import { SettingsService } from "@/lib/api/settings";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle, CheckCircle2, Upload, MapPin, Building2, Calendar, Globe, Building } from "lucide-react";
 import Image from "next/image";
+import {
+  INDUSTRIES,
+  getLocalizedCountry,
+  getLocalizedIndustry,
+  getLocalizedTimezone,
+} from "@/lib/constants/business-data";
 
 export function BusinessProfile({ business }: { business: any }) {
   const t = useTranslations("settings");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
 
   const [formData, setFormData] = useState({
     name: business?.name || "",
@@ -145,15 +153,11 @@ export function BusinessProfile({ business }: { business: any }) {
                     <SelectValue placeholder="Select Industry" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
-                    <SelectItem value="Software">Software & IT</SelectItem>
-                    <SelectItem value="Retail">Retail & E-commerce</SelectItem>
-                    <SelectItem value="Consulting">Consulting & Professional Services</SelectItem>
-                    <SelectItem value="Finance">Finance & Investment</SelectItem>
-                    <SelectItem value="Healthcare">Healthcare & Wellness</SelectItem>
-                    <SelectItem value="Education">Education & Training</SelectItem>
-                    <SelectItem value="Manufacturing">Manufacturing & Supply Chain</SelectItem>
-                    <SelectItem value="Real Estate">Real Estate & Construction</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    {INDUSTRIES.map((ind) => (
+                      <SelectItem key={ind.id} value={ind.nameEn}>
+                        {isArabic ? ind.nameAr : ind.nameEn}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -253,7 +257,7 @@ export function BusinessProfile({ business }: { business: any }) {
           </div>
 
           <div className="border-t border-gray-200 dark:border-gray-600 pt-6 flex justify-end gap-4">
-            <Button variant="outline" className="min-w-[120px] border-gray-200 dark:border-gray-600">Cancel</Button>
+            <Button variant="outline" className="min-w-[120px] border-gray-200 dark:border-gray-600">{t("businessProfile.cancel") || "Cancel"}</Button>
             <Button
               onClick={handleSave}
               disabled={isLoading}
@@ -289,7 +293,9 @@ export function BusinessProfile({ business }: { business: any }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500">{t("businessProfile.summaryIndustry")}</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{formData.industry || "Software & IT"}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {getLocalizedIndustry(formData.industry || "Software", locale)}
+                </p>
               </div>
             </div>
 
@@ -310,7 +316,9 @@ export function BusinessProfile({ business }: { business: any }) {
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500">{t("businessProfile.summaryLocation")}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {formData.city ? `${formData.city}, ${formData.country || "USA"}` : business?.country || "USA"}
+                  {formData.city 
+                    ? `${formData.city}, ${getLocalizedCountry(formData.country || business?.country || "US", locale)}`
+                    : getLocalizedCountry(business?.country || formData.country || "US", locale)}
                 </p>
               </div>
             </div>
@@ -321,7 +329,9 @@ export function BusinessProfile({ business }: { business: any }) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500">{t("businessProfile.summaryTimezone")}</p>
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{business?.timezone || "UTC"}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                  {getLocalizedTimezone(business?.timezone || "UTC", locale)}
+                </p>
               </div>
             </div>
           </div>

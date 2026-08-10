@@ -7,7 +7,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50/50 dark:bg-[#060813] text-gray-900 dark:text-white selection:bg-[#8b5cf6]/30">
       <Sidebar />
-      <div className="flex w-0 flex-1 flex-col h-screen overflow-hidden">
+      <div className="flex w-0 flex-1 flex-col h-screen overflow-hidden min-w-0">
         <DashboardHeader />
         <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {children}

@@ -26,7 +26,10 @@
     "upgradeTitle": "Upgrade to Pro",
     "upgradeDesc": "Unlock AI insights, custom reports, and unlimited invoices.",
     "upgradeBtn": "Upgrade Now",
-    "owner": "Owner"
+    "owner": "Owner",
+    "logout": "Logout",
+    "collapse": "Collapse",
+    "expand": "Expand"
   },
   "header": {
     "search": "Search transactions, invoices, or customers...",

@@ -39,18 +39,18 @@ spring:
     user: ${POSTGRES_USER:afab_user}
     password: ${POSTGRES_PASSWORD:afab_secret_2026}
 
-  # ── Mail ──────────────────────────────────────
+  # ── Mail (Gmail SMTP) ──────────────────────────
   mail:
-    host: ${MAIL_HOST:mailpit}
-    port: ${MAIL_PORT:1025}
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
     username: ${MAIL_USERNAME:}
     password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
-          auth: ${MAIL_SMTP_AUTH:false}
+          auth: ${MAIL_SMTP_AUTH:true}
           starttls:
-            enable: ${MAIL_STARTTLS_ENABLE:false}
+            enable: ${MAIL_STARTTLS_ENABLE:true}
 
   # ── Redis ─────────────────────────────────────
   data:
@@ -75,6 +75,9 @@ afab:
   frontend-url: ${FRONTEND_URL:http://localhost:3000}
   password-reset:
     expiration-minutes: ${PASSWORD_RESET_EXPIRATION_MINUTES:15}
+  mail:
+    from: ${MAIL_FROM:afab_support_team@gmail.com}
+    from-name: ${MAIL_FROM_NAME:AFAB}
   minio:
     endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
     access-key: ${MINIO_ACCESS_KEY:afab_minio_access}

@@ -116,18 +116,18 @@ export function Sidebar() {
           href={item.href}
           onClick={() => setMobileOpen(false)}
           title={collapsed ? item.name : undefined}
-          className={`group flex items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+          className={`group flex items-center ${collapsed ? "justify-center" : "justify-between"} rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
             isActive 
               ? "bg-primary/10 text-primary" 
               : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-200"
           }`}
         >
-          <div className={`flex items-center ${collapsed ? "justify-center w-full" : "gap-3"}`}>
+          <div className={`flex items-center ${collapsed ? "justify-center w-full" : "gap-3 min-w-0"}`}>
             <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-primary" : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"}`} />
-            {!collapsed && <span>{item.name}</span>}
+            {!collapsed && <span className="truncate">{item.name}</span>}
           </div>
           {item.badge && !collapsed && (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm">
+            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm shrink-0 ms-2">
               {item.badge}
             </span>
           )}
@@ -141,7 +141,7 @@ export function Sidebar() {
       {/* ── Brand / Workspace Selector ── */}
       <div className="flex h-16 shrink-0 items-center px-3 border-b border-gray-200 dark:border-gray-800/60">
         <div className={`flex w-full items-center ${collapsed ? "justify-center" : "justify-between"} rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.05] p-1.5 transition-colors cursor-pointer`}>
-          <div className={`flex items-center ${collapsed ? "" : "gap-2.5"} overflow-hidden`}>
+          <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2.5"} overflow-hidden min-w-0`}>
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md shadow-primary/20">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="currentColor">
                 <path d="M12 2L2 12L12 22L22 12L12 2Z" fill="currentColor" opacity="0.3" />
@@ -149,13 +149,13 @@ export function Sidebar() {
               </svg>
             </div>
             {!collapsed && (
-              <div className="flex flex-col overflow-hidden">
+              <div className="flex flex-col overflow-hidden min-w-0 text-start">
                 <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{profile?.businessName || profile?.workspaceName || "My Business"}</span>
                 <span className="truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{profile?.planType || tSidebar("freePlan")}</span>
               </div>
             )}
           </div>
-          {!collapsed && <ChevronsUpDown className="h-4 w-4 text-gray-400 shrink-0" />}
+          {!collapsed && <ChevronsUpDown className="h-4 w-4 text-gray-400 shrink-0 ms-1" />}
         </div>
       </div>
 
@@ -167,12 +167,12 @@ export function Sidebar() {
 
         {!collapsed && (
           <div className="mt-8 mb-2 px-3">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 truncate">
               {tSidebar("workspace")}
             </h4>
           </div>
         )}
-        {collapsed && <div className="my-4 border-t border-gray-200 dark:border-gray-800/60" />}
+        {collapsed && <div className="my-4 border-t border-gray-200 dark:border-gray-800/60 mx-1" />}
         
         <nav className="space-y-1">
           {renderNavItems(workspaceItems)}
@@ -181,7 +181,7 @@ export function Sidebar() {
 
       {/* ── Upgrade Card ── */}
       {!collapsed && (
-        <div className="px-4 py-4">
+        <div className="px-4 py-4 shrink-0">
           <div className="relative overflow-hidden rounded-2xl bg-gradient-purple p-4 text-white shadow-lg shadow-primary/20">
             <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
             <h4 className="relative z-10 text-sm font-bold">{tSidebar("upgradeTitle")}</h4>
@@ -196,9 +196,9 @@ export function Sidebar() {
       )}
 
       {/* ── User Profile & Logout ── */}
-      <div className="border-t border-gray-200 dark:border-gray-800/60 p-3 space-y-2">
+      <div className={`border-t border-gray-200 dark:border-gray-800/60 ${collapsed ? "p-2" : "p-3"} space-y-2 shrink-0`}>
         <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
-          <div className={`flex items-center ${collapsed ? "justify-center" : "gap-3 w-full"} bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700`}>
+          <div className={`flex items-center ${collapsed ? "justify-center p-1" : "gap-3 w-full bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700"}`}>
             <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden shrink-0">
               {profile?.avatarUrl ? (
                 <img 
@@ -213,11 +213,11 @@ export function Sidebar() {
               )}
             </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0 text-left">
+              <div className="flex-1 min-w-0 text-start">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {profile ? `${profile.firstName} ${profile.lastName}` : "Loading..."}
                 </p>
-                <p className="text-xs text-gray-500 truncate">{t("owner")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{tSidebar("owner") || "Owner"}</p>
               </div>
             )}
           </div>
@@ -226,22 +226,27 @@ export function Sidebar() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          title={collapsed ? "Logout" : undefined}
-          className={`flex w-full items-center ${collapsed ? "justify-center" : "gap-3"} rounded-xl px-3 py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors`}
+          title={collapsed ? (tSidebar("logout") || "Logout") : undefined}
+          className={`flex w-full items-center ${collapsed ? "justify-center px-0" : "gap-3 px-3"} rounded-xl py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors`}
         >
-          <LogOut className="h-4.5 w-4.5 shrink-0" />
-          {!collapsed && <span>Logout</span>}
+          <LogOut className="h-4.5 w-4.5 shrink-0 rtl:rotate-180" />
+          {!collapsed && <span>{tSidebar("logout") || "Logout"}</span>}
         </button>
       </div>
 
       {/* ── Collapse Toggle (desktop only) ── */}
-      <div className="hidden lg:flex border-t border-gray-200 dark:border-gray-800/60 p-2">
+      <div className="hidden lg:flex border-t border-gray-200 dark:border-gray-800/60 p-2 shrink-0">
         <button
           onClick={() => setCollapsed(!collapsed)}
+          title={collapsed ? (tSidebar("expand") || "Expand") : (tSidebar("collapse") || "Collapse")}
           className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
         >
-          {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          {!collapsed && <span>Collapse</span>}
+          {collapsed ? (
+            <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4 rtl:rotate-180" />
+          )}
+          {!collapsed && <span>{tSidebar("collapse") || "Collapse"}</span>}
         </button>
       </div>
     </>
@@ -251,7 +256,7 @@ export function Sidebar() {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col border-r border-gray-200 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#080c18] sticky top-0 h-screen transition-all duration-300 ease-in-out ${
+        className={`hidden lg:flex flex-col border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#080c18] sticky top-0 h-screen transition-all duration-300 ease-in-out shrink-0 overflow-x-hidden ${
           collapsed ? "w-[68px]" : "w-64"
         }`}
       >
@@ -268,14 +273,15 @@ export function Sidebar() {
 
       {/* Mobile Sidebar Drawer */}
       <aside
-        className={`fixed inset-y-0 start-0 z-50 flex w-72 flex-col border-r border-gray-200 dark:border-gray-800/60 bg-gray-50 dark:bg-[#080c18] transition-transform duration-300 ease-in-out lg:hidden ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 start-0 z-50 flex w-72 flex-col border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-gray-50 dark:bg-[#080c18] transition-transform duration-300 ease-in-out lg:hidden ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full pointer-events-none"
         }`}
       >
         {/* Close button */}
         <button
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 end-4 z-10 flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-white/[0.05]"
+          aria-label="Close sidebar"
+          className="absolute top-4 end-4 z-20 flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
         >
           <X className="h-5 w-5" />
         </button>

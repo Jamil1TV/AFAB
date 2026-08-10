@@ -36,18 +36,18 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
       <div className="flex h-full">
         
         {/* ── Desktop Settings Sidebar (fixed, scrolls independently) ── */}
-        <aside className={`hidden lg:flex flex-col shrink-0 border-r border-gray-200 dark:border-gray-800/60 bg-white/50 dark:bg-[#080c18]/50 transition-all duration-300 ease-in-out ${
+        <aside className={`hidden lg:flex flex-col shrink-0 border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-white/50 dark:bg-[#080c18]/50 transition-all duration-300 ease-in-out overflow-x-hidden ${
           collapsed ? "w-[60px]" : "w-60"
         }`}>
           
           {/* Settings Header */}
           <div className={`shrink-0 p-4 border-b border-gray-100 dark:border-gray-800/60 ${collapsed ? "px-2" : ""}`}>
             {!collapsed && (
-              <div>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+              <div className="min-w-0 text-start">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate">
                   {t("title")}
                 </h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
                   {t("subtitle")}
                 </p>
               </div>
@@ -76,12 +76,12 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                 >
                   {/* Active indicator bar */}
                   {isActive && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-full" />
+                    <div className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-full" />
                   )}
                   <span className={`shrink-0 ${isActive ? "text-primary" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
                     {tab.icon}
                   </span>
-                  {!collapsed && <span>{tab.label}</span>}
+                  {!collapsed && <span className="truncate">{tab.label}</span>}
                 </Link>
               );
             })}
@@ -91,10 +91,11 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
           <div className="shrink-0 border-t border-gray-100 dark:border-gray-800/60 p-2">
             <button
               onClick={() => setCollapsed(!collapsed)}
+              title={collapsed ? (t("expand") || "Expand") : (t("collapse") || "Collapse")}
               className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
             >
-              {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-              {!collapsed && <span>Collapse</span>}
+              {collapsed ? <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" /> : <PanelLeftClose className="h-4 w-4 rtl:rotate-180" />}
+              {!collapsed && <span>{t("collapse") || "Collapse"}</span>}
             </button>
           </div>
         </aside>
@@ -127,7 +128,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
                         onClick={() => setMobileNavOpen(false)}
                         className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors
                           ${isActive 
-                            ? "bg-primary/5 text-primary border-l-2 border-primary" 
+                            ? "bg-primary/5 text-primary border-l-2 rtl:border-l-0 rtl:border-r-2 border-primary" 
                             : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white"
                           }`}
                       >

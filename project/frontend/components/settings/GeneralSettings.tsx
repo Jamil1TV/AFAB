@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useState } from "react";
 import { SettingsService } from "@/lib/api/settings";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,19 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertCircle, CheckCircle2, ChevronRight, Download, Trash2, CalendarDays } from "lucide-react";
+import {
+  CURRENCIES,
+  TIMEZONES,
+  MONTHS,
+  DATE_FORMATS,
+  NUMBER_FORMATS,
+  getLocalizedCurrencyOption,
+} from "@/lib/constants/business-data";
 
 export function GeneralSettings({ profile, business }: { profile: any, business: any }) {
   const t = useTranslations("settings");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
 
   const [formData, setFormData] = useState({
     name: business?.name || "",
@@ -138,19 +148,11 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
                     <SelectValue placeholder="Select Currency" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
-                    <SelectItem value="QAR">QAR - Qatari Riyal (ر.ق)</SelectItem>
-                    <SelectItem value="AED">AED - UAE Dirham (د.إ)</SelectItem>
-                    <SelectItem value="SAR">SAR - Saudi Riyal (ر.س)</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
-                    <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
-                    <SelectItem value="DZD">DZD - Algerian Dinar (د.ج)</SelectItem>
-                    <SelectItem value="KWD">KWD - Kuwaiti Dinar (د.ك)</SelectItem>
-                    <SelectItem value="BHD">BHD - Bahraini Dinar (د.ب)</SelectItem>
-                    <SelectItem value="OMR">OMR - Omani Rial (ر.ع.)</SelectItem>
-                    <SelectItem value="CAD">CAD - Canadian Dollar ($)</SelectItem>
-                    <SelectItem value="AUD">AUD - Australian Dollar ($)</SelectItem>
-                    <SelectItem value="JPY">JPY - Japanese Yen (¥)</SelectItem>
+                    {CURRENCIES.map((curr) => (
+                      <SelectItem key={curr.code} value={curr.code}>
+                        {getLocalizedCurrencyOption(curr, locale)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -166,15 +168,11 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
                     <SelectValue placeholder="Select Timezone" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
-                    <SelectItem value="Asia/Qatar">Asia/Qatar (GMT+3 - Qatar Time)</SelectItem>
-                    <SelectItem value="Asia/Dubai">Asia/Dubai (GMT+4 - UAE Time)</SelectItem>
-                    <SelectItem value="Asia/Riyadh">Asia/Riyadh (GMT+3 - Saudi Time)</SelectItem>
-                    <SelectItem value="UTC">UTC (Universal Time Coordinated)</SelectItem>
-                    <SelectItem value="America/New_York">America/New_York (EST / EDT)</SelectItem>
-                    <SelectItem value="Europe/London">Europe/London (GMT / BST)</SelectItem>
-                    <SelectItem value="Africa/Algiers">Africa/Algiers (CET)</SelectItem>
-                    <SelectItem value="Asia/Tokyo">Asia/Tokyo (JST)</SelectItem>
-                    <SelectItem value="Australia/Sydney">Australia/Sydney (AEST)</SelectItem>
+                    {TIMEZONES.map((tz) => (
+                      <SelectItem key={tz.value} value={tz.value}>
+                        {isArabic ? tz.labelAr : tz.labelEn}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -190,18 +188,11 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
                     <SelectValue placeholder="Select Month" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
-                    <SelectItem value="1">1 - January</SelectItem>
-                    <SelectItem value="2">2 - February</SelectItem>
-                    <SelectItem value="3">3 - March</SelectItem>
-                    <SelectItem value="4">4 - April</SelectItem>
-                    <SelectItem value="5">5 - May</SelectItem>
-                    <SelectItem value="6">6 - June</SelectItem>
-                    <SelectItem value="7">7 - July</SelectItem>
-                    <SelectItem value="8">8 - August</SelectItem>
-                    <SelectItem value="9">9 - September</SelectItem>
-                    <SelectItem value="10">10 - October</SelectItem>
-                    <SelectItem value="11">11 - November</SelectItem>
-                    <SelectItem value="12">12 - December</SelectItem>
+                    {MONTHS.map((m) => (
+                      <SelectItem key={m.value} value={m.value.toString()}>
+                        {m.value} - {isArabic ? m.nameAr : m.nameEn}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("general.fiscalYearHelper")}</p>
@@ -232,13 +223,11 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
                     <SelectValue placeholder="Select Date Format" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
-                    <SelectItem value="MM/DD/YYYY">MM/DD/YYYY (12/31/2026 - US)</SelectItem>
-                    <SelectItem value="DD/MM/YYYY">DD/MM/YYYY (31/12/2026 - International)</SelectItem>
-                    <SelectItem value="YYYY-MM-DD">YYYY-MM-DD (2026-12-31 - ISO)</SelectItem>
-                    <SelectItem value="DD-MM-YYYY">DD-MM-YYYY (31-12-2026)</SelectItem>
-                    <SelectItem value="MMM DD, YYYY">MMM DD, YYYY (Dec 31, 2026)</SelectItem>
-                    <SelectItem value="DD MMM YYYY">DD MMM YYYY (31 Dec 2026)</SelectItem>
-                    <SelectItem value="YYYY/MM/DD">YYYY/MM/DD (2026/12/31)</SelectItem>
+                    {DATE_FORMATS.map((df) => (
+                      <SelectItem key={df.value} value={df.value}>
+                        {isArabic ? df.labelAr : df.labelEn}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -254,11 +243,11 @@ export function GeneralSettings({ profile, business }: { profile: any, business:
                     <SelectValue placeholder="Select Number Format" />
                   </SelectTrigger>
                   <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
-                    <SelectItem value="US">1,234,567.89 (US Standard)</SelectItem>
-                    <SelectItem value="EU">1.234.567,89 (EU Standard)</SelectItem>
-                    <SelectItem value="SI">1 234 567,89 (Space separator)</SelectItem>
-                    <SelectItem value="DOT">1,234,567·89 (Middle dot)</SelectItem>
-                    <SelectItem value="RAW">1234567.89 (Plain)</SelectItem>
+                    {NUMBER_FORMATS.map((nf) => (
+                      <SelectItem key={nf.value} value={nf.value}>
+                        {isArabic ? nf.labelAr : nf.labelEn}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

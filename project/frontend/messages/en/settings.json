@@ -61,6 +61,10 @@
     "deleteAccount": "Delete Account",
     "deleteAccountDesc": "Permanently delete your account"
   },
+  "collapse": "Collapse",
+  "expand": "Expand",
+  "comingSoon": "Coming Soon",
+  "comingSoonDesc": "This section is coming soon.",
   "businessProfile": {
     "title": "Business Profile",
     "subtitle": "Manage your business information and contact details.",
@@ -70,6 +74,10 @@
     "uploadLogo": "Upload Logo",
     "businessName": "Business Name",
     "industry": "Industry",
+    "entityType": "Entity Type",
+    "country": "Country",
+    "baseCurrency": "Base Currency",
+    "timezone": "Timezone",
     "businessEmail": "Business Email",
     "phoneNumber": "Phone Number",
     "website": "Business Website",
@@ -91,6 +99,7 @@
     "documents": "Document Uploads",
     "documentsSubtitle": "Manage your important business documents.",
     "uploadDocument": "Upload Document",
+    "cancel": "Cancel",
     "comingSoon": "Coming Soon"
   },
   "security": {

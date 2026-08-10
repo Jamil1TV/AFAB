@@ -9,109 +9,36 @@ import {
   ArrowRight, 
   ArrowLeft, 
   Sparkles, 
-  Loader2, 
   AlertCircle,
   Briefcase,
   Clock,
   Calendar
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/routing";
 import { motion, AnimatePresence } from "framer-motion";
 import { BusinessService } from "@/lib/api/business";
 import { AuthStore } from "@/lib/auth-store";
 import { AfabLoader } from "@/components/ui/afab-loader";
-
-// Currencies
-const CURRENCIES = [
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "AED", symbol: "د.إ", name: "UAE Dirham" },
-  { code: "SAR", symbol: "﷼", name: "Saudi Riyal" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-  { code: "CAD", symbol: "$", name: "Canadian Dollar" },
-  { code: "EGP", symbol: "ج.م", name: "Egyptian Pound" },
-  { code: "DZD", symbol: "د.ج", name: "Algerian Dinar" },
-  { code: "MAD", symbol: "د.م", name: "Moroccan Dirham" },
-  { code: "KWD", symbol: "د.ك", name: "Kuwaiti Dinar" },
-  { code: "QAR", symbol: "﷼", name: "Qatari Riyal" },
-];
-
-// Countries
-const COUNTRIES = [
-  { code: "US", name: "United States" },
-  { code: "AE", name: "United Arab Emirates" },
-  { code: "SA", name: "Saudi Arabia" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "CA", name: "Canada" },
-  { code: "EG", name: "Egypt" },
-  { code: "DZ", name: "Algeria" },
-  { code: "MA", name: "Morocco" },
-  { code: "QA", name: "Qatar" },
-  { code: "KW", name: "Kuwait" },
-  { code: "BH", name: "Bahrain" },
-  { code: "OM", name: "Oman" },
-  { code: "JO", name: "Jordan" },
-  { code: "LB", name: "Lebanon" },
-  { code: "DE", name: "Germany" },
-  { code: "FR", name: "France" },
-];
-
-// Industries
-const INDUSTRIES = [
-  "Technology & Software",
-  "E-commerce & Retail",
-  "Professional Services & Consulting",
-  "Financial Services & Fintech",
-  "Healthcare & Life Sciences",
-  "Real Estate & Construction",
-  "Media & Entertainment",
-  "Food & Beverage",
-  "Manufacturing & Logistics",
-  "Education & Non-profit",
-  "Other"
-];
-
-// Business Types
-const BUSINESS_TYPES = [
-  "Sole Proprietorship",
-  "Limited Liability Company (LLC)",
-  "Corporation",
-  "Partnership",
-  "Freelancer / Individual",
-  "Non-Profit"
-];
-
-// Timezones
-const TIMEZONES = [
-  "UTC",
-  "Asia/Dubai (GMT+4)",
-  "Asia/Riyadh (GMT+3)",
-  "Africa/Cairo (GMT+3)",
-  "Africa/Algiers (GMT+1)",
-  "Europe/London (GMT+0)",
-  "Europe/Paris (GMT+1)",
-  "America/New_York (GMT-5)",
-  "America/Los_Angeles (GMT-8)",
-];
-
-const MONTHS = [
-  { value: 1, name: "January" },
-  { value: 2, name: "February" },
-  { value: 3, name: "March" },
-  { value: 4, name: "April" },
-  { value: 5, name: "May" },
-  { value: 6, name: "June" },
-  { value: 7, name: "July" },
-  { value: 8, name: "August" },
-  { value: 9, name: "September" },
-  { value: 10, name: "October" },
-  { value: 11, name: "November" },
-  { value: 12, name: "December" },
-];
+import {
+  COUNTRIES,
+  INDUSTRIES,
+  BUSINESS_TYPES,
+  CURRENCIES,
+  TIMEZONES,
+  MONTHS,
+  getLocalizedCountry,
+  getLocalizedIndustry,
+  getLocalizedBusinessType,
+  getLocalizedCurrencyOption,
+  getLocalizedTimezone,
+  getLocalizedMonth,
+} from "@/lib/constants/business-data";
 
 export default function OnboardingPage() {
   const t = useTranslations("Auth");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
   const router = useRouter();
   const user = AuthStore.getUser();
 
@@ -119,21 +46,25 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form State
+  // Form State (stores standard backend values)
   const [country, setCountry] = useState("United Arab Emirates");
   const [industry, setIndustry] = useState("Technology & Software");
   const [businessType, setBusinessType] = useState("Limited Liability Company (LLC)");
   const [currency, setCurrency] = useState("USD");
-  const [timezone, setTimezone] = useState("Asia/Dubai (GMT+4)");
+  const [timezone, setTimezone] = useState("Asia/Dubai");
   const [fiscalYearStartMonth, setFiscalYearStartMonth] = useState(1);
 
   const handleNext = () => {
     setError(null);
     if (step === 1) {
-      if (!country) return setError("Please select a country");
+      if (!country) return setError(isArabic ? "يرجى اختيار الدولة" : "Please select a country");
       setStep(2);
     } else if (step === 2) {
-      if (!currency || !timezone) return setError("Please configure currency and timezone");
+      if (!currency || !timezone) {
+        return setError(
+          isArabic ? "يرجى تحديد العملة والمنطقة الزمنية" : "Please configure currency and timezone"
+        );
+      }
       setStep(3);
     }
   };
@@ -145,7 +76,11 @@ export default function OnboardingPage() {
 
   const handleSubmit = async () => {
     if (!user?.businessId) {
-      setError("No business profile found. Please log in again.");
+      setError(
+        isArabic
+          ? "لم يتم العثور على ملف الشركة. يرجى تسجيل الدخول مرة أخرى."
+          : "No business profile found. Please log in again."
+      );
       return;
     }
 
@@ -162,19 +97,22 @@ export default function OnboardingPage() {
         businessType,
       });
 
+      // Update cached user onboarding status
+      AuthStore.updateUser({ onboardingComplete: true });
+
       // Redirect to Dashboard after brief success display
       setTimeout(() => {
         router.push("/dashboard");
       }, 1000);
     } catch (err: any) {
-      setError(err.message || "Failed to save business settings. Please try again.");
+      setError(err.message || (isArabic ? "فشل حفظ إعدادات الشركة. يرجى المحاولة مرة أخرى." : "Failed to save business settings. Please try again."));
       setLoading(false);
     }
   };
 
   const slideVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 50 : -50,
+      x: direction > 0 ? (isArabic ? -50 : 50) : (isArabic ? 50 : -50),
       opacity: 0,
     }),
     center: {
@@ -182,18 +120,24 @@ export default function OnboardingPage() {
       opacity: 1,
     },
     exit: (direction: number) => ({
-      x: direction < 0 ? 50 : -50,
+      x: direction < 0 ? (isArabic ? -50 : 50) : (isArabic ? 50 : -50),
       opacity: 0,
     }),
   };
+
+  const stepTabText = step === 1 
+    ? (t("onboardingStep1Tab") || "Business Info")
+    : step === 2 
+    ? (t("onboardingStep2Tab") || "Financial Setup")
+    : (t("onboardingStep3Tab") || "Review & Complete");
 
   return (
     <div className="w-full max-w-[540px] rounded-[28px] bg-white/80 p-6 sm:p-9 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:bg-[#161B2B]/80 dark:border dark:border-[#232A3E]/50 dark:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
       {/* Step Indicator Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#7c3aed] dark:text-[#8b5cf6] mb-3">
-          <span>{t("onboardingStep") || `Step ${step} of 3`}</span>
-          <span>{step === 1 ? "Business Info" : step === 2 ? "Financial Setup" : "Review & Complete"}</span>
+          <span>{t("onboardingStep", { step }) || `Step ${step} of 3`}</span>
+          <span>{stepTabText}</span>
         </div>
 
         {/* Progress Bar */}
@@ -255,8 +199,8 @@ export default function OnboardingPage() {
                   className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
                 >
                   {COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.name} className="dark:bg-[#161B2B]">
-                      {c.name}
+                    <option key={c.code} value={c.nameEn} className="dark:bg-[#161B2B]">
+                      {isArabic ? c.nameAr : c.nameEn}
                     </option>
                   ))}
                 </select>
@@ -274,8 +218,8 @@ export default function OnboardingPage() {
                   className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
                 >
                   {INDUSTRIES.map((ind) => (
-                    <option key={ind} value={ind} className="dark:bg-[#161B2B]">
-                      {ind}
+                    <option key={ind.id} value={ind.nameEn} className="dark:bg-[#161B2B]">
+                      {isArabic ? ind.nameAr : ind.nameEn}
                     </option>
                   ))}
                 </select>
@@ -293,8 +237,8 @@ export default function OnboardingPage() {
                   className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
                 >
                   {BUSINESS_TYPES.map((bt) => (
-                    <option key={bt} value={bt} className="dark:bg-[#161B2B]">
-                      {bt}
+                    <option key={bt.id} value={bt.nameEn} className="dark:bg-[#161B2B]">
+                      {isArabic ? bt.nameAr : bt.nameEn}
                     </option>
                   ))}
                 </select>
@@ -336,7 +280,7 @@ export default function OnboardingPage() {
                 >
                   {CURRENCIES.map((curr) => (
                     <option key={curr.code} value={curr.code} className="dark:bg-[#161B2B]">
-                      {curr.code} ({curr.symbol}) — {curr.name}
+                      {getLocalizedCurrencyOption(curr, locale)}
                     </option>
                   ))}
                 </select>
@@ -354,8 +298,8 @@ export default function OnboardingPage() {
                   className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
                 >
                   {TIMEZONES.map((tz) => (
-                    <option key={tz} value={tz} className="dark:bg-[#161B2B]">
-                      {tz}
+                    <option key={tz.value} value={tz.value} className="dark:bg-[#161B2B]">
+                      {isArabic ? tz.labelAr : tz.labelEn}
                     </option>
                   ))}
                 </select>
@@ -374,7 +318,7 @@ export default function OnboardingPage() {
                 >
                   {MONTHS.map((m) => (
                     <option key={m.value} value={m.value} className="dark:bg-[#161B2B]">
-                      {m.name}
+                      {isArabic ? m.nameAr : m.nameEn}
                     </option>
                   ))}
                 </select>
@@ -406,26 +350,40 @@ export default function OnboardingPage() {
               </div>
 
               {/* Summary Card */}
-              <div className="rounded-[18px] border border-gray-200/80 bg-gray-50/60 p-5 text-left dark:border-[#232A3E] dark:bg-[#111522]/60 space-y-3 text-[14px]">
+              <div className="rounded-[18px] border border-gray-200/80 bg-gray-50/60 p-5 text-start dark:border-[#232A3E] dark:bg-[#111522]/60 space-y-3 text-[14px]">
                 <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
-                  <span className="text-gray-500 dark:text-gray-400">Country</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{country}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("summaryCountry") || "Country"}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {getLocalizedCountry(country, locale)}
+                  </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
-                  <span className="text-gray-500 dark:text-gray-400">Industry</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{industry}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("summaryIndustry") || "Industry"}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {getLocalizedIndustry(industry, locale)}
+                  </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
-                  <span className="text-gray-500 dark:text-gray-400">Entity Type</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{businessType}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("summaryBusinessType") || "Entity Type"}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {getLocalizedBusinessType(businessType, locale)}
+                  </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
-                  <span className="text-gray-500 dark:text-gray-400">Base Currency</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("summaryCurrency") || "Base Currency"}</span>
                   <span className="font-semibold text-gray-900 dark:text-white">{currency}</span>
                 </div>
+                <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
+                  <span className="text-gray-500 dark:text-gray-400">{t("summaryTimezone") || "Timezone"}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {getLocalizedTimezone(timezone, locale)}
+                  </span>
+                </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-gray-500 dark:text-gray-400">Timezone</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{timezone}</span>
+                  <span className="text-gray-500 dark:text-gray-400">{t("summaryFiscalYear") || "Fiscal Year"}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">
+                    {getLocalizedMonth(fiscalYearStartMonth, locale)}
+                  </span>
                 </div>
               </div>
             </motion.div>

@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
  * SMTP Email Service Implementation — uses Spring's JavaMailSender.
  *
  * This implementation works with any standard SMTP server:
- * - Gmail (development)
+ * - Gmail SMTP (production / development)
  * - Mailtrap (testing)
- * - Mailpit (local Docker)
+ * - Any SMTP relay (SendGrid, AWS SES SMTP, etc.)
  */
 @Service
 public class SmtpEmailServiceImpl implements EmailService {
@@ -24,7 +24,7 @@ public class SmtpEmailServiceImpl implements EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${afab.mail.from:noreply@afab.com}")
+    @Value("${afab.mail.from:afab_support_team@gmail.com}")
     private String fromAddress;
 
     @Value("${afab.mail.from-name:AFAB}")

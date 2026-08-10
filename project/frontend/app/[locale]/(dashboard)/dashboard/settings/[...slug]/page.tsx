@@ -36,10 +36,10 @@ export default function SettingsCatchAllPage() {
         {currentTab?.icon || <Settings className="w-8 h-8" />}
       </div>
       <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-        {currentTab?.label || "Coming Soon"}
+        {currentTab?.label || t("comingSoon") || "Coming Soon"}
       </h3>
-      <p className="text-gray-500">
-        This section is coming soon.
+      <p className="text-gray-500 dark:text-gray-400">
+        {t("comingSoonDesc") || "This section is coming soon."}
       </p>
     </div>
   );
