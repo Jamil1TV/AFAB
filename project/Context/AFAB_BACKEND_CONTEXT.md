@@ -262,3 +262,49 @@ Use the wrapper only if present; otherwise use `mvn test` / `mvn verify`. Never 
 - [ ] Unit/integration/security tests added.
 - [ ] Build/tests actually run and results reported.
 - [ ] Deployment/configuration/migration steps documented.
+
+## Mandatory API Contract Documentation Rule
+
+**Every new, modified, or removed API endpoint MUST be reflected in the backend's `contract/` folder whenever the change affects the public API. This requirement is mandatory and must not be skipped.**
+
+### Before implementing an endpoint
+1. Inspect the existing `contract/` folder and identify the relevant contract file.
+2. Check whether the endpoint already exists in the documented API.
+3. Follow the existing contract structure, naming conventions, and documentation format.
+4. Determine whether the proposed change affects existing consumers or requires a versioned contract update.
+
+### After implementing an endpoint
+Update the relevant contract documentation to accurately reflect the implementation, including:
+
+- HTTP method and complete endpoint path.
+- Purpose and expected behavior.
+- Authentication and authorization requirements.
+- Path parameters, query parameters, headers, and request body.
+- Request and response schemas, including field types and nullability.
+- Successful HTTP status codes and error responses.
+- Validation rules and relevant business constraints.
+- Pagination, filtering, sorting, and examples where applicable.
+- Business ownership and tenant-isolation requirements.
+- Subscription-plan restrictions and usage limits when applicable.
+
+### Contract synchronization requirements
+1. The contract must describe the actual implemented behavior, not an intended or hypothetical implementation.
+2. Update existing contract files rather than creating duplicate documentation.
+3. If the project uses OpenAPI, update the appropriate OpenAPI specification and keep it synchronized with the contract documentation.
+4. If the frontend consumes the endpoint, update its API types, service interfaces, and relevant integration tests.
+5. Never silently introduce breaking API changes. Document the impact and obtain approval when required.
+6. If an endpoint is removed or deprecated, update the contract and clearly document its status.
+7. Never mark contract documentation as complete if it has not been verified against the implementation.
+
+### Definition of Done
+
+A backend endpoint change is not complete until:
+
+- The implementation is complete.
+- Request and response contracts are accurate.
+- The relevant files in `contract/` are updated.
+- Related frontend contracts are synchronized when necessary.
+- Appropriate tests are added or updated.
+- Relevant tests and build checks have been executed, with their actual results reported.
+
+**Final reporting:** Always list the contract files created or updated alongside the implementation files. If no contract file was changed, explain why and identify any remaining documentation work.
