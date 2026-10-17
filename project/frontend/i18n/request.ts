@@ -27,6 +27,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       Home: home,
       Auth: auth,
       Dashboard: dashboard,
+      dashboard: dashboard,
       NotFound: notFound,
       Settings: settings,
       settings: settings,

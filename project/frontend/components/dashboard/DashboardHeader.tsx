@@ -1,9 +1,9 @@
 "use client";
 
-import { Search, Bell, Plus, Calendar as CalendarIcon, Menu, Globe } from "lucide-react";
+import { Search, Bell, Plus, Calendar as CalendarIcon, Menu, Globe, Sparkles } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter, usePathname } from "@/i18n/routing";
+import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSidebar } from "@/components/dashboard/Sidebar";
 
 export function DashboardHeader() {
@@ -37,7 +37,7 @@ export function DashboardHeader() {
           </div>
           <input
             type="text"
-            placeholder={tHeader("search")}
+            placeholder={tHeader("search") || (locale === "ar" ? "ابحث عن أي شيء..." : "Search anything...")}
             className="block w-full rounded-full border border-gray-200 dark:border-gray-700/60 bg-gray-50 dark:bg-[#12162b] py-2 ps-10 pe-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
           />
           <div className="absolute inset-y-0 end-0 flex items-center pe-2">
@@ -50,43 +50,37 @@ export function DashboardHeader() {
 
       {/* Right side actions */}
       <div className="flex items-center gap-2 sm:gap-3">
-        {/* Date Selector (hidden on very small screens) */}
-        <div className="hidden sm:flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-[#12162b] px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors me-2">
-          <CalendarIcon className="h-4 w-4 text-gray-400" />
-          <span>{tHeader("thisMonth")}</span>
-        </div>
-
         {/* Theme Toggle */}
         <ThemeToggle />
 
         {/* Language Switcher */}
         <button 
           onClick={toggleLanguage}
-          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-white/[0.06] px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/[0.1]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-white/[0.06] px-3.5 py-1.5 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/[0.1]"
         >
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline-block">{tLang("switchTo")}</span>
         </button>
 
         {/* Notifications */}
-        <button className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] transition-colors">
+        <button 
+          aria-label="Notifications"
+          className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] transition-colors"
+        >
           <Bell className="h-5 w-5" />
-          <span className="absolute end-2 top-2 flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#8b5cf6] opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#7c3aed]"></span>
+          <span className="absolute -top-0.5 -end-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+            3
           </span>
         </button>
 
-        {/* Create Button */}
-        <button className="hidden sm:flex items-center gap-1.5 rounded-full bg-[#7c3aed] px-4 py-2 text-sm font-semibold text-white shadow-md shadow-[#7c3aed]/20 hover:bg-[#6d28d9] transition-all hover:scale-[1.02] active:scale-[0.98] ms-1">
-          <Plus className="h-4 w-4" />
-          {tHeader("create")}
-        </button>
-        
-        {/* Mobile Create Button */}
-        <button className="flex sm:hidden h-9 w-9 items-center justify-center rounded-full bg-[#7c3aed] text-white shadow-md shadow-[#7c3aed]/20 hover:bg-[#6d28d9] transition-all ms-1">
-          <Plus className="h-4 w-4" />
-        </button>
+        {/* Upgrade to Pro Button */}
+        <Link
+          href="/dashboard/plans"
+          className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-purple-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+          <span>{locale === "ar" ? "الترقية إلى برو" : (tHeader("upgradeToPro") || "Upgrade to Pro")}</span>
+        </Link>
       </div>
     </header>
   );

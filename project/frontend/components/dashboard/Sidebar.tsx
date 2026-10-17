@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, useRef, createContext, useContext } from "react";
 import { UserService } from "@/lib/api/dashboard";
 import { AuthStore } from "@/lib/auth-store";
-import { Link, usePathname } from "@/i18n/routing";
+import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { 
   LayoutDashboard, 
   ArrowRightLeft, 
@@ -19,7 +19,9 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
-  X
+  X,
+  ArrowRight,
+  ChevronDown
 } from "lucide-react";
 
 import { useTranslations, useLocale } from "next-intl";
@@ -70,13 +72,31 @@ export function Sidebar() {
   const t = useTranslations("Dashboard.sidebar");
   const locale = useLocale();
   const pathname = usePathname();
+  const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebar();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleNavigate = (path: string) => {
+    setUserMenuOpen(false);
+    router.push(path);
+  };
 
   const handleLogout = () => {
     AuthStore.clearAuth();
     window.location.href = `/${locale}/login`;
   };
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     async function fetchProfile() {
@@ -108,7 +128,10 @@ export function Sidebar() {
 
   const renderNavItems = (items: NavItem[]) => {
     return items.map((item) => {
-      const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+      const isActive = 
+        pathname === item.href || 
+        (item.href !== "/dashboard" && pathname.startsWith(item.href)) ||
+        (item.href === "/dashboard/ai" && (pathname.includes("/plans") || pathname.includes("/upgrade")));
       
       return (
         <Link
@@ -118,16 +141,16 @@ export function Sidebar() {
           title={collapsed ? item.name : undefined}
           className={`group flex items-center ${collapsed ? "justify-center" : "justify-between"} rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
             isActive 
-              ? "bg-primary/10 text-primary" 
+              ? "bg-[#6c4cf5]/15 text-[#8b5cf6] dark:bg-purple-600/20 dark:text-purple-300 shadow-sm" 
               : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-200"
           }`}
         >
           <div className={`flex items-center ${collapsed ? "justify-center w-full" : "gap-3 min-w-0"}`}>
-            <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-primary" : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"}`} />
+            <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-[#8b5cf6] dark:text-purple-300" : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"}`} />
             {!collapsed && <span className="truncate">{item.name}</span>}
           </div>
           {item.badge && !collapsed && (
-            <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold text-primary-foreground shadow-sm shrink-0 ms-2">
+            <span className="rounded-full bg-purple-600/20 border border-purple-500/30 px-2 py-0.5 text-[10px] font-bold text-purple-300 shadow-sm shrink-0 ms-2">
               {item.badge}
             </span>
           )}
@@ -181,25 +204,45 @@ export function Sidebar() {
 
       {/* ── Upgrade Card ── */}
       {!collapsed && (
-        <div className="px-4 py-4 shrink-0">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-purple p-4 text-white shadow-lg shadow-primary/20">
-            <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl" />
-            <h4 className="relative z-10 text-sm font-bold">{tSidebar("upgradeTitle")}</h4>
-            <p className="relative z-10 mt-1 text-xs text-white/80 leading-relaxed">
-              {tSidebar("upgradeDesc")}
+        <div className="px-3 py-3 shrink-0">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-purple-50/90 via-indigo-50/40 to-white dark:from-[#141938] dark:to-[#0c1022] border border-purple-200/80 dark:border-purple-500/30 p-4 shadow-md shadow-purple-500/5 dark:shadow-xl dark:shadow-purple-900/20 transition-all">
+            <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-purple-500/15 dark:bg-purple-600/20 blur-2xl pointer-events-none" />
+            <h4 className="relative z-10 text-sm font-bold text-gray-900 dark:text-white">
+              {locale === "ar" ? "افتح المزيد مع برو" : (tSidebar("upgradeCardTitle") || "Unlock more with Pro")}
+            </h4>
+            <p className="relative z-10 mt-1 text-xs text-gray-600 dark:text-gray-300 leading-snug">
+              {locale === "ar" ? "احصل على ميزات الذكاء الاصطناعي المتقدمة وإدارة شركات متعددة." : (tSidebar("upgradeCardDesc") || "Get advanced AI features and manage multiple businesses.")}
             </p>
-            <button className="relative z-10 mt-3 w-full rounded-lg bg-white px-3 py-2 text-xs font-bold text-primary transition-transform hover:scale-[1.02] active:scale-[0.98]">
-              {tSidebar("upgradeBtn")}
-            </button>
+            <div className="relative my-2.5 h-20 w-full flex items-center justify-center">
+              <div className="relative rounded-2xl p-1 bg-[#090d20] dark:bg-transparent border border-purple-200/80 dark:border-purple-500/30 shadow-md shadow-purple-500/10 dark:shadow-[0_0_20px_rgba(139,92,246,0.4)]">
+                <img 
+                  src="/images/plans/crystal-cube.jpg" 
+                  alt="Pro Crystal"
+                  className="h-16 w-16 object-contain rounded-xl" 
+                />
+              </div>
+            </div>
+            <Link 
+              href="/dashboard/plans"
+              className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <span>{locale === "ar" ? "الترقية الآن" : (tSidebar("upgradeBtn") || "Upgrade Now")}</span>
+              <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
+            </Link>
           </div>
         </div>
       )}
 
-      {/* ── User Profile & Logout ── */}
-      <div className={`border-t border-gray-200 dark:border-gray-800/60 ${collapsed ? "p-2" : "p-3"} space-y-2 shrink-0`}>
-        <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
-          <div className={`flex items-center ${collapsed ? "justify-center p-1" : "gap-3 w-full bg-white dark:bg-gray-800 p-2 rounded-xl border border-gray-100 dark:border-gray-700"}`}>
-            <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-gray-700 overflow-hidden shrink-0">
+      {/* ── User Profile & Dropdown (with Logout inside) ── */}
+      <div className={`border-t border-gray-200 dark:border-gray-800/60 ${collapsed ? "p-2" : "p-3"} shrink-0 relative`} ref={userMenuRef}>
+        <div 
+          onClick={() => setUserMenuOpen(!userMenuOpen)}
+          role="button"
+          tabIndex={0}
+          className={`flex items-center ${collapsed ? "justify-center p-1" : "gap-3 w-full bg-white dark:bg-[#0f1429] p-2.5 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"} cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all`}
+        >
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 p-[1.5px] shrink-0">
+            <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-900 dark:text-white">
               {profile?.avatarUrl ? (
                 <img 
                   src={profile.avatarUrl} 
@@ -207,31 +250,79 @@ export function Sidebar() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-semibold text-sm">
-                  {profile?.firstName?.[0] || ""}{profile?.lastName?.[0] || ""}
-                </div>
+                <span>
+                  {profile?.firstName ? `${profile.firstName[0]}${profile?.lastName?.[0] || ""}` : "AK"}
+                </span>
               )}
             </div>
-            {!collapsed && (
-              <div className="flex-1 min-w-0 text-start">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {profile ? `${profile.firstName} ${profile.lastName}` : "Loading..."}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{tSidebar("owner") || "Owner"}</p>
-              </div>
-            )}
           </div>
+          {!collapsed && (
+            <div className="flex-1 min-w-0 text-start flex items-center justify-between">
+              <div className="overflow-hidden min-w-0">
+                <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
+                  {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Ahmed K."}
+                </p>
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                  {profile?.businessName || tSidebar("businessOwner") || (locale === "ar" ? "مالك العمل" : "Business Owner")}
+                </p>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-gray-400 shrink-0 ms-1 transition-transform duration-200 ${userMenuOpen ? "rotate-180 text-primary" : ""}`} />
+            </div>
+          )}
         </div>
 
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          title={collapsed ? (tSidebar("logout") || "Logout") : undefined}
-          className={`flex w-full items-center ${collapsed ? "justify-center px-0" : "gap-3 px-3"} rounded-xl py-2.5 text-sm font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors`}
-        >
-          <LogOut className="h-4.5 w-4.5 shrink-0 rtl:rotate-180" />
-          {!collapsed && <span>{tSidebar("logout") || "Logout"}</span>}
-        </button>
+        {/* Dropdown Menu Popup (positioned above profile) */}
+        {userMenuOpen && (
+          <div 
+            className={`absolute z-50 bottom-full ${collapsed ? "start-full ms-2 mb-0" : "start-3 end-3 mb-2"} rounded-2xl bg-white dark:bg-[#0e1328] border border-gray-200 dark:border-purple-500/30 p-2 shadow-2xl shadow-black/50 backdrop-blur-md`}
+          >
+            {/* User Info Header */}
+            <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800/80">
+              <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Ahmed K."}
+              </p>
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                {profile?.email || "ahmed@example.com"}
+              </p>
+            </div>
+
+            {/* Menu Links */}
+            <div className="py-1 space-y-0.5">
+              <Link
+                href="/dashboard/settings/general"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] rounded-xl transition-colors text-start cursor-pointer"
+              >
+                <Settings className="h-4 w-4 text-gray-400 shrink-0" />
+                <span>{locale === "ar" ? "إعدادات الحساب" : (tSidebar("accountSettings") || "Account Settings")}</span>
+              </Link>
+              <Link
+                href="/dashboard/settings/business-profile"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] rounded-xl transition-colors text-start cursor-pointer"
+              >
+                <Sparkles className="h-4 w-4 text-purple-400 shrink-0" />
+                <span>{locale === "ar" ? "الملف التجاري" : (tSidebar("businessProfile") || "Business Profile")}</span>
+              </Link>
+            </div>
+
+            {/* Logout Action Inside Dropdown */}
+            <div className="pt-1 border-t border-gray-100 dark:border-gray-800/80">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUserMenuOpen(false);
+                  handleLogout();
+                }}
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors text-start cursor-pointer"
+              >
+                <LogOut className="h-4 w-4 rtl:rotate-180 shrink-0" />
+                <span>{locale === "ar" ? "تسجيل الخروج" : (tSidebar("logout") || "Logout")}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── Collapse Toggle (desktop only) ── */}
