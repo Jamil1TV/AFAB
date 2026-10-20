@@ -24,13 +24,13 @@ export class ApiError extends Error {
 
 async function tryRefreshToken(): Promise<boolean> {
   const refreshToken = AuthStore.getRefreshToken();
-  if (!refreshToken) return false;
 
   try {
     const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
       method: "POST",
+      credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
+      body: refreshToken ? JSON.stringify({ refreshToken }) : undefined,
     });
 
     if (!res.ok) return false;
@@ -54,7 +54,7 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
 
   const config: RequestInit = {
     ...customConfig,
-    credentials: "omit",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...headers,

@@ -1,0 +1,703 @@
+openapi: 3.0.1
+info:
+  title: AFAB Finance API (Categories & Transactions)
+  version: 1.0.0
+  description: OpenAPI specification for the Finance Core module (Categories and Transactions) of AFAB.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/categories:
+    get:
+      summary: List all categories for the current business
+      description: Returns global system categories plus custom business-scoped categories.
+      operationId: getCategories
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryDTO'
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create a custom category for the business
+      operationId: createCategory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCategoryRequest'
+      responses:
+        '201':
+          description: Category created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDTO'
+        '400':
+          description: Validation error or duplicate category name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized
+
+  /api/v1/categories/{id}:
+    put:
+      summary: Update a custom category
+      operationId: updateCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCategoryRequest'
+      responses:
+        '200':
+          description: Category updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDTO'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Cannot modify system categories or another business's categories
+        '404':
+          description: Category not found
+    delete:
+      summary: Delete a custom category
+      operationId: deleteCategory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Category deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Cannot delete system categories or another business's categories
+        '404':
+          description: Category not found
+        '409':
+          description: Category is currently in use by one or more transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/v1/transactions:
+    get:
+      summary: Get paginated transactions with filters
+      operationId: getTransactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [INCOME, EXPENSE]
+        - name: categoryId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [COMPLETED, PENDING, CANCELLED]
+        - name: paymentMethod
+          in: query
+          schema:
+            type: string
+            enum: [BANK_TRANSFER, CARD, CREDIT_CARD, CASH, OTHER]
+        - name: taxDeductible
+          in: query
+          schema:
+            type: boolean
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Paginated transaction list with totals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponseDTO'
+        '401':
+          description: Unauthorized
+    post:
+      summary: Create a new transaction
+      operationId: createTransaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '201':
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDTO'
+        '400':
+          description: Validation error or category type mismatch
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Category belongs to another business
+        '404':
+          description: Category not found
+
+  /api/v1/transactions/{id}:
+    put:
+      summary: Update an existing transaction
+      operationId: updateTransaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTransactionRequest'
+      responses:
+        '200':
+          description: Transaction updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDTO'
+        '400':
+          description: Validation error or category type mismatch
+        '401':
+          description: Unauthorized
+        '403':
+          description: Unauthorized transaction access
+        '404':
+          description: Transaction or category not found
+    delete:
+      summary: Soft-delete a transaction
+      operationId: deleteTransaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Transaction deleted successfully
+        '401':
+          description: Unauthorized
+        '403':
+          description: Unauthorized transaction access
+        '404':
+          description: Transaction not found
+
+  /api/v1/transactions/categories:
+    get:
+      summary: Legacy alias for listing categories
+      operationId: getLegacyCategories
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryDTO'
+
+  /api/v1/dashboard/summary:
+    get:
+      summary: Aggregated real-time financial stats and dashboard metrics
+      description: Returns cash-basis KPIs, 6-month trailing revenue/expense trends, category breakdown, and recent transactions.
+      operationId: getDashboardSummary
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          description: Aggregation period ('month', 'weekly', '30d', 'year')
+          schema:
+            type: string
+            default: month
+      responses:
+        '200':
+          description: Dashboard financial summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummaryDTO'
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CategoryDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        businessId:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        icon:
+          type: string
+          nullable: true
+        color:
+          type: string
+          nullable: true
+        isSystemDefault:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CreateCategoryRequest:
+      type: object
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        icon:
+          type: string
+          maxLength: 50
+        color:
+          type: string
+          maxLength: 30
+
+    UpdateCategoryRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        icon:
+          type: string
+          maxLength: 50
+        color:
+          type: string
+          maxLength: 30
+
+    TransactionDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        categoryName:
+          type: string
+          nullable: true
+        categoryColor:
+          type: string
+          nullable: true
+        categoryIcon:
+          type: string
+          nullable: true
+        description:
+          type: string
+        transactionDate:
+          type: string
+          format: date
+        paymentMethod:
+          type: string
+          enum: [BANK_TRANSFER, CARD, CREDIT_CARD, CASH, OTHER]
+        status:
+          type: string
+          enum: [COMPLETED, PENDING, CANCELLED]
+        receiptUrl:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        taxDeductible:
+          type: boolean
+        taxRate:
+          type: number
+          nullable: true
+        isSplit:
+          type: boolean
+        parentTransactionId:
+          type: string
+          format: uuid
+          nullable: true
+        potentialDuplicate:
+          type: boolean
+        priceHikePercentage:
+          type: number
+          nullable: true
+        splitItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitItemDTO'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SplitItemDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        categoryId:
+          type: string
+          format: uuid
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        categoryIcon:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+
+    SplitRequestItem:
+      type: object
+      required:
+        - categoryId
+        - amount
+      properties:
+        categoryId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+
+    CreateTransactionRequest:
+      type: object
+      required:
+        - type
+        - amount
+        - description
+        - transactionDate
+      properties:
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        amount:
+          type: number
+          minimum: 0.0001
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        transactionDate:
+          type: string
+          format: date
+        paymentMethod:
+          type: string
+          enum: [BANK_TRANSFER, CARD, CREDIT_CARD, CASH, OTHER]
+          default: BANK_TRANSFER
+        status:
+          type: string
+          enum: [COMPLETED, PENDING, CANCELLED]
+          default: COMPLETED
+        notes:
+          type: string
+          maxLength: 1000
+          nullable: true
+        taxDeductible:
+          type: boolean
+          default: false
+        taxRate:
+          type: number
+          nullable: true
+        splitItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitRequestItem'
+
+    UpdateTransactionRequest:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [INCOME, EXPENSE]
+        amount:
+          type: number
+          minimum: 0.0001
+        categoryId:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          minLength: 1
+          maxLength: 255
+        transactionDate:
+          type: string
+          format: date
+        paymentMethod:
+          type: string
+          enum: [BANK_TRANSFER, CARD, CREDIT_CARD, CASH, OTHER]
+        status:
+          type: string
+          enum: [COMPLETED, PENDING, CANCELLED]
+        notes:
+          type: string
+          maxLength: 1000
+          nullable: true
+        taxDeductible:
+          type: boolean
+        taxRate:
+          type: number
+          nullable: true
+        splitItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitRequestItem'
+
+    TransactionResponseDTO:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionDTO'
+        pageNumber:
+          type: integer
+        pageSize:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        totalInflow:
+          type: number
+        totalOutflow:
+          type: number
+        netBalance:
+          type: number
+        currency:
+          type: string
+
+    ApiError:
+      type: object
+      properties:
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+        fieldErrors:
+          type: object
+          additionalProperties:
+            type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    DashboardSummaryDTO:
+      type: object
+      properties:
+        currency:
+          type: string
+        businessName:
+          type: string
+        kpiData:
+          type: object
+          properties:
+            revenue:
+              $ref: '#/components/schemas/KpiMetric'
+            expenses:
+              $ref: '#/components/schemas/KpiMetric'
+            profit:
+              $ref: '#/components/schemas/KpiMetric'
+            cashFlow:
+              $ref: '#/components/schemas/KpiMetric'
+        revenueData:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              name:
+                type: string
+              revenue:
+                type: number
+              expenses:
+                type: number
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              amount:
+                type: string
+              rawAmount:
+                type: number
+              date:
+                type: string
+              type:
+                type: string
+              status:
+                type: string
+              isCredit:
+                type: boolean
+        expenseCategories:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              amount:
+                type: string
+              value:
+                type: number
+              percentage:
+                type: number
+              color:
+                type: string
+
+    KpiMetric:
+      type: object
+      properties:
+        value:
+          type: string
+        change:
+          type: string
+        isPositive:
+          type: boolean
+        rawValue:
+          type: number
+        rawChange:
+          type: number
+

@@ -320,3 +320,25 @@ export function getLocalizedPeriod(period: PeriodKey, locale: string = "en"): st
   const isAr = locale === "ar";
   return isAr ? PERIODS[period]?.ar || period : PERIODS[period]?.en || period;
 }
+
+/**
+ * Returns localized Date Format label.
+ */
+export function getLocalizedDateFormat(formatValue: string | undefined | null, locale: string = "en"): string {
+  if (!formatValue) return "";
+  const isAr = locale === "ar";
+  const found = DATE_FORMATS.find((df) => df.value === formatValue);
+  if (found) return isAr ? found.labelAr : found.labelEn;
+  return formatValue;
+}
+
+/**
+ * Returns localized Number Format label.
+ */
+export function getLocalizedNumberFormat(formatValue: string | undefined | null, locale: string = "en"): string {
+  if (!formatValue) return "";
+  const isAr = locale === "ar";
+  const found = NUMBER_FORMATS.find((nf) => nf.value === formatValue);
+  if (found) return isAr ? found.labelAr : found.labelEn;
+  return formatValue;
+}

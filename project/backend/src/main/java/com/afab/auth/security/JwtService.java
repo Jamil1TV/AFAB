@@ -52,7 +52,41 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
+        String tokenType = null;
+        try {
+            tokenType = extractClaim(token, claims -> claims.get("type", String.class));
+        } catch (Exception ignored) {}
+        if ("2FA_CHALLENGE".equals(tokenType)) {
+            return false;
+        }
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    public String generateTwoFactorChallengeToken(String email) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("type", "2FA_CHALLENGE");
+        return Jwts.builder()
+                .claims(claims)
+                .subject(email)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 5 * 60 * 1000L)) // 5 minutes
+                .signWith(getSignInKey())
+                .compact();
+    }
+
+    public String validateTwoFactorChallengeToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            if (!"2FA_CHALLENGE".equals(claims.get("type"))) {
+                return null;
+            }
+            if (claims.getExpiration().before(new Date())) {
+                return null;
+            }
+            return claims.getSubject();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private boolean isTokenExpired(String token) {

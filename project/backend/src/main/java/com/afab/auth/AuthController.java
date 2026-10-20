@@ -5,7 +5,10 @@ import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -14,6 +17,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -21,13 +26,16 @@ public class AuthController {
 
     private final AuthService authService;
     
-    // Rate Limiting Bucket: 5 requests per minute for auth endpoints
+    // Rate Limiting Bucket: 60 requests per minute for auth endpoints
     private final Bucket authBucket;
+
+    @Value("${spring.profiles.active:local}")
+    private String activeProfile;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
         
-        Bandwidth limit = Bandwidth.builder().capacity(5).refillGreedy(5, Duration.ofMinutes(1)).build();
+        Bandwidth limit = Bandwidth.builder().capacity(60).refillGreedy(60, Duration.ofMinutes(1)).build();
         this.authBucket = Bucket.builder()
                 .addLimit(limit)
                 .build();
@@ -49,7 +57,18 @@ public class AuthController {
                     getClientIp(httpRequest),
                     httpRequest.getHeader("User-Agent")
             );
-            return ResponseEntity.ok(response);
+
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
+                    .httpOnly(true)
+                    .secure(false)
+                    .sameSite("Lax")
+                    .path("/api/v1/auth")
+                    .maxAge(24L * 60 * 60)
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ErrorResponse.error("REGISTRATION_FAILED", e.getMessage()));
@@ -72,37 +91,114 @@ public class AuthController {
                     getClientIp(httpRequest),
                     httpRequest.getHeader("User-Agent")
             );
-            return ResponseEntity.ok(response);
+
+            // If 2FA is required, don't set refresh cookie yet
+            if (response.isRequiresTwoFactor()) {
+                return ResponseEntity.ok(response);
+            }
+
+            long maxAgeSeconds = Boolean.TRUE.equals(request.getRememberMe()) ? (30L * 24 * 60 * 60) : (24L * 60 * 60);
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
+                    .httpOnly(true)
+                    .secure(false)
+                    .sameSite("Lax")
+                    .path("/api/v1/auth")
+                    .maxAge(maxAgeSeconds)
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ErrorResponse.error("EMAIL_NOT_FOUND", "No account exists with this email."));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ErrorResponse.error("INVALID_PASSWORD", "Incorrect password."));
+                    .body(ErrorResponse.error("INVALID_PASSWORD", e.getMessage()));
         } catch (DisabledException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ErrorResponse.error("ACCOUNT_DISABLED", "Your account has been disabled."));
         } catch (LockedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(ErrorResponse.error("ACCOUNT_LOCKED", "Your account has been locked."));
+                    .body(ErrorResponse.error("ACCOUNT_LOCKED", e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ErrorResponse.error("SERVER_ERROR", "Something went wrong. Please try again later."));
         }
     }
 
-    @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(
-            @Valid @RequestBody TokenRefreshRequest request,
+    @PostMapping("/2fa/verify-login")
+    public ResponseEntity<?> verifyTwoFactorLogin(
+            @Valid @RequestBody TwoFactorVerifyRequest request,
             HttpServletRequest httpRequest
     ) {
         try {
-            AuthResponse response = authService.refreshToken(
-                    request.getRefreshToken(),
+            AuthResponse response = authService.verifyTwoFactorLogin(
+                    request,
                     getClientIp(httpRequest),
                     httpRequest.getHeader("User-Agent")
             );
-            return ResponseEntity.ok(response);
+
+            long maxAgeSeconds = Boolean.TRUE.equals(request.getRememberMe()) ? (30L * 24 * 60 * 60) : (24L * 60 * 60);
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
+                    .httpOnly(true)
+                    .secure(false)
+                    .sameSite("Lax")
+                    .path("/api/v1/auth")
+                    .maxAge(maxAgeSeconds)
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ErrorResponse.error("INVALID_2FA_CODE", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ErrorResponse.error("INVALID_2FA_REQUEST", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ErrorResponse.error("SERVER_ERROR", "Authentication failed. Please try again."));
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refresh(
+            @RequestBody(required = false) TokenRefreshRequest request,
+            @CookieValue(name = "refreshToken", required = false) String cookieRefreshToken,
+            HttpServletRequest httpRequest
+    ) {
+        String token = null;
+        if (cookieRefreshToken != null && !cookieRefreshToken.isBlank()) {
+            token = cookieRefreshToken;
+        } else if (request != null && request.getRefreshToken() != null && !request.getRefreshToken().isBlank()) {
+            token = request.getRefreshToken();
+        }
+
+        if (token == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(ErrorResponse.error("INVALID_REFRESH_TOKEN", "Refresh token is missing."));
+        }
+
+        try {
+            AuthResponse response = authService.refreshToken(
+                    token,
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+
+            ResponseCookie cookie = ResponseCookie.from("refreshToken", response.getRefreshToken())
+                    .httpOnly(true)
+                    .secure(false)
+                    .sameSite("Lax")
+                    .path("/api/v1/auth")
+                    .maxAge(30L * 24 * 60 * 60)
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                    .body(response);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(ErrorResponse.error("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token."));
@@ -111,15 +207,36 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(
-            @Valid @RequestBody TokenRefreshRequest request,
+            @RequestBody(required = false) TokenRefreshRequest request,
+            @CookieValue(name = "refreshToken", required = false) String cookieRefreshToken,
             HttpServletRequest httpRequest
     ) {
-        authService.logout(
-                request.getRefreshToken(),
-                getClientIp(httpRequest),
-                httpRequest.getHeader("User-Agent")
-        );
-        return ResponseEntity.ok(ErrorResponse.success("Logged out successfully."));
+        String token = null;
+        if (cookieRefreshToken != null && !cookieRefreshToken.isBlank()) {
+            token = cookieRefreshToken;
+        } else if (request != null && request.getRefreshToken() != null) {
+            token = request.getRefreshToken();
+        }
+
+        if (token != null) {
+            authService.logout(
+                    token,
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+        }
+
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .path("/api/v1/auth")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(ErrorResponse.success("Logged out successfully."));
     }
 
     // ── Email Verification ─────────────────────────────────
@@ -152,8 +269,14 @@ public class AuthController {
                     .body(ErrorResponse.error("RATE_LIMITED", "Too many requests. Please wait and try again."));
         }
         try {
-            authService.resendVerificationEmail(request.getEmail());
-            return ResponseEntity.ok(ErrorResponse.success("Verification code sent."));
+            String otp = authService.resendVerificationEmail(request.getEmail());
+            Map<String, Object> body = new HashMap<>();
+            body.put("success", true);
+            body.put("message", "Verification code sent.");
+            if ("local".equalsIgnoreCase(activeProfile) || "dev".equalsIgnoreCase(activeProfile)) {
+                body.put("devOtp", otp);
+            }
+            return ResponseEntity.ok(body);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ErrorResponse.error("RESEND_FAILED", e.getMessage()));

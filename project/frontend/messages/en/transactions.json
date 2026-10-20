@@ -2,7 +2,11 @@
   "title": "Transactions",
   "subtitle": "Manage, filter, and track all business inflows and outflows.",
   "addTransaction": "Add Transaction",
+  "splitTransaction": "Split Expense",
+  "manageCategories": "Manage Categories",
   "export": "Export CSV",
+  "taxFilter": "Tax Write-offs",
+  "duplicate": "Duplicate",
   "kpi": {
     "totalInflow": "Total Inflow",
     "totalOutflow": "Total Outflow",
@@ -34,12 +38,16 @@
     "amount": "Amount",
     "status": "Status",
     "actions": "Actions",
+    "edit": "Edit",
+    "delete": "Delete",
     "noTransactions": "No transactions found",
     "noTransactionsSubtitle": "Try adjusting your filters or click 'Add Transaction' to record your first entry."
   },
   "modal": {
     "title": "Add New Transaction",
     "subtitle": "Record a new income or expense for your business ledger.",
+    "editTitle": "Edit Transaction",
+    "editSubtitle": "Update the details for this transaction entry.",
     "incomeTab": "Income (+)",
     "expenseTab": "Expense (-)",
     "descriptionLabel": "Description",
@@ -58,6 +66,35 @@
     "notesPlaceholder": "Additional context or reference ID...",
     "cancel": "Cancel",
     "submit": "Record Transaction",
+    "updateSubmit": "Update Transaction",
     "saving": "Saving..."
+  },
+  "deleteModal": {
+    "title": "Delete Transaction",
+    "confirmMessage": "Are you sure you want to delete this transaction? This action will remove it from your active ledger.",
+    "confirmBtn": "Yes, Delete",
+    "cancelBtn": "Cancel",
+    "deleting": "Deleting..."
+  },
+  "categoriesModal": {
+    "title": "Manage Categories",
+    "subtitle": "Organize your business categories for accurate reporting.",
+    "incomeTab": "Income Categories",
+    "expenseTab": "Expense Categories",
+    "newCategory": "New Category",
+    "nameLabel": "Category Name",
+    "namePlaceholder": "e.g. SaaS Subscriptions",
+    "iconLabel": "Icon",
+    "colorLabel": "Color",
+    "systemDefault": "System Default",
+    "custom": "Custom",
+    "createBtn": "Create Category",
+    "cancel": "Cancel",
+    "close": "Close",
+    "deleteTooltip": "Delete category",
+    "deleteConfirm": "Are you sure you want to delete this category?",
+    "inUseError": "Cannot delete category: it is currently used by existing transactions.",
+    "createSuccess": "Category created successfully.",
+    "deleteSuccess": "Category deleted successfully."
   }
 }

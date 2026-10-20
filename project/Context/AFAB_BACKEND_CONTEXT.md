@@ -83,7 +83,8 @@ Verify response shapes and resource ownership when touching profile/session func
 `DashboardService` currently constructs zero-valued KPI metrics and empty transaction/category/reminder/customer lists. This is placeholder-oriented, not evidence of live financial aggregation. Live metrics must derive from persisted transactions and be tested.
 
 ### Finance endpoints
-- `/api/v1/transactions`: `GET` list (`type`, `categoryId`, `search`, `page`, `size`); `POST` create; `DELETE /{id}`; `GET /categories`.
+- `/api/v1/categories`: `GET` list (combines global read-only defaults + business custom categories), `POST` create, `PUT /{id}`, `DELETE /{id}` (blocked with 409 + count when referenced by active transactions).
+- `/api/v1/transactions`: `GET` list (`type`, `categoryId`, `status`, `paymentMethod`, `startDate`, `endDate`, `taxDeductible`, `search`, `page`, `size`); `POST` create (HTTP 201, supports `taxDeductible`, `taxRate`, and `splitItems`); `PUT /{id}` update; `DELETE /{id}` (soft-delete with deleted_at timestamp); `GET /categories` (backward compatible). Root transactions filter `parentTransaction IS NULL` to prevent split line duplication.
 - `/api/v1/expenses`: `GET` list and `GET /summary`.
 - `/api/v1/revenue`: `GET` list and `GET /summary`.
 - `/api/v1/invoices`: `GET` list and `GET /summary`.
@@ -93,11 +94,11 @@ Expense/revenue/invoice controllers reuse transaction service/query structures. 
 - `/api/v1/health`: health endpoint.
 
 ## 5. API contract conventions
-- Base path `/api/v1`.
+- Base path `/api/v1`. OpenAPI specification maintained in `contracts/finance.openapi.yaml`.
 - Use typed request/response DTOs and Jakarta validation.
-- Return correct HTTP status codes and stable error shapes (`common/exception/ApiError`, `GlobalExceptionHandler`, `auth/dto/ErrorResponse`).
+- Return correct HTTP status codes and stable error shapes (`common/exception/ApiError`, `GlobalExceptionHandler`, `ResourceNotFoundException` [404], `ForbiddenException` [403], `ConflictException` [409]).
 - UUIDs are used for IDs in inspected entities.
-- Validate pagination and impose a maximum page size.
+- Validate pagination and impose a maximum page size (<= 100).
 - Preserve contract compatibility or update frontend service interfaces at the same time.
 - Export/update OpenAPI specs when contracts change.
 - Never leak SQL errors, stack traces, tokens, or sensitive finance data.
@@ -113,6 +114,7 @@ Flyway migrations found:
 - `V7__transactions.sql`
 - `V8__password_reset_tokens.sql`
 - `V9__add_updated_at_to_categories.sql`
+- `V10__finance_core.sql` (transactions.amount NUMERIC(19,4), deleted_at TIMESTAMPTZ, unique index on custom categories per business)
 
 Flyway is enabled at `classpath:db/migration`; Hibernate `ddl-auto` is `none`. Do not change it to `update` to work around schema mismatch.
 

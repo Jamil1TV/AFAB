@@ -28,13 +28,11 @@ export function LoginCard() {
       const response = await AuthService.login({
         email,
         password,
+        rememberMe,
       });
 
       if (response.accessToken) {
-        localStorage.setItem("afab_token", response.accessToken);
-        // If remember me is true, maybe store in a longer-lived cookie?
-        // For now, push to dashboard
-        router.push("/dashboard"); // We'll build the dashboard in step 3
+        router.push("/dashboard");
       }
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please try again.");

@@ -1,32 +1,52 @@
 package com.afab.finance.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class CreateTransactionRequest {
 
-    @NotBlank(message = "Transaction type is required (INCOME or EXPENSE)")
+    @NotBlank(message = "Transaction type is required")
+    @Pattern(regexp = "^(INCOME|EXPENSE)$", message = "Type must be either INCOME or EXPENSE")
     private String type;
 
     @NotNull(message = "Amount is required")
-    @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
+    @DecimalMin(value = "0.0001", message = "Amount must be greater than zero")
     private BigDecimal amount;
 
     @NotBlank(message = "Description is required")
+    @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
 
     @NotNull(message = "Transaction date is required")
     private LocalDate transactionDate;
 
     private UUID categoryId;
+
+    @Pattern(regexp = "^(BANK_TRANSFER|CARD|CREDIT_CARD|CASH|OTHER)$", message = "Invalid payment method")
     private String paymentMethod = "BANK_TRANSFER";
+
+    @Pattern(regexp = "^(COMPLETED|PENDING|CANCELLED)$", message = "Invalid transaction status")
     private String status = "COMPLETED";
+
+    @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
     private String notes;
+
+    private Boolean taxDeductible = false;
+
+    private BigDecimal taxRate;
+
+    @Valid
+    private List<SplitRequestItem> splitItems = new ArrayList<>();
 
     public CreateTransactionRequest() {}
 
@@ -53,4 +73,13 @@ public class CreateTransactionRequest {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public Boolean getTaxDeductible() { return taxDeductible != null && taxDeductible; }
+    public void setTaxDeductible(Boolean taxDeductible) { this.taxDeductible = taxDeductible; }
+
+    public BigDecimal getTaxRate() { return taxRate; }
+    public void setTaxRate(BigDecimal taxRate) { this.taxRate = taxRate; }
+
+    public List<SplitRequestItem> getSplitItems() { return splitItems; }
+    public void setSplitItems(List<SplitRequestItem> splitItems) { this.splitItems = splitItems; }
 }

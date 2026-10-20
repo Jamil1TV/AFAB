@@ -12,6 +12,13 @@ export interface RegisterPayload {
 export interface LoginPayload {
   email: string;
   password: string;
+  rememberMe?: boolean;
+}
+
+export interface VerifyTwoFactorLoginPayload {
+  twoFactorToken: string;
+  code: string;
+  rememberMe?: boolean;
 }
 
 export interface ForgotPasswordPayload {
@@ -27,6 +34,32 @@ export interface ResetPasswordByTokenPayload {
   password: string;
 }
 
+export interface TwoFactorSetupData {
+  secret: string;
+  qrCodeUri: string;
+  backupCodes: string[];
+}
+
+export interface TwoFactorEnablePayload {
+  secret: string;
+  code: string;
+  backupCodes: string[];
+}
+
+export interface TwoFactorDisablePayload {
+  password?: string;
+  code?: string;
+}
+
+export interface SessionDto {
+  id: string;
+  deviceInfo: string;
+  ipAddress: string;
+  createdAt: string;
+  expiresAt: string;
+  currentSession: boolean;
+}
+
 export interface ApiSuccessResponse {
   success: boolean;
   message: string;
@@ -39,7 +72,7 @@ export class AuthService {
       body: JSON.stringify(payload),
       requireAuth: false,
     });
-    AuthStore.setAuth(res);
+    AuthStore.setAuth(res, false);
     return res;
   }
 
@@ -49,7 +82,19 @@ export class AuthService {
       body: JSON.stringify(payload),
       requireAuth: false,
     });
-    AuthStore.setAuth(res);
+    if (!res.requiresTwoFactor) {
+      AuthStore.setAuth(res, !!payload.rememberMe);
+    }
+    return res;
+  }
+
+  static async verifyTwoFactorLogin(payload: VerifyTwoFactorLoginPayload): Promise<AuthResponseData> {
+    const res = await fetchClient("/auth/2fa/verify-login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      requireAuth: false,
+    });
+    AuthStore.setAuth(res, !!payload.rememberMe);
     return res;
   }
 
@@ -62,8 +107,8 @@ export class AuthService {
     AuthStore.updateUser({ emailVerified: true });
   }
 
-  static async resendVerification(email: string): Promise<void> {
-    await fetchClient("/auth/resend-verification", {
+  static async resendVerification(email: string): Promise<{ success: boolean; message: string; devOtp?: string }> {
+    return await fetchClient("/auth/resend-verification", {
       method: "POST",
       body: JSON.stringify({ email }),
       requireAuth: false,
@@ -72,22 +117,22 @@ export class AuthService {
 
   static async logout(): Promise<void> {
     const refreshToken = AuthStore.getRefreshToken();
-    if (refreshToken) {
-      try {
-        await fetchClient("/auth/logout", {
-          method: "POST",
-          body: JSON.stringify({ refreshToken }),
-        });
-      } catch (err) {
-        console.error("Logout request failed:", err);
-      }
+    try {
+      await fetchClient("/auth/logout", {
+        method: "POST",
+        body: refreshToken ? JSON.stringify({ refreshToken }) : JSON.stringify({}),
+        requireAuth: false,
+      });
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      AuthStore.clearAuth();
     }
-    AuthStore.clearAuth();
   }
 
   /**
    * Request a password reset link be sent to the given email.
-   * Uses the new link-based flow.
+   * Uses the link-based flow.
    */
   static async forgotPassword(payload: ForgotPasswordPayload): Promise<ApiSuccessResponse> {
     return await fetchClient("/auth/forgot-password-link", {
@@ -99,7 +144,6 @@ export class AuthService {
 
   /**
    * Validate a password reset token (from URL query param).
-   * Returns { success: true } if valid, or throws ApiError with code TOKEN_EXPIRED or INVALID_TOKEN.
    */
   static async validateResetToken(payload: ValidateTokenPayload): Promise<ApiSuccessResponse> {
     return await fetchClient("/auth/validate-reset-token", {
@@ -117,6 +161,63 @@ export class AuthService {
       method: "POST",
       body: JSON.stringify(payload),
       requireAuth: false,
+    });
+  }
+
+  // ── Two-Factor Authentication (Authenticated) ─────────────────
+
+  static async setup2FA(): Promise<TwoFactorSetupData> {
+    return await fetchClient("/user/2fa/setup", {
+      method: "GET",
+      requireAuth: true,
+    });
+  }
+
+  static async enable2FA(payload: TwoFactorEnablePayload): Promise<void> {
+    await fetchClient("/user/2fa/enable", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      requireAuth: true,
+    });
+    AuthStore.updateUser({ twoFactorEnabled: true });
+  }
+
+  static async disable2FA(payload: TwoFactorDisablePayload): Promise<void> {
+    await fetchClient("/user/2fa/disable", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      requireAuth: true,
+    });
+    AuthStore.updateUser({ twoFactorEnabled: false });
+  }
+
+  static async regenerateBackupCodes(): Promise<string[]> {
+    return await fetchClient("/user/2fa/backup-codes", {
+      method: "POST",
+      requireAuth: true,
+    });
+  }
+
+  // ── Active Sessions Management (Authenticated) ────────────────
+
+  static async getActiveSessions(): Promise<SessionDto[]> {
+    return await fetchClient("/user/me/sessions", {
+      method: "GET",
+      requireAuth: true,
+    });
+  }
+
+  static async revokeSession(sessionId: string): Promise<void> {
+    await fetchClient(`/user/me/sessions/${sessionId}`, {
+      method: "DELETE",
+      requireAuth: true,
+    });
+  }
+
+  static async revokeAllOtherSessions(): Promise<void> {
+    await fetchClient("/user/me/sessions", {
+      method: "DELETE",
+      requireAuth: true,
     });
   }
 }

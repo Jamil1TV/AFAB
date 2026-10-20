@@ -45,6 +45,15 @@ public class User extends BaseEntity {
     @Column(name = "two_factor_secret")
     private String twoFactorSecret;
 
+    @Column(name = "two_factor_backup_codes")
+    private String twoFactorBackupCodes;
+
+    @Column(name = "failed_login_attempts", nullable = false)
+    private int failedLoginAttempts = 0;
+
+    @Column(name = "lockout_until")
+    private Instant lockoutUntil;
+
     @Column(name = "email_verified_at")
     private Instant emailVerifiedAt;
 
@@ -114,6 +123,7 @@ public class User extends BaseEntity {
 
     public Boolean getTwoFactorEnabled() { return twoFactorEnabled; }
     public void setTwoFactorEnabled(Boolean twoFactorEnabled) { this.twoFactorEnabled = twoFactorEnabled; }
+    public boolean isTwoFactorEnabled() { return Boolean.TRUE.equals(twoFactorEnabled); }
 
     public String getTwoFactorSecret() { return twoFactorSecret; }
     public void setTwoFactorSecret(String twoFactorSecret) { this.twoFactorSecret = twoFactorSecret; }
@@ -147,4 +157,13 @@ public class User extends BaseEntity {
 
     public Boolean getShowTips() { return showTips; }
     public void setShowTips(Boolean showTips) { this.showTips = showTips; }
+
+    public int getFailedLoginAttempts() { return failedLoginAttempts; }
+    public void setFailedLoginAttempts(int failedLoginAttempts) { this.failedLoginAttempts = failedLoginAttempts; }
+
+    public Instant getLockoutUntil() { return lockoutUntil; }
+    public void setLockoutUntil(Instant lockoutUntil) { this.lockoutUntil = lockoutUntil; }
+
+    public String getTwoFactorBackupCodes() { return twoFactorBackupCodes; }
+    public void setTwoFactorBackupCodes(String twoFactorBackupCodes) { this.twoFactorBackupCodes = twoFactorBackupCodes; }
 }

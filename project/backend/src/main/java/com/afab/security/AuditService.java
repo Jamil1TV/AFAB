@@ -40,4 +40,14 @@ public class AuditService {
             log.error("Failed to write audit log for business action: {}", action, e);
         }
     }
+
+    public void log(User user, String action, String entityType, UUID entityId, String details) {
+        try {
+            AuditLog auditLog = new AuditLog(user, action, entityType, entityId, null, null, details);
+            auditLogRepository.save(auditLog);
+            log.info("Entity audit event recorded: {} on {} (ID: {}) for user {}", action, entityType, entityId, user != null ? user.getEmail() : "anonymous");
+        } catch (Exception e) {
+            log.error("Failed to write audit log for {} action on {}: {}", action, entityType, e);
+        }
+    }
 }

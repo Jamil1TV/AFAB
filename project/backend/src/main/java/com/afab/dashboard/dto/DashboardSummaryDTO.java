@@ -1,10 +1,11 @@
 package com.afab.dashboard.dto;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
  * Dashboard Summary DTO — returned by GET /api/v1/dashboard/summary.
- * Mirrors the frontend's expected data shape.
+ * Contains aggregated financial metrics, chart data, and recent transactions.
  */
 public class DashboardSummaryDTO {
 
@@ -16,8 +17,6 @@ public class DashboardSummaryDTO {
     private List<CustomerItem> customers;
     private String currency;
     private String businessName;
-
-    // ── Constructors ────────────────────────────
 
     public DashboardSummaryDTO() {}
 
@@ -34,8 +33,6 @@ public class DashboardSummaryDTO {
         this.currency = currency;
         this.businessName = businessName;
     }
-
-    // ── Getters & Setters ───────────────────────
 
     public KpiData getKpiData() { return kpiData; }
     public void setKpiData(KpiData kpiData) { this.kpiData = kpiData; }
@@ -95,6 +92,8 @@ public class DashboardSummaryDTO {
         private String value;
         private String change;
         private boolean isPositive;
+        private BigDecimal rawValue;
+        private BigDecimal rawChange;
 
         public KpiMetric() {}
 
@@ -102,6 +101,14 @@ public class DashboardSummaryDTO {
             this.value = value;
             this.change = change;
             this.isPositive = isPositive;
+        }
+
+        public KpiMetric(String value, String change, boolean isPositive, BigDecimal rawValue, BigDecimal rawChange) {
+            this.value = value;
+            this.change = change;
+            this.isPositive = isPositive;
+            this.rawValue = rawValue;
+            this.rawChange = rawChange;
         }
 
         public String getValue() { return value; }
@@ -112,10 +119,17 @@ public class DashboardSummaryDTO {
 
         public boolean getIsPositive() { return isPositive; }
         public void setIsPositive(boolean isPositive) { this.isPositive = isPositive; }
+
+        public BigDecimal getRawValue() { return rawValue; }
+        public void setRawValue(BigDecimal rawValue) { this.rawValue = rawValue; }
+
+        public BigDecimal getRawChange() { return rawChange; }
+        public void setRawChange(BigDecimal rawChange) { this.rawChange = rawChange; }
     }
 
     public static class RevenueDataPoint {
         private String month;
+        private String name;
         private double revenue;
         private double expenses;
 
@@ -123,12 +137,23 @@ public class DashboardSummaryDTO {
 
         public RevenueDataPoint(String month, double revenue, double expenses) {
             this.month = month;
+            this.name = month;
+            this.revenue = revenue;
+            this.expenses = expenses;
+        }
+
+        public RevenueDataPoint(String month, String name, double revenue, double expenses) {
+            this.month = month;
+            this.name = name;
             this.revenue = revenue;
             this.expenses = expenses;
         }
 
         public String getMonth() { return month; }
         public void setMonth(String month) { this.month = month; }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
 
         public double getRevenue() { return revenue; }
         public void setRevenue(double revenue) { this.revenue = revenue; }
@@ -139,23 +164,61 @@ public class DashboardSummaryDTO {
 
     public static class TransactionItem {
         private String id;
+        private String name;
         private String description;
         private String amount;
+        private BigDecimal rawAmount;
         private String date;
         private String type;
+        private String status;
+        private String color;
+        private String initials;
+        private boolean isCredit;
 
         public TransactionItem() {}
 
         public TransactionItem(String id, String description, String amount, String date, String type) {
             this.id = id;
+            this.name = description;
             this.description = description;
             this.amount = amount;
             this.date = date;
             this.type = type;
+            this.status = "Completed";
+            this.isCredit = "INCOME".equalsIgnoreCase(type);
+            this.initials = extractInitials(description);
+            this.color = isCredit ? "bg-emerald-500" : "bg-purple-500";
+        }
+
+        public TransactionItem(String id, String name, String description, String amount, BigDecimal rawAmount,
+                               String date, String type, String status, String color, String initials, boolean isCredit) {
+            this.id = id;
+            this.name = name;
+            this.description = description;
+            this.amount = amount;
+            this.rawAmount = rawAmount;
+            this.date = date;
+            this.type = type;
+            this.status = status;
+            this.color = color;
+            this.initials = initials;
+            this.isCredit = isCredit;
+        }
+
+        private static String extractInitials(String desc) {
+            if (desc == null || desc.isBlank()) return "TX";
+            String[] parts = desc.trim().split("\\s+");
+            if (parts.length == 1) {
+                return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+            }
+            return ("" + parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
         }
 
         public String getId() { return id; }
         public void setId(String id) { this.id = id; }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
 
         public String getDescription() { return description; }
         public void setDescription(String description) { this.description = description; }
@@ -163,16 +226,32 @@ public class DashboardSummaryDTO {
         public String getAmount() { return amount; }
         public void setAmount(String amount) { this.amount = amount; }
 
+        public BigDecimal getRawAmount() { return rawAmount; }
+        public void setRawAmount(BigDecimal rawAmount) { this.rawAmount = rawAmount; }
+
         public String getDate() { return date; }
         public void setDate(String date) { this.date = date; }
 
         public String getType() { return type; }
         public void setType(String type) { this.type = type; }
+
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+
+        public String getColor() { return color; }
+        public void setColor(String color) { this.color = color; }
+
+        public String getInitials() { return initials; }
+        public void setInitials(String initials) { this.initials = initials; }
+
+        public boolean getIsCredit() { return isCredit; }
+        public void setIsCredit(boolean isCredit) { this.isCredit = isCredit; }
     }
 
     public static class ExpenseCategory {
         private String name;
         private String amount;
+        private double value;
         private double percentage;
         private String color;
 
@@ -181,8 +260,26 @@ public class DashboardSummaryDTO {
         public ExpenseCategory(String name, String amount, double percentage, String color) {
             this.name = name;
             this.amount = amount;
+            this.value = parseAmount(amount);
             this.percentage = percentage;
             this.color = color;
+        }
+
+        public ExpenseCategory(String name, String amount, double value, double percentage, String color) {
+            this.name = name;
+            this.amount = amount;
+            this.value = value;
+            this.percentage = percentage;
+            this.color = color;
+        }
+
+        private static double parseAmount(String str) {
+            if (str == null) return 0.0;
+            try {
+                return Double.parseDouble(str.replaceAll("[^0-9.]", ""));
+            } catch (Exception e) {
+                return 0.0;
+            }
         }
 
         public String getName() { return name; }
@@ -190,6 +287,9 @@ public class DashboardSummaryDTO {
 
         public String getAmount() { return amount; }
         public void setAmount(String amount) { this.amount = amount; }
+
+        public double getValue() { return value; }
+        public void setValue(double value) { this.value = value; }
 
         public double getPercentage() { return percentage; }
         public void setPercentage(double percentage) { this.percentage = percentage; }
@@ -203,6 +303,7 @@ public class DashboardSummaryDTO {
         private String title;
         private String date;
         private String priority;
+        private String type;
 
         public ReminderItem() {}
 
@@ -211,6 +312,15 @@ public class DashboardSummaryDTO {
             this.title = title;
             this.date = date;
             this.priority = priority;
+            this.type = priority;
+        }
+
+        public ReminderItem(String id, String title, String date, String priority, String type) {
+            this.id = id;
+            this.title = title;
+            this.date = date;
+            this.priority = priority;
+            this.type = type;
         }
 
         public String getId() { return id; }
@@ -224,6 +334,9 @@ public class DashboardSummaryDTO {
 
         public String getPriority() { return priority; }
         public void setPriority(String priority) { this.priority = priority; }
+
+        public String getType() { return type; }
+        public void setType(String type) { this.type = type; }
     }
 
     public static class CustomerItem {

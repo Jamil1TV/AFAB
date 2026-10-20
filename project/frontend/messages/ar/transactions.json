@@ -2,7 +2,11 @@
   "title": "المعاملات المالية",
   "subtitle": "إدارة وتصفية ومتابعة جميع التدفقات المالية الواردة والصادرة.",
   "addTransaction": "إضافة معاملة",
+  "splitTransaction": "تقسيم المصروف",
+  "manageCategories": "إدارة الفئات",
   "export": "تصدير CSV",
+  "taxFilter": "المصروفات الضريبية",
+  "duplicate": "تكرار",
   "kpi": {
     "totalInflow": "إجمالي الوارد",
     "totalOutflow": "إجمالي المنصرف",
@@ -34,12 +38,16 @@
     "amount": "المبلغ",
     "status": "الحالة",
     "actions": "الإجراءات",
+    "edit": "تعديل",
+    "delete": "حذف",
     "noTransactions": "لم يتم العثور على معاملات",
     "noTransactionsSubtitle": "جرب تعديل الفلاتر أو انقر على 'إضافة معاملة' لتسجيل أول قيد."
   },
   "modal": {
     "title": "إضافة معاملة جديدة",
     "subtitle": "تسجيل إيراد أو مصروف جديد في دفتر الحسابات الخاص بك.",
+    "editTitle": "تعديل المعاملة",
+    "editSubtitle": "تحديث تفاصيل قيد المعاملة في دفتر الحسابات.",
     "incomeTab": "إيراد (+)",
     "expenseTab": "مصروف (-)",
     "descriptionLabel": "الوصف",
@@ -58,6 +66,35 @@
     "notesPlaceholder": "سياق إضافي أو رقم المرجع...",
     "cancel": "إلغاء",
     "submit": "تسجيل المعاملة",
+    "updateSubmit": "تحديث المعاملة",
     "saving": "جاري الحفظ..."
+  },
+  "deleteModal": {
+    "title": "حذف المعاملة",
+    "confirmMessage": "هل أنت متأكد من رغبتك في حذف هذه المعاملة؟ سيؤدي هذا الإجراء إلى إزالتها من دفتر الحسابات النشط.",
+    "confirmBtn": "نعم، حذف",
+    "cancelBtn": "إلغاء",
+    "deleting": "جاري الحذف..."
+  },
+  "categoriesModal": {
+    "title": "إدارة الفئات",
+    "subtitle": "تنظيم وتخصيص فئات أعمالك للحصول على تقارير مالية دقيقة.",
+    "incomeTab": "فئات الإيرادات",
+    "expenseTab": "فئات المصروفات",
+    "newCategory": "فئة جديدة",
+    "nameLabel": "اسم الفئة",
+    "namePlaceholder": "مثال: اشتراكات البرمجيات",
+    "iconLabel": "الأيقونة",
+    "colorLabel": "اللون",
+    "systemDefault": "افتراضي للنظام",
+    "custom": "مخصص",
+    "createBtn": "إنشاء الفئة",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "deleteTooltip": "حذف الفئة",
+    "deleteConfirm": "هل أنت متأكد من حذف هذه الفئة؟",
+    "inUseError": "لا يمكن حذف هذه الفئة لأنها مرتبطة حالياً بمعاملات مسجلة.",
+    "createSuccess": "تم إنشاء الفئة بنجاح.",
+    "deleteSuccess": "تم حذف الفئة بنجاح."
   }
 }

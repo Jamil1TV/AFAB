@@ -1,7 +1,10 @@
 package com.afab.finance.dto;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class TransactionDTO {
@@ -17,25 +20,18 @@ public class TransactionDTO {
     private String categoryColor;
     private String categoryIcon;
     private UUID categoryId;
+    private String notes;
+    private Boolean taxDeductible;
+    private BigDecimal taxRate;
+    private Boolean isSplit;
+    private UUID parentTransactionId;
+    private Boolean potentialDuplicate;
+    private BigDecimal priceHikePercentage;
+    private List<SplitItemDTO> splitItems = new ArrayList<>();
+    private Instant createdAt;
+    private Instant updatedAt;
 
     public TransactionDTO() {}
-
-    public TransactionDTO(UUID id, String type, BigDecimal amount, String currency, String description,
-                          LocalDate transactionDate, String paymentMethod, String status,
-                          String categoryName, String categoryColor, String categoryIcon, UUID categoryId) {
-        this.id = id;
-        this.type = type;
-        this.amount = amount;
-        this.currency = currency;
-        this.description = description;
-        this.transactionDate = transactionDate;
-        this.paymentMethod = paymentMethod;
-        this.status = status;
-        this.categoryName = categoryName;
-        this.categoryColor = categoryColor;
-        this.categoryIcon = categoryIcon;
-        this.categoryId = categoryId;
-    }
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -72,4 +68,34 @@ public class TransactionDTO {
 
     public UUID getCategoryId() { return categoryId; }
     public void setCategoryId(UUID categoryId) { this.categoryId = categoryId; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public Boolean getTaxDeductible() { return taxDeductible != null && taxDeductible; }
+    public void setTaxDeductible(Boolean taxDeductible) { this.taxDeductible = taxDeductible; }
+
+    public BigDecimal getTaxRate() { return taxRate; }
+    public void setTaxRate(BigDecimal taxRate) { this.taxRate = taxRate; }
+
+    public Boolean getIsSplit() { return isSplit != null && isSplit; }
+    public void setIsSplit(Boolean isSplit) { this.isSplit = isSplit; }
+
+    public UUID getParentTransactionId() { return parentTransactionId; }
+    public void setParentTransactionId(UUID parentTransactionId) { this.parentTransactionId = parentTransactionId; }
+
+    public Boolean getPotentialDuplicate() { return potentialDuplicate != null && potentialDuplicate; }
+    public void setPotentialDuplicate(Boolean potentialDuplicate) { this.potentialDuplicate = potentialDuplicate; }
+
+    public BigDecimal getPriceHikePercentage() { return priceHikePercentage; }
+    public void setPriceHikePercentage(BigDecimal priceHikePercentage) { this.priceHikePercentage = priceHikePercentage; }
+
+    public List<SplitItemDTO> getSplitItems() { return splitItems; }
+    public void setSplitItems(List<SplitItemDTO> splitItems) { this.splitItems = splitItems; }
+
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

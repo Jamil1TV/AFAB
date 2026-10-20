@@ -1,0 +1,67 @@
+{
+  "title": "Currencies & FX Markets",
+  "subtitle": "Track real-time global foreign exchange rates, convert across 160+ currencies, and evaluate your business portfolio impact.",
+  "liveStatus": "Live Rates Active",
+  "refresh": "Refresh",
+  "baseCurrency": "Base Currency",
+  "searchPlaceholder": "Search currency or symbol (e.g. USD, EUR, TND)...",
+  "timeframe": {
+    "1W": "1 Week",
+    "1M": "1 Month",
+    "3M": "3 Months",
+    "1Y": "1 Year"
+  },
+  "marketTicker": "Global FX Ticker",
+  "featuredPairs": "Featured Currency Pairs",
+  "rateChart": "Exchange Rate Trajectory",
+  "chartSubtitle": "Historical exchange rate trend over selected period",
+  "high24h": "24h High",
+  "low24h": "24h Low",
+  "change24h": "24h Change",
+  "converter": {
+    "title": "Live Currency Converter",
+    "subtitle": "Instant conversion using real-time mid-market rates",
+    "youPay": "You send / Amount",
+    "youReceive": "You receive (Estimated)",
+    "swap": "Swap currencies",
+    "midMarketRate": "Mid-market rate: 1 {from} = {rate} {to}",
+    "updatedJustNow": "Rates refreshed in real-time"
+  },
+  "businessPortfolio": {
+    "title": "Business Portfolio Valuation",
+    "subtitle": "Your current net balance evaluated in top international currencies",
+    "currentBalance": "Current Business Balance",
+    "inUsd": "Valuation in USD",
+    "inEur": "Valuation in EUR",
+    "inTnd": "Valuation in TND",
+    "inGbp": "Valuation in GBP",
+    "inAed": "Valuation in AED",
+    "fxRiskNote": "Monitor currency fluctuations to hedge foreign exchange risk when invoicing overseas clients."
+  },
+  "table": {
+    "title": "All Supported FX Currencies",
+    "currency": "Currency",
+    "code": "Code",
+    "rateAgainstBase": "Rate (vs {base})",
+    "change": "24h Trend",
+    "action": "Action",
+    "useInConverter": "Convert"
+  },
+  "migrationModal": {
+    "title": "Change Business Base Currency",
+    "subtitle": "Update your primary accounting currency with live market conversion",
+    "warning": "Changing your base currency will affect how financial reports and balances are displayed.",
+    "liveRate": "Real-Time Exchange Rate",
+    "currentBalance": "Current Net Balance",
+    "projectedBalance": "Converted Net Balance",
+    "transactionsAffected": "Transactions to convert",
+    "optionsTitle": "Choose how to handle existing transactions:",
+    "optionConvert": "Convert all past transactions using the live rate ({rate})",
+    "optionConvertDesc": "Recommended: Preserves the true historical monetary value of your revenues, expenses, and invoices in the new currency.",
+    "optionKeep": "Keep existing transaction amounts as-is",
+    "optionKeepDesc": "Only changes the currency code symbol without multiplying previous amounts. May distort historical financial totals.",
+    "confirm": "Confirm Currency Change",
+    "cancel": "Cancel",
+    "success": "Base currency successfully updated to {newCurrency}!"
+  }
+}

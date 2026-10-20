@@ -54,7 +54,7 @@ frontend/
 - Keep labels accessible and document direction correct.
 
 ## 5. API layer
-Feature wrappers in `lib/api/` include `client.ts`, `auth.ts`, `business.ts`, `dashboard.ts`, `expenses.ts`, `invoices.ts`, `revenue.ts`, `settings.ts`, and `transactions.ts`.
+Feature wrappers in `lib/api/` include `client.ts`, `auth.ts`, `business.ts`, `categories.ts`, `dashboard.ts`, `expenses.ts`, `invoices.ts`, `revenue.ts`, `settings.ts`, and `transactions.ts`.
 
 `fetchClient` in `lib/api/client.ts` uses `NEXT_PUBLIC_API_URL`, falling back to `http://localhost:8080/api/v1`. It sets JSON headers, attaches a bearer token when auth is required, and attempts refresh after an unauthorized response. API failures use `ApiError`.
 
@@ -90,7 +90,7 @@ Security considerations:
 - Settings: general, business profile, security, subscription, and catch-all settings route.
 - Maintenance and not-found states.
 
-Dashboard components include KPI cards, revenue chart, AI insights, recent transactions, expense categories, reminders, top customers, sidebar, add-transaction modal, and upgrade banner. A visual component does not prove the data behind it is persisted/live.
+Dashboard components include KPI cards, revenue chart, AI insights, recent transactions, expense categories, reminders, top customers, sidebar, add/edit-transaction modal, delete-transaction modal, manage-categories modal, upgrade banner, QuickAddBar (natural language magic quick-add with shortcut N), TransactionDetailDrawer (slide-over with audit info, notes, and anomaly alerts), SplitTransactionModal (multi-category split with live balance validation), and CSV exporter (UTF-8 BOM for Arabic/English Excel compatibility). A visual component does not prove the data behind it is persisted/live.
 
 ## 8. Plans and multi-business requirement
 `components/plans/PlansScreen.tsx` defines display plan data and local React state for billing/trial/checkout presentation. Treat it as presentation, not a subscription backend.

@@ -8,31 +8,46 @@ import { ExpenseCategories } from "@/components/dashboard/ExpenseCategories";
 import { ReminderCard } from "@/components/dashboard/ReminderCard";
 import { TopCustomers } from "@/components/dashboard/TopCustomers";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
-import { useState, useEffect } from "react";
-import { DashboardService, UserService } from "@/lib/api/dashboard";
+import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
+import { useState, useEffect, useCallback } from "react";
+import { DashboardService, UserService, DashboardSummaryResponse } from "@/lib/api/dashboard";
 import { AuthStore } from "@/lib/auth-store";
 import { DollarSign, CreditCard, TrendingUp, Wallet, BarChart3 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { AfabLoader } from "@/components/ui/afab-loader";
+import { formatCurrency } from "@/lib/currency";
 
 export default function DashboardPage() {
   const tWelcome = useTranslations("Dashboard.welcome");
   const tKpi = useTranslations("Dashboard.kpi");
   
-  const [data, setData] = useState<any>(null);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [data, setData] = useState<DashboardSummaryResponse | null>(null);
+  const [userProfile, setUserProfile] = useState<{ firstName?: string; currency?: string } | null>(null);
+  const [period, setPeriod] = useState<"WEEKLY" | "MONTHLY" | "YEARLY">("MONTHLY");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    DashboardService.getSummary()
-      .then(setData)
-      .catch((err) => {
-        console.error("Dashboard fetch error:", err);
-        setError(err.message || "Failed to load dashboard data");
-      })
-      .finally(() => setLoading(false));
+  const fetchSummary = useCallback(async () => {
+    setLoading(true);
+    try {
+      const periodParam = period === "MONTHLY" ? "month" : period === "WEEKLY" ? "weekly" : "year";
+      const res = await DashboardService.getSummary(periodParam);
+      setData(res);
+      setError(null);
+    } catch (err: unknown) {
+      console.error("Dashboard fetch error:", err);
+      const message = err instanceof Error ? err.message : "Failed to load dashboard data";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
 
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary]);
+
+  useEffect(() => {
     UserService.getProfile()
       .then(setUserProfile)
       .catch(() => {
@@ -41,10 +56,10 @@ export default function DashboardPage() {
       });
   }, []);
 
-  if (loading) {
+  if (loading && !data) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <AfabLoader size="lg" text="Loading dashboard data..." />
+        <AfabLoader size="lg" text="Loading real-time financial stats..." />
       </div>
     );
   }
@@ -61,7 +76,7 @@ export default function DashboardPage() {
             {error || "Something went wrong. Please try again later."}
           </p>
           <button
-            onClick={() => window.location.reload()}
+            onClick={() => fetchSummary()}
             className="mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-[#8b5cf6] text-white hover:bg-[#7c3aed] transition-colors"
           >
             Retry
@@ -71,19 +86,27 @@ export default function DashboardPage() {
     );
   }
 
-  // Safe access to KPI data with defaults
+  const currency = data.currency || userProfile?.currency || "USD";
+
+  // Safe access to KPI data
   const kpi = data.kpiData || {};
-  const revenue = kpi.revenue || { value: "$0.00", change: "0.0%", isPositive: true };
-  const expenses = kpi.expenses || { value: "$0.00", change: "0.0%", isPositive: true };
-  const profit = kpi.profit || { value: "$0.00", change: "0.0%", isPositive: true };
-  const cashFlow = kpi.cashFlow || { value: "$0.00", change: "0.0%", isPositive: true };
+  const revenue = kpi.revenue || { value: formatCurrency(0, currency), change: "0.0%", isPositive: true };
+  const expenses = kpi.expenses || { value: formatCurrency(0, currency), change: "0.0%", isPositive: true };
+  const profit = kpi.profit || { value: formatCurrency(0, currency), change: "0.0%", isPositive: true };
+  const cashFlow = kpi.cashFlow || { value: formatCurrency(0, currency), change: "0.0%", isPositive: true };
+
+  // Trailing monthly arrays for sparklines in KPI cards
+  const revSparkline = data.revenueData?.map((d) => d.revenue) || [0, 0, 0, 0, 0, 0];
+  const expSparkline = data.revenueData?.map((d) => d.expenses) || [0, 0, 0, 0, 0, 0];
+  const profitSparkline = data.revenueData?.map((d) => d.revenue - d.expenses) || [0, 0, 0, 0, 0, 0];
+  const cashFlowSparkline = profitSparkline;
 
   const firstName = userProfile?.firstName || AuthStore.getUser()?.firstName || "";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-700">
       
-      {/* ── Welcome Header ── */}
+      {/* ── Welcome Header & Period Selector ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white sm:text-3xl tracking-tight">
@@ -93,41 +116,45 @@ export default function DashboardPage() {
             {tWelcome("subtitle")}
           </p>
         </div>
+
+        <div className="flex items-center gap-3">
+          <PeriodSelector value={period} onChange={setPeriod} />
+        </div>
       </div>
 
       {/* ── KPI Cards ── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard 
           title={tKpi("totalRevenue")} 
-          value={revenue.value} 
+          value={revenue.rawValue != null ? formatCurrency(revenue.rawValue, currency) : revenue.value} 
           change={revenue.change} 
           isPositive={revenue.isPositive} 
           icon={DollarSign}
-          data={[0, 0, 0, 0, 0, 0, 0]}
+          data={revSparkline}
         />
         <KpiCard 
           title={tKpi("totalExpenses")} 
-          value={expenses.value} 
+          value={expenses.rawValue != null ? formatCurrency(expenses.rawValue, currency) : expenses.value} 
           change={expenses.change} 
           isPositive={expenses.isPositive} 
           icon={CreditCard}
-          data={[0, 0, 0, 0, 0, 0, 0]}
+          data={expSparkline}
         />
         <KpiCard 
           title={tKpi("netProfit")} 
-          value={profit.value} 
+          value={profit.rawValue != null ? formatCurrency(profit.rawValue, currency) : profit.value} 
           change={profit.change} 
           isPositive={profit.isPositive} 
           icon={TrendingUp}
-          data={[0, 0, 0, 0, 0, 0, 0]}
+          data={profitSparkline}
         />
         <KpiCard 
           title={tKpi("cashFlow")} 
-          value={cashFlow.value} 
+          value={cashFlow.rawValue != null ? formatCurrency(cashFlow.rawValue, currency) : cashFlow.value} 
           change={cashFlow.change} 
           isPositive={cashFlow.isPositive} 
           icon={Wallet}
-          data={[0, 0, 0, 0, 0, 0, 0]}
+          data={cashFlowSparkline}
         />
       </div>
 
@@ -135,7 +162,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Chart takes up 2 columns on large screens */}
         <div className="lg:col-span-2">
-          <RevenueChart data={data.revenueData || []} />
+          <RevenueChart data={data.revenueData || []} currency={currency} />
         </div>
         {/* AI Insights takes 1 column */}
         <div className="lg:col-span-1">
@@ -147,18 +174,18 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {/* Transactions take up 2 columns on large screens */}
         <div className="lg:col-span-2">
-          <RecentTransactions transactions={data.transactions || []} />
+          <RecentTransactions transactions={data.transactions || []} currency={currency} />
         </div>
         {/* Expense Categories takes 1 column */}
         <div className="lg:col-span-1">
-          <ExpenseCategories categories={data.expenseCategories || []} currency={data.currency || "USD"} />
+          <ExpenseCategories categories={data.expenseCategories || []} currency={currency} />
         </div>
       </div>
 
       {/* ── Tertiary Data Row ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <ReminderCard reminders={data.reminders || []} />
-        <TopCustomers customers={data.customers || []} currency={data.currency || "USD"} />
+        <TopCustomers customers={data.customers || []} currency={currency} />
       </div>
 
       {/* ── Upgrade Banner ── */}

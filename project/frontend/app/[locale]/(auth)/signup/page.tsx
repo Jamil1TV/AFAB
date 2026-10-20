@@ -28,7 +28,7 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      await AuthService.register({
+      const res = await AuthService.register({
         firstName,
         lastName,
         businessName,
@@ -37,7 +37,11 @@ export default function SignupPage() {
       });
 
       // Redirect to Email Verification page
-      router.push("/verify-email");
+      if (res.devOtp) {
+        router.push(`/verify-email?devOtp=${res.devOtp}`);
+      } else {
+        router.push("/verify-email");
+      }
     } catch (err: any) {
       setError(err.message || t("signupFailed") || "Registration failed. Please try again.");
     } finally {

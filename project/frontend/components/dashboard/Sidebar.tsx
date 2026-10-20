@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { UserService } from "@/lib/api/dashboard";
 import { AuthStore } from "@/lib/auth-store";
+import { AuthService } from "@/lib/api/auth";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { 
   LayoutDashboard, 
@@ -15,6 +16,7 @@ import {
   Sparkles, 
   CalendarDays, 
   Settings,
+  Coins,
   ChevronsUpDown,
   PanelLeftClose,
   PanelLeftOpen,
@@ -25,6 +27,7 @@ import {
 } from "lucide-react";
 
 import { useTranslations, useLocale } from "next-intl";
+import { BusinessSwitcher } from "./BusinessSwitcher";
 
 interface UserProfile {
   id: number | string;
@@ -76,21 +79,30 @@ export function Sidebar() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebar();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleNavigate = (path: string) => {
     setUserMenuOpen(false);
     router.push(path);
   };
 
-  const handleLogout = () => {
-    AuthStore.clearAuth();
-    window.location.href = `/${locale}/login`;
+  const handleLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await AuthService.logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      AuthStore.clearAuth();
+      window.location.href = `/${locale}/login`;
+    }
   };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      const target = event.target as HTMLElement | null;
+      if (target && !target.closest("[data-user-menu]")) {
         setUserMenuOpen(false);
       }
     }
@@ -118,6 +130,7 @@ export function Sidebar() {
     { name: tSidebar("invoices"), href: "/dashboard/invoices", icon: FileText },
     { name: tSidebar("customers"), href: "/dashboard/customers", icon: Users },
     { name: tSidebar("reports"), href: "/dashboard/reports", icon: BarChart3 },
+    { name: tSidebar("currencies") || "Currencies", href: "/dashboard/currencies", icon: Coins, badge: "FX" },
   ];
 
   const workspaceItems: NavItem[] = [
@@ -162,24 +175,8 @@ export function Sidebar() {
   const sidebarContent = (
     <>
       {/* ── Brand / Workspace Selector ── */}
-      <div className="flex h-16 shrink-0 items-center px-3 border-b border-gray-200 dark:border-gray-800/60">
-        <div className={`flex w-full items-center ${collapsed ? "justify-center" : "justify-between"} rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.05] p-1.5 transition-colors cursor-pointer`}>
-          <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2.5"} overflow-hidden min-w-0`}>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md shadow-primary/20">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="currentColor">
-                <path d="M12 2L2 12L12 22L22 12L12 2Z" fill="currentColor" opacity="0.3" />
-                <path d="M12 7L7 12L12 17L17 12L12 7Z" fill="currentColor" />
-              </svg>
-            </div>
-            {!collapsed && (
-              <div className="flex flex-col overflow-hidden min-w-0 text-start">
-                <span className="truncate text-sm font-bold text-gray-900 dark:text-white">{profile?.businessName || profile?.workspaceName || "My Business"}</span>
-                <span className="truncate text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{profile?.planType || tSidebar("freePlan")}</span>
-              </div>
-            )}
-          </div>
-          {!collapsed && <ChevronsUpDown className="h-4 w-4 text-gray-400 shrink-0 ms-1" />}
-        </div>
+      <div className="flex h-16 shrink-0 items-center px-3 border-b border-gray-200 dark:border-gray-800/60 relative z-30">
+        <BusinessSwitcher collapsed={collapsed} profile={profile} />
       </div>
 
       {/* ── Navigation ── */}
@@ -205,26 +202,33 @@ export function Sidebar() {
       {/* ── Upgrade Card ── */}
       {!collapsed && (
         <div className="px-3 py-3 shrink-0">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-purple-50/90 via-indigo-50/40 to-white dark:from-[#141938] dark:to-[#0c1022] border border-purple-200/80 dark:border-purple-500/30 p-4 shadow-md shadow-purple-500/5 dark:shadow-xl dark:shadow-purple-900/20 transition-all">
-            <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-purple-500/15 dark:bg-purple-600/20 blur-2xl pointer-events-none" />
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-purple-50/90 via-indigo-50/40 to-white dark:from-[#131735] dark:via-[#0f132b] dark:to-[#090c1e] border border-purple-200/80 dark:border-purple-500/25 p-4 shadow-md shadow-purple-500/5 dark:shadow-2xl dark:shadow-black/60 transition-all">
+            {/* Ambient decorative lighting */}
+            <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-purple-500/15 dark:bg-purple-600/25 blur-2xl pointer-events-none" />
+            <div className="absolute -start-4 -bottom-4 h-20 w-20 rounded-full bg-indigo-500/10 dark:bg-indigo-600/20 blur-xl pointer-events-none" />
+
             <h4 className="relative z-10 text-sm font-bold text-gray-900 dark:text-white">
               {locale === "ar" ? "افتح المزيد مع برو" : (tSidebar("upgradeCardTitle") || "Unlock more with Pro")}
             </h4>
             <p className="relative z-10 mt-1 text-xs text-gray-600 dark:text-gray-300 leading-snug">
               {locale === "ar" ? "احصل على ميزات الذكاء الاصطناعي المتقدمة وإدارة شركات متعددة." : (tSidebar("upgradeCardDesc") || "Get advanced AI features and manage multiple businesses.")}
             </p>
+
             <div className="relative my-2.5 h-20 w-full flex items-center justify-center">
-              <div className="relative rounded-2xl p-1 bg-[#090d20] dark:bg-transparent border border-purple-200/80 dark:border-purple-500/30 shadow-md shadow-purple-500/10 dark:shadow-[0_0_20px_rgba(139,92,246,0.4)]">
+              {/* Radial glow halo */}
+              <div className="absolute h-16 w-16 rounded-full bg-purple-500/25 dark:bg-purple-600/35 blur-xl pointer-events-none" />
+              <div className="relative rounded-2xl p-1 bg-[#090d20] border border-purple-200/80 dark:border-purple-500/40 shadow-md shadow-purple-500/15 dark:shadow-[0_0_25px_rgba(139,92,246,0.35)] overflow-hidden">
                 <img 
                   src="/images/plans/crystal-cube.jpg" 
                   alt="Pro Crystal"
-                  className="h-16 w-16 object-contain rounded-xl" 
+                  className="h-16 w-16 object-cover rounded-xl transition-transform hover:scale-105 duration-300" 
                 />
               </div>
             </div>
+
             <Link 
               href="/dashboard/plans"
-              className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 dark:shadow-purple-900/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>{locale === "ar" ? "الترقية الآن" : (tSidebar("upgradeBtn") || "Upgrade Now")}</span>
               <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -234,7 +238,10 @@ export function Sidebar() {
       )}
 
       {/* ── User Profile & Dropdown (with Logout inside) ── */}
-      <div className={`border-t border-gray-200 dark:border-gray-800/60 ${collapsed ? "p-2" : "p-3"} shrink-0 relative`} ref={userMenuRef}>
+      <div 
+        data-user-menu="true"
+        className={`border-t border-gray-200 dark:border-gray-800/60 ${collapsed ? "p-2" : "p-3"} shrink-0 relative z-30`}
+      >
         <div 
           onClick={() => setUserMenuOpen(!userMenuOpen)}
           role="button"
@@ -274,6 +281,7 @@ export function Sidebar() {
         {/* Dropdown Menu Popup (positioned above profile) */}
         {userMenuOpen && (
           <div 
+            onMouseDown={(e) => e.stopPropagation()}
             className={`absolute z-50 bottom-full ${collapsed ? "start-full ms-2 mb-0" : "start-3 end-3 mb-2"} rounded-2xl bg-white dark:bg-[#0e1328] border border-gray-200 dark:border-purple-500/30 p-2 shadow-2xl shadow-black/50 backdrop-blur-md`}
           >
             {/* User Info Header */}
@@ -310,15 +318,23 @@ export function Sidebar() {
             <div className="pt-1 border-t border-gray-100 dark:border-gray-800/80">
               <button
                 type="button"
-                onClick={(e) => {
+                disabled={loggingOut}
+                onClick={async (e) => {
                   e.stopPropagation();
-                  setUserMenuOpen(false);
-                  handleLogout();
+                  await handleLogout();
                 }}
-                className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors text-start cursor-pointer"
+                className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors text-start cursor-pointer disabled:opacity-50"
               >
-                <LogOut className="h-4 w-4 rtl:rotate-180 shrink-0" />
-                <span>{locale === "ar" ? "تسجيل الخروج" : (tSidebar("logout") || "Logout")}</span>
+                {loggingOut ? (
+                  <div className="h-4 w-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin shrink-0" />
+                ) : (
+                  <LogOut className="h-4 w-4 rtl:rotate-180 shrink-0" />
+                )}
+                <span>
+                  {loggingOut 
+                    ? (locale === "ar" ? "جاري تسجيل الخروج..." : "Logging out...") 
+                    : (locale === "ar" ? "تسجيل الخروج" : (tSidebar("logout") || "Logout"))}
+                </span>
               </button>
             </div>
           </div>
@@ -347,7 +363,7 @@ export function Sidebar() {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className={`hidden lg:flex flex-col border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#080c18] sticky top-0 h-screen transition-all duration-300 ease-in-out shrink-0 overflow-x-hidden ${
+        className={`hidden lg:flex flex-col border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#080c18] sticky top-0 h-screen transition-all duration-300 ease-in-out shrink-0 ${
           collapsed ? "w-[68px]" : "w-64"
         }`}
       >

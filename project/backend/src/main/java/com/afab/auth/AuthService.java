@@ -1,10 +1,9 @@
 package com.afab.auth;
 
 import com.afab.auth.domain.*;
-import com.afab.auth.dto.AuthResponse;
-import com.afab.auth.dto.LoginRequest;
-import com.afab.auth.dto.RegisterRequest;
+import com.afab.auth.dto.*;
 import com.afab.auth.security.JwtService;
+import com.afab.auth.security.TotpService;
 import com.afab.business.Business;
 import com.afab.business.BusinessRepository;
 import com.afab.mail.EmailService;
@@ -15,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,9 +27,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.HexFormat;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -41,6 +40,7 @@ public class AuthService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final TotpService totpService;
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
     private final AuditService auditService;
@@ -60,7 +60,8 @@ public class AuthService {
                        VerificationTokenRepository verificationTokenRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService, AuthenticationManager authenticationManager,
+                       JwtService jwtService, TotpService totpService,
+                       AuthenticationManager authenticationManager,
                        UserDetailsService userDetailsService, AuditService auditService,
                        EmailService emailService) {
         this.userRepository = userRepository;
@@ -70,11 +71,15 @@ public class AuthService {
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.totpService = totpService;
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.auditService = auditService;
         this.emailService = emailService;
     }
+
+    @Value("${spring.profiles.active:local}")
+    private String activeProfile;
 
     @Transactional
     public AuthResponse register(RegisterRequest request, String ipAddress, String userAgent) {
@@ -99,9 +104,13 @@ public class AuthService {
         auditService.logSecurityEvent(user, "REGISTER_SUCCESS", ipAddress, userAgent, "{\"businessName\":\"" + request.getBusinessName() + "\"}");
 
         // Send Email Verification OTP
-        sendVerificationOtp(user);
+        String otp = sendVerificationOtp(user);
 
-        return buildAuthResponse(user, business.getId(), ipAddress, userAgent);
+        AuthResponse response = buildAuthResponse(user, business.getId(), ipAddress, userAgent, false);
+        if ("local".equalsIgnoreCase(activeProfile) || "dev".equalsIgnoreCase(activeProfile)) {
+            response.setDevOtp(otp);
+        }
+        return response;
     }
 
     /**
@@ -113,43 +122,195 @@ public class AuthService {
      * - BadCredentialsException  → INVALID_PASSWORD
      * - DisabledException        → ACCOUNT_DISABLED
      */
-    @Transactional
+    @Transactional(noRollbackFor = {BadCredentialsException.class, LockedException.class})
     public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
-        // 1) Check if user exists first — so we can distinguish "no account" from "wrong password"
+        // 1) Check if user exists first — distinguish "no account" from "wrong password"
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
         if (user == null) {
             throw new UsernameNotFoundException("No account exists with this email.");
         }
 
-        // 2) Check account status before attempting authentication
+        // 2) Check account status
         if (!"ACTIVE".equals(user.getStatus())) {
             throw new DisabledException("Your account has been disabled.");
         }
 
-        // 3) Authenticate — this throws BadCredentialsException if password is wrong
+        // 3) Check account lockout
+        if (user.getLockoutUntil() != null && user.getLockoutUntil().isAfter(Instant.now())) {
+            long remainingMinutes = java.time.Duration.between(Instant.now(), user.getLockoutUntil()).toMinutes() + 1;
+            throw new LockedException("Account is temporarily locked due to multiple failed login attempts. Please try again in " + remainingMinutes + " minute(s).");
+        }
+
+        // 4) Authenticate
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (DisabledException e) {
-            // Re-throw with our message (UserDetailsService might also throw this)
             throw new DisabledException("Your account has been disabled.");
         } catch (BadCredentialsException e) {
-            auditService.logSecurityEvent(user, "LOGIN_FAILED_BAD_PASSWORD", ipAddress, userAgent, null);
-            throw new BadCredentialsException("Incorrect password.");
+            int failed = user.getFailedLoginAttempts() + 1;
+            user.setFailedLoginAttempts(failed);
+            if (failed >= 5) {
+                user.setLockoutUntil(Instant.now().plus(15, ChronoUnit.MINUTES));
+                userRepository.save(user);
+                auditService.logSecurityEvent(user, "ACCOUNT_LOCKED", ipAddress, userAgent, "{\"reason\":\"max_failed_attempts\"}");
+                throw new LockedException("Account locked due to 5 consecutive failed login attempts. Try again in 15 minutes.");
+            } else {
+                userRepository.save(user);
+                auditService.logSecurityEvent(user, "LOGIN_FAILED_BAD_PASSWORD", ipAddress, userAgent, "{\"failedAttempts\":" + failed + "}");
+                throw new BadCredentialsException("Incorrect password. " + (5 - failed) + " attempt(s) remaining before temporary lockout.");
+            }
         }
 
-        // 4) Success — update login metadata
+        // 5) Success — reset failed attempts & update login metadata
+        user.setFailedLoginAttempts(0);
+        user.setLockoutUntil(null);
         user.setLastLoginAt(Instant.now());
         user.setLastLoginIp(ipAddress);
         userRepository.save(user);
 
-        Business business = businessRepository.findByUserId(user.getId()).orElseThrow();
+        // 6) 2FA verification challenge if enabled
+        if (user.isTwoFactorEnabled()) {
+            String challengeToken = jwtService.generateTwoFactorChallengeToken(user.getEmail());
+            auditService.logSecurityEvent(user, "LOGIN_2FA_CHALLENGE", ipAddress, userAgent, null);
+            return AuthResponse.twoFactorRequired(challengeToken);
+        }
 
-        refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
+        Business business = businessRepository.findByUserId(user.getId()).orElseThrow();
         auditService.logSecurityEvent(user, "LOGIN_SUCCESS", ipAddress, userAgent, null);
 
-        return buildAuthResponse(user, business.getId(), ipAddress, userAgent);
+        boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
+        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, rememberMe);
+    }
+
+    @Transactional
+    public AuthResponse verifyTwoFactorLogin(TwoFactorVerifyRequest request, String ipAddress, String userAgent) {
+        String email = jwtService.validateTwoFactorChallengeToken(request.getTwoFactorToken());
+        if (email == null) {
+            throw new IllegalArgumentException("Two-factor authentication session expired or invalid. Please login again.");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (!user.isTwoFactorEnabled()) {
+            throw new IllegalArgumentException("Two-factor authentication is not enabled for this account.");
+        }
+
+        String inputCode = request.getCode() != null ? request.getCode().trim() : "";
+        boolean valid = totpService.verifyCode(user.getTwoFactorSecret(), inputCode);
+
+        if (!valid) {
+            valid = verifyAndConsumeBackupCode(user, inputCode, ipAddress, userAgent);
+        }
+
+        if (!valid) {
+            auditService.logSecurityEvent(user, "LOGIN_2FA_FAILED", ipAddress, userAgent, "{\"reason\":\"invalid_code\"}");
+            throw new BadCredentialsException("Invalid authentication code. Please check your authenticator app or backup codes.");
+        }
+
+        Business business = businessRepository.findByUserId(user.getId()).orElseThrow();
+        auditService.logSecurityEvent(user, "LOGIN_2FA_SUCCESS", ipAddress, userAgent, null);
+
+        boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
+        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, rememberMe);
+    }
+
+    private boolean verifyAndConsumeBackupCode(User user, String code, String ipAddress, String userAgent) {
+        if (user.getTwoFactorBackupCodes() == null || user.getTwoFactorBackupCodes().isBlank()) {
+            return false;
+        }
+
+        String cleanCode = code.replace(" ", "").toUpperCase();
+        String codeHash = sha256(cleanCode);
+
+        List<String> storedHashes = new ArrayList<>(Arrays.asList(user.getTwoFactorBackupCodes().split(",")));
+        if (storedHashes.remove(codeHash)) {
+            user.setTwoFactorBackupCodes(String.join(",", storedHashes));
+            userRepository.save(user);
+            auditService.logSecurityEvent(user, "2FA_BACKUP_CODE_USED", ipAddress, userAgent, "{\"remainingCodes\":" + storedHashes.size() + "}");
+            return true;
+        }
+        return false;
+    }
+
+    @Transactional(readOnly = true)
+    public TwoFactorSetupResponse setupTwoFactor(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        String secret = totpService.generateSecret();
+        String qrUri = totpService.getQrCodeUri(user.getEmail(), secret, "AFAB Finance");
+        List<String> backupCodes = totpService.generateBackupCodes();
+
+        return new TwoFactorSetupResponse(secret, qrUri, backupCodes);
+    }
+
+    @Transactional
+    public void enableTwoFactor(UUID userId, TwoFactorEnableRequest request, String ipAddress, String userAgent) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!totpService.verifyCode(request.getSecret(), request.getCode())) {
+            throw new IllegalArgumentException("Invalid verification code. Please check the code on your authenticator app.");
+        }
+
+        user.setTwoFactorSecret(request.getSecret());
+        user.setTwoFactorEnabled(true);
+
+        if (request.getBackupCodes() != null && !request.getBackupCodes().isEmpty()) {
+            List<String> hashedCodes = request.getBackupCodes().stream()
+                    .map(c -> sha256(c.replace(" ", "").toUpperCase()))
+                    .collect(Collectors.toList());
+            user.setTwoFactorBackupCodes(String.join(",", hashedCodes));
+        }
+
+        userRepository.save(user);
+        auditService.logSecurityEvent(user, "2FA_ENABLED", ipAddress, userAgent, null);
+    }
+
+    @Transactional
+    public void disableTwoFactor(UUID userId, TwoFactorDisableRequest request, String ipAddress, String userAgent) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!user.isTwoFactorEnabled()) {
+            throw new IllegalArgumentException("Two-factor authentication is not enabled.");
+        }
+
+        if (request.getPassword() == null || !passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            auditService.logSecurityEvent(user, "2FA_DISABLE_FAILED", ipAddress, userAgent, "{\"reason\":\"invalid_password\"}");
+            throw new BadCredentialsException("Invalid password. Current password is required to disable 2FA.");
+        }
+
+        user.setTwoFactorEnabled(false);
+        user.setTwoFactorSecret(null);
+        user.setTwoFactorBackupCodes(null);
+        userRepository.save(user);
+
+        auditService.logSecurityEvent(user, "2FA_DISABLED", ipAddress, userAgent, null);
+    }
+
+    @Transactional
+    public List<String> regenerateBackupCodes(UUID userId, String ipAddress, String userAgent) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (!user.isTwoFactorEnabled()) {
+            throw new IllegalArgumentException("Two-factor authentication must be enabled to regenerate backup codes.");
+        }
+
+        List<String> plainCodes = totpService.generateBackupCodes();
+        List<String> hashedCodes = plainCodes.stream()
+                .map(c -> sha256(c.replace(" ", "").toUpperCase()))
+                .collect(Collectors.toList());
+
+        user.setTwoFactorBackupCodes(String.join(",", hashedCodes));
+        userRepository.save(user);
+
+        auditService.logSecurityEvent(user, "2FA_BACKUP_CODES_REGENERATED", ipAddress, userAgent, null);
+        return plainCodes;
     }
 
     @Transactional
@@ -169,7 +330,10 @@ public class AuthService {
 
         auditService.logSecurityEvent(user, "TOKEN_REFRESH", ipAddress, userAgent, null);
 
-        return buildAuthResponse(user, business.getId(), ipAddress, userAgent);
+        // Retain 30-day expiration if previous token had a 30-day lifetime
+        boolean wasRememberMe = java.time.Duration.between(savedToken.getCreatedAt(), savedToken.getExpiresAt()).toDays() > 2;
+
+        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, wasRememberMe);
     }
 
     @Transactional
@@ -184,7 +348,7 @@ public class AuthService {
     // ── Email Verification Flow ────────────────────────
 
     @Transactional
-    public void resendVerificationEmail(String email) {
+    public String resendVerificationEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
@@ -192,7 +356,7 @@ public class AuthService {
             throw new IllegalArgumentException("Email is already verified");
         }
 
-        sendVerificationOtp(user);
+        return sendVerificationOtp(user);
     }
 
     @Transactional
@@ -220,7 +384,7 @@ public class AuthService {
         auditService.logSecurityEvent(user, "EMAIL_VERIFIED", ipAddress, userAgent, null);
     }
 
-    private void sendVerificationOtp(User user) {
+    private String sendVerificationOtp(User user) {
         // Invalidate old tokens
         verificationTokenRepository.invalidateAllUserTokens(user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION, Instant.now());
 
@@ -235,6 +399,7 @@ public class AuthService {
         verificationTokenRepository.save(token);
 
         emailService.sendVerificationOtp(user.getEmail(), user.getFirstName(), otp);
+        return otp;
     }
 
     // ── Password Reset Flow (OTP-based — existing) ────────────────────────────
@@ -388,7 +553,7 @@ public class AuthService {
 
         // Verify current password
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
-            auditService.logSecurityEvent(user, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent, "Invalid current password");
+            auditService.logSecurityEvent(user, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent, "{\"reason\":\"invalid_current_password\"}");
             throw new IllegalArgumentException("Current password is incorrect");
         }
 
@@ -404,15 +569,18 @@ public class AuthService {
 
     // ── Utility Methods ────────────────────────────────
 
-    private AuthResponse buildAuthResponse(User user, UUID businessId, String ipAddress, String userAgent) {
+    private AuthResponse buildAuthResponse(User user, UUID businessId, String ipAddress, String userAgent, boolean rememberMe) {
         var userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String accessToken = jwtService.generateToken(userDetails);
+
+        // 30 days = 30 * 24 * 60 * 60 * 1000 = 2,592,000,000 ms
+        long expirationDuration = rememberMe ? (30L * 24L * 60L * 60L * 1000L) : refreshTokenExpirationMs;
 
         String refreshTokenString = UUID.randomUUID().toString();
         RefreshToken refreshToken = new RefreshToken(
                 user,
                 refreshTokenString,
-                Instant.now().plusMillis(refreshTokenExpirationMs),
+                Instant.now().plusMillis(expirationDuration),
                 userAgent != null && userAgent.length() > 255 ? userAgent.substring(0, 255) : userAgent,
                 ipAddress
         );
@@ -424,7 +592,17 @@ public class AuthService {
         return new AuthResponse(
                 accessToken,
                 refreshTokenString,
-                new AuthResponse.UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getEmail(), businessId, user.getAvatarUrl(), user.getEmailVerifiedAt() != null, onboardingComplete)
+                new AuthResponse.UserDto(
+                        user.getId(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getEmail(),
+                        businessId,
+                        user.getAvatarUrl(),
+                        user.getEmailVerifiedAt() != null,
+                        onboardingComplete,
+                        user.isTwoFactorEnabled()
+                )
         );
     }
 

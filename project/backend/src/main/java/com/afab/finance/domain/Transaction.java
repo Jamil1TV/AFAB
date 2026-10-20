@@ -4,6 +4,7 @@ import com.afab.business.Business;
 import com.afab.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class Transaction extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String type; // 'INCOME', 'EXPENSE'
 
-    @Column(nullable = false, precision = 15, scale = 2)
+    @Column(nullable = false, precision = 19, scale = 4)
     private BigDecimal amount;
 
     @Column(nullable = false, length = 3)
@@ -49,6 +50,25 @@ public class Transaction extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "tax_deductible", nullable = false)
+    private Boolean taxDeductible = false;
+
+    @Column(name = "tax_rate", precision = 5, scale = 2)
+    private BigDecimal taxRate;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_transaction_id")
+    private Transaction parentTransaction;
+
+    @Column(name = "is_split", nullable = false)
+    private Boolean isSplit = false;
+
+    @OneToMany(mappedBy = "parentTransaction", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Transaction> splitItems = new java.util.ArrayList<>();
 
     public Transaction() {}
 
@@ -87,4 +107,22 @@ public class Transaction extends BaseEntity {
 
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
+
+    public Instant getDeletedAt() { return deletedAt; }
+    public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
+    public Boolean getTaxDeductible() { return taxDeductible != null && taxDeductible; }
+    public void setTaxDeductible(Boolean taxDeductible) { this.taxDeductible = taxDeductible; }
+
+    public BigDecimal getTaxRate() { return taxRate; }
+    public void setTaxRate(BigDecimal taxRate) { this.taxRate = taxRate; }
+
+    public Transaction getParentTransaction() { return parentTransaction; }
+    public void setParentTransaction(Transaction parentTransaction) { this.parentTransaction = parentTransaction; }
+
+    public Boolean getIsSplit() { return isSplit != null && isSplit; }
+    public void setIsSplit(Boolean isSplit) { this.isSplit = isSplit; }
+
+    public java.util.List<Transaction> getSplitItems() { return splitItems; }
+    public void setSplitItems(java.util.List<Transaction> splitItems) { this.splitItems = splitItems; }
 }

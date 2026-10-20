@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, DollarSign, Calendar, Tag, CreditCard, FileText, ArrowUpRight, ArrowDownLeft } from "lucide-react";
-import { CategoryItem, TransactionService } from "@/lib/api/transactions";
+import { useState } from "react";
+import { X, Calendar, Tag, CreditCard, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { CategoryItem, TransactionItem, TransactionService } from "@/lib/api/transactions";
 import { useTranslations } from "next-intl";
 
 interface AddTransactionModalProps {
@@ -11,28 +11,33 @@ interface AddTransactionModalProps {
   onSuccess: () => void;
   categories: CategoryItem[];
   currency?: string;
+  transactionToEdit?: TransactionItem | null;
 }
 
-export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, currency = "USD" }: AddTransactionModalProps) {
+type FormModalProps = Omit<AddTransactionModalProps, "isOpen">;
+
+function TransactionFormModal({
+  onClose,
+  onSuccess,
+  categories,
+  currency = "USD",
+  transactionToEdit = null,
+}: FormModalProps) {
   const tModal = useTranslations("Transactions.modal");
 
-  const [type, setType] = useState<"INCOME" | "EXPENSE">("EXPENSE");
-  const [description, setDescription] = useState("");
-  const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split("T")[0]);
-  const [paymentMethod, setPaymentMethod] = useState("BANK_TRANSFER");
-  const [notes, setNotes] = useState("");
+  const [type, setType] = useState<"INCOME" | "EXPENSE">(transactionToEdit?.type || "EXPENSE");
+  const [description, setDescription] = useState(transactionToEdit?.description || "");
+  const [amount, setAmount] = useState(transactionToEdit ? transactionToEdit.amount.toString() : "");
+  const [categoryId, setCategoryId] = useState(transactionToEdit?.categoryId || "");
+  const [transactionDate, setTransactionDate] = useState(
+    transactionToEdit?.transactionDate || new Date().toISOString().split("T")[0]
+  );
+  const [paymentMethod, setPaymentMethod] = useState(transactionToEdit?.paymentMethod || "BANK_TRANSFER");
+  const [notes, setNotes] = useState(transactionToEdit?.notes || "");
+  const [taxDeductible, setTaxDeductible] = useState(transactionToEdit?.taxDeductible || false);
+  const [taxRate, setTaxRate] = useState(transactionToEdit?.taxRate ? transactionToEdit.taxRate.toString() : "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      setError(null);
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const filteredCategories = categories.filter(
     (c) => c.type.toUpperCase() === type.toUpperCase()
@@ -41,7 +46,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim() || !amount || parseFloat(amount) <= 0) {
-      setError("Please enter a valid description and amount.");
+      setError("Please enter a valid description and positive amount.");
       return;
     }
 
@@ -49,7 +54,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
     setError(null);
 
     try {
-      await TransactionService.createTransaction({
+      const payload = {
         type,
         amount: parseFloat(amount),
         description: description.trim(),
@@ -57,17 +62,21 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
         categoryId: categoryId || undefined,
         paymentMethod,
         notes: notes.trim() || undefined,
-      });
+        taxDeductible,
+        taxRate: taxRate ? parseFloat(taxRate) : undefined,
+      };
 
-      // Reset form
-      setDescription("");
-      setAmount("");
-      setCategoryId("");
-      setNotes("");
+      if (transactionToEdit) {
+        await TransactionService.updateTransaction(transactionToEdit.id, payload);
+      } else {
+        await TransactionService.createTransaction(payload);
+      }
+
       onSuccess();
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to create transaction.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to save transaction.";
+      setError(message);
     } finally {
       setSubmitting(false);
     }
@@ -83,10 +92,10 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/60 pb-4">
           <div>
             <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
-              {tModal("title")}
+              {transactionToEdit ? tModal("editTitle") : tModal("title")}
             </h2>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {tModal("subtitle")}
+              {transactionToEdit ? tModal("editSubtitle") : tModal("subtitle")}
             </p>
           </div>
           <button
@@ -147,6 +156,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
             <input
               type="text"
               required
+              maxLength={255}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={tModal("descriptionPlaceholder")}
@@ -161,18 +171,18 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
                 {tModal("amountLabel")} *
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-xs font-bold text-gray-500 dark:text-gray-400">
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-xs font-bold text-gray-500 dark:text-gray-400">
                   {currency === "QAR" ? "QAR" : currency === "AED" ? "AED" : currency === "SAR" ? "SAR" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$"}
                 </div>
                 <input
                   type="number"
-                  step="0.01"
-                  min="0.01"
+                  step="any"
+                  min="0.0001"
                   required
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder={tModal("amountPlaceholder")}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-12 pr-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-12 pe-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
                 />
               </div>
             </div>
@@ -182,7 +192,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
                 {tModal("dateLabel")} *
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-gray-400">
                   <Calendar className="h-4 w-4" />
                 </div>
                 <input
@@ -190,7 +200,7 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
                   required
                   value={transactionDate}
                   onChange={(e) => setTransactionDate(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
                 />
               </div>
             </div>
@@ -203,13 +213,13 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
                 {tModal("categoryLabel")}
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-gray-400">
                   <Tag className="h-4 w-4" />
                 </div>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
                 >
                   <option value="">{tModal("selectCategory")}</option>
                   {filteredCategories.map((cat) => (
@@ -226,13 +236,13 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
                 {tModal("methodLabel")}
               </label>
               <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-gray-400">
+                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-gray-400">
                   <CreditCard className="h-4 w-4" />
                 </div>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
                 >
                   <option value="BANK_TRANSFER">{tModal("bankTransfer")}</option>
                   <option value="CARD">{tModal("card")}</option>
@@ -250,11 +260,40 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
             </label>
             <input
               type="text"
+              maxLength={1000}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={tModal("notesPlaceholder")}
               className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
             />
+          </div>
+
+          {/* Tax Deductible Toggle */}
+          <div className="p-3.5 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.02] flex items-center justify-between">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={taxDeductible}
+                onChange={(e) => setTaxDeductible(e.target.checked)}
+                className="w-4 h-4 rounded text-[#8b5cf6] focus:ring-[#8b5cf6] border-gray-300 dark:border-gray-700"
+              />
+              <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+                Tax Deductible Business Expense
+              </span>
+            </label>
+            {taxDeductible && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-gray-400">VAT / Tax %</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(e.target.value)}
+                  placeholder="e.g. 19"
+                  className="w-20 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-2 py-1 text-xs text-right text-gray-900 dark:text-white"
+                />
+              </div>
+            )}
           </div>
 
           {/* Actions */}
@@ -271,11 +310,21 @@ export function AddTransactionModal({ isOpen, onClose, onSuccess, categories, cu
               disabled={submitting}
               className="px-6 py-2.5 rounded-xl text-xs font-bold bg-[#8b5cf6] text-white hover:bg-[#7c3aed] disabled:opacity-50 transition-all shadow-lg shadow-[#8b5cf6]/25"
             >
-              {submitting ? tModal("saving") : tModal("submit")}
+              {submitting ? tModal("saving") : (transactionToEdit ? tModal("updateSubmit") : tModal("submit"))}
             </button>
           </div>
         </form>
       </div>
     </div>
+  );
+}
+
+export function AddTransactionModal(props: AddTransactionModalProps) {
+  if (!props.isOpen) return null;
+  return (
+    <TransactionFormModal
+      key={props.transactionToEdit ? props.transactionToEdit.id : "new"}
+      {...props}
+    />
   );
 }
