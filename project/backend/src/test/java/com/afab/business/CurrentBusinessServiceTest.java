@@ -1,7 +1,6 @@
 package com.afab.business;
 
 import com.afab.common.exception.ForbiddenException;
-import com.afab.common.exception.ResourceNotFoundException;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

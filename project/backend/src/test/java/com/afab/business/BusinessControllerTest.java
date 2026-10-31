@@ -2,7 +2,6 @@ package com.afab.business;
 
 import com.afab.business.dto.BusinessDTO;
 import com.afab.business.dto.CreateBusinessRequest;
-import com.afab.common.exception.ForbiddenException;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 

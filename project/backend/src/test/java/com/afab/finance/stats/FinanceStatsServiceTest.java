@@ -2,7 +2,6 @@ package com.afab.finance.stats;
 
 import com.afab.business.Business;
 import com.afab.dashboard.dto.DashboardSummaryDTO;
-import com.afab.finance.domain.Category;
 import com.afab.finance.domain.Transaction;
 import com.afab.finance.repository.TransactionRepository;
 import org.junit.jupiter.api.BeforeEach;

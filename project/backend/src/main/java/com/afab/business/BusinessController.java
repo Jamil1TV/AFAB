@@ -4,7 +4,6 @@ import com.afab.business.dto.BusinessDTO;
 import com.afab.business.dto.CreateBusinessRequest;
 import com.afab.business.dto.UpdateBusinessRequest;
 import com.afab.common.exception.ForbiddenException;
-import com.afab.common.exception.ResourceNotFoundException;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import jakarta.validation.Valid;

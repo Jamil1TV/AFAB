@@ -165,6 +165,8 @@ class EntitlementServiceTest {
 
         SubscriptionSnapshotDTO result = entitlementService.activateTrial(userEmail, "plus");
 
+        assertThat(result).isNotNull();
+        assertThat(result.getStatus()).isEqualTo("TRIALING");
         assertThat(activeSubscription.getStatus()).isEqualTo("TRIALING");
         assertThat(activeSubscription.getTrialEnd()).isAfter(Instant.now());
         assertThat(testUser.getPlanTier()).isEqualTo("PLUS");
