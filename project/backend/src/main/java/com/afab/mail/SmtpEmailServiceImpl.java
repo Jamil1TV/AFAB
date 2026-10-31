@@ -22,6 +22,7 @@ public class SmtpEmailServiceImpl implements EmailService {
     private static final Logger log = LoggerFactory.getLogger(SmtpEmailServiceImpl.class);
 
     private final JavaMailSender mailSender;
+    private final MailHealthMonitor mailHealthMonitor;
 
     @Value("${afab.mail.from:afab_support_team@gmail.com}")
     private String fromAddress;
@@ -32,8 +33,15 @@ public class SmtpEmailServiceImpl implements EmailService {
     @Value("${afab.app.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
-    public SmtpEmailServiceImpl(JavaMailSender mailSender) {
+    @Value("${afab.mail.max-attempts:3}")
+    private int maxAttempts;
+
+    @Value("${afab.mail.retry-backoff-ms:1000}")
+    private long retryBackoffMs;
+
+    public SmtpEmailServiceImpl(JavaMailSender mailSender, MailHealthMonitor mailHealthMonitor) {
         this.mailSender = mailSender;
+        this.mailHealthMonitor = mailHealthMonitor;
     }
 
     @Override
@@ -117,19 +125,45 @@ public class SmtpEmailServiceImpl implements EmailService {
     // Private Helpers
     // ═══════════════════════════════════════════════════════════════
 
+    /**
+     * Sends an HTML email, retrying transient failures (timeouts, dropped connections) with backoff.
+     * Authentication failures are NOT retried — they never fix themselves and need a new password.
+     *
+     * @throws EmailDeliveryException if the email could not be delivered after all attempts.
+     *         (Previously failures were swallowed, so users silently never got their code.)
+     */
     private void sendHtmlEmail(String to, String subject, String htmlContent) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setFrom(fromAddress, fromName);
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-            mailSender.send(message);
-            log.info("📧 Email successfully sent to {}", to);
-        } catch (Exception e) {
-            log.warn("⚠️ SMTP Email delivery failed to {} (Reason: {}). Proceeding cleanly for dev testing.", to, e.getMessage());
+        Exception lastFailure = null;
+        for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                MimeMessage message = mailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+                helper.setFrom(fromAddress, fromName);
+                helper.setTo(to);
+                helper.setSubject(subject);
+                helper.setText(htmlContent, true);
+                mailSender.send(message);
+                mailHealthMonitor.recordSuccess();
+                log.info("📧 Email successfully sent to {}{}", to, attempt > 1 ? " (attempt " + attempt + ")" : "");
+                return;
+            } catch (Exception e) {
+                lastFailure = e;
+                boolean authFailure = MailHealthMonitor.isAuthenticationFailure(e);
+                log.warn("⚠️ SMTP delivery to {} failed (attempt {}/{}): {}", to, attempt, maxAttempts, e.getMessage());
+                if (authFailure || attempt == maxAttempts) {
+                    break;
+                }
+                try {
+                    Thread.sleep(retryBackoffMs * attempt);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
         }
+        mailHealthMonitor.recordFailure(lastFailure);
+        throw new EmailDeliveryException("Failed to deliver email to " + to, lastFailure,
+                MailHealthMonitor.isAuthenticationFailure(lastFailure));
     }
 
     // ═══════════════════════════════════════════════════════════════

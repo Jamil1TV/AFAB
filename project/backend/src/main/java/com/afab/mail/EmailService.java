@@ -18,6 +18,9 @@ package com.afab.mail;
  * │  @Profile("!prod") on SmtpEmailServiceImpl. Spring will          │
  * │  automatically pick the right one based on the active profile.   │
  * └──────────────────────────────────────────────────────────────────┘
+ *
+ * All send methods throw {@link EmailDeliveryException} when the email could not be delivered,
+ * so callers can react instead of pretending the email was sent.
  */
 public interface EmailService {
 

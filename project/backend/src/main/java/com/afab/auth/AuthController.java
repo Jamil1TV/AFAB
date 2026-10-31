@@ -1,6 +1,7 @@
 package com.afab.auth;
 
 import com.afab.auth.dto.*;
+import com.afab.mail.EmailDeliveryException;
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
 import jakarta.servlet.http.HttpServletRequest;
@@ -280,6 +281,10 @@ public class AuthController {
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ErrorResponse.error("RESEND_FAILED", e.getMessage()));
+        } catch (EmailDeliveryException e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(ErrorResponse.error("EMAIL_DELIVERY_FAILED",
+                            "We couldn't send the verification email right now. Please try again in a few minutes."));
         }
     }
 

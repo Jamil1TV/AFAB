@@ -8,10 +8,13 @@ import com.afab.business.Business;
 import com.afab.business.BusinessMember;
 import com.afab.business.BusinessMemberRepository;
 import com.afab.business.BusinessRepository;
+import com.afab.mail.EmailDeliveryException;
 import com.afab.mail.EmailService;
 import com.afab.security.AuditService;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -34,6 +37,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final BusinessRepository businessRepository;
@@ -140,10 +145,21 @@ public class AuthService {
 
         auditService.logSecurityEvent(user, "REGISTER_SUCCESS", ipAddress, userAgent, "{\"businessName\":\"" + request.getBusinessName() + "\"}");
 
-        // Send Email Verification OTP
-        String otp = sendVerificationOtp(user);
+        // Send Email Verification OTP.
+        // If delivery fails we still keep the account (the user can hit "Resend" once SMTP is back),
+        // but we tell the client honestly that the code was not sent.
+        String otp = createVerificationOtp(user);
+        boolean emailSent = true;
+        try {
+            emailService.sendVerificationOtp(user.getEmail(), user.getFirstName(), otp);
+        } catch (EmailDeliveryException e) {
+            log.error("Registration of {} succeeded but the verification email could not be sent: {}",
+                    user.getEmail(), e.getMessage());
+            emailSent = false;
+        }
 
         AuthResponse response = buildAuthResponse(user, business.getId(), ipAddress, userAgent, false);
+        response.setVerificationEmailSent(emailSent);
         if ("local".equalsIgnoreCase(activeProfile) || "dev".equalsIgnoreCase(activeProfile)) {
             response.setDevOtp(otp);
         }
@@ -421,7 +437,19 @@ public class AuthService {
         auditService.logSecurityEvent(user, "EMAIL_VERIFIED", ipAddress, userAgent, null);
     }
 
+    /**
+     * Creates a fresh OTP and emails it.
+     *
+     * @throws EmailDeliveryException if the email could not be delivered.
+     */
     private String sendVerificationOtp(User user) {
+        String otp = createVerificationOtp(user);
+        emailService.sendVerificationOtp(user.getEmail(), user.getFirstName(), otp);
+        return otp;
+    }
+
+    /** Invalidates previous verification codes and stores a new hashed one. Returns the raw code. */
+    private String createVerificationOtp(User user) {
         // Invalidate old tokens
         verificationTokenRepository.invalidateAllUserTokens(user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION, Instant.now());
 
@@ -434,8 +462,6 @@ public class AuthService {
                 Instant.now().plus(15, ChronoUnit.MINUTES)
         );
         verificationTokenRepository.save(token);
-
-        emailService.sendVerificationOtp(user.getEmail(), user.getFirstName(), otp);
         return otp;
     }
 
@@ -456,7 +482,12 @@ public class AuthService {
             );
             verificationTokenRepository.save(token);
 
-            emailService.sendPasswordResetOtp(user.getEmail(), user.getFirstName(), otp);
+            try {
+                emailService.sendPasswordResetOtp(user.getEmail(), user.getFirstName(), otp);
+            } catch (EmailDeliveryException e) {
+                // Stay silent towards the client (prevents email enumeration), but log loudly.
+                log.error("Password reset OTP for {} could not be delivered: {}", user.getEmail(), e.getMessage());
+            }
             auditService.logSecurityEvent(user, "PASSWORD_RESET_REQUESTED", ipAddress, userAgent, null);
         });
         // We don't throw an error if the user isn't found to prevent email enumeration attacks
@@ -513,7 +544,12 @@ public class AuthService {
             // Build reset link
             String resetLink = frontendUrl + "/en/reset-password?token=" + rawToken;
 
-            emailService.sendPasswordResetLink(user.getEmail(), user.getFirstName(), resetLink);
+            try {
+                emailService.sendPasswordResetLink(user.getEmail(), user.getFirstName(), resetLink);
+            } catch (EmailDeliveryException e) {
+                // Stay silent towards the client (prevents email enumeration), but log loudly.
+                log.error("Password reset link for {} could not be delivered: {}", user.getEmail(), e.getMessage());
+            }
             auditService.logSecurityEvent(user, "PASSWORD_RESET_LINK_REQUESTED", ipAddress, userAgent, null);
         });
         // Silent return to prevent email enumeration

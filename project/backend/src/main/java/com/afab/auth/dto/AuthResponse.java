@@ -11,6 +11,9 @@ public class AuthResponse {
 
     private String devOtp;
 
+    /** False when the account was created but the verification email could not be delivered. */
+    private boolean verificationEmailSent = true;
+
     public AuthResponse() {}
 
     public AuthResponse(String accessToken, String refreshToken, UserDto user) {
@@ -33,6 +36,8 @@ public class AuthResponse {
     public String getTwoFactorToken() { return twoFactorToken; }
     public String getDevOtp() { return devOtp; }
     public void setDevOtp(String devOtp) { this.devOtp = devOtp; }
+    public boolean isVerificationEmailSent() { return verificationEmailSent; }
+    public void setVerificationEmailSent(boolean verificationEmailSent) { this.verificationEmailSent = verificationEmailSent; }
 
     public static class UserDto {
         private UUID id;
