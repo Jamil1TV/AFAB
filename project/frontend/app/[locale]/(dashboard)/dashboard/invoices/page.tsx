@@ -18,7 +18,8 @@ import {
   Wallet,
   Receipt,
   ArrowUpRight,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Trash2
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
@@ -70,7 +71,7 @@ export default function InvoicesPage() {
     setLoading(true);
     try {
       const [sumRes, listRes] = await Promise.all([
-        InvoiceService.getSummary(),
+        InvoiceService.getSummary(period.toLowerCase()),
         InvoiceService.getInvoices({
           search: search || undefined,
           page,
@@ -84,7 +85,7 @@ export default function InvoicesPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, page]);
+  }, [search, page, period]);
 
   useEffect(() => {
     fetchData();
@@ -136,7 +137,7 @@ export default function InvoicesPage() {
     : [0, 0, 0, 0, 0, 0, 0];
 
   // Donut chart status breakdown data
-  const statusPieData = (summary?.statusBreakdown && summary.statusBreakdown.length > 0)
+  const statusPieData = (summary?.statusBreakdown && summary.statusBreakdown.some(st => st.amount > 0))
     ? summary.statusBreakdown.map((st) => ({
         name: st.name,
         value: st.amount,
@@ -144,9 +145,7 @@ export default function InvoicesPage() {
         color: st.color
       }))
     : [
-        { name: "Paid", value: 13420, percentage: 54, color: "#4edea3" },
-        { name: "Pending", value: 6230, percentage: 25, color: "#ffb95f" },
-        { name: "Overdue", value: 5200, percentage: 21, color: "#ffb4ab" }
+        { name: "No Invoices", value: 1, percentage: 0, color: "#1E293B" }
       ];
 
   if (loading && !invoicesData) {
@@ -489,26 +488,33 @@ export default function InvoicesPage() {
             </div>
 
             <div className="space-y-3">
-              {(summary?.upcomingDueList || []).map((item) => (
-                <div key={item.invoiceId} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold text-xs border border-[#8b5cf6]/20">
-                      {item.customerName.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[120px]">
-                        {item.customerName}
-                      </p>
-                      <p className="text-[10px] text-gray-400 font-mono">
-                        {item.invoiceId} • {item.dueDate}
-                      </p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">
-                    {formatCurrency(item.amount, currency)}
-                  </span>
+              {!summary?.upcomingDueList || summary.upcomingDueList.length === 0 ? (
+                <div className="py-6 text-center text-xs text-gray-400">
+                  <Receipt className="h-6 w-6 mx-auto mb-1 opacity-40" />
+                  <p>No upcoming invoices due</p>
                 </div>
-              ))}
+              ) : (
+                summary.upcomingDueList.map((item) => (
+                  <div key={item.invoiceId} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold text-xs border border-[#8b5cf6]/20">
+                        {item.customerName.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate max-w-[120px]">
+                          {item.customerName}
+                        </p>
+                        <p className="text-[10px] text-gray-400 font-mono">
+                          {item.invoiceId} • {item.dueDate}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">
+                      {formatCurrency(item.amount, currency)}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -556,7 +562,24 @@ export default function InvoicesPage() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-between items-center">
+              <button
+                onClick={async () => {
+                  if (confirm("Are you sure you want to delete this invoice?")) {
+                    try {
+                      await TransactionService.deleteTransaction(selectedTx.id);
+                      setSelectedTx(null);
+                      fetchData();
+                    } catch (err) {
+                      console.error("Failed to delete invoice:", err);
+                    }
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
               <button
                 onClick={() => setSelectedTx(null)}
                 className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200"

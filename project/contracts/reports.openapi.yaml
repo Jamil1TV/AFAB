@@ -1,0 +1,315 @@
+openapi: 3.0.1
+info:
+  title: AFAB Reports & Export API
+  version: 1.0.0
+  description: OpenAPI specification for the Financial Reports & Export module of AFAB (Profit & Loss, Cash Flow, Category Breakdowns, Period Comparisons, and Quota-Gated CSV/PDF Exporters).
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/reports/profit-loss:
+    get:
+      summary: Get Profit & Loss Statement
+      description: Returns cash-basis Revenue, Operating Expenses, Net Operating Income, Profit Margin %, and Category shares. Annual & Custom ranges require PLUS or PRO plan tier.
+      operationId: getProfitAndLoss
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            default: this_month
+            enum: [this_month, last_month, this_quarter, this_year, last_year, custom]
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Profit & Loss Statement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfitAndLossReportDTO'
+        '403':
+          description: Plan limit reached (e.g. basic requesting yearly/custom)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /api/v1/reports/cash-flow:
+    get:
+      summary: Get Cash Flow Statement
+      description: Returns cash inflows, outflows, net change, and monthly 6-month cash flow trends.
+      operationId: getCashFlow
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            default: this_month
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Cash Flow Statement
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashFlowReportDTO'
+
+  /api/v1/reports/comparison:
+    get:
+      summary: Compare Two Financial Periods
+      description: Compares primary and comparison periods (e.g. this_month vs last_month), calculating absolute and percentage growth. Requires PLUS or PRO plan tier.
+      operationId: getComparison
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: primaryPeriod
+          in: query
+          required: false
+          schema:
+            type: string
+            default: this_month
+        - name: comparisonPeriod
+          in: query
+          required: false
+          schema:
+            type: string
+            default: last_month
+      responses:
+        '200':
+          description: Period Comparison Report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComparisonReportDTO'
+
+  /api/v1/reports/export/csv:
+    get:
+      summary: Export Financial Statement as CSV
+      description: Downloads financial statement as RFC 4180 CSV with UTF-8 BOM encoding for Excel. Consumes 1 export quota unit from user's monthly allowance.
+      operationId: exportCsv
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            default: this_month
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Streamed CSV file
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Export quota exceeded (code PLAN_LIMIT_REACHED)
+
+  /api/v1/reports/export/pdf:
+    get:
+      summary: Export Financial Statement as PDF
+      description: Downloads branded PDF statement with summary tables and visual metrics. Consumes 1 export quota unit from user's monthly allowance.
+      operationId: exportPdf
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            default: this_month
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Streamed PDF document
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Export quota exceeded (code PLAN_LIMIT_REACHED)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CategoryShareDTO:
+      type: object
+      properties:
+        categoryName:
+          type: string
+        amount:
+          type: number
+        percentage:
+          type: number
+        transactionCount:
+          type: integer
+
+    MonthlyCashFlowDTO:
+      type: object
+      properties:
+        month:
+          type: string
+          example: "2026-10"
+        inflow:
+          type: number
+        outflow:
+          type: number
+        net:
+          type: number
+
+    ProfitAndLossReportDTO:
+      type: object
+      properties:
+        period:
+          type: string
+        currency:
+          type: string
+        totalRevenue:
+          type: number
+        totalExpenses:
+          type: number
+        grossProfit:
+          type: number
+        netOperatingIncome:
+          type: number
+        profitMarginPct:
+          type: number
+        revenueBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryShareDTO'
+        expenseBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryShareDTO'
+
+    CashFlowReportDTO:
+      type: object
+      properties:
+        period:
+          type: string
+        currency:
+          type: string
+        cashInflow:
+          type: number
+        cashOutflow:
+          type: number
+        netCashChange:
+          type: number
+        monthlyTrend:
+          type: array
+          items:
+            $ref: '#/components/schemas/MonthlyCashFlowDTO'
+
+    ComparisonReportDTO:
+      type: object
+      properties:
+        currency:
+          type: string
+        primaryPeriodLabel:
+          type: string
+        primaryRevenue:
+          type: number
+        primaryExpenses:
+          type: number
+        primaryNetIncome:
+          type: number
+        comparisonPeriodLabel:
+          type: string
+        comparisonRevenue:
+          type: number
+        comparisonExpenses:
+          type: number
+        comparisonNetIncome:
+          type: number
+        revenueDifference:
+          type: number
+        revenueDifferencePct:
+          type: number
+        expensesDifference:
+          type: number
+        expensesDifferencePct:
+          type: number
+        netIncomeDifference:
+          type: number
+        netIncomeDifferencePct:
+          type: number
+
+    ApiError:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 403
+        code:
+          type: string
+          example: PLAN_LIMIT_REACHED
+        message:
+          type: string
+        feature:
+          type: string
+        limit:
+          type: integer
+        used:
+          type: integer
+        upgradeTo:
+          type: string

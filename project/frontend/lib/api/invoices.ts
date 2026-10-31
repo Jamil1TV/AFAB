@@ -26,8 +26,9 @@ export interface InvoiceSummaryResponse {
 }
 
 export class InvoiceService {
-  static async getSummary(): Promise<InvoiceSummaryResponse> {
-    return await fetchClient("/invoices/summary");
+  static async getSummary(period?: string): Promise<InvoiceSummaryResponse> {
+    const query = period ? `?period=${encodeURIComponent(period.toLowerCase())}` : "";
+    return await fetchClient(`/invoices/summary${query}`);
   }
 
   static async getInvoices(params?: { categoryId?: string; search?: string; page?: number; size?: number }) {

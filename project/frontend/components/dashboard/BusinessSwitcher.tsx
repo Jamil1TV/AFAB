@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Link, useRouter } from "@/i18n/routing";
 import { useLocale } from "next-intl";
+import { BusinessService } from "@/lib/api/business";
+import { AuthStore } from "@/lib/auth-store";
 import {
   Building2,
   Plus,
@@ -56,47 +58,49 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
   const [newBusinessCurrency, setNewBusinessCurrency] = useState("USD");
   const switcherRef = useRef<HTMLDivElement>(null);
 
-  // Active plan (defaults to FREE)
-  const planType = (profile?.planType || "FREE PLAN").toUpperCase();
-  const isFreePlan = planType.includes("FREE");
+  // Active plan & business limits (FREE: 1, PLUS: 3, PRO: 5)
+  const planTier = (profile?.planTier || profile?.planType || "FREE").toUpperCase();
+  const maxBusinesses = planTier.includes("PRO") ? 5 : planTier.includes("PLUS") ? 3 : 1;
+  const isFreePlan = planTier.includes("FREE");
 
   // Multi-business storage with primary business default
-  const primaryBusinessName = profile?.businessName || profile?.workspaceName || "NexusDev";
+  const primaryBusinessName = profile?.businessName || profile?.workspaceName || "My Business";
 
-  const [businesses, setBusinesses] = useState<BusinessItem[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const stored = localStorage.getItem("afab_user_businesses");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        }
-      } catch (e) {
-        // fallback
-      }
-    }
-    return [
-      {
-        id: "primary",
-        name: primaryBusinessName,
-        currency: "USD",
-        plan: planType,
-        isActive: true,
-      },
-    ];
-  });
+  const [businesses, setBusinesses] = useState<BusinessItem[]>([
+    {
+      id: "primary",
+      name: primaryBusinessName,
+      currency: "USD",
+      plan: planTier,
+      isActive: true,
+    },
+  ]);
 
-  // Keep primary business name synchronized with profile
-  useEffect(() => {
-    if (primaryBusinessName) {
-      setBusinesses((prev) => {
-        const updated = prev.map((b) =>
-          b.id === "primary" ? { ...b, name: primaryBusinessName, plan: planType } : b
+  const fetchBusinesses = useCallback(async () => {
+    try {
+      const list = await BusinessService.list();
+      if (list && list.length > 0) {
+        setBusinesses(
+          list.map((b) => ({
+            id: b.id,
+            name: b.name,
+            currency: b.currency,
+            plan: b.userRole || planTier,
+            isActive: Boolean(b.active),
+            country: b.country,
+          }))
         );
-        return updated;
-      });
+      }
+    } catch (err) {
+      console.error("Failed to load businesses:", err);
     }
-  }, [primaryBusinessName, planType]);
+  }, [planTier]);
+
+  useEffect(() => {
+    fetchBusinesses();
+  }, [fetchBusinesses]);
+
+  const isAtLimit = businesses.length >= maxBusinesses;
 
   const activeBusiness = useMemo(() => {
     return businesses.find((b) => b.isActive) || businesses[0];
@@ -117,54 +121,44 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
     };
   }, [isOpen]);
 
-  const handleSelectBusiness = (id: string) => {
-    setBusinesses((prev) => {
-      const updated = prev.map((b) => ({
-        ...b,
-        isActive: b.id === id,
-      }));
-      if (typeof window !== "undefined") {
-        localStorage.setItem("afab_user_businesses", JSON.stringify(updated));
-      }
-      return updated;
-    });
-    setIsOpen(false);
+  const handleSelectBusiness = async (id: string) => {
+    try {
+      await BusinessService.switchActive(id);
+      AuthStore.setActiveBusinessId(id);
+      setIsOpen(false);
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to switch business:", err);
+    }
   };
 
   const handleAddBusinessClick = () => {
     setIsOpen(false);
-    if (isFreePlan) {
-      // Free plan limit reached: prompt upgrade
+    if (isAtLimit) {
       setIsUpgradeModalOpen(true);
     } else {
-      // Pro / Plus plan: allow creating new business
       setIsCreateModalOpen(true);
     }
   };
 
-  const handleCreateBusiness = (e: React.FormEvent) => {
+  const handleCreateBusiness = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newBusinessName.trim()) return;
 
-    const newId = `biz_${Date.now()}`;
-    const newBiz: BusinessItem = {
-      id: newId,
-      name: newBusinessName.trim(),
-      currency: newBusinessCurrency,
-      plan: planType,
-      isActive: true,
-    };
-
-    setBusinesses((prev) => {
-      const updated = prev.map((b) => ({ ...b, isActive: false })).concat(newBiz);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("afab_user_businesses", JSON.stringify(updated));
+    try {
+      const created = await BusinessService.create({
+        name: newBusinessName.trim(),
+        currency: newBusinessCurrency,
+      });
+      if (created?.id) {
+        AuthStore.setActiveBusinessId(created.id);
       }
-      return updated;
-    });
-
-    setNewBusinessName("");
-    setIsCreateModalOpen(false);
+      setIsCreateModalOpen(false);
+      setNewBusinessName("");
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to create business:", err);
+    }
   };
 
   return (
@@ -226,20 +220,20 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             </p>
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                isFreePlan
+                isAtLimit
                   ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
                   : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
               }`}
             >
-              {isFreePlan ? (
+              {isAtLimit ? (
                 <>
                   <Lock className="w-2.5 h-2.5 shrink-0" />
-                  <span>1 / 1 {isArabic ? "مجاني" : "Free"}</span>
+                  <span>{businesses.length} / {maxBusinesses} {isArabic ? "الحد الأقصى" : "Max"}</span>
                 </>
               ) : (
                 <>
                   <Crown className="w-2.5 h-2.5 shrink-0" />
-                  <span>{businesses.length} {isArabic ? "نشطة" : "Active"}</span>
+                  <span>{businesses.length} / {maxBusinesses} {isArabic ? "نشطة" : "Active"}</span>
                 </>
               )}
             </span>
@@ -303,10 +297,10 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 </div>
                 <span className="truncate">{isArabic ? "إضافة عمل جديد" : "Add Business"}</span>
               </div>
-              {isFreePlan ? (
+              {isAtLimit ? (
                 <span className="flex items-center gap-1 text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-full border border-purple-500/20 shrink-0 ms-1.5">
                   <Crown className="w-2.5 h-2.5 shrink-0" />
-                  PRO
+                  UPGRADE
                 </span>
               ) : (
                 <Plus className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-500 shrink-0" />
@@ -349,12 +343,12 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             </div>
             <div>
               <DialogTitle className="text-xl font-black text-gray-900 dark:text-white">
-                {isArabic ? "افتح إمكانية إدارة شركات متعددة" : "Manage Multiple Businesses with Pro"}
+                {isArabic ? "حد الباقة الحالية للأعمال" : "Workspace Plan Limit Reached"}
               </DialogTitle>
               <DialogDescription className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {isArabic
-                  ? "أنت حالياً على الخطة المجانية، والتي تدعم شركة واحدة فقط (1/1). للترقية وإضافة شركات إضافية مع فواتير وتقارير موحدة، انتقل إلى خطة برو."
-                  : "You are currently on the Free Plan, which supports 1 business workspace (1/1 used). Upgrade to Pro to manage multiple entities with consolidated reporting."}
+                  ? `باقتك الحالية (${planTier}) تدعم حتى ${maxBusinesses} مساحة عمل (${businesses.length}/${maxBusinesses} مستخدمة). باقة Plus تدعم حتى 3 شركات، وباقة Pro تدعم حتى 5 شركات.`
+                  : `Your current ${planTier} plan allows up to ${maxBusinesses} workspace(s) (${businesses.length}/${maxBusinesses} used). Upgrade to Plus for up to 3 businesses or Pro for up to 5 businesses.`}
               </DialogDescription>
             </div>
           </DialogHeader>

@@ -17,7 +17,8 @@ import {
   Receipt,
   Wallet,
   ArrowUpRight,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Trash2
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, Tooltip } from "recharts";
@@ -70,7 +71,7 @@ export default function RevenuePage() {
     setLoading(true);
     try {
       const [sumRes, listRes] = await Promise.all([
-        RevenueService.getSummary(),
+        RevenueService.getSummary(period.toLowerCase()),
         RevenueService.getRevenue({
           categoryId: categoryFilter || undefined,
           search: search || undefined,
@@ -85,7 +86,7 @@ export default function RevenuePage() {
     } finally {
       setLoading(false);
     }
-  }, [categoryFilter, search, page]);
+  }, [categoryFilter, search, page, period]);
 
   useEffect(() => {
     fetchData();
@@ -145,19 +146,24 @@ export default function RevenuePage() {
     : [{ name: "No Data", value: 1, percentage: 0, color: "#1E293B" }];
 
   // Overview area chart data points
-  const overviewChartData = hasRevenue && revenueData?.content
+  const overviewChartData = (summary?.dailyOverview && summary.dailyOverview.length > 0)
+    ? summary.dailyOverview.map((pt) => ({
+        date: pt.date.substring(5),
+        amount: pt.amount,
+      }))
+    : hasRevenue && revenueData?.content
     ? revenueData.content.slice(0, 7).reverse().map((t, idx) => ({
         date: `Day ${idx + 1}`,
         amount: t.amount
       }))
     : [
-        { date: "May 12", amount: 0 },
-        { date: "May 13", amount: 0 },
-        { date: "May 14", amount: 0 },
-        { date: "May 15", amount: 0 },
-        { date: "May 16", amount: 0 },
-        { date: "May 17", amount: 0 },
-        { date: "May 18", amount: 0 },
+        { date: "Day 1", amount: 0 },
+        { date: "Day 2", amount: 0 },
+        { date: "Day 3", amount: 0 },
+        { date: "Day 4", amount: 0 },
+        { date: "Day 5", amount: 0 },
+        { date: "Day 6", amount: 0 },
+        { date: "Day 7", amount: 0 },
       ];
 
   if (loading && !revenueData) {
@@ -573,23 +579,30 @@ export default function RevenuePage() {
             </div>
 
             <div className="space-y-3.5">
-              {(summary?.topProducts || []).map((item, idx) => (
-                <div key={item.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-gray-900 dark:text-white">{item.name}</span>
-                    <span className="text-gray-400 font-mono">{formatCurrency(item.amount, currency)}</span>
-                  </div>
-                  <div className="h-1.5 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{
-                        width: `${item.percentage}%`,
-                        backgroundColor: item.color || sourceColors[idx % sourceColors.length]
-                      }}
-                    />
-                  </div>
+              {!summary?.topProducts || summary.topProducts.length === 0 ? (
+                <div className="py-6 text-center text-xs text-gray-400">
+                  <PieChartIcon className="h-6 w-6 mx-auto mb-1 opacity-40" />
+                  <p>No products or streams configured yet</p>
                 </div>
-              ))}
+              ) : (
+                summary.topProducts.map((item, idx) => (
+                  <div key={item.name} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-gray-900 dark:text-white">{item.name}</span>
+                      <span className="text-gray-400 font-mono">{formatCurrency(item.amount, currency)}</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{
+                          width: `${item.percentage}%`,
+                          backgroundColor: item.color || sourceColors[idx % sourceColors.length]
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -637,7 +650,24 @@ export default function RevenuePage() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-between items-center">
+              <button
+                onClick={async () => {
+                  if (confirm("Are you sure you want to delete this revenue transaction?")) {
+                    try {
+                      await TransactionService.deleteTransaction(selectedTx.id);
+                      setSelectedTx(null);
+                      fetchData();
+                    } catch (err) {
+                      console.error("Failed to delete revenue transaction:", err);
+                    }
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
               <button
                 onClick={() => setSelectedTx(null)}
                 className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200"

@@ -20,8 +20,11 @@ public class RevenueController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<RevenueSummaryDTO> getRevenueSummary(Authentication authentication) {
-        RevenueSummaryDTO summary = transactionService.getRevenueSummary(authentication.getName());
+    public ResponseEntity<RevenueSummaryDTO> getRevenueSummary(
+            Authentication authentication,
+            @RequestParam(value = "period", required = false, defaultValue = "month") String period
+    ) {
+        RevenueSummaryDTO summary = transactionService.getRevenueSummary(authentication.getName(), period);
         return ResponseEntity.ok(summary);
     }
 

@@ -85,42 +85,18 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
 
   return (
     <div className="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[#8b5cf6]/5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/[0.03] text-gray-500 dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/[0.03] text-gray-500 dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
             <Icon className="h-5 w-5" />
           </div>
           <span className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 leading-tight">
             {title}
           </span>
         </div>
-      </div>
 
-      <div className="mt-4 flex items-end justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white truncate">
-            {value}
-          </h3>
-          <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-            <span
-              className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ${
-                isZero
-                  ? "bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400"
-                  : isPositive
-                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                  : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
-              }`}
-            >
-              {change}
-            </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              {tKpi("vsLastMonth")}
-            </span>
-          </div>
-        </div>
-
-        {/* High-Performance SVG Sparkline (No Recharts size errors, perfectly smoothed) */}
-        <div className="h-10 w-24 shrink-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100 flex items-end justify-end">
+        {/* High-Performance SVG Sparkline */}
+        <div className="h-7 w-20 shrink-0 opacity-70 transition-opacity duration-300 group-hover:opacity-100 flex items-center justify-end">
           <svg
             viewBox="0 0 100 40"
             className="w-full h-full overflow-visible"
@@ -143,6 +119,29 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
               strokeDasharray={isZero ? "3 3" : undefined}
             />
           </svg>
+        </div>
+      </div>
+
+      <div className="mt-4">
+        {/* Full, unclipped budget & financial amount - all digits shown */}
+        <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white select-all">
+          {value}
+        </h3>
+        <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+          <span
+            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ${
+              isZero
+                ? "bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-400"
+                : isPositive
+                ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                : "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
+            }`}
+          >
+            {change}
+          </span>
+          <span className="text-xs text-gray-400 dark:text-gray-500">
+            {tKpi("vsLastMonth")}
+          </span>
         </div>
       </div>
     </div>

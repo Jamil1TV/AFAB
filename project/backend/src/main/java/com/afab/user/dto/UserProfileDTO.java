@@ -25,6 +25,7 @@ public class UserProfileDTO {
     private boolean compactMode;
     private boolean autoCategorizeTransactions;
     private boolean showTips;
+    private String planTier;
 
     public UserProfileDTO() {}
 
@@ -32,7 +33,8 @@ public class UserProfileDTO {
                           String avatarUrl, boolean emailVerified, UUID businessId, String businessName, String currency,
                           String country, boolean onboardingComplete, Instant createdAt,
                           Instant passwordChangedAt, boolean twoFactorEnabled, Instant lastLoginAt, String lastLoginIp,
-                          boolean enableAiInsights, boolean compactMode, boolean autoCategorizeTransactions, boolean showTips) {
+                          boolean enableAiInsights, boolean compactMode, boolean autoCategorizeTransactions, boolean showTips,
+                          String planTier) {
         this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -54,6 +56,7 @@ public class UserProfileDTO {
         this.compactMode = compactMode;
         this.autoCategorizeTransactions = autoCategorizeTransactions;
         this.showTips = showTips;
+        this.planTier = planTier != null ? planTier : "FREE";
     }
 
     public UUID getId() { return id; }
@@ -77,4 +80,5 @@ public class UserProfileDTO {
     public boolean isCompactMode() { return compactMode; }
     public boolean isAutoCategorizeTransactions() { return autoCategorizeTransactions; }
     public boolean isShowTips() { return showTips; }
+    public String getPlanTier() { return planTier != null ? planTier : "FREE"; }
 }

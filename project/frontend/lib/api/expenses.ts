@@ -29,8 +29,9 @@ export interface ExpenseSummaryResponse {
 }
 
 export class ExpenseService {
-  static async getSummary(): Promise<ExpenseSummaryResponse> {
-    return await fetchClient("/expenses/summary");
+  static async getSummary(period?: string): Promise<ExpenseSummaryResponse> {
+    const query = period ? `?period=${encodeURIComponent(period.toLowerCase())}` : "";
+    return await fetchClient(`/expenses/summary${query}`);
   }
 
   static async getExpenses(params?: { categoryId?: string; search?: string; page?: number; size?: number }) {

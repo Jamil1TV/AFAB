@@ -31,17 +31,20 @@ public class TransactionService {
     private final CurrentBusinessService currentBusinessService;
     private final CategoryService categoryService;
     private final AuditService auditService;
+    private final com.afab.finance.stats.FinanceStatsService financeStatsService;
 
     public TransactionService(TransactionRepository transactionRepository,
                               CategoryRepository categoryRepository,
                               CurrentBusinessService currentBusinessService,
                               CategoryService categoryService,
-                              AuditService auditService) {
+                              AuditService auditService,
+                              com.afab.finance.stats.FinanceStatsService financeStatsService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
         this.currentBusinessService = currentBusinessService;
         this.categoryService = categoryService;
         this.auditService = auditService;
+        this.financeStatsService = financeStatsService;
     }
 
     @Transactional(readOnly = true)
@@ -287,175 +290,34 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public ExpenseSummaryDTO getExpenseSummary(String userEmail) {
+    public ExpenseSummaryDTO getExpenseSummary(String userEmail, String period) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        return financeStatsService.buildExpenseSummary(business, period);
+    }
 
-        String currency = (business.getCurrency() != null && !business.getCurrency().isBlank())
-                ? business.getCurrency() : "USD";
+    @Transactional(readOnly = true)
+    public ExpenseSummaryDTO getExpenseSummary(String userEmail) {
+        return getExpenseSummary(userEmail, "month");
+    }
 
-        BigDecimal totalExpenses = transactionRepository.sumAmountByBusinessAndType(business.getId(), "EXPENSE");
-
-        BigDecimal avgPerDay = totalExpenses.compareTo(BigDecimal.ZERO) > 0
-                ? totalExpenses.divide(new BigDecimal("30"), 2, java.math.RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        Page<Transaction> expensesPage = transactionRepository.searchTransactions(
-                business.getId(), "EXPENSE", null, null, null, null, null, null, null, PageRequest.of(0, 100)
-        );
-        List<Transaction> expenses = expensesPage.getContent();
-
-        String highestTitle = expenses.isEmpty() ? "No Expenses" : "N/A";
-        BigDecimal highestAmount = BigDecimal.ZERO;
-        if (!expenses.isEmpty()) {
-            Transaction maxTx = expenses.stream()
-                    .max(java.util.Comparator.comparing(Transaction::getAmount))
-                    .orElse(null);
-            if (maxTx != null) {
-                highestTitle = maxTx.getDescription();
-                highestAmount = maxTx.getAmount();
-            }
-        }
-
-        long categoryCount = expenses.stream()
-                .map(t -> t.getCategory() != null ? t.getCategory().getName() : "General")
-                .distinct()
-                .count();
-
-        java.util.Map<String, BigDecimal> catSums = new java.util.HashMap<>();
-        java.util.Map<String, String> catColors = new java.util.HashMap<>();
-        for (Transaction t : expenses) {
-            String catName = t.getCategory() != null ? t.getCategory().getName() : "General Expenses";
-            String catColor = (t.getCategory() != null && t.getCategory().getColor() != null)
-                    ? t.getCategory().getColor() : "#9f78ff";
-            catSums.put(catName, catSums.getOrDefault(catName, BigDecimal.ZERO).add(t.getAmount()));
-            catColors.put(catName, catColor);
-        }
-
-        List<ExpenseSummaryDTO.CategoryBreakdownItem> breakdown = new java.util.ArrayList<>();
-        for (java.util.Map.Entry<String, BigDecimal> entry : catSums.entrySet()) {
-            double pct = totalExpenses.compareTo(BigDecimal.ZERO) > 0
-                    ? entry.getValue().doubleValue() / totalExpenses.doubleValue() * 100.0
-                    : 0.0;
-            breakdown.add(new ExpenseSummaryDTO.CategoryBreakdownItem(
-                    entry.getKey(),
-                    entry.getValue(),
-                    Math.round(pct * 10.0) / 10.0,
-                    catColors.getOrDefault(entry.getKey(), "#9f78ff")
-            ));
-        }
-
-        List<ExpenseSummaryDTO.RecurringItem> recurringList = List.of(
-                new ExpenseSummaryDTO.RecurringItem("Adobe Creative Cloud", new BigDecimal("52.00"), "Monthly", "Jun 16", "palette"),
-                new ExpenseSummaryDTO.RecurringItem("Google Workspace", new BigDecimal("120.00"), "Monthly", "Jun 20", "mail"),
-                new ExpenseSummaryDTO.RecurringItem("Shopify Plan", new BigDecimal("79.00"), "Monthly", "Jun 22", "shopping_cart")
-        );
-        BigDecimal recurringTotal = new BigDecimal("251.00");
-        double recurringPct = totalExpenses.compareTo(BigDecimal.ZERO) > 0
-                ? recurringTotal.doubleValue() / totalExpenses.doubleValue() * 100.0
-                : 0.0;
-
-        List<ExpenseSummaryDTO.DailyOverviewPoint> dailyOverview = List.of();
-
-        return new ExpenseSummaryDTO(
-                totalExpenses,
-                avgPerDay,
-                highestTitle,
-                highestAmount,
-                categoryCount,
-                recurringTotal,
-                Math.round(recurringPct * 10.0) / 10.0,
-                currency,
-                breakdown,
-                recurringList,
-                dailyOverview
-        );
+    @Transactional(readOnly = true)
+    public RevenueSummaryDTO getRevenueSummary(String userEmail, String period) {
+        Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        return financeStatsService.buildRevenueSummary(business, period);
     }
 
     @Transactional(readOnly = true)
     public RevenueSummaryDTO getRevenueSummary(String userEmail) {
-        Business business = currentBusinessService.getCurrentBusiness(userEmail);
-
-        String currency = (business.getCurrency() != null && !business.getCurrency().isBlank())
-                ? business.getCurrency() : "USD";
-
-        BigDecimal totalRevenue = transactionRepository.sumAmountByBusinessAndType(business.getId(), "INCOME");
-        BigDecimal grossRevenue = totalRevenue;
-        BigDecimal discounts = BigDecimal.ZERO;
-        BigDecimal refunds = BigDecimal.ZERO;
-        BigDecimal netRevenue = grossRevenue.subtract(discounts).subtract(refunds);
-
-        BigDecimal avgPerDay = totalRevenue.compareTo(BigDecimal.ZERO) > 0
-                ? totalRevenue.divide(new BigDecimal("30"), 2, java.math.RoundingMode.HALF_UP)
-                : BigDecimal.ZERO;
-
-        Page<Transaction> incomePage = transactionRepository.searchTransactions(
-                business.getId(), "INCOME", null, null, null, null, null, null, null, PageRequest.of(0, 100)
-        );
-        List<Transaction> incomes = incomePage.getContent();
-        long totalInvoices = incomePage.getTotalElements();
-
-        BigDecimal highestAmount = BigDecimal.ZERO;
-        String highestDate = "N/A";
-        if (!incomes.isEmpty()) {
-            Transaction maxTx = incomes.stream()
-                    .max(java.util.Comparator.comparing(Transaction::getAmount))
-                    .orElse(null);
-            if (maxTx != null) {
-                highestAmount = maxTx.getAmount();
-                highestDate = maxTx.getTransactionDate() != null ? maxTx.getTransactionDate().toString() : "N/A";
-            }
-        }
-
-        java.util.Map<String, BigDecimal> catSums = new java.util.HashMap<>();
-        java.util.Map<String, String> catColors = new java.util.HashMap<>();
-        for (Transaction t : incomes) {
-            String catName = t.getCategory() != null ? t.getCategory().getName() : "Product Sales";
-            String catColor = (t.getCategory() != null && t.getCategory().getColor() != null)
-                    ? t.getCategory().getColor() : "#d0bcff";
-            catSums.put(catName, catSums.getOrDefault(catName, BigDecimal.ZERO).add(t.getAmount()));
-            catColors.put(catName, catColor);
-        }
-
-        List<RevenueSummaryDTO.RevenueSourceItem> sources = new java.util.ArrayList<>();
-        for (java.util.Map.Entry<String, BigDecimal> entry : catSums.entrySet()) {
-            double pct = totalRevenue.compareTo(BigDecimal.ZERO) > 0
-                    ? entry.getValue().doubleValue() / totalRevenue.doubleValue() * 100.0
-                    : 0.0;
-            sources.add(new RevenueSummaryDTO.RevenueSourceItem(
-                    entry.getKey(),
-                    entry.getValue(),
-                    Math.round(pct * 10.0) / 10.0,
-                    catColors.getOrDefault(entry.getKey(), "#d0bcff")
-            ));
-        }
-
-        List<RevenueSummaryDTO.TopProductItem> topProducts = List.of(
-                new RevenueSummaryDTO.TopProductItem("AFAB Pro Plan", new BigDecimal("8450.00"), 45.0, "#d0bcff"),
-                new RevenueSummaryDTO.TopProductItem("AI Assistant Add-on", new BigDecimal("6320.00"), 25.0, "#4edea3"),
-                new RevenueSummaryDTO.TopProductItem("Financial Reports", new BigDecimal("4230.00"), 20.0, "#ffb95f")
-        );
-
-        List<RevenueSummaryDTO.DailyOverviewPoint> dailyOverview = List.of();
-
-        return new RevenueSummaryDTO(
-                totalRevenue,
-                grossRevenue,
-                discounts,
-                refunds,
-                netRevenue,
-                avgPerDay,
-                highestAmount,
-                highestDate,
-                totalInvoices,
-                currency,
-                sources,
-                topProducts,
-                dailyOverview
-        );
+        return getRevenueSummary(userEmail, "month");
     }
 
     @Transactional(readOnly = true)
     public InvoiceSummaryDTO getInvoiceSummary(String userEmail) {
+        return getInvoiceSummary(userEmail, "month");
+    }
+
+    @Transactional(readOnly = true)
+    public InvoiceSummaryDTO getInvoiceSummary(String userEmail, String period) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
 
         String currency = (business.getCurrency() != null && !business.getCurrency().isBlank())
@@ -503,11 +365,8 @@ public class TransactionService {
                 new InvoiceSummaryDTO.StatusBreakdownItem("Overdue", overdueAmount, Math.round(overduePct * 10.0) / 10.0, "#ffb4ab")
         );
 
-        List<InvoiceSummaryDTO.UpcomingInvoiceItem> upcomingList = List.of(
-                new InvoiceSummaryDTO.UpcomingInvoiceItem("INV-1244", "AI Assistant Add-on", "billing@aiassist.com", "May 24, 2024", new BigDecimal("1250.00")),
-                new InvoiceSummaryDTO.UpcomingInvoiceItem("INV-1243", "Financial Reports", "finance@reports.com", "May 23, 2024", new BigDecimal("850.00")),
-                new InvoiceSummaryDTO.UpcomingInvoiceItem("INV-1242", "Consulting Service", "contact@consult.com", "May 22, 2024", new BigDecimal("3200.00"))
-        );
+        // Honest empty list until Phase 9 introduces real invoice model
+        List<InvoiceSummaryDTO.UpcomingInvoiceItem> upcomingList = List.of();
 
         return new InvoiceSummaryDTO(
                 totalInvoices,

@@ -8,6 +8,7 @@ export interface UserDto {
   emailVerified: boolean;
   onboardingComplete: boolean;
   twoFactorEnabled?: boolean;
+  planTier?: "FREE" | "PLUS" | "PRO" | string;
 }
 
 export interface AuthResponseData {
@@ -36,6 +37,9 @@ export class AuthStore {
     }
     if (data.user) {
       localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+      if (data.user.businessId) {
+        localStorage.setItem("afab_active_business_id", data.user.businessId);
+      }
     }
 
     const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
@@ -72,10 +76,25 @@ export class AuthStore {
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(REMEMBER_ME_KEY);
     localStorage.removeItem("afab_token");
+    localStorage.removeItem("afab_active_business_id");
 
     // Clear accessToken cookie for all paths and domains
     document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax";
     document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax";
+  }
+
+  static getActiveBusinessId(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem("afab_active_business_id");
+  }
+
+  static setActiveBusinessId(id: string | null) {
+    if (typeof window === "undefined") return;
+    if (id) {
+      localStorage.setItem("afab_active_business_id", id);
+    } else {
+      localStorage.removeItem("afab_active_business_id");
+    }
   }
 
   static getAccessToken(): string | null {

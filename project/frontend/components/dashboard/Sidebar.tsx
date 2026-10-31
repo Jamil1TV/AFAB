@@ -258,7 +258,7 @@ export function Sidebar() {
                 />
               ) : (
                 <span>
-                  {profile?.firstName ? `${profile.firstName[0]}${profile?.lastName?.[0] || ""}` : "AK"}
+                  {profile?.firstName ? `${profile.firstName[0]}${profile?.lastName?.[0] || ""}` : (AuthStore.getUser()?.firstName?.[0] || "U")}
                 </span>
               )}
             </div>
@@ -267,7 +267,11 @@ export function Sidebar() {
             <div className="flex-1 min-w-0 text-start flex items-center justify-between">
               <div className="overflow-hidden min-w-0">
                 <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
-                  {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Ahmed K."}
+                  {profile?.firstName 
+                    ? `${profile.firstName} ${profile.lastName}` 
+                    : AuthStore.getUser()?.firstName 
+                      ? `${AuthStore.getUser()!.firstName} ${AuthStore.getUser()!.lastName}` 
+                      : (locale === "ar" ? "حسابي" : "My Account")}
                 </p>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
                   {profile?.businessName || tSidebar("businessOwner") || (locale === "ar" ? "مالك العمل" : "Business Owner")}
@@ -287,10 +291,14 @@ export function Sidebar() {
             {/* User Info Header */}
             <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800/80">
               <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                {profile?.firstName ? `${profile.firstName} ${profile.lastName}` : "Ahmed K."}
+                {profile?.firstName 
+                  ? `${profile.firstName} ${profile.lastName}` 
+                  : AuthStore.getUser()?.firstName 
+                    ? `${AuthStore.getUser()!.firstName} ${AuthStore.getUser()!.lastName}` 
+                    : (locale === "ar" ? "حسابي" : "My Account")}
               </p>
               <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                {profile?.email || "ahmed@example.com"}
+                {profile?.email || AuthStore.getUser()?.email || ""}
               </p>
             </div>
 

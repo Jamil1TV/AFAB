@@ -20,8 +20,11 @@ public class InvoiceController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<InvoiceSummaryDTO> getInvoiceSummary(Authentication authentication) {
-        InvoiceSummaryDTO summary = transactionService.getInvoiceSummary(authentication.getName());
+    public ResponseEntity<InvoiceSummaryDTO> getInvoiceSummary(
+            Authentication authentication,
+            @RequestParam(value = "period", required = false, defaultValue = "month") String period
+    ) {
+        InvoiceSummaryDTO summary = transactionService.getInvoiceSummary(authentication.getName(), period);
         return ResponseEntity.ok(summary);
     }
 

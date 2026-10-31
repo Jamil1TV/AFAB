@@ -13,12 +13,14 @@ interface FetchOptions extends RequestInit {
 export class ApiError extends Error {
   code: string;
   status: number;
+  details?: Record<string, any>;
 
-  constructor(message: string, code: string, status: number) {
+  constructor(message: string, code: string, status: number, details?: Record<string, any>) {
     super(message);
     this.name = "ApiError";
     this.code = code;
     this.status = status;
+    this.details = details;
   }
 }
 
@@ -69,6 +71,14 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
         Authorization: `Bearer ${token}`,
       };
     }
+
+    const activeBusinessId = AuthStore.getActiveBusinessId();
+    if (activeBusinessId) {
+      config.headers = {
+        ...config.headers,
+        "X-Business-Id": activeBusinessId,
+      };
+    }
   }
 
   let response: Response;
@@ -85,8 +95,8 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
   }
 
   if (!response.ok) {
-    // Attempt transparent token refresh on 401/403 for authenticated endpoints
-    if ((response.status === 401 || response.status === 403) && requireAuth && !endpoint.includes("/auth/")) {
+    // Attempt transparent token refresh on 401 for authenticated endpoints (excluding auth routes)
+    if (response.status === 401 && requireAuth && !endpoint.includes("/auth/")) {
       const refreshed = await tryRefreshToken();
       if (refreshed) {
         const newToken = AuthStore.getAccessToken();
@@ -110,27 +120,16 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
     }
 
     if (!response.ok) {
-      if ((response.status === 401 || response.status === 403) && requireAuth) {
-        AuthStore.clearAuth();
-        if (typeof window !== "undefined") {
-          // Automatically redirect to login when token expires
-          const currentLang = window.location.pathname.split('/')[1] || 'en';
-          window.location.href = `/${currentLang}/login`;
-          
-          // Return a promise that never resolves so the app doesn't crash while navigating
-          return new Promise(() => {});
-        }
-      }
-
-      // Parse structured error response from backend
+      // Parse structured error response from backend first
       let errorCode = "UNKNOWN_ERROR";
       let errorMsg = "Something went wrong. Please try again later.";
+      let errorDetails: Record<string, any> | undefined = undefined;
 
       try {
         const errorText = await response.text();
         try {
           const parsed = JSON.parse(errorText);
-          // Backend returns { success, code, message } via ErrorResponse
+          errorDetails = parsed;
           if (parsed.code) {
             errorCode = parsed.code;
           }
@@ -148,7 +147,35 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
         // fallback — keep default message
       }
 
-      throw new ApiError(errorMsg, errorCode, response.status);
+      // Handle plan limit reached (403 Forbidden with PLAN_LIMIT_REACHED)
+      if (response.status === 403 && errorCode === "PLAN_LIMIT_REACHED") {
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("afab:plan-limit-reached", {
+              detail: {
+                feature: errorDetails?.feature,
+                limit: errorDetails?.limit,
+                used: errorDetails?.used,
+                upgradeTo: errorDetails?.upgradeTo,
+                message: errorMsg,
+              },
+            })
+          );
+        }
+        throw new ApiError(errorMsg, errorCode, response.status, errorDetails);
+      }
+
+      // 401 Unauthorized: token expired or invalid, clear auth and redirect to login
+      if (response.status === 401 && requireAuth) {
+        AuthStore.clearAuth();
+        if (typeof window !== "undefined") {
+          const currentLang = window.location.pathname.split("/")[1] || "en";
+          window.location.href = `/${currentLang}/login`;
+          return new Promise(() => {});
+        }
+      }
+
+      throw new ApiError(errorMsg, errorCode, response.status, errorDetails);
     }
   }
 

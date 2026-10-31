@@ -165,7 +165,7 @@ class CategoryServiceTest {
 
         assertThatThrownBy(() -> categoryService.deleteCategory(userEmail, catId))
                 .isInstanceOf(ConflictException.class)
-                .hasMessageContaining("Cannot delete category because it is used by 3 transaction(s)");
+                .hasMessageContaining("Cannot delete category 'Subscriptions' because it is currently used by 3 transaction(s)");
 
         verify(categoryRepository, never()).delete(any());
     }

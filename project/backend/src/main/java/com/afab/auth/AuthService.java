@@ -5,6 +5,8 @@ import com.afab.auth.dto.*;
 import com.afab.auth.security.JwtService;
 import com.afab.auth.security.TotpService;
 import com.afab.business.Business;
+import com.afab.business.BusinessMember;
+import com.afab.business.BusinessMemberRepository;
 import com.afab.business.BusinessRepository;
 import com.afab.mail.EmailService;
 import com.afab.security.AuditService;
@@ -35,6 +37,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final BusinessRepository businessRepository;
+    private final BusinessMemberRepository businessMemberRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
@@ -56,6 +59,7 @@ public class AuthService {
     private int passwordResetExpirationMinutes;
 
     public AuthService(UserRepository userRepository, BusinessRepository businessRepository,
+                       BusinessMemberRepository businessMemberRepository,
                        RefreshTokenRepository refreshTokenRepository,
                        VerificationTokenRepository verificationTokenRepository,
                        PasswordResetTokenRepository passwordResetTokenRepository,
@@ -66,6 +70,7 @@ public class AuthService {
                        EmailService emailService) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
+        this.businessMemberRepository = businessMemberRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
@@ -80,6 +85,30 @@ public class AuthService {
 
     @Value("${spring.profiles.active:local}")
     private String activeProfile;
+
+    /**
+     * Resolves the user's active business cleanly without assuming 1:1 user-to-business constraint.
+     */
+    public Business resolveUserActiveBusiness(User user) {
+        if (user.getActiveBusinessId() != null) {
+            Optional<Business> b = businessRepository.findById(user.getActiveBusinessId());
+            if (b.isPresent() && b.get().getArchivedAt() == null) {
+                return b.get();
+            }
+        }
+        List<BusinessMember> members = businessMemberRepository.findAllActiveByUserIdWithBusiness(user.getId());
+        if (!members.isEmpty()) {
+            Business b = members.get(0).getBusiness();
+            user.setActiveBusinessId(b.getId());
+            userRepository.save(user);
+            return b;
+        }
+        Business b = businessRepository.findFirstByUserIdAndArchivedAtIsNull(user.getId())
+                .orElseThrow(() -> new IllegalStateException("No active business found for user: " + user.getEmail()));
+        user.setActiveBusinessId(b.getId());
+        userRepository.save(user);
+        return b;
+    }
 
     @Transactional
     public AuthResponse register(RegisterRequest request, String ipAddress, String userAgent) {
@@ -100,6 +129,14 @@ public class AuthService {
         business.setName(request.getBusinessName());
         business.setCurrency("USD");
         business = businessRepository.save(business);
+
+        // Assign OWNER membership
+        BusinessMember ownerMember = new BusinessMember(business, user, "OWNER", "ACTIVE");
+        businessMemberRepository.save(ownerMember);
+
+        // Set as active business
+        user.setActiveBusinessId(business.getId());
+        user = userRepository.save(user);
 
         auditService.logSecurityEvent(user, "REGISTER_SUCCESS", ipAddress, userAgent, "{\"businessName\":\"" + request.getBusinessName() + "\"}");
 
@@ -177,7 +214,7 @@ public class AuthService {
             return AuthResponse.twoFactorRequired(challengeToken);
         }
 
-        Business business = businessRepository.findByUserId(user.getId()).orElseThrow();
+        Business business = resolveUserActiveBusiness(user);
         auditService.logSecurityEvent(user, "LOGIN_SUCCESS", ipAddress, userAgent, null);
 
         boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
@@ -210,7 +247,7 @@ public class AuthService {
             throw new BadCredentialsException("Invalid authentication code. Please check your authenticator app or backup codes.");
         }
 
-        Business business = businessRepository.findByUserId(user.getId()).orElseThrow();
+        Business business = resolveUserActiveBusiness(user);
         auditService.logSecurityEvent(user, "LOGIN_2FA_SUCCESS", ipAddress, userAgent, null);
 
         boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
@@ -323,7 +360,7 @@ public class AuthService {
         }
 
         User user = savedToken.getUser();
-        Business business = businessRepository.findByUserId(user.getId()).orElseThrow();
+        Business business = resolveUserActiveBusiness(user);
 
         savedToken.setRevokedAt(Instant.now());
         refreshTokenRepository.save(savedToken);

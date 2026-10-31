@@ -99,6 +99,154 @@ public class FinanceStatsService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public com.afab.finance.dto.ExpenseSummaryDTO buildExpenseSummary(Business business, String period) {
+        UUID businessId = business.getId();
+        String currency = (business.getCurrency() != null && !business.getCurrency().isBlank())
+                ? business.getCurrency() : "USD";
+
+        DateRange range = resolveDateRange(period);
+
+        BigDecimal totalExpenses = transactionRepository.sumCompletedAmountByBusinessAndTypeAndDateRange(
+                businessId, "EXPENSE", range.startDate, range.endDate
+        );
+
+        LocalDate today = LocalDate.now();
+        LocalDate effectiveEnd = range.endDate.isAfter(today) ? today : range.endDate;
+        long elapsedDays = Math.max(1, ChronoUnit.DAYS.between(range.startDate, effectiveEnd) + 1);
+        BigDecimal avgPerDay = totalExpenses.compareTo(BigDecimal.ZERO) > 0
+                ? totalExpenses.divide(BigDecimal.valueOf(elapsedDays), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        List<Transaction> highestTxs = transactionRepository.findHighestTransactionInDateRange(
+                businessId, "EXPENSE", range.startDate, range.endDate, PageRequest.of(0, 1)
+        );
+        String highestTitle = "No Expenses";
+        BigDecimal highestAmount = BigDecimal.ZERO;
+        if (!highestTxs.isEmpty()) {
+            Transaction tx = highestTxs.get(0);
+            highestTitle = tx.getDescription() != null && !tx.getDescription().isBlank() ? tx.getDescription() : "N/A";
+            highestAmount = tx.getAmount() != null ? tx.getAmount() : BigDecimal.ZERO;
+        }
+
+        List<Object[]> rawCategories = transactionRepository.findCategoryBreakdownByType(
+                businessId, "EXPENSE", range.startDate, range.endDate
+        );
+        List<com.afab.finance.dto.ExpenseSummaryDTO.CategoryBreakdownItem> breakdown = new ArrayList<>();
+        for (Object[] row : rawCategories) {
+            String name = (String) row[0];
+            String color = (String) row[1];
+            BigDecimal amount = (BigDecimal) row[2];
+            double pct = totalExpenses.compareTo(BigDecimal.ZERO) > 0
+                    ? amount.divide(totalExpenses, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
+                    : 0.0;
+            breakdown.add(new com.afab.finance.dto.ExpenseSummaryDTO.CategoryBreakdownItem(
+                    name, amount, Math.round(pct * 10.0) / 10.0, color != null ? color : "#8b5cf6"
+            ));
+        }
+
+        List<Object[]> rawDaily = transactionRepository.findDailyOverviewByType(
+                businessId, "EXPENSE", range.startDate, range.endDate
+        );
+        List<com.afab.finance.dto.ExpenseSummaryDTO.DailyOverviewPoint> dailyOverview = new ArrayList<>();
+        for (Object[] row : rawDaily) {
+            LocalDate date = (LocalDate) row[0];
+            BigDecimal amount = (BigDecimal) row[1];
+            dailyOverview.add(new com.afab.finance.dto.ExpenseSummaryDTO.DailyOverviewPoint(date.toString(), amount));
+        }
+
+        return new com.afab.finance.dto.ExpenseSummaryDTO(
+                totalExpenses,
+                avgPerDay,
+                highestTitle,
+                highestAmount,
+                breakdown.size(),
+                BigDecimal.ZERO,
+                0.0,
+                currency,
+                breakdown,
+                List.of(),
+                dailyOverview
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public com.afab.finance.dto.RevenueSummaryDTO buildRevenueSummary(Business business, String period) {
+        UUID businessId = business.getId();
+        String currency = (business.getCurrency() != null && !business.getCurrency().isBlank())
+                ? business.getCurrency() : "USD";
+
+        DateRange range = resolveDateRange(period);
+
+        BigDecimal totalRevenue = transactionRepository.sumCompletedAmountByBusinessAndTypeAndDateRange(
+                businessId, "INCOME", range.startDate, range.endDate
+        );
+
+        LocalDate today = LocalDate.now();
+        LocalDate effectiveEnd = range.endDate.isAfter(today) ? today : range.endDate;
+        long elapsedDays = Math.max(1, ChronoUnit.DAYS.between(range.startDate, effectiveEnd) + 1);
+        BigDecimal avgPerDay = totalRevenue.compareTo(BigDecimal.ZERO) > 0
+                ? totalRevenue.divide(BigDecimal.valueOf(elapsedDays), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        List<Transaction> highestTxs = transactionRepository.findHighestTransactionInDateRange(
+                businessId, "INCOME", range.startDate, range.endDate, PageRequest.of(0, 1)
+        );
+        String highestDate = "N/A";
+        BigDecimal highestAmount = BigDecimal.ZERO;
+        if (!highestTxs.isEmpty()) {
+            Transaction tx = highestTxs.get(0);
+            highestDate = tx.getTransactionDate() != null ? tx.getTransactionDate().toString() : "N/A";
+            highestAmount = tx.getAmount() != null ? tx.getAmount() : BigDecimal.ZERO;
+        }
+
+        List<Object[]> rawCategories = transactionRepository.findCategoryBreakdownByType(
+                businessId, "INCOME", range.startDate, range.endDate
+        );
+        List<com.afab.finance.dto.RevenueSummaryDTO.RevenueSourceItem> sources = new ArrayList<>();
+        for (Object[] row : rawCategories) {
+            String name = (String) row[0];
+            String color = (String) row[1];
+            BigDecimal amount = (BigDecimal) row[2];
+            double pct = totalRevenue.compareTo(BigDecimal.ZERO) > 0
+                    ? amount.divide(totalRevenue, 4, RoundingMode.HALF_UP).multiply(BigDecimal.valueOf(100)).doubleValue()
+                    : 0.0;
+            sources.add(new com.afab.finance.dto.RevenueSummaryDTO.RevenueSourceItem(
+                    name, amount, Math.round(pct * 10.0) / 10.0, color != null ? color : "#10b981"
+            ));
+        }
+
+        List<Object[]> rawDaily = transactionRepository.findDailyOverviewByType(
+                businessId, "INCOME", range.startDate, range.endDate
+        );
+        List<com.afab.finance.dto.RevenueSummaryDTO.DailyOverviewPoint> dailyOverview = new ArrayList<>();
+        for (Object[] row : rawDaily) {
+            LocalDate date = (LocalDate) row[0];
+            BigDecimal amount = (BigDecimal) row[1];
+            dailyOverview.add(new com.afab.finance.dto.RevenueSummaryDTO.DailyOverviewPoint(date.toString(), amount));
+        }
+
+        long totalInvoices = transactionRepository.countCompletedByBusinessAndTypeAndDateRange(
+                businessId, "INCOME", range.startDate, range.endDate
+        );
+
+        return new com.afab.finance.dto.RevenueSummaryDTO(
+                totalRevenue,
+                totalRevenue,
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
+                totalRevenue,
+                avgPerDay,
+                highestAmount,
+                highestDate,
+                totalInvoices,
+                currency,
+                sources,
+                List.of(),
+                dailyOverview
+        );
+    }
+
     private KpiMetric buildKpiMetric(BigDecimal current, BigDecimal previous, String currency, boolean isExpense) {
         BigDecimal delta = current.subtract(previous);
         BigDecimal pct;

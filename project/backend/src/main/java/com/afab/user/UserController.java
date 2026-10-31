@@ -30,13 +30,16 @@ public class UserController {
     private final BusinessRepository businessRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthService authService;
+    private final com.afab.business.CurrentBusinessService currentBusinessService;
 
     public UserController(UserRepository userRepository, BusinessRepository businessRepository,
-                          RefreshTokenRepository refreshTokenRepository, AuthService authService) {
+                          RefreshTokenRepository refreshTokenRepository, AuthService authService,
+                          com.afab.business.CurrentBusinessService currentBusinessService) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.authService = authService;
+        this.currentBusinessService = currentBusinessService;
     }
 
     @GetMapping("/me")
@@ -48,7 +51,13 @@ public class UserController {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        Business business = businessRepository.findByUserId(user.getId()).orElse(null);
+        Business business = null;
+        try {
+            business = currentBusinessService.getCurrentBusiness(user.getEmail());
+        } catch (Exception e) {
+            // Fallback if not set yet
+            business = businessRepository.findFirstByUserIdAndArchivedAtIsNull(user.getId()).orElse(null);
+        }
 
         UserProfileDTO profile = new UserProfileDTO(
                 user.getId(),
@@ -71,7 +80,8 @@ public class UserController {
                 user.getEnableAiInsights(),
                 user.getCompactMode(),
                 user.getAutoCategorizeTransactions(),
-                user.getShowTips()
+                user.getShowTips(),
+                user.getPlanTier()
         );
 
         return ResponseEntity.ok(profile);

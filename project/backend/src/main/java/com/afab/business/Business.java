@@ -18,8 +18,8 @@ public class Business extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Column(nullable = false)
@@ -78,6 +78,9 @@ public class Business extends BaseEntity {
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Column(name = "archived_at")
+    private Instant archivedAt;
 
     @Column(name = "date_format", length = 50)
     private String dateFormat = "MM/DD/YYYY";
@@ -194,6 +197,9 @@ public class Business extends BaseEntity {
 
     public Instant getDeletedAt() { return deletedAt; }
     public void setDeletedAt(Instant deletedAt) { this.deletedAt = deletedAt; }
+
+    public Instant getArchivedAt() { return archivedAt; }
+    public void setArchivedAt(Instant archivedAt) { this.archivedAt = archivedAt; }
 
     public String getDateFormat() { return dateFormat; }
     public void setDateFormat(String dateFormat) { this.dateFormat = dateFormat; }

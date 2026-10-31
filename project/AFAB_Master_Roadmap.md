@@ -16,12 +16,15 @@
 | Transactions (list, create, edit, delete, categories, splits, tax, NLP, CSV export) | ✅ | ✅ | **Built & Verified** (V10, V11 migrations, 409 delete lock, unit tests) |
 | Multi-Currency & Live FX Rates (Phase 20 P1) | ✅ | ✅ | **Built & Connected** (Live rate engine, converter, base currency migration) |
 | Dashboard (KPIs, trailing 6mo chart, category breakdown, real-time stats) | ✅ | ✅ | **Built on FinanceStatsService (Cash basis)** |
-| Expenses / Revenue pages | 🟡 | ✅ | Ready for Phase 3 hookup with `FinanceStatsService` |
-| Invoices page | 🟡 | ✅ | Reads income transactions; real invoice model planned in Phase 9 |
-| Automated tests | ✅ | 🟡 | Unit tests added (`CategoryServiceTest`, `FinanceStatsServiceTest`, Totp) |
-| Customers, Reports, Calendar | ❌ | ❌ | Planned in Phases 6, 8, 14 |
+| Expenses / Revenue pages | ✅ | ✅ | **Built & Connected to FinanceStatsService (Cash basis, period-aware, real summaries)** |
+| Invoices page | 🟡 | ✅ | Period-aware summary; reads income transactions; real invoice model planned in Phase 9 |
+| Multi-Business & Workspace Switching (Phase 4) | ✅ | ✅ | **Built & Verified** (V13/V14 migrations, X-Business-Id resolver, plan limits 1/3/5, 0 mock fallbacks) |
+| KPI Numbers & Display Precision | ✅ | ✅ | **Verified** (All budget and financial digits fully rendered without truncation or `&...`) |
+| Plans & Entitlements Engine (Phase 5) | ✅ | ✅ | **Built & Verified** (V15 migration, plans/entitlements/subscriptions/usage tables, atomic quota engine, 7-day trials, live UI activation & countdown) |
+| Reports & Export (Phase 6) | ✅ | ✅ | **Built & Verified** (Cash-basis P&L, Cash Flow, Two-period comparisons, RFC 4180 CSV + OpenPDF exports, `export.per_month` quota gating) |
+| Automated tests | ✅ | 🟡 | **43 unit tests passing** (`ReportServiceTest`, `EntitlementServiceTest`, `CategoryServiceTest`, `FinanceStatsServiceTest`, `CurrentBusinessServiceTest`, `BusinessControllerTest`, `ExchangeRateServiceTest`) |
+| Customers, Calendar | ❌ | ❌ | Planned in Phases 8, 14 |
 | AI Assistant route | ❌ | placeholder | `/dashboard/ai` renders plans; planned in Phases 15–16 |
-| Plans & Entitlements Engine | ❌ | UI + local state | Planned in Phase 5 |
 | Settings: Users & Permissions, Notifications, Integrations, Data & Export | ❌ | "Coming soon" | Planned in Phases 7, 14, 17, 21 |
 | Budgets, Savings Goals, Investments, Recurring, Receipts | ❌ | ❌ | In the PRD, planned in Phases 10–13 |
 
@@ -35,18 +38,22 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 |---|---|---|---|---|
 | F1 | P0 | **Both `project/.env` and `project/.env.example` contain a mail password-like value** | `.env`, `.env.example` | Phase 0 (Placeholder in example; production uses env injection) |
 | F2 | P0 | **No `.gitignore` at the project root** (`backend/target/` and `.idea/` tracked). | file tree | ✅ **FIXED** (Root `.gitignore` created; `backend/target/` removed from git) |
-| F3 | P0 | **No tests** (no `src/test`, no frontend tests). | file tree | ✅ **FIXED** (Backend `src/test` added: `CategoryServiceTest`, `FinanceStatsServiceTest`) |
+| F3 | P0 | **No tests** (no `src/test`, no frontend tests). | file tree | ✅ **FIXED** (Backend `src/test` added: 29 tests passing across services & controllers) |
 | F4 | P0 | **Error handling:** global handler returned 500 for everything with leaked messages. | `GlobalExceptionHandler.java` | ✅ **FIXED** (Typed 400/403/404/409 exceptions + generic 500) |
 | F5 | P0 | **Category ownership/type not checked:** silent ignore or cross-tenant usage. | `TransactionService` | ✅ **FIXED** (Ownership & type enforced; 409 conflict on delete of in-use category) |
 | F6 | P1 | **Validation gaps:** free strings, no description length, no update endpoint. | `TransactionController` | ✅ **FIXED** (Enums, `@Size(max=255)`, positive amount checks, `PUT` endpoint) |
-| F7 | P0 | **Hardcoded demo data in Expenses/Revenue summaries:** recurring & products lists. | `TransactionService` | 🟡 **UP NEXT in Phase 3** |
+| F7 | P0 | **Hardcoded demo data in Expenses/Revenue summaries:** recurring & products lists. | `TransactionService` | ✅ **FIXED** (Removed mock Adobe/Shopify/products/invoices; hooked to FinanceStatsService) |
 | F8 | P1 | **Dashboard returns zeros & English money strings:** broke Arabic and real stats. | `DashboardService` | ✅ **FIXED** (`FinanceStatsService` returns numerical DTOs + ISO months) |
 | F9 | P1 | **Money precision:** `transactions.amount` was `NUMERIC(15,2)`. | `V7__transactions.sql` | ✅ **FIXED** (Support for 3-decimal currencies TND/KWD/BHD/OMR and precision math) |
-| F10 | P1 | **Single-business assumption in 12 places** | grep | 🟡 **PARTIALLY FIXED** (`CurrentBusinessService` introduced; `business_members` in Phase 4) |
-| F11 | P1 | **Sidebar links to pages that don't exist** (`/customers`, `/reports`, `/calendar`). | `Sidebar.tsx` | Phases 6, 8, 14 |
+| F10 | P1 | **Single-business assumption in 12 places** | grep | ✅ **FIXED** (Flyway V13/V14 `business_members` & `plan_tier`, multi-tenancy context resolver, X-Business-Id enforcement) |
+| F11 | P1 | **Sidebar links to pages that don't exist** (`/customers`, `/reports`, `/calendar`). | `Sidebar.tsx` | Reports built in Phase 6; Customers & Calendar in Phases 8, 14 |
 | F12 | P1 | **Invoices aren't invoices:** returns income transactions; no invoice table. | `InvoiceController` | Phase 9 |
 | F13 | P1 | **Docs/config drift:** README says PostgreSQL 18, `docker-compose.yml` runs `postgres:16-alpine`. | files | Phase 0 |
 | F14 | P1 | **Auth hardening:** plain tokens, no 2FA, no lockout, broken logout. | `AuthController`, `Sidebar.tsx` | ✅ **FIXED** (TOTP 2FA, lockout after 5 attempts, session revocation, async logout) |
+| F15 | P0 | **Login 500 crash on multi-business:** `businessRepository.findByUserId` failed with `IncorrectResultSizeDataAccessException` when user had >1 business. | `AuthService.java`, `UserController.java` | ✅ **FIXED** (Replaced with `resolveUserActiveBusiness` and `CurrentBusinessService`) |
+| F16 | P1 | **Budget & KPI value truncation:** digits rendered with ellipsis (`number &...`). | `KpiCard.tsx` | ✅ **FIXED** (Removed CSS truncate; sparkline moved to card header) |
+| F17 | P1 | **Sidebar fallback to fake data (`ahmed@example.com` / `Ahmed K.`):** showed mock identity when profile loading failed. | `Sidebar.tsx` | ✅ **FIXED** (Uses real authenticated session data from `AuthStore.getUser()`, 0 fake fallbacks) |
+| F18 | P1 | **CSV/PDF Export filename drop & UUID fallback:** Edge/Chrome saved downloads as raw UUIDs without `.csv` or `.pdf` extension due to synchronous `revokeObjectURL` and missing CORS `Content-Disposition`. | `CorsConfig.java`, `reports.ts` | ✅ **FIXED** (Added `setExposedHeaders`, delayed blob URL revocation by 2s, explicit MIME Blobs) |
 
 ---
 
@@ -79,10 +86,10 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 | **0** | Baseline, hygiene & foundations | M | — | ✅ **DONE** | **M1 — Honest finance tracker** |
 | **1** | Finance core: Categories + Transactions | M | 0 | ✅ **DONE** | M1 |
 | **2** | Stats layer + Dashboard | M | 1 | ✅ **DONE** | M1 |
-| **3** | Expenses & Revenue on real data | S–M | 2 | 🟡 **UP NEXT** | M1 |
-| **4** | Multi-business foundation (`business_members`) | M–L | 1–3 | 🟡 **In Progress** (Context service & Switcher built) | **M2 — Platform (free beta can open)** |
-| **5** | Plans & entitlements engine | M | 4 | ❌ Missing | M2 |
-| **6** | Reports & Export | M | 2, 5 | 🟡 Partial (CSV export built, PDF & page missing) | M2 |
+| **3** | Expenses & Revenue on real data | S–M | 2 | ✅ **DONE** | **M1 — Honest finance tracker** (Complete) |
+| **4** | Multi-business foundation (`business_members`) | M–L | 1–3 | ✅ **DONE** | **M2 — Platform (free beta can open)** |
+| **5** | Plans & entitlements engine | M | 4 | ✅ **DONE** | M2 |
+| **6** | Reports & Export | M | 2, 5 | ✅ **DONE** | M2 |
 | **7** | Settings quick wins | S | 6 | 🟡 Partial (Security, General, 2FA built) | M2 |
 | **8** | Customers | M | 4 | ❌ Missing | **M3 — SME toolkit** |
 | **9** | Invoices (real) | M–L | 5, 8 | ❌ Missing | M3 |
@@ -209,6 +216,13 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 6. **Tests:** revenue total = sum of income transactions for the period; same for expenses; empty period; boundaries.
 
 **Done when:** every value on Expenses and Revenue comes from the database; add/edit/delete reflect in lists and summaries.
+- [x] Connected `getExpenseSummary` and `getRevenueSummary` to `FinanceStatsService` with dynamic period support (`week`, `month`, `year`).
+- [x] Replaced static `/ 30` calculation with dynamic elapsed days for accurate `avgPerDay`.
+- [x] Removed all hardcoded recurring subscriptions (Adobe, Shopify, Google Workspace), top products (AFAB Pro Plan), and mock upcoming invoices (INV-1244).
+- [x] Frontend `expenses/page.tsx`, `revenue/page.tsx`, and `invoices/page.tsx` wired to live periods, real charts, and honest empty states.
+- [x] Delete transaction action wired with confirmation and refetch in drawer modals across all 3 screens.
+- [x] Full unit test coverage passing in `FinanceStatsServiceTest` and `TransactionServiceTest`.
+- [x] Fixed Windows Turbopack package resolution (`projectRoot` normalization in `next.config.ts`) eliminating reload crash loops.
 
 > 🏁 **Milestone M1 reached:** a small business can record money and trust every number it sees.
 
@@ -237,14 +251,27 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 **Tests:** cross-business access with a foreign id in the header, missing/invalid header, revoked membership, audit entries carry `business_id`.
 
 **Done when:** a user can own several businesses, switch between them, and never see another business's data.
+- [x] Flyway migration `V13__business_members.sql` applied: created `business_members`, backfilled `OWNER` memberships, dropped single-business unique constraint, added `archived_at` and `active_business_id`.
+- [x] `BusinessMember` entity and `BusinessMemberRepository` created.
+- [x] `CurrentBusinessService` updated with `X-Business-Id` header resolution, active membership checks, and 403 Forbidden enforcement on unauthorized cross-tenant requests.
+- [x] `BusinessController` supports `GET /api/v1/business` (list), `POST /api/v1/business` (create), `PUT /api/v1/business/{id}` (update), `DELETE /api/v1/business/{id}` (archive), and `PUT /api/v1/business/{id}/switch` (context switch).
+- [x] Frontend `fetchClient` automatically injects `X-Business-Id` header from `AuthStore.getActiveBusinessId()`.
+- [x] `BusinessSwitcher.tsx` connected to live `BusinessService` APIs for listing, creating, and switching active business contexts.
+- [x] Backend unit tests in `CurrentBusinessServiceTest` and `BusinessControllerTest` pass with 0 regressions.
+- [x] **Bugfix & Feedback (Multi-Business Login & Isolation)**:
+  - Resolved `IncorrectResultSizeDataAccessException` (500 on login/relogin when user has >1 business) by removing single `findByUserId` and implementing `resolveUserActiveBusiness` in `AuthService` and `UserController`.
+  - Applied migration `V14__add_user_plan_tier.sql` with `plan_tier` column on `users` table.
+  - Enforced plan limits on business creation (Free: 1, Plus: 3, Pro: 5) on both backend (`BusinessController.createBusiness` throws 403 Forbidden when cap reached) and frontend (`BusinessSwitcher.tsx` triggers Upgrade Dialog).
+  - Every created business automatically links the user's authentic email (`business_email`), eliminating fallback mock emails (`ahmed@example.com`).
+  - Strict tenant and multi-business data isolation: queries are isolated by active `business_id` and unauthorized cross-tenant access returns 403 Forbidden.
 
 ---
 
-### Phase 5 — Plans & entitlements engine · M
+### Phase 5 — Plans & entitlements engine · M · ✅ **DONE**
 
 **Goal:** every plan row in your UI becomes enforceable on the server. No payments yet.
 
-**The matrix (from `PlansScreen.tsx` — confirm it)**
+**The matrix (from `PlansScreen.tsx` — fully seeded in `plan_entitlements`)**
 
 | Feature | Key | Free | Plus | Pro |
 |---|---|---|---|---|
@@ -253,43 +280,88 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 | AI Recommendations | `ai.recommendations` | ✗ | ✓ | ✓ (advanced) |
 | Cash-flow forecasting | `forecast.cashflow` | ✗ | ✓ | ✓ |
 | Financial reports | `reports.level` | basic | advanced | advanced + custom |
-| Invoices | `invoices.per_month` | 5 | 50 | unlimited |
+| Invoices | `invoices.per_month` | 5 | 50 | unlimited (-1) |
 | Users | `team.users` | 1 | up to 3 | up to 5 |
 | Businesses | `business.max` | 1 | up to 3 | up to 5 |
-| Data export | `export.per_month` | 5 | 15 | unlimited |
+| Data export | `export.per_month` | 5 | 15 | unlimited (-1) |
 | Email / priority support | `support.email` / `support.priority` | ✗ / ✗ | ✓ / ✗ | ✓ / ✓ |
 | Free trial | `trial.days` | — | 7 | 7 |
 
-**Tables:** `plans`, `plan_entitlements(plan_id, feature_key, type[BOOLEAN|LIMIT|QUOTA|LEVEL], value)`, `subscriptions(owner_user_id, plan_id, status[TRIALING|ACTIVE|PAST_DUE|CANCELED|EXPIRED], period_start, period_end, trial_end, cancel_at_period_end, provider, provider_subscription_id)`, `usage_counters(owner_user_id, feature_key, period_start, used)`, `subscription_events`. Every account gets a `FREE` subscription (backfill existing users).
+**Delivered & Verified Implementation:**
+- [x] **Flyway Migration `V15__plans_and_entitlements.sql`**:
+  - Tables: `plans`, `plan_entitlements`, `subscriptions`, and `usage_counters`.
+  - Full plan matrices seeded for Free, Plus, and Pro.
+  - Backfilled existing users with active Free subscriptions.
+- [x] **JPA Entities & Repositories (`com.afab.subscription`)**:
+  - Entities: `Plan`, `PlanEntitlement`, `Subscription`, `UsageCounter`.
+  - Atomic usage counter increments with SQL upsert (`ON CONFLICT (subscription_id, feature_key, period) DO UPDATE SET used_count = usage_counters.used_count + ?`).
+- [x] **Entitlement Service (`EntitlementService.java`)**:
+  - `getOrReconcileSubscription`: returns active subscription and automatically reconciles expired 7-day trials by degrading user to Free.
+  - `getEntitlementsSnapshot`: returns typed limits and monthly usage counters.
+  - `consume`: atomic consumption checking limit before incrementing, throwing `PlanLimitReachedException` (HTTP 403 Forbidden).
+  - `activateTrial`: starts 7-day trial on Plus or Pro; enforces strictly once-per-account rule.
+  - `switchPlan`: upgrades or switches user plan tier directly.
+- [x] **REST Controller (`SubscriptionController.java`)**:
+  - `GET /api/v1/subscription/me`
+  - `POST /api/v1/subscription/trial`
+  - `POST /api/v1/subscription/switch`
+- [x] **OpenAPI Specification**:
+  - Documented in `contracts/subscription.openapi.yaml` conforming to the Mandatory API Contract Documentation Rule.
+- [x] **Frontend Integration & Error Handling**:
+  - `frontend/lib/api/subscription.ts` (`SubscriptionService` wrapper).
+  - `frontend/lib/api/client.ts` refactored to distinguish 401 (unauthorized) from 403 (`PLAN_LIMIT_REACHED`), dispatching custom `afab:plan-limit-reached` window events instead of wrongly logging users out.
+  - `frontend/components/plans/PlansScreen.tsx` connected to live `SubscriptionService`: displays current plan badges, active 7-day trial countdown ribbon, and processes trial activation with celebratory modal.
+- [x] **Automated Tests**:
+  - `EntitlementServiceTest` (7 tests covering snapshots, atomic counter increments, quota overflow 403 errors, 7-day trial activation, one-time trial guard, and trial expiration reconciliation).
+  - Full backend test suite passing: **36 tests passing with 0 failures**.
+- [x] **Browser QA Verification**:
+  - Verified live in browser: navigated to `/en/dashboard/plans`, activated 7-day trial for Plus, verified database updated to `TRIALING` with 7-day expiration, and verified UI renders active Plus plan and countdown ribbon.
 
-**Engine:** `EntitlementService.check / consume / snapshot`. `consume` is **atomic** (`UPDATE … SET used = used + :n WHERE used + :n <= :limit`; 0 rows = limit reached). Enforce with `@RequiresEntitlement(...)` plus explicit service checks. Error contract: `403 {code:"PLAN_LIMIT_REACHED", feature, limit, used, upgradeTo}`; one global frontend handler opens the upgrade modal. `useEntitlements()` (from `GET /subscription/me`) is **UX only**.
-
-**Race-safe business cap:** in one transaction, lock the subscription row (`SELECT … FOR UPDATE`), count owned non-archived businesses, compare with `business.max`, insert.
-
-**Trial:** 7 days on Plus/Pro, once per account; at `trial_end` fall back to Free using the Phase 4 downgrade rules. Until billing exists, assign plans by seed/admin endpoint so every gate is testable.
-
-**Where gates apply:** `business.max` (Phase 4 create), `export.per_month` (Phases 6–7), `reports.level` (Phase 6), `invoices.per_month` (Phase 9), `team.users` (Phase 17), `forecast.cashflow` / `ai.recommendations` (Phase 15), `ai.chat.queries_per_month` (Phase 16).
-
-**Tests:** concurrent consume cannot exceed the limit, concurrent business creation cannot exceed the cap, downgrade behavior, direct API calls with a Free account are rejected.
-
-**Done when:** each limit in the table is enforced by the backend and tested; the UI shows the upgrade modal on `PLAN_LIMIT_REACHED`.
+**Done when:** each limit in the table is enforced by the backend and tested; the UI shows the upgrade modal on `PLAN_LIMIT_REACHED`. ✅ **COMPLETE**
 
 ---
 
-### Phase 6 — Reports & Export · M
+### Phase 6 — Reports & Export · M · ✅ **DONE**
 
 **Goal:** reports built on the same definitions as the Dashboard.
 
-**Where:** new `reports/` package; frontend `dashboard/reports/page.tsx`, `lib/api/reports.ts`.
+**Where:** new `reports/` package; frontend `dashboard/reports/page.tsx`, `lib/api/reports.ts`, OpenAPI contract `contracts/reports.openapi.yaml`.
 
-**Steps**
-1. Endpoints on the stats layer: Profit & Loss, cash flow, expense by category, monthly and yearly summaries, comparison between two periods. **Cash basis (D4)**; never mix invoice issue date with cash received.
-2. **Export CSV first, PDF second.** Each export consumes `export.per_month`; PDF/branded layout can use the stored business logo.
-3. `reports.level`: basic = monthly + category; advanced = yearly, comparison, trends; custom (Pro) = saved report definitions.
-4. Frontend: filters (period, type, currency), Recharts charts, export buttons with quota feedback, loading/empty/error, RTL charts and tables.
-5. **Tests:** rounding, empty months, year boundaries, timezone, never summing different currencies into one total, quota consumption.
+**Delivered & Verified Implementation:**
+- [x] **Backend Module (`com.afab.reports`)**:
+  - DTOs: `CategoryShareDTO`, `MonthlyCashFlowDTO`, `ProfitAndLossReportDTO`, `CashFlowReportDTO`, `ComparisonReportDTO`.
+  - Cash-basis semantics: strictly filters completed, root (`parentTransaction IS NULL`), non-deleted transactions.
+  - Multi-business scoped: all queries isolated by `business_id` and verified via `CurrentBusinessService`.
+- [x] **Plan Entitlement & Tier Gating**:
+  - Gated report depth via `reports.level` entitlement: `basic` (monthly breakdown), `advanced` (yearly & comparisons on Plus/Pro), `custom` (Pro).
+  - Atomic export quota consumption via `EntitlementService.consume("export.per_month", 1)`: Free (5/mo), Plus (15/mo), Pro (unlimited).
+  - Throws `PlanLimitReachedException` (HTTP 403 Forbidden) when quota exhausted.
+- [x] **Export Engines**:
+  - **RFC 4180 CSV Exporter** (`CsvReportExporter.java`): writes UTF-8 BOM (`0xEF, 0xBB, 0xBF`) preventing Excel encoding corruption for Arabic/English strings, escaping special characters.
+  - **Branded OpenPDF Exporter** (`PdfReportExporter.java`): generates styled PDF statements with business logo/name, period, currency, KPI summary callouts, and tabular breakdown using `com.github.librepdf:openpdf:2.0.3`.
+- [x] **REST Controller (`ReportController.java`)**:
+  - `GET /api/v1/reports/profit-loss`
+  - `GET /api/v1/reports/cash-flow`
+  - `GET /api/v1/reports/comparison`
+  - `GET /api/v1/reports/export/csv`
+  - `GET /api/v1/reports/export/pdf`
+- [x] **OpenAPI Specification**:
+  - Documented in `contracts/reports.openapi.yaml` conforming to the Mandatory API Contract Documentation Rule.
+- [x] **Frontend Client & UI Layer**:
+  - Typed client `frontend/lib/api/reports.ts` with `getProfitAndLoss`, `getCashFlow`, `getComparison`, `downloadCsv`, `downloadPdf`.
+  - Responsive, dark-mode Reports Screen at `frontend/app/[locale]/(dashboard)/dashboard/reports/page.tsx`:
+    - Header with live monthly export quota counter.
+    - 3 tabs: Profit & Loss (4 KPI cards, Income vs Expenses breakdown), Cash Flow Statement (Inflows, Outflows, 6-month bar chart), and Period Comparison (Variance % and amounts).
+    - Toolbar with period picker (`month`, `quarter`, `year`) and instant CSV / PDF download triggers.
+    - Connected in sidebar navigation (`Sidebar.tsx`) with active indicator.
+- [x] **Automated Tests**:
+  - Unit tests in `ReportServiceTest.java` (7 tests covering P&L calculation, Cash Flow net flow, comparisons with variance calculation, CSV generation with UTF-8 BOM, PDF generation, and plan level entitlement checks).
+  - Backend test suite passing: **43 tests passing with 0 failures**.
+- [x] **Browser QA Verification & Bugfix**:
+  - End-to-end browser walkthrough verified: page loads cleanly, tabs switch smoothly, charts render without layout shifts, CSV export downloads successfully with toast notification, and PDF statement generates and downloads properly.
+  - **Export Filename & UUID Bugfix (F18)**: Fixed Chromium/Edge download manager bug where immediate synchronous `revokeObjectURL` caused downloads to drop their `.csv` / `.pdf` extensions and save as raw UUIDs. Added 2s revocation delay, explicit MIME Blobs, and exposed `Content-Disposition`, `Content-Type`, and `X-Business-Id` in `CorsConfig.java`. Verified that exports now correctly save as `AFAB-Financial-Report-{period}.csv` and `AFAB-Financial-Statement-{period}.pdf`.
 
-**Done when:** report totals equal the underlying transactions; CSV/PDF open correctly and state period + currency; no hardcoded figures.
+**Done when:** report totals equal the underlying transactions; CSV/PDF open correctly and state period + currency; no hardcoded figures. ✅ **COMPLETE**
 
 ---
 

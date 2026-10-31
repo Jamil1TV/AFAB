@@ -1,67 +1,185 @@
 package com.afab.business;
 
 import com.afab.business.dto.BusinessDTO;
+import com.afab.business.dto.CreateBusinessRequest;
 import com.afab.business.dto.UpdateBusinessRequest;
+import com.afab.common.exception.ForbiddenException;
+import com.afab.common.exception.ResourceNotFoundException;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/business")
 public class BusinessController {
 
     private final BusinessRepository businessRepository;
+    private final BusinessMemberRepository businessMemberRepository;
     private final UserRepository userRepository;
+    private final CurrentBusinessService currentBusinessService;
 
-    public BusinessController(BusinessRepository businessRepository, UserRepository userRepository) {
+    public BusinessController(
+            BusinessRepository businessRepository,
+            BusinessMemberRepository businessMemberRepository,
+            UserRepository userRepository,
+            CurrentBusinessService currentBusinessService
+    ) {
         this.businessRepository = businessRepository;
+        this.businessMemberRepository = businessMemberRepository;
         this.userRepository = userRepository;
+        this.currentBusinessService = currentBusinessService;
     }
 
     /**
-     * GET /api/v1/business/mine — get the current user's business without knowing UUID.
+     * GET /api/v1/business — list all businesses the authenticated user belongs to.
      */
-    @GetMapping("/mine")
-    public ResponseEntity<?> getMyBusiness(Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName()).orElseThrow();
-        Business business = businessRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new IllegalArgumentException("No business found for this user"));
-        return ResponseEntity.ok(toDTO(business));
+    @GetMapping
+    public ResponseEntity<List<BusinessDTO>> listMyBusinesses(Authentication authentication) {
+        String email = authentication.getName();
+        Business activeBusiness = currentBusinessService.getCurrentBusiness(email);
+        List<BusinessMember> memberships = currentBusinessService.getUserMemberships(email);
+
+        List<BusinessDTO> dtos = memberships.stream().map(m -> {
+            Business b = m.getBusiness();
+            BusinessDTO dto = toDTO(b);
+            dto.setUserRole(m.getRole());
+            dto.setActive(b.getId().equals(activeBusiness.getId()));
+            return dto;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(dtos);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getBusiness(@PathVariable UUID id, Authentication authentication) {
-        User user = userRepository.findByEmail(authentication.getName()).orElseThrow();
-        Business business = businessRepository.findById(id).orElseThrow();
+    /**
+     * POST /api/v1/business — create a new workspace / business.
+     */
+    @PostMapping
+    @Transactional
+    public ResponseEntity<BusinessDTO> createBusiness(
+            @Valid @RequestBody CreateBusinessRequest request,
+            Authentication authentication
+    ) {
+        User user = currentBusinessService.getCurrentUser(authentication.getName());
 
-        // Ensure user owns this business
-        if (!business.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("Forbidden");
+        // Enforce Plan Limits: FREE = 1, PLUS = 3, PRO = 5
+        String planTier = user.getPlanTier() != null ? user.getPlanTier().toUpperCase() : "FREE";
+        int maxAllowed;
+        if (planTier.contains("PRO") || planTier.contains("ENTERPRISE")) {
+            maxAllowed = 5;
+        } else if (planTier.contains("PLUS")) {
+            maxAllowed = 3;
+        } else {
+            maxAllowed = 1;
         }
 
-        return ResponseEntity.ok(toDTO(business));
+        long activeOwnedCount = businessMemberRepository.findAllActiveByUserIdWithBusiness(user.getId())
+                .stream()
+                .filter(m -> "OWNER".equalsIgnoreCase(m.getRole()) && m.getBusiness().getArchivedAt() == null)
+                .count();
+
+        if (activeOwnedCount >= maxAllowed) {
+            throw new com.afab.subscription.PlanLimitReachedException(
+                    "business.max",
+                    maxAllowed,
+                    (int) activeOwnedCount,
+                    planTier.contains("FREE") ? "plus" : "pro"
+            );
+        }
+
+        Business business = new Business();
+        business.setUser(user);
+        business.setName(request.getName().trim());
+        business.setCurrency(request.getCurrency().toUpperCase().trim());
+        business.setCountry(request.getCountry());
+        business.setTimezone(request.getTimezone());
+        business.setIndustry(request.getIndustry());
+        business.setBusinessType(request.getBusinessType());
+        business.setBusinessEmail(user.getEmail());
+        business.setStatus("ACTIVE");
+
+        business = businessRepository.save(business);
+
+        // Automatically assign OWNER membership
+        BusinessMember ownerMember = new BusinessMember(business, user, "OWNER", "ACTIVE");
+        businessMemberRepository.save(ownerMember);
+
+        // Set as active business
+        user.setActiveBusinessId(business.getId());
+        userRepository.save(user);
+
+        BusinessDTO dto = toDTO(business);
+        dto.setUserRole("OWNER");
+        dto.setActive(true);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
 
+    /**
+     * GET /api/v1/business/mine — get the active business for the current context.
+     */
+    @GetMapping("/mine")
+    public ResponseEntity<BusinessDTO> getMyBusiness(Authentication authentication) {
+        String email = authentication.getName();
+        Business business = currentBusinessService.getCurrentBusiness(email);
+        User user = currentBusinessService.getCurrentUser(email);
+
+        BusinessDTO dto = toDTO(business);
+        dto.setActive(true);
+
+        businessMemberRepository.findByBusinessIdAndUserId(business.getId(), user.getId())
+                .ifPresent(m -> dto.setUserRole(m.getRole()));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * GET /api/v1/business/{id} — get a specific business if member.
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<BusinessDTO> getBusiness(@PathVariable UUID id, Authentication authentication) {
+        User user = currentBusinessService.getCurrentUser(authentication.getName());
+
+        BusinessMember member = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new ForbiddenException("Unauthorized: You do not have access to business " + id));
+
+        BusinessDTO dto = toDTO(member.getBusiness());
+        dto.setUserRole(member.getRole());
+        dto.setActive(id.equals(user.getActiveBusinessId()));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * PUT /api/v1/business/{id} — update business settings (OWNER or ADMIN only).
+     */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateBusiness(
+    @Transactional
+    public ResponseEntity<BusinessDTO> updateBusiness(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateBusinessRequest request,
             Authentication authentication
     ) {
-        User user = userRepository.findByEmail(authentication.getName()).orElseThrow();
-        Business business = businessRepository.findById(id).orElseThrow();
+        User user = currentBusinessService.getCurrentUser(authentication.getName());
 
-        // Ensure user owns this business
-        if (!business.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("Forbidden");
+        BusinessMember member = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new ForbiddenException("Unauthorized: You do not have access to business " + id));
+
+        if (!member.isAdminOrOwner()) {
+            throw new ForbiddenException("Only business owners and admins can update business settings.");
         }
 
-        // Only update non-null fields (partial update)
+        Business business = member.getBusiness();
+
         if (request.getName() != null) business.setName(request.getName());
         if (request.getCountry() != null) business.setCountry(request.getCountry());
         if (request.getCurrency() != null) business.setCurrency(request.getCurrency());
@@ -83,7 +201,60 @@ public class BusinessController {
         if (request.getNumberFormat() != null) business.setNumberFormat(request.getNumberFormat());
 
         business = businessRepository.save(business);
-        return ResponseEntity.ok(toDTO(business));
+
+        BusinessDTO dto = toDTO(business);
+        dto.setUserRole(member.getRole());
+        dto.setActive(id.equals(user.getActiveBusinessId()));
+
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * DELETE /api/v1/business/{id} — archive a business (OWNER only).
+     */
+    @DeleteMapping("/{id}")
+    @Transactional
+    public ResponseEntity<Void> archiveBusiness(@PathVariable UUID id, Authentication authentication) {
+        User user = currentBusinessService.getCurrentUser(authentication.getName());
+
+        BusinessMember member = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(id, user.getId())
+                .orElseThrow(() -> new ForbiddenException("Unauthorized: You do not have access to business " + id));
+
+        if (!member.isOwner()) {
+            throw new ForbiddenException("Only the business owner can archive a business.");
+        }
+
+        Business business = member.getBusiness();
+        business.setArchivedAt(Instant.now());
+        business.setStatus("ARCHIVED");
+        businessRepository.save(business);
+
+        // If the archived business was the user's active business, clear it
+        if (id.equals(user.getActiveBusinessId())) {
+            user.setActiveBusinessId(null);
+            userRepository.save(user);
+        }
+
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * PUT /api/v1/business/{id}/switch — switch active business context.
+     */
+    @PutMapping("/{id}/switch")
+    public ResponseEntity<BusinessDTO> switchBusiness(@PathVariable UUID id, Authentication authentication) {
+        String email = authentication.getName();
+        Business business = currentBusinessService.switchActiveBusiness(email, id);
+
+        BusinessDTO dto = toDTO(business);
+        dto.setActive(true);
+        dto.setUserRole("MEMBER");
+
+        User user = currentBusinessService.getCurrentUser(email);
+        businessMemberRepository.findByBusinessIdAndUserId(id, user.getId())
+                .ifPresent(m -> dto.setUserRole(m.getRole()));
+
+        return ResponseEntity.ok(dto);
     }
 
     private BusinessDTO toDTO(Business business) {

@@ -86,29 +86,31 @@ Security considerations:
 ## 7. Pages/features observed
 - Public landing page and home sections.
 - Login, signup, forgot/reset password, verify email, onboarding.
-- Dashboard, transactions, expenses, revenue, invoices, AI page, plans, upgrade.
+- Dashboard, transactions, expenses, revenue, invoices, reports (`/dashboard/reports`), AI page, plans, upgrade.
 - Settings: general, business profile, security, subscription, and catch-all settings route.
 - Maintenance and not-found states.
 
 Dashboard components include KPI cards, revenue chart, AI insights, recent transactions, expense categories, reminders, top customers, sidebar, add/edit-transaction modal, delete-transaction modal, manage-categories modal, upgrade banner, QuickAddBar (natural language magic quick-add with shortcut N), TransactionDetailDrawer (slide-over with audit info, notes, and anomaly alerts), SplitTransactionModal (multi-category split with live balance validation), and CSV exporter (UTF-8 BOM for Arabic/English Excel compatibility). A visual component does not prove the data behind it is persisted/live.
 
-## 8. Plans and multi-business requirement
-`components/plans/PlansScreen.tsx` defines display plan data and local React state for billing/trial/checkout presentation. Treat it as presentation, not a subscription backend.
-
-Requested limits:
-- Free: 1 business
-- Plus: up to 3 businesses
-- Pro: up to 5 businesses
-
-Rules:
-- Show limits consistently on cards and comparison table.
-- Keep plan limits in one typed configuration source.
-- Use clear business-limit messaging and accessible tooltips.
-- Do not infer payment/trial success from local state.
-- Never enforce caps only in React; backend entitlements must enforce them.
-- Current backend is one-business-per-user. True multi-business support requires coordinated backend/schema/authz changes.
-- Do not invent yearly prices/discounts without confirmation.
-- $9.99 Plus / $19.99 Pro are mockup proposals, not verified payment configuration.
+## 8. Plans, Entitlements Engine, and Reports (Phase 4, 5 & 6 Completed)
+- `components/dashboard/BusinessSwitcher.tsx` provides live workspace listing, creation, and switching:
+  - Stores `afab_active_business_id` in `AuthStore` and sends `X-Business-Id` on all API requests via `fetchClient`.
+  - Enforces workspace limits: Free (1), Plus (3), Pro (5). When limit is reached, clicking "Add Business" opens the Upgrade Dialog directing the user to `/dashboard/plans`.
+  - `Sidebar.tsx` binds directly to active user session data without fake fallback profiles (`ahmed@example.com`).
+- `components/dashboard/KpiCard.tsx` renders full numeric digits for budget and financial stats without ellipsis truncation (`&...`), with sparklines positioned cleanly in the card header.
+- `lib/api/subscription.ts` (`SubscriptionService`) interacts with `/api/v1/subscription`:
+  - `getMySubscription()`: retrieves active subscription, trial status, remaining days, entitlements map, and monthly usage counters.
+  - `activateTrial(planSlug)`: triggers 7-day free trial on Plus or Pro.
+  - `switchPlan(planSlug)`: changes the active plan tier.
+- `fetchClient` intercepts HTTP 403 with `code: "PLAN_LIMIT_REACHED"` and dispatches `afab:plan-limit-reached` window event to open the global Upgrade Modal.
+- `components/plans/PlansScreen.tsx` connects to `SubscriptionService`, enabling trial activation, plan tier switching, and active subscription badges.
+- `app/[locale]/(dashboard)/dashboard/reports/page.tsx` & `lib/api/reports.ts`:
+  - Live P&L Statement with 4 KPI cards and income/expense category breakdown.
+  - Cash Flow Statement with Operating Inflows/Outflows and 6-month cash trend bar chart.
+  - Two-Period Comparisons with variance percentage and delta amounts.
+  - Period toolbar (`month`, `quarter`, `year`) and quota badge showing monthly consumed exports.
+  - Instant RFC 4180 CSV export (UTF-8 BOM) and branded OpenPDF statement download.
+  - Robust file download handler (`triggerFileDownload`): applies explicit MIME typing (`text/csv;charset=utf-8;`, `application/pdf`) and delays `URL.revokeObjectURL` by 2,000ms, preventing Chromium/Edge from losing download extensions and falling back to raw UUIDs.
 
 ## 9. Mock/demo data
 `lib/mock-data.ts` contains sample chart, KPI, transaction, and category data.

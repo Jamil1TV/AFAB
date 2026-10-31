@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Check, 
   X, 
@@ -19,11 +19,15 @@ import {
   CheckCircle2,
   Lock,
   Globe2,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from "lucide-react";
 import { useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
+import { SubscriptionService, SubscriptionSnapshot } from "@/lib/api/subscription";
+import { AuthStore } from "@/lib/auth-store";
+import { toast } from "sonner";
 
 interface PlanFeature {
   name: string;
@@ -49,10 +53,34 @@ export function PlansScreen() {
 
   const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">("monthly");
   const [activePlan, setActivePlan] = useState<"free" | "plus" | "pro">("free");
+  const [subscription, setSubscription] = useState<SubscriptionSnapshot | null>(null);
   const [selectedPlanForTrial, setSelectedPlanForTrial] = useState<"plus" | "pro" | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<"form" | "success">("form");
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadSubscription() {
+      setIsLoading(true);
+      try {
+        const sub = await SubscriptionService.getMySubscription();
+        setSubscription(sub);
+        if (sub?.planSlug) {
+          setActivePlan(sub.planSlug);
+        }
+      } catch (err) {
+        console.warn("Could not load subscription details", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadSubscription();
+  }, []);
+
+  const hasUsedTrial = Boolean(subscription?.trialEnd);
 
   const plans: PlanData[] = [
     {
@@ -312,15 +340,51 @@ export function PlansScreen() {
 
   const handleStartTrial = (planId: "plus" | "pro") => {
     setSelectedPlanForTrial(planId);
+    setErrorMessage(null);
     setCheckoutStep("form");
     setIsCheckoutOpen(true);
   };
 
-  const handleConfirmCheckout = (e: React.FormEvent) => {
+  const handleConfirmCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCheckoutStep("success");
-    if (selectedPlanForTrial) {
+    if (!selectedPlanForTrial) return;
+    setIsSubmitting(true);
+    setErrorMessage(null);
+    try {
+      const updated = await SubscriptionService.activateTrial(selectedPlanForTrial);
+      setSubscription(updated);
       setActivePlan(selectedPlanForTrial);
+      const user = AuthStore.getUser();
+      if (user) {
+        AuthStore.updateUser({ planTier: selectedPlanForTrial.toUpperCase() });
+      }
+      toast.success(isAr ? "تم تفعيل الفترة التجريبية بنجاح!" : "Trial activated successfully!");
+      setCheckoutStep("success");
+    } catch (err: any) {
+      const msg = err?.message || (isAr ? "فشل تفعيل الفترة التجريبية" : "Failed to activate trial");
+      setErrorMessage(msg);
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSwitchPlan = async (planId: "free" | "plus" | "pro") => {
+    if (planId === activePlan) return;
+    setIsSubmitting(true);
+    try {
+      const updated = await SubscriptionService.switchPlan(planId);
+      setSubscription(updated);
+      setActivePlan(planId);
+      const user = AuthStore.getUser();
+      if (user) {
+        AuthStore.updateUser({ planTier: planId.toUpperCase() });
+      }
+      toast.success(isAr ? "تم تحديث خطتك بنجاح!" : `Switched to ${planId.toUpperCase()} plan!`);
+    } catch (err: any) {
+      toast.error(err?.message || (isAr ? "فشل تغيير الخطة" : "Failed to switch plan"));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -397,16 +461,34 @@ export function PlansScreen() {
             </button>
           </div>
 
-          {/* 7-day free trial ribbon */}
-          <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 px-4 py-2 rounded-xl shadow-sm dark:shadow-none">
-            <Gift className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span>
-              <strong className="text-purple-600 dark:text-purple-300 font-semibold underline underline-offset-2">
-                {isAr ? "تجربة مجانية لمدة 7 أيام على باقتي Plus و Pro." : "7-day free trial on Plus & Pro plans."}
-              </strong>{" "}
-              {isAr ? "يمكنك الإلغاء في أي وقت." : "Cancel anytime."}
-            </span>
-          </div>
+          {/* 7-day free trial banner or active countdown */}
+          {subscription?.isTrial ? (
+            <div className="flex items-center gap-2.5 text-xs text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 border border-purple-400 px-5 py-2.5 rounded-2xl shadow-lg shadow-purple-900/30">
+              <Clock className="w-4 h-4 text-yellow-300 animate-pulse shrink-0" />
+              <span>
+                <strong>
+                  {isAr 
+                    ? `أنت حالياً في فترة تجريبية مجانية لباقة ${subscription.planName}.`
+                    : `You are currently on a 7-day free trial of ${subscription.planName}.`}
+                </strong>{" "}
+                <span className="bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                  {isAr 
+                    ? `متبقي ${subscription.trialDaysRemaining ?? 7} أيام`
+                    : `${subscription.trialDaysRemaining ?? 7} days remaining`}
+                </span>
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 px-4 py-2 rounded-xl shadow-sm dark:shadow-none">
+              <Gift className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+              <span>
+                <strong className="text-purple-600 dark:text-purple-300 font-semibold underline underline-offset-2">
+                  {isAr ? "تجربة مجانية لمدة 7 أيام على باقتي Plus و Pro." : "7-day free trial on Plus & Pro plans."}
+                </strong>{" "}
+                {isAr ? "يمكنك الإلغاء في أي وقت." : "Cancel anytime."}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── Pricing Cards Grid ── */}
@@ -498,31 +580,61 @@ export function PlansScreen() {
 
                   {/* CTA Button */}
                   <div>
-                    {plan.id === "free" ? (
+                    {isCurrent ? (
                       <button
                         type="button"
                         disabled
-                        className="w-full mt-5 py-2.5 px-4 bg-slate-100 dark:bg-[#11172E] text-slate-500 dark:text-slate-300 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700/60 cursor-default transition-colors text-center"
+                        className="w-full mt-5 py-2.5 px-4 bg-slate-100 dark:bg-[#11172E] text-slate-500 dark:text-slate-300 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700/60 cursor-default transition-colors text-center flex items-center justify-center gap-1.5"
                       >
-                        {isAr ? "الخطة الحالية" : "Current Plan"}
+                        <Check className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>{isAr ? "الخطة الحالية" : "Current Plan"}</span>
                       </button>
-                    ) : isPlus ? (
+                    ) : plan.id === "free" ? (
                       <button
                         type="button"
-                        onClick={() => handleStartTrial("plus")}
-                        className="w-full mt-5 py-2.5 px-4 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-semibold text-xs rounded-xl shadow-lg shadow-purple-900/50 flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                        disabled={isSubmitting}
+                        onClick={() => handleSwitchPlan("free")}
+                        className="w-full mt-5 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-[#11172E] dark:hover:bg-[#192244] text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700/60 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
                       >
-                        <span>{isAr ? "ابدأ التجربة المجانية" : "Start Free Trial"}</span>
+                        {isSubmitting ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <span>{isAr ? "الرجوع للخطة المجانية" : "Downgrade to Free"}</span>
+                        )}
+                      </button>
+                    ) : !hasUsedTrial ? (
+                      <button
+                        type="button"
+                        disabled={isSubmitting}
+                        onClick={() => handleStartTrial(plan.id as "plus" | "pro")}
+                        className={`w-full mt-5 py-2.5 px-4 text-xs font-semibold rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${
+                          isPlus
+                            ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-900/50"
+                            : "bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-bold shadow-amber-900/40"
+                        }`}
+                      >
+                        <span>{isAr ? "ابدأ التجربة المجانية (7 أيام)" : "Start 7-Day Free Trial"}</span>
                         <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
                       </button>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleStartTrial("pro")}
-                        className="w-full mt-5 py-2.5 px-4 bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-amber-900/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99]"
+                        disabled={isSubmitting}
+                        onClick={() => handleSwitchPlan(plan.id as "plus" | "pro")}
+                        className={`w-full mt-5 py-2.5 px-4 text-xs font-semibold rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${
+                          isPlus
+                            ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-900/50"
+                            : "bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-bold shadow-amber-900/40"
+                        }`}
                       >
-                        <span>{isAr ? "ابدأ التجربة المجانية" : "Start Free Trial"}</span>
-                        <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                        {isSubmitting ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <>
+                            <span>{isAr ? `الترقية إلى ${plan.name}` : `Upgrade to ${plan.name}`}</span>
+                            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                          </>
+                        )}
                       </button>
                     )}
                   </div>
@@ -894,7 +1006,7 @@ export function PlansScreen() {
                       </label>
                       <input
                         type="text"
-                        required
+                        defaultValue="Ahmed Al-Kindi"
                         placeholder="Ahmed Al-Kindi"
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                       />
@@ -907,7 +1019,7 @@ export function PlansScreen() {
                       <div className="relative">
                         <input
                           type="text"
-                          required
+                          defaultValue="4242 •••• •••• 4242"
                           placeholder="•••• •••• •••• 4242"
                           className="w-full px-3.5 py-2.5 ps-10 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                         />
@@ -922,7 +1034,7 @@ export function PlansScreen() {
                         </label>
                         <input
                           type="text"
-                          required
+                          defaultValue="12/28"
                           placeholder="MM/YY"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                         />
@@ -933,7 +1045,7 @@ export function PlansScreen() {
                         </label>
                         <input
                           type="text"
-                          required
+                          defaultValue="123"
                           placeholder="123"
                           className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                         />
@@ -941,13 +1053,29 @@ export function PlansScreen() {
                     </div>
                   </div>
 
+                  {errorMessage && (
+                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 font-medium">
+                      {errorMessage}
+                    </div>
+                  )}
+
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-purple-900/40 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2"
+                    disabled={isSubmitting}
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-purple-900/40 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                   >
-                    <Lock className="w-4 h-4" />
-                    <span>{isAr ? "تأكيد وبدء التجربة المجانية" : "Confirm & Start Free Trial"}</span>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{isAr ? "جاري المعالجة والتفعيل..." : "Processing & Activating..."}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        <span>{isAr ? "تأكيد وبدء التجربة المجانية" : "Confirm & Start Free Trial"}</span>
+                      </>
+                    )}
                   </button>
 
                   <p className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1">

@@ -1,0 +1,188 @@
+openapi: 3.0.1
+info:
+  title: AFAB Subscription & Entitlements API
+  version: 1.0.0
+  description: OpenAPI specification for the Plans, Entitlements, and Subscriptions module of AFAB.
+servers:
+  - url: http://localhost:8080
+paths:
+  /api/v1/subscription/me:
+    get:
+      summary: Get current user subscription snapshot
+      description: Returns the user's active subscription, trial status, days remaining, entitlements map, and current monthly usage counters. Automatically reconciles expired trials to the FREE plan.
+      operationId: getMySubscription
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active subscription snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+        '401':
+          description: Unauthorized
+
+  /api/v1/subscription/trial:
+    post:
+      summary: Activate a 7-day free trial
+      description: Starts a strictly one-time 7-day trial on PLUS or PRO plan. If the user has previously used a trial, returns 400 Bad Request.
+      operationId: activateTrial
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrialActivationRequest'
+      responses:
+        '200':
+          description: Trial activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+        '400':
+          description: Trial already used or invalid plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized
+
+  /api/v1/subscription/switch:
+    post:
+      summary: Switch subscription plan tier
+      description: Switches active plan tier directly (e.g. during onboarding or administrative plan changes). Upgrades user.planTier and persists active subscription.
+      operationId: switchPlan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanSwitchRequest'
+      responses:
+        '200':
+          description: Plan switched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+        '400':
+          description: Invalid plan slug or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TrialActivationRequest:
+      type: object
+      required:
+        - planSlug
+      properties:
+        planSlug:
+          type: string
+          example: plus
+          enum: [plus, pro]
+
+    PlanSwitchRequest:
+      type: object
+      required:
+        - planSlug
+      properties:
+        planSlug:
+          type: string
+          example: pro
+          enum: [free, plus, pro]
+
+    SubscriptionSnapshotDTO:
+      type: object
+      properties:
+        planSlug:
+          type: string
+          example: plus
+        planName:
+          type: string
+          example: Plus
+        status:
+          type: string
+          example: TRIAL
+          enum: [ACTIVE, TRIAL, CANCELLED, EXPIRED, PAST_DUE]
+        trial:
+          type: boolean
+          example: true
+        trialDaysRemaining:
+          type: integer
+          example: 7
+        trialEnd:
+          type: string
+          format: date-time
+        currentPeriodStart:
+          type: string
+          format: date-time
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        entitlements:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            business.max: "3"
+            invoices.per_month: "50"
+            export.per_month: "15"
+            ai.chat.queries_per_month: "100"
+            ai.recommendations: "true"
+        usage:
+          type: object
+          additionalProperties:
+            type: integer
+          example:
+            invoices.per_month: 2
+            export.per_month: 0
+            ai.chat.queries_per_month: 12
+
+    ApiError:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          example: 403
+        error:
+          type: string
+          example: Forbidden
+        code:
+          type: string
+          example: PLAN_LIMIT_REACHED
+        message:
+          type: string
+          example: "Plan limit reached for: invoices.per_month. Current: 5 / Max: 5. Upgrade your plan."
+        feature:
+          type: string
+          example: invoices.per_month
+        limit:
+          type: integer
+          example: 5
+        used:
+          type: integer
+          example: 5
+        upgradeTo:
+          type: string
+          example: plus

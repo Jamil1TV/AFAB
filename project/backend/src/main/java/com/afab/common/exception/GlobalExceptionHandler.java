@@ -101,6 +101,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(apiError);
     }
 
+    @ExceptionHandler(com.afab.subscription.PlanLimitReachedException.class)
+    public ResponseEntity<Map<String, Object>> handlePlanLimitReached(
+            com.afab.subscription.PlanLimitReachedException ex, HttpServletRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("code", ex.getCode());
+        body.put("message", ex.getMessage());
+        body.put("feature", ex.getFeature());
+        body.put("limit", ex.getLimit());
+        body.put("used", ex.getUsed());
+        body.put("upgradeTo", ex.getUpgradeTo());
+        body.put("path", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAll(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception at {}: {}", request.getRequestURI(), ex.getMessage(), ex);

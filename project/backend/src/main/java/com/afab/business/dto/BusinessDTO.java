@@ -30,6 +30,8 @@ public class BusinessDTO {
     private Instant createdAt;
     private String dateFormat;
     private String numberFormat;
+    private String userRole;
+    private boolean active;
 
     public BusinessDTO() {}
 
@@ -81,6 +83,11 @@ public class BusinessDTO {
     public void setLogoUrl(String logoUrl) { this.logoUrl = logoUrl; }
     public void setStatus(String status) { this.status = status; }
     public void setOnboardingComplete(boolean onboardingComplete) { this.onboardingComplete = onboardingComplete; }
+    public String getUserRole() { return userRole; }
+    public void setUserRole(String userRole) { this.userRole = userRole; }
+    public boolean isActive() { return active; }
+    public void setActive(boolean active) { this.active = active; }
+
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setDateFormat(String dateFormat) { this.dateFormat = dateFormat; }
     public void setNumberFormat(String numberFormat) { this.numberFormat = numberFormat; }

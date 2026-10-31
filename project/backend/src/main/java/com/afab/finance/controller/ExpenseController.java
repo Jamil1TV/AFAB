@@ -20,8 +20,11 @@ public class ExpenseController {
     }
 
     @GetMapping("/summary")
-    public ResponseEntity<ExpenseSummaryDTO> getExpenseSummary(Authentication authentication) {
-        ExpenseSummaryDTO summary = transactionService.getExpenseSummary(authentication.getName());
+    public ResponseEntity<ExpenseSummaryDTO> getExpenseSummary(
+            Authentication authentication,
+            @RequestParam(value = "period", required = false, defaultValue = "month") String period
+    ) {
+        ExpenseSummaryDTO summary = transactionService.getExpenseSummary(authentication.getName(), period);
         return ResponseEntity.ok(summary);
     }
 

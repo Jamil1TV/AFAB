@@ -78,7 +78,7 @@ export default function ExpensesPage() {
     setLoading(true);
     try {
       const [sumRes, listRes] = await Promise.all([
-        ExpenseService.getSummary(),
+        ExpenseService.getSummary(period.toLowerCase()),
         ExpenseService.getExpenses({
           categoryId: categoryFilter || undefined,
           search: search || undefined,
@@ -93,7 +93,7 @@ export default function ExpensesPage() {
     } finally {
       setLoading(false);
     }
-  }, [categoryFilter, search, page]);
+  }, [categoryFilter, search, page, period]);
 
   useEffect(() => {
     fetchData();
@@ -155,20 +155,22 @@ export default function ExpensesPage() {
       }))
     : [{ name: "No Data", value: 1, percentage: 0, color: "#374151" }];
 
-  // Mock Overview area chart points
-  const overviewChartData = hasExpenses && expensesData?.content
+  // Real or derived Overview area chart points
+  const overviewChartData = (summary?.dailyOverview && summary.dailyOverview.length > 0)
+    ? summary.dailyOverview.map((pt) => ({
+        date: pt.date,
+        amount: pt.amount
+      }))
+    : hasExpenses && expensesData?.content
     ? expensesData.content.slice(0, 7).reverse().map((t, idx) => ({
-        date: `Day ${idx + 1}`,
+        date: t.transactionDate || `Day ${idx + 1}`,
         amount: t.amount
       }))
     : [
-        { date: "May 12", amount: 0 },
-        { date: "May 13", amount: 0 },
-        { date: "May 14", amount: 0 },
-        { date: "May 15", amount: 0 },
-        { date: "May 16", amount: 0 },
-        { date: "May 17", amount: 0 },
-        { date: "May 18", amount: 0 },
+        { date: "Day 1", amount: 0 },
+        { date: "Day 2", amount: 0 },
+        { date: "Day 3", amount: 0 },
+        { date: "Day 4", amount: 0 },
       ];
 
   if (loading && !expensesData) {
@@ -582,22 +584,32 @@ export default function ExpensesPage() {
             </div>
 
             <div className="space-y-3">
-              {(summary?.recurringList || []).map((item) => (
-                <div key={item.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 font-bold text-xs border border-purple-500/20">
-                      <Repeat className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900 dark:text-white">{item.name}</p>
-                      <p className="text-[10px] text-gray-400 uppercase font-medium">{item.billingCycle} • {item.dueDate}</p>
-                    </div>
+              {(!summary?.recurringList || summary.recurringList.length === 0) ? (
+                <div className="py-6 text-center text-gray-400">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 mb-2">
+                    <Repeat className="h-5 w-5 opacity-60" />
                   </div>
-                  <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">
-                    {formatCurrency(item.amount, currency)}
-                  </span>
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">No recurring rules yet</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">Recurring subscriptions tracking will be active in Phase 13</p>
                 </div>
-              ))}
+              ) : (
+                summary.recurringList.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 font-bold text-xs border border-purple-500/20">
+                        <Repeat className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white">{item.name}</p>
+                        <p className="text-[10px] text-gray-400 uppercase font-medium">{item.billingCycle} • {item.dueDate}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">
+                      {formatCurrency(item.amount, currency)}
+                    </span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -645,7 +657,24 @@ export default function ExpensesPage() {
               </div>
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-between items-center">
+              <button
+                onClick={async () => {
+                  if (confirm("Are you sure you want to delete this expense?")) {
+                    try {
+                      await TransactionService.deleteTransaction(selectedTx.id);
+                      setSelectedTx(null);
+                      fetchData();
+                    } catch (err) {
+                      console.error("Failed to delete expense:", err);
+                    }
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </button>
               <button
                 onClick={() => setSelectedTx(null)}
                 className="px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-200"

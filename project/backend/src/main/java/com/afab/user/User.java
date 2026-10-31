@@ -84,6 +84,12 @@ public class User extends BaseEntity {
     @Column(name = "show_tips")
     private Boolean showTips = true;
 
+    @Column(name = "active_business_id")
+    private UUID activeBusinessId;
+
+    @Column(name = "plan_tier", nullable = false)
+    private String planTier = "FREE";
+
     // ── Constructors ────────────────────────────
 
     public User() {}
@@ -166,4 +172,10 @@ public class User extends BaseEntity {
 
     public String getTwoFactorBackupCodes() { return twoFactorBackupCodes; }
     public void setTwoFactorBackupCodes(String twoFactorBackupCodes) { this.twoFactorBackupCodes = twoFactorBackupCodes; }
+
+    public UUID getActiveBusinessId() { return activeBusinessId; }
+    public void setActiveBusinessId(UUID activeBusinessId) { this.activeBusinessId = activeBusinessId; }
+
+    public String getPlanTier() { return planTier != null ? planTier : "FREE"; }
+    public void setPlanTier(String planTier) { this.planTier = planTier; }
 }

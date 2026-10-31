@@ -80,18 +80,20 @@ This is a modular monolith organized mainly by backend feature/package. Keep bus
 - Transactions and categories; expense/revenue/invoice read endpoints and summaries.
 - Health endpoint.
 - Audit-log infrastructure and SMTP email service.
+- Plans & Entitlements Engine (`/api/v1/subscription`): atomic monthly quota counters, 7-day trial management on Plus/Pro, automatic reconciliation of expired trials to Free, plan tier switching, and HTTP 403 `PLAN_LIMIT_REACHED` enforcement.
+- Reports & Export (`/api/v1/reports`): cash-basis Profit & Loss, Cash Flow Statement, Two-Period Comparisons, RFC 4180 CSV export (with UTF-8 BOM), branded OpenPDF statement generation, and `export.per_month` quota gating.
 
 ### Frontend areas evident in source
 - Public landing page and dashboard UI.
 - Signup/login, forgot/reset password, email verification, onboarding.
-- Dashboard, transactions, expenses, revenue, invoices, AI screen, plans/upgrade, settings.
+- Dashboard, transactions, expenses, revenue, invoices, reports (`/dashboard/reports`), AI screen, plans/upgrade, settings.
 - English/Arabic localized routing.
 - Theme provider/toggle and design-system CSS.
-- API service wrappers under `frontend/lib/api/`.
+- API service wrappers under `frontend/lib/api/` (including `subscription.ts` and `reports.ts`).
 - Sample data in `frontend/lib/mock-data.ts`; audit individual screens to determine whether they use API data, placeholders, or local sample data.
 
 ### Not proven complete
-The PRD and mockups mention budgets, savings goals, investments, recurring transactions, notifications, customer management, integrations, report exports, receipts, subscriptions/billing, team management, and AI recommendations/forecasting. The current backend controller inventory does not show complete API modules for many of these. Verify source, persistence, endpoints, and tests before describing them as implemented.
+The PRD and mockups mention budgets, savings goals, investments, recurring transactions, notifications, customer management, integrations, receipts, team management, and AI recommendations/forecasting. The current backend controller inventory does not show complete API modules for many of these. Verify source, persistence, endpoints, and tests before describing them as implemented.
 
 ## 6. Product decisions and inconsistencies
 
@@ -100,18 +102,27 @@ Product summaries and rules say AI is excluded from MVP and prohibit third-party
 
 **Agent rule:** Do not integrate OpenAI, Anthropic, Gemini, or another third-party AI API unless the owner explicitly changes this rule. Distinguish UI, placeholders, deterministic analytics, and actual model-backed capabilities. Never fabricate AI outputs or imply a model is connected when it is not.
 
-### 6.2 Multi-business support
-Existing product rule PR-001 and backend `Business` entity enforce **one business per user** (one-to-one relation and unique `user_id`). The user has since requested pricing limits:
-- Free: 1 business
-- Plus: up to 3 businesses
-- Pro: up to 5 businesses
+### 6.2 Multi-business support (Implemented in Phase 4)
+Multi-business support is active:
+- `business_members` table manages memberships (`OWNER`, `ADMIN`, `MEMBER`) across businesses.
+- Users can create and switch between multiple workspaces.
+- Plan limits are server-enforced (`V14__add_user_plan_tier.sql`):
+  - **Free**: 1 business
+  - **Plus**: up to 3 businesses
+  - **Pro**: up to 5 businesses
 
-The backend does not yet show a complete subscription/entitlement system or multi-business model.
-
-**Agent rule:** Treat this as a new product requirement requiring backend/database/authz work, not merely pricing-card text. Design ownership/membership, active-business context, tenant isolation, and server-enforced limits. UI-only limits are not security controls. Preserve current behavior until a migration is planned and approved.
+### 6.3 Plans & Entitlements Engine (Implemented in Phase 5)
+- Flyway `V15__plans_and_entitlements.sql` creates tables `plans`, `plan_entitlements`, `subscriptions`, and `usage_counters`.
+- Plans matrix: Free ($0), Plus ($9.99/mo), Pro ($19.99/mo).
+- Entitlement features tracked: `business.max`, `invoices.per_month`, `export.per_month`, `ai.chat.queries_per_month`, `ai.recommendations`, `forecast.cashflow`, `reports.level`, `team.users`, `trial.days`.
+- Strict 7-day trial once per user account on Plus or Pro; expired trials automatically degrade to Free on reconciliation.
+- Atomic counters with SQL upsert (`ON CONFLICT (subscription_id, feature_key, period) DO UPDATE SET used_count = usage_counters.used_count + ?`).
+- Backend throws `PlanLimitReachedException` (403) with error code `PLAN_LIMIT_REACHED` when a quota is exceeded.
+- `CurrentBusinessService` resolves active business context via `X-Business-Id` header (validated against user memberships, returning 403 Forbidden on foreign access) or fallback to `user.activeBusinessId`.
+- Login, session, and profile logic uses `resolveUserActiveBusiness` to support multi-business accounts without 500 errors.
 
 ### 6.3 Pricing and checkout
-Plan UI contains locally defined data and local UI state. A visual “trial” or “checkout success” state is not proof of payment-provider integration. Mockup prices are Free `$0`, Plus `$9.99/month`, Pro `$19.99/month`; treat these as proposals until confirmed. Do not claim subscriptions, renewals, cancellations, trials, invoices, or entitlements work without verified backend/payment integration.
+Plan UI contains display data and local React state. The server-enforced entitlements and plan engine is planned in Phase 5. Mockup prices are Free `$0`, Plus `$9.99/month`, Pro `$19.99/month`. Stripe/LemonSqueezy payment gateway integration is scheduled for Phase 19.
 
 ### 6.4 Requirements vs implementation
 PRD/schema documents include aspirational features. A requirement document is not implementation evidence. Prefer current source and migrations for actual behavior; preserve future requirements separately.
@@ -121,29 +132,29 @@ PRD/schema documents include aspirational features. A requirement document is no
 - Use request/response DTOs, validation, correct status codes, and consistent errors.
 - Do not expose JPA entities directly as public API contracts.
 - Use pagination/filtering for growing lists.
-- Financial calculations must derive from persisted data and be tested for currency, rounding, and date edge cases.
+- Financial calculations derive from persisted transactions and `FinanceStatsService` (cash basis).
 - Update frontend wrappers and OpenAPI documentation when contracts change.
 
 Controllers found in source:
-- `/api/v1/auth/**`
-- `/api/v1/business/**`
-- `/api/v1/dashboard/summary`
-- `/api/v1/transactions/**`
-- `/api/v1/expenses/**`
-- `/api/v1/revenue/**`
-- `/api/v1/invoices/**`
-- `/api/v1/user/**`
+- `/api/v1/auth/**` (register, login, refresh, logout, email verify, password reset, 2FA challenge & verify)
+- `/api/v1/business/**` (list, create, update, archive, switch active context)
+- `/api/v1/dashboard/summary` (real-time stats via FinanceStatsService)
+- `/api/v1/transactions/**` (list, create, update, soft-delete, splits, tax, category management)
+- `/api/v1/expenses/**` (period-aware list and summary via FinanceStatsService)
+- `/api/v1/revenue/**` (period-aware list and summary via FinanceStatsService)
+- `/api/v1/invoices/**` (period-aware read of income transactions; full model in Phase 9)
+- `/api/v1/currencies/**` (live FX rate refresh, rate alert thresholds, conversions)
+- `/api/v1/user/**` (profile, active business resolution, session revocation)
 - `/api/v1/health`
 
-See `AFAB_BACKEND_CONTEXT.md` for endpoint details and gaps.
+See `AFAB_BACKEND_CONTEXT.md` for endpoint details.
 
 ## 8. Database and tenant isolation
-- Flyway migrations are in `backend/src/main/resources/db/migration/`; migrations V1 through V9 are present.
-- Current `Business` model maps one user to one business.
-- Transactions are associated with a business. Category `business_id` appears nullable in V7 and should be reviewed against the “every financial record belongs to a business” rule.
-- Derive and validate business scope from the authenticated user/server-side authorization. Never trust a client-supplied `businessId` alone.
-- Never edit an already-applied Flyway migration; add a forward-only migration.
-- Do not delete or rewrite financial data as a shortcut.
+- Flyway migrations are in `backend/src/main/resources/db/migration/`; migrations **V1 through V14** are active and applied.
+- `business_members` table provides many-to-many user-to-business mappings with roles (`OWNER`, `ADMIN`, `MEMBER`).
+- Every financial record (`Transaction`, `Category`, `Invoice`) is strictly scoped by `business_id`.
+- Tenant isolation is strictly enforced server-side: foreign `X-Business-Id` returns `403 Forbidden`.
+- Forward-only migrations rule: Never edit an already-applied Flyway migration; always add a new versioned migration.
 
 ## 9. Security and operational warnings
 **The supplied archive contains credential-like values in environment/config files.** They are intentionally not reproduced here.

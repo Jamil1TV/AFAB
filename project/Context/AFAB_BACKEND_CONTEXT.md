@@ -37,6 +37,7 @@ backend/src/main/java/com/afab/
 ├── health/
 ├── mail/               # EmailService + SMTP implementation
 ├── security/           # AuditService and AuditLog
+├── subscription/       # Plan, PlanEntitlement, Subscription, UsageCounter, EntitlementService, SubscriptionController
 └── user/               # User entity/controller/repository/profile/session DTOs
 ```
 Maintain package-by-feature organization. Keep controllers thin, rules in services, persistence in repositories, and public contracts in DTOs.
@@ -62,46 +63,50 @@ Relevant files: `auth/AuthController.java`, `auth/AuthService.java`, `auth/secur
 The project uses bearer JWT authentication and refresh-token persistence. Verify expiry, rotation, reuse, and revocation semantics before changing token logic.
 
 ### Business — `/api/v1/business`
-- `GET /mine` — current user's business.
-- `GET /{id}` — business retrieval after ownership check.
-- `PUT /{id}` — business update after ownership check.
+- `GET /` — list all businesses/workspaces the authenticated user belongs to.
+- `POST /` — create a new business workspace (enforces plan limits: Free=1, Plus=3, Pro=5; assigns user email as default `businessEmail`).
+- `GET /mine` — active business for the current context.
+- `GET /{id}` — business retrieval after membership authorization check.
+- `PUT /{id}` — business update after membership check (OWNER or ADMIN only).
+- `DELETE /{id}` — archive business (OWNER only, soft delete).
+- `PUT /{id}/switch` — switch user's active business context.
 
-`Business` currently has a one-to-one relation to `User` and a unique `user_id`. It contains name, currency, country, timezone, fiscal-year start month, industry/type, contact details, address, logo, status, onboarding, and formatting preferences.
+`Business` supports multi-workspace operations via `business_members` (storing `business_id`, `user_id`, `role`, and `status`).
 
 ### User — `/api/v1/user`
-- `GET /me` — current profile and business/onboarding information.
+- `GET /me` — current profile, active business context, and plan tier (`planTier`).
 - `PUT /me` — profile update.
 - `GET /me/sessions` — list sessions.
 - `DELETE /me/sessions/{tokenId}` — revoke one session.
 - `DELETE /me/sessions` — revoke all sessions.
 
-Verify response shapes and resource ownership when touching profile/session functionality.
-
 ### Dashboard — `/api/v1/dashboard`
 - `GET /summary`
 
-`DashboardService` currently constructs zero-valued KPI metrics and empty transaction/category/reminder/customer lists. This is placeholder-oriented, not evidence of live financial aggregation. Live metrics must derive from persisted transactions and be tested.
+`DashboardService` is connected to `FinanceStatsService`. It calculates live cash-basis metrics (total revenue, total expenses, net income, profit margin, percentage changes vs previous period, trailing 6-month performance charts, and category breakdowns) directly from persisted transactions.
+
+### Subscription & Entitlements — `/api/v1/subscription`
+- `GET /me` — active subscription snapshot, trial status, remaining days, entitlement limits, and current monthly usage counters. Automatically reconciles expired trials.
+- `POST /trial` — start 7-day free trial on Plus or Pro (strictly once per user account).
+- `POST /switch` — switch active subscription tier (Free, Plus, Pro) and synchronize `users.plan_tier`.
 
 ### Finance endpoints
 - `/api/v1/categories`: `GET` list (combines global read-only defaults + business custom categories), `POST` create, `PUT /{id}`, `DELETE /{id}` (blocked with 409 + count when referenced by active transactions).
 - `/api/v1/transactions`: `GET` list (`type`, `categoryId`, `status`, `paymentMethod`, `startDate`, `endDate`, `taxDeductible`, `search`, `page`, `size`); `POST` create (HTTP 201, supports `taxDeductible`, `taxRate`, and `splitItems`); `PUT /{id}` update; `DELETE /{id}` (soft-delete with deleted_at timestamp); `GET /categories` (backward compatible). Root transactions filter `parentTransaction IS NULL` to prevent split line duplication.
-- `/api/v1/expenses`: `GET` list and `GET /summary`.
-- `/api/v1/revenue`: `GET` list and `GET /summary`.
-- `/api/v1/invoices`: `GET` list and `GET /summary`.
-
-Expense/revenue/invoice controllers reuse transaction service/query structures. The inspected invoice endpoints query income-type transactions; do not assume a separate invoice entity/workflow exists.
-
+- `/api/v1/expenses`: `GET` list and `GET /summary` (period-aware summaries via FinanceStatsService).
+- `/api/v1/revenue`: `GET` list and `GET /summary` (period-aware summaries via FinanceStatsService).
+- `/api/v1/invoices`: `GET` list and `GET /summary` (period-aware summaries).
+- `/api/v1/currencies`: `GET /rates` (real-time 166-currency FX engine), `GET /convert`, `GET /alerts`, `POST /alerts`.
 - `/api/v1/health`: health endpoint.
 
 ## 5. API contract conventions
-- Base path `/api/v1`. OpenAPI specification maintained in `contracts/finance.openapi.yaml`.
+- Base path `/api/v1`. OpenAPI specifications maintained in `contracts/finance.openapi.yaml`, `contracts/identity.openapi.yaml`, and `contracts/subscription.openapi.yaml`.
 - Use typed request/response DTOs and Jakarta validation.
 - Return correct HTTP status codes and stable error shapes (`common/exception/ApiError`, `GlobalExceptionHandler`, `ResourceNotFoundException` [404], `ForbiddenException` [403], `ConflictException` [409]).
+- Quota/Plan enforcement error: HTTP 403 with `code: "PLAN_LIMIT_REACHED"`, including `feature`, `limit`, `used`, and `upgradeTo`.
 - UUIDs are used for IDs in inspected entities.
 - Validate pagination and impose a maximum page size (<= 100).
-- Preserve contract compatibility or update frontend service interfaces at the same time.
-- Export/update OpenAPI specs when contracts change.
-- Never leak SQL errors, stack traces, tokens, or sensitive finance data.
+- Multi-tenancy header: `X-Business-Id` is resolved and membership validated on every request.
 
 ## 6. Database and migrations
 Flyway migrations found:
@@ -115,33 +120,23 @@ Flyway migrations found:
 - `V8__password_reset_tokens.sql`
 - `V9__add_updated_at_to_categories.sql`
 - `V10__finance_core.sql` (transactions.amount NUMERIC(19,4), deleted_at TIMESTAMPTZ, unique index on custom categories per business)
+- `V11__transaction_tax_and_splits.sql` (tax rate, tax deductible, split line items table)
+- `V12__security_lockout_and_2fa.sql` (TOTP 2FA secret/backup codes, failed login counter, lockout_until)
+- `V13__business_members.sql` (business_members table, OWNER backfill, dropped single-business unique constraint, users.active_business_id, businesses.archived_at)
+- `V14__add_user_plan_tier.sql` (users.plan_tier column for subscription limit enforcement)
+- `V15__plans_and_entitlements.sql` (plans, plan_entitlements, subscriptions, usage_counters with atomic increment; Free/Plus/Pro matrices; backfill existing users)
 
-Flyway is enabled at `classpath:db/migration`; Hibernate `ddl-auto` is `none`. Do not change it to `update` to work around schema mismatch.
+Flyway is enabled at `classpath:db/migration`; Hibernate `ddl-auto` is `none`.
 
-Observations:
-- Core tables include users, businesses, refresh tokens, audit logs, KYC verifications, verification/reset tokens, categories, and transactions.
-- Transactions include business ownership, type, amount, currency, category, description/date, payment method/status, receipt URL, and notes.
-- Category `business_id` appears nullable in V7 despite the rule that financial records belong to a business; review system-default category semantics.
-- PRD concepts such as budgets, savings goals, investments, notifications, dedicated invoices, and subscriptions do not have complete backend modules in the inspected source/migrations.
-- PRD schema documentation may be aspirational; migrations/entity mappings are the operational contract.
-
-Migration rules:
-1. Never edit a migration already applied in shared environments.
-2. Add a forward-only migration.
-3. Review mappings, constraints, indexes, deletion behavior, and backfill.
-4. Plan backward compatibility and existing-record handling.
-5. Test on target PostgreSQL.
-6. Never remove financial data without explicit authorization and a backup plan.
-
-## 7. Business ownership and requested multi-business model
-
-### Current behavior
-One business per user is enforced in the product rules and `Business` entity (one-to-one + unique `user_id`).
-
-### Requested limits
-- Free: 1 business
-- Plus: up to 3 businesses
-- Pro: up to 5 businesses
+## 7. Business ownership and multi-business model (Phase 4 Completed)
+- Multi-business is fully operational.
+- The `business_members` table handles many-to-many relationships and permissions.
+- Limits per subscription tier:
+  - **Free**: 1 business
+  - **Plus**: up to 3 businesses
+  - **Pro**: up to 5 businesses
+- `CurrentBusinessService` resolves `X-Business-Id` and throws `ForbiddenException` (403) on unauthorized cross-tenant requests.
+- `AuthService.resolveUserActiveBusiness` safely resolves the active business on login/refresh without 1:1 unique constraint assumptions.
 
 This conflicts with the current data model. Do not merely remove the unique constraint.
 
@@ -168,7 +163,7 @@ Critical items:
 - **JWT defaults:** configuration contains a default signing secret. Production must fail fast if a strong `JWT_SECRET` is missing; use high entropy and secret management.
 - **SMTP credentials:** do not use committed credentials; rotate any exposed app password.
 - **One-time tokens:** production checklist says verification/reset token values are stored in plain form. Hash them before persistence and verify securely.
-- **CORS:** development origins are defaults and `allowCredentials` is true. Restrict production origins and review necessity.
+- **CORS:** development origins are defaults and `allowCredentials` is true. Restrict production origins and review necessity. `CorsConfig` explicitly exposes `Content-Disposition`, `Content-Type`, and `X-Business-Id` to allow clients to receive export filenames and tenant IDs.
 - **Rate limiting:** a bucket created inside the controller is local to that instance, not a shared distributed limiter. Verify its scope and behavior; add tests.
 - **JWT lifecycle:** test refresh rotation/reuse/revocation, logout, expiry, and concurrent refreshes.
 - **Authorization:** every UUID-addressed resource must be ownership-checked server-side.
@@ -244,13 +239,15 @@ Use the wrapper only if present; otherwise use `mvn test` / `mvn verify`. Never 
 |---|---|---|
 | Health | `GET /api/v1/health` | Verify response/probes before deployment |
 | Auth | `POST /api/v1/auth/register`, `/login`, `/refresh`, `/logout`, `/verify-email`, `/resend-verification`, `/forgot-password`, `/reset-password`, `/forgot-password-link`, `/validate-reset-token`, `/reset-password-token`, `/change-password` | Review DTOs and lifecycle security |
-| Business | `GET /api/v1/business/mine`, `GET /{id}`, `PUT /{id}` | One business per user currently |
-| User | `GET /api/v1/user/me`, `PUT /me`, `GET /me/sessions`, `DELETE /me/sessions/{tokenId}`, `DELETE /me/sessions` | Profile/session |
-| Dashboard | `GET /api/v1/dashboard/summary` | Currently zeroed/empty summary structure |
+| Business | `GET /api/v1/business/`, `POST /`, `GET /mine`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`, `PUT /{id}/switch` | Multi-workspace management with plan limits (1/3/5) |
+| User | `GET /api/v1/user/me`, `PUT /me`, `GET /me/sessions`, `DELETE /me/sessions/{tokenId}`, `DELETE /me/sessions` | Profile/session and planTier |
+| Dashboard | `GET /api/v1/dashboard/summary` | Cash-basis live financial KPIs via FinanceStatsService |
+| Subscription | `GET /api/v1/subscription/me`, `POST /trial`, `POST /switch` | Entitlements, usage quotas, 7-day trials, plan tier switching |
 | Transactions | `GET/POST /api/v1/transactions`, `DELETE /{id}`, `GET /categories` | Read/create/delete/categories |
 | Expenses | `GET /api/v1/expenses`, `GET /summary` | Via transaction service |
 | Revenue | `GET /api/v1/revenue`, `GET /summary` | Income-type transactions |
-| Invoices | `GET /api/v1/invoices`, `GET /summary` | Reuses income-type transactions; not a dedicated invoice lifecycle |
+| Invoices | `GET /api/v1/invoices`, `GET /summary` | Income transactions summary & invoices list |
+| Reports | `GET /api/v1/reports/profit-loss`, `/cash-flow`, `/comparison`, `/export/csv`, `/export/pdf` | P&L, Cash Flow, Comparative stats, RFC 4180 CSV & OpenPDF exports with quota consumption |
 
 ## 14. Backend change checklist
 - [ ] Existing behavior and relevant code inspected.

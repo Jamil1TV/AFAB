@@ -101,6 +101,70 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("endDate") LocalDate endDate
     );
 
+    @Query("SELECT COALESCE(c.name, 'Uncategorized'), COALESCE(c.color, '#8b5cf6'), COALESCE(SUM(t.amount), 0) " +
+           "FROM Transaction t LEFT JOIN t.category c " +
+           "WHERE t.business.id = :businessId " +
+           "AND t.type = :type " +
+           "AND t.status = 'COMPLETED' " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.parentTransaction IS NULL " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate " +
+           "GROUP BY COALESCE(c.name, 'Uncategorized'), COALESCE(c.color, '#8b5cf6') " +
+           "ORDER BY SUM(t.amount) DESC")
+    List<Object[]> findCategoryBreakdownByType(
+            @Param("businessId") UUID businessId,
+            @Param("type") String type,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("SELECT t.transactionDate, COALESCE(SUM(t.amount), 0) " +
+           "FROM Transaction t " +
+           "WHERE t.business.id = :businessId " +
+           "AND t.type = :type " +
+           "AND t.status = 'COMPLETED' " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.parentTransaction IS NULL " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate " +
+           "GROUP BY t.transactionDate " +
+           "ORDER BY t.transactionDate ASC")
+    List<Object[]> findDailyOverviewByType(
+            @Param("businessId") UUID businessId,
+            @Param("type") String type,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    @Query("SELECT t FROM Transaction t " +
+           "WHERE t.business.id = :businessId " +
+           "AND t.type = :type " +
+           "AND t.status = 'COMPLETED' " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.parentTransaction IS NULL " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY t.amount DESC")
+    List<Transaction> findHighestTransactionInDateRange(
+            @Param("businessId") UUID businessId,
+            @Param("type") String type,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            Pageable pageable
+    );
+
+    @Query("SELECT COUNT(t) FROM Transaction t " +
+           "WHERE t.business.id = :businessId " +
+           "AND t.type = :type " +
+           "AND t.status = 'COMPLETED' " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.parentTransaction IS NULL " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate")
+    long countCompletedByBusinessAndTypeAndDateRange(
+            @Param("businessId") UUID businessId,
+            @Param("type") String type,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     @Query("SELECT t FROM Transaction t " +
            "WHERE t.business.id = :businessId " +
            "AND t.deletedAt IS NULL " +
@@ -116,4 +180,16 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.business.id = :businessId AND t.deletedAt IS NULL AND t.parentTransaction IS NULL")
     long countByBusinessIdAndDeletedAtIsNull(@Param("businessId") UUID businessId);
+
+    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.category WHERE t.business.id = :businessId " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.parentTransaction IS NULL " +
+           "AND t.status = 'COMPLETED' " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY t.transactionDate ASC, t.createdAt ASC")
+    List<Transaction> findCompletedTransactionsForReport(
+            @Param("businessId") UUID businessId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 }

@@ -30,8 +30,9 @@ export interface RevenueSummaryResponse {
 }
 
 export class RevenueService {
-  static async getSummary(): Promise<RevenueSummaryResponse> {
-    return await fetchClient("/revenue/summary");
+  static async getSummary(period?: string): Promise<RevenueSummaryResponse> {
+    const query = period ? `?period=${encodeURIComponent(period.toLowerCase())}` : "";
+    return await fetchClient(`/revenue/summary${query}`);
   }
 
   static async getRevenue(params?: { categoryId?: string; search?: string; page?: number; size?: number }) {

@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -123,5 +124,96 @@ class FinanceStatsServiceTest {
         assertThat(summary.getKpiData().getRevenue().getChange()).isEqualTo("0.0%");
         assertThat(summary.getTransactions()).isEmpty();
         assertThat(summary.getExpenseCategories()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("buildExpenseSummary: computes real totals, dynamic average per day, and real categories")
+    void testBuildExpenseSummary() {
+        when(transactionRepository.sumCompletedAmountByBusinessAndTypeAndDateRange(
+                eq(businessId), eq("EXPENSE"), any(LocalDate.class), any(LocalDate.class)
+        )).thenReturn(new BigDecimal("3000.00"));
+
+        Transaction highest = new Transaction();
+        highest.setDescription("MacBook Pro");
+        highest.setAmount(new BigDecimal("2500.00"));
+
+        when(transactionRepository.findHighestTransactionInDateRange(
+                eq(businessId), eq("EXPENSE"), any(LocalDate.class), any(LocalDate.class), any(Pageable.class)
+        )).thenReturn(List.of(highest));
+
+        when(transactionRepository.findCategoryBreakdownByType(
+                eq(businessId), eq("EXPENSE"), any(LocalDate.class), any(LocalDate.class)
+        )).thenReturn(List.of(
+                new Object[]{"Hardware", "#8b5cf6", new BigDecimal("2500.00")},
+                new Object[]{"Office", "#10b981", new BigDecimal("500.00")}
+        ));
+
+        when(transactionRepository.findDailyOverviewByType(
+                eq(businessId), eq("EXPENSE"), any(LocalDate.class), any(LocalDate.class)
+        )).thenReturn(Collections.singletonList(
+                new Object[]{LocalDate.now(), new BigDecimal("3000.00")}
+        ));
+
+        com.afab.finance.dto.ExpenseSummaryDTO summary = financeStatsService.buildExpenseSummary(testBusiness, "month");
+
+        assertThat(summary).isNotNull();
+        assertThat(summary.getTotalExpenses()).isEqualByComparingTo(new BigDecimal("3000.00"));
+        assertThat(summary.getAvgPerDay()).isGreaterThan(BigDecimal.ZERO);
+        assertThat(summary.getHighestExpenseTitle()).isEqualTo("MacBook Pro");
+        assertThat(summary.getHighestExpenseAmount()).isEqualByComparingTo(new BigDecimal("2500.00"));
+        assertThat(summary.getCategoryCount()).isEqualTo(2);
+        assertThat(summary.getCategoryBreakdown()).hasSize(2);
+        assertThat(summary.getCategoryBreakdown().get(0).getName()).isEqualTo("Hardware");
+        assertThat(summary.getCategoryBreakdown().get(0).getPercentage()).isEqualTo(83.3);
+        // Honest empty recurring list (no hardcoded Adobe/Shopify)
+        assertThat(summary.getRecurringList()).isEmpty();
+        assertThat(summary.getRecurringTotal()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(summary.getDailyOverview()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("buildRevenueSummary: computes real income totals, sources, and empty top products")
+    void testBuildRevenueSummary() {
+        when(transactionRepository.sumCompletedAmountByBusinessAndTypeAndDateRange(
+                eq(businessId), eq("INCOME"), any(LocalDate.class), any(LocalDate.class)
+        )).thenReturn(new BigDecimal("10000.00"));
+
+        Transaction highest = new Transaction();
+        highest.setDescription("Enterprise Contract");
+        highest.setAmount(new BigDecimal("8000.00"));
+        highest.setTransactionDate(LocalDate.now());
+
+        when(transactionRepository.findHighestTransactionInDateRange(
+                eq(businessId), eq("INCOME"), any(LocalDate.class), any(LocalDate.class), any(Pageable.class)
+        )).thenReturn(List.of(highest));
+
+        when(transactionRepository.findCategoryBreakdownByType(
+                eq(businessId), eq("INCOME"), any(LocalDate.class), any(LocalDate.class)
+        )).thenReturn(Collections.singletonList(
+                new Object[]{"Consulting", "#10b981", new BigDecimal("10000.00")}
+        ));
+
+        when(transactionRepository.findDailyOverviewByType(
+                eq(businessId), eq("INCOME"), any(LocalDate.class), any(LocalDate.class)
+        )).thenReturn(Collections.singletonList(
+                new Object[]{LocalDate.now(), new BigDecimal("10000.00")}
+        ));
+
+        when(transactionRepository.countCompletedByBusinessAndTypeAndDateRange(
+                eq(businessId), eq("INCOME"), any(LocalDate.class), any(LocalDate.class)
+        )).thenReturn(5L);
+
+        com.afab.finance.dto.RevenueSummaryDTO summary = financeStatsService.buildRevenueSummary(testBusiness, "month");
+
+        assertThat(summary).isNotNull();
+        assertThat(summary.getTotalRevenue()).isEqualByComparingTo(new BigDecimal("10000.00"));
+        assertThat(summary.getGrossRevenue()).isEqualByComparingTo(new BigDecimal("10000.00"));
+        assertThat(summary.getNetRevenue()).isEqualByComparingTo(new BigDecimal("10000.00"));
+        assertThat(summary.getHighestRevenueAmount()).isEqualByComparingTo(new BigDecimal("8000.00"));
+        assertThat(summary.getHighestRevenueDate()).isEqualTo(LocalDate.now().toString());
+        assertThat(summary.getTotalInvoices()).isEqualTo(5);
+        assertThat(summary.getRevenueBySource()).hasSize(1);
+        // Honest empty top products list (no hardcoded AFAB Pro Plan)
+        assertThat(summary.getTopProducts()).isEmpty();
     }
 }
