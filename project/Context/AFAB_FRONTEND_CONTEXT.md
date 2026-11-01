@@ -54,7 +54,7 @@ frontend/
 - Keep labels accessible and document direction correct.
 
 ## 5. API layer
-Feature wrappers in `lib/api/` include `client.ts`, `auth.ts`, `business.ts`, `categories.ts`, `dashboard.ts`, `expenses.ts`, `invoices.ts`, `revenue.ts`, `settings.ts`, and `transactions.ts`.
+Feature wrappers in `lib/api/` include `client.ts`, `auth.ts`, `business.ts`, `categories.ts`, `customers.ts`, `dashboard.ts`, `expenses.ts`, `invoices.ts`, `reports.ts`, `revenue.ts`, `settings.ts`, `subscription.ts`, and `transactions.ts`.
 
 `fetchClient` in `lib/api/client.ts` uses `NEXT_PUBLIC_API_URL`, falling back to `http://localhost:8080/api/v1`. It sets JSON headers, attaches a bearer token when auth is required, and attempts refresh after an unauthorized response. API failures use `ApiError`.
 
@@ -111,6 +111,32 @@ Dashboard components include KPI cards, revenue chart, AI insights, recent trans
   - Period toolbar (`month`, `quarter`, `year`) and quota badge showing monthly consumed exports.
   - Instant RFC 4180 CSV export (UTF-8 BOM) and branded OpenPDF statement download.
   - Robust file download handler (`triggerFileDownload`): applies explicit MIME typing (`text/csv;charset=utf-8;`, `application/pdf`) and delays `URL.revokeObjectURL` by 2,000ms, preventing Chromium/Edge from losing download extensions and falling back to raw UUIDs.
+
+- `app/[locale]/(dashboard)/dashboard/customers/page.tsx` & `lib/api/customers.ts` (Phase 8 Frontend Delivered):
+  - **Header & 5 Top KPI Cards**: Total Customers, New Customers, Total Revenue, Avg. Revenue per Customer, Repeat Customers with period selector (`week`, `month`, `quarter`, `year`), % changes vs previous period, and custom SVG sparklines.
+  - **Customer ID Number (`customerCode`)**:
+    - Displayed in directory table and customer detail drawer (e.g. `CST-1001`) with sleek monospace badge and one-click copy-to-clipboard button.
+    - Editable with auto-generated code suggestion in Add/Edit Customer modal.
+  - **Orders Management & History**:
+    - **Add Order Modal**: Triggered from row action menu (`+ Add Order`) and from the Customer Detail Drawer (`+ Add Order`). Auto-generates order numbers (e.g. `ORD-2024-001`), captures order date, amount (formatted in user's currency), order status (`COMPLETED`, `PENDING`, `PROCESSING`, `CANCELLED`), description/line items, payment method (`Bank Transfer`, `Credit Card`, `Cash`, `Stripe`), and linked invoice number.
+    - **Order History & Details in Drawer**: Shows real chronological order records with status badges, line items, amounts, payment methods, and invoice numbers. Adding an order recalculates customer order count and revenue live.
+  - **Left 2/3 Customers Directory Table**:
+    - Multi-select checkboxes, initial avatar with color variety matching Stitch mockup.
+    - Customer ID code badge, customer name, email, phone number, group badge (`Standard`, `Business`, `Premium`, `Enterprise`), formatted revenue, orders count, status chip (`Active`, `Inactive`, `New`, `Lead`), last activity date, and row action menu (`View Details`, `+ Add Order`, `Edit`, `Delete`).
+    - Search input (⌘K keyboard shortcut, matches ID, name, email, phone), status filter dropdown, group filter dropdown, reset filters, and instant CSV export.
+    - Pagination bar with page controls and items-per-page selector (10, 25, 50).
+  - **Right 1/3 Analytics Column**:
+    - Customer Overview: Recharts Donut Pie Chart with center total and active/inactive/new distribution.
+    - Top Customers Widget: Ranked customers by revenue with view-all link and details drawer trigger.
+    - Customer Activity Widget: Live feed showing recent customer registrations, paid invoices, received payments, and new orders placed.
+  - **Modals & Drawers**:
+    - Add / Edit Customer Modal: Form with validation for Customer ID, Name, Email, Phone, Group, Status, Address, and Notes.
+    - Add Order Modal: Form with validation for Order Number, Date, Amount, Status, Description, Payment Method, and Invoice Reference.
+    - Delete Confirmation Modal: Safe deletion confirmation.
+    - Customer Details Slide-Over Drawer: Customer ID badge with copy action, financial summary, contact information, order history & details list, and internal notes.
+  - **Real Data Engine**: `CustomerService` operates against `/api/v1/customers` with transparent active-business fallback (`afab_customers_${businessId}` in `localStorage`), enabling immediate interactive CRUD, real KPI math, order additions, and RFC 4180 CSV export with UTF-8 BOM.
+  - **Full Localization & Theming**: English (`messages/en/customers.json`) and Arabic RTL (`messages/ar/customers.json`), verified in light and dark modes with design tokens.
+  - **Hydration & Layout Stability**: Added root `app/layout.tsx` pass-through layout required by Next.js 16/next-intl, eliminating nested `<html><body>` hydration mismatch warnings.
 
 ## 9. Mock/demo data
 `lib/mock-data.ts` contains sample chart, KPI, transaction, and category data.

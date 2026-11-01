@@ -18,20 +18,19 @@ export default function middleware(req: NextRequest) {
   const isDashboardRoute = pathname.includes('/dashboard');
   const isOnboardingRoute = pathname.includes('/onboarding');
   const isSettingsRoute = pathname.includes('/settings');
-  const isAuthRoute = pathname.includes('/login') || pathname.includes('/signup');
   const isHomeRoute = pathname === '/' || (hasLocale && pathname === `/${locale}`);
   
   // Protected routes require authentication
   const isProtectedRoute = isDashboardRoute || isOnboardingRoute || isSettingsRoute;
 
-  // 1. Logged out user attempting to access a protected route
+  // 1. Logged out user attempting to access a protected route -> redirect to login
   if (isProtectedRoute && !token) {
     const loginUrl = new URL(`/${locale}/login`, req.url);
     return NextResponse.redirect(loginUrl);
   }
 
-  // 2. Logged in user attempting to access auth or home page
-  if ((isAuthRoute || isHomeRoute) && token) {
+  // 2. Logged in user attempting to access root landing page -> redirect to dashboard
+  if (isHomeRoute && token) {
     const dashboardUrl = new URL(`/${locale}/dashboard`, req.url);
     return NextResponse.redirect(dashboardUrl);
   }

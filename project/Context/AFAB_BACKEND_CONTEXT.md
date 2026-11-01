@@ -125,6 +125,7 @@ Flyway migrations found:
 - `V13__business_members.sql` (business_members table, OWNER backfill, dropped single-business unique constraint, users.active_business_id, businesses.archived_at)
 - `V14__add_user_plan_tier.sql` (users.plan_tier column for subscription limit enforcement)
 - `V15__plans_and_entitlements.sql` (plans, plan_entitlements, subscriptions, usage_counters with atomic increment; Free/Plus/Pro matrices; backfill existing users)
+- `V16__customers.sql` (Phase 8 Planned: `customers` table with `business_id NOT NULL`, `customer_code VARCHAR(50) NOT NULL`, `name`, `email`, `phone`, `customer_group`, `status`, `total_revenue`, `orders_count`, `last_activity_date`, `address`, `notes`, `created_at`, `updated_at`; `customer_orders` table with `id`, `customer_id`, `order_number`, `amount`, `status`, `order_date`, `description`, `payment_method`, `invoice_number`; index on `business_id`; nullable `customer_id` FK on `transactions`)
 
 Flyway is enabled at `classpath:db/migration`; Hibernate `ddl-auto` is `none`.
 

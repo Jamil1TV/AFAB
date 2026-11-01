@@ -10,7 +10,12 @@ import {
   ChevronDown, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
+export default function SettingsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+  params?: Promise<any>;
+}) {
   const t = useTranslations("settings");
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);

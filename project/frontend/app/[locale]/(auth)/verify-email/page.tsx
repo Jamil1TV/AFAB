@@ -68,8 +68,10 @@ export default function VerifyEmailPage() {
       setTimeout(() => {
         router.push("/onboarding");
       }, 1500);
-    } catch (err: any) {
-      if (err.message && err.message.toLowerCase().includes("already verified")) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "";
+
+      if (message.toLowerCase().includes("already verified")) {
         AuthStore.updateUser({ emailVerified: true });
         setStatus("success");
         setSuccessMsg(t("verifySuccess") || "Email verified! Redirecting...");
@@ -78,7 +80,7 @@ export default function VerifyEmailPage() {
         }, 1200);
       } else {
         setStatus("error");
-        setError(err.message || t("verifyFailed") || "Invalid verification code.");
+        setError(message || t("verifyFailed") || "Invalid verification code.");
         setShakeKey((prev) => prev + 1);
         setTimeout(() => {
           setStatus("idle");
@@ -171,8 +173,9 @@ export default function VerifyEmailPage() {
         setDevOtp(res.devOtp);
       }
       setCountdown(60);
-    } catch (err: any) {
-      setError(err.message || t("resendFailed") || "Failed to resend code.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : t("resendFailed") || "Failed to resend code.";
+      setError(message);
     } finally {
       setResending(false);
     }

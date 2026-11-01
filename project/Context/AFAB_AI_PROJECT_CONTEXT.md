@@ -82,6 +82,7 @@ This is a modular monolith organized mainly by backend feature/package. Keep bus
 - Audit-log infrastructure and SMTP email service.
 - Plans & Entitlements Engine (`/api/v1/subscription`): atomic monthly quota counters, 7-day trial management on Plus/Pro, automatic reconciliation of expired trials to Free, plan tier switching, and HTTP 403 `PLAN_LIMIT_REACHED` enforcement.
 - Reports & Export (`/api/v1/reports`): cash-basis Profit & Loss, Cash Flow Statement, Two-Period Comparisons, RFC 4180 CSV export (with UTF-8 BOM), branded OpenPDF statement generation, and `export.per_month` quota gating.
+- Customers & Orders (Phase 8 Planned: `/api/v1/customers` and Flyway `V16__customers.sql` schema with `customers` and `customer_orders`).
 
 ### Frontend areas evident in source
 - Public landing page and dashboard UI.
@@ -89,11 +90,12 @@ This is a modular monolith organized mainly by backend feature/package. Keep bus
 - Dashboard, transactions, expenses, revenue, invoices, reports (`/dashboard/reports`), AI screen, plans/upgrade, settings.
 - English/Arabic localized routing.
 - Theme provider/toggle and design-system CSS.
-- API service wrappers under `frontend/lib/api/` (including `subscription.ts` and `reports.ts`).
+- API service wrappers under `frontend/lib/api/` (including `subscription.ts`, `reports.ts`, and `customers.ts`).
+- Customers module with Customer ID (`customerCode`) tracking, Add Order modal with line items/invoices, order history & details drawer, 5 KPI cards with custom SVG sparklines, Recharts overview donut, live activity feed, and RFC 4180 CSV export.
 - Sample data in `frontend/lib/mock-data.ts`; audit individual screens to determine whether they use API data, placeholders, or local sample data.
 
 ### Not proven complete
-The PRD and mockups mention budgets, savings goals, investments, recurring transactions, notifications, customer management, integrations, receipts, team management, and AI recommendations/forecasting. The current backend controller inventory does not show complete API modules for many of these. Verify source, persistence, endpoints, and tests before describing them as implemented.
+The PRD and mockups mention budgets, savings goals, investments, recurring transactions, notifications, integrations, receipts, team management, and AI recommendations/forecasting. The current backend controller inventory does not show complete API modules for many of these. Verify source, persistence, endpoints, and tests before describing them as implemented.
 
 ## 6. Product decisions and inconsistencies
 

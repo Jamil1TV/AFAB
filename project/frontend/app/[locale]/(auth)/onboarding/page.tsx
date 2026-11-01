@@ -104,8 +104,15 @@ export default function OnboardingPage() {
       setTimeout(() => {
         router.push("/dashboard");
       }, 1000);
-    } catch (err: any) {
-      setError(err.message || (isArabic ? "فشل حفظ إعدادات الشركة. يرجى المحاولة مرة أخرى." : "Failed to save business settings. Please try again."));
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : isArabic
+            ? "فشل حفظ إعدادات الشركة. يرجى المحاولة مرة أخرى."
+            : "Failed to save business settings. Please try again.";
+
+      setError(message);
       setLoading(false);
     }
   };

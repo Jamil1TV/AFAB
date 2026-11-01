@@ -1,0 +1,12 @@
+{
+  "name": "afab",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix project/frontend run dev",
+    "build": "npm --prefix project/frontend run build",
+    "start": "npm --prefix project/frontend start",
+    "lint": "npm --prefix project/frontend run lint",
+    "install:frontend": "npm --prefix project/frontend install"
+  }
+}

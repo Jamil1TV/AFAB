@@ -20,7 +20,7 @@ services:
 
   # ── MinIO (S3-Compatible Receipt Storage) ──────
   minio:
-    image: minio/minio:latest
+    image: elestio/minio:latest
     container_name: afab-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"

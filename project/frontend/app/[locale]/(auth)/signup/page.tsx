@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Lock, Eye, EyeOff, ArrowRight, User, Building, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight, User, Building, AlertCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import { motion } from "framer-motion";
@@ -42,8 +42,13 @@ export default function SignupPage() {
       } else {
         router.push("/verify-email");
       }
-    } catch (err: any) {
-      setError(err.message || t("signupFailed") || "Registration failed. Please try again.");
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : t("signupFailed") || "Registration failed. Please try again.";
+
+      setError(message);
     } finally {
       setLoading(false);
     }

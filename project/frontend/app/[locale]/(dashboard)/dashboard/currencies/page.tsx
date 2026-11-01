@@ -6,20 +6,14 @@ import {
   Coins, 
   RefreshCw, 
   Search, 
-  ArrowRightLeft, 
   TrendingUp, 
   TrendingDown, 
   Globe, 
-  Sparkles, 
-  SlidersHorizontal,
-  ChevronRight,
-  ShieldCheck,
-  Building2,
+  Sparkles,
   Wallet,
   Calculator,
   Bell,
   Layers,
-  ArrowUpRight,
   Zap,
 } from "lucide-react";
 import { CurrencyService, CurrencyPair, HistoricalRatePoint } from "@/lib/api/currencies";
@@ -131,14 +125,65 @@ export default function CurrenciesPage() {
   }, [viewBaseCurrency]);
 
   useEffect(() => {
-    loadInitialData();
-  }, [loadInitialData]);
+    let isActive = true;
+
+    const run = async () => {
+      setIsRefreshing(true);
+
+      try {
+        const summary = await DashboardService.getSummary();
+        if (!isActive) return;
+
+        if (summary) {
+          if (summary.businessName) setBusinessName(summary.businessName);
+          if (summary.currency) {
+            setBaseCurrency(summary.currency);
+            setViewBaseCurrency(summary.currency);
+          }
+          const rawProfit = summary.kpiData?.profit?.rawValue;
+          const rawCash = summary.kpiData?.cashFlow?.rawValue;
+          if (rawProfit !== undefined && rawProfit !== 0) {
+            setNetBalance(rawProfit);
+          } else if (rawCash !== undefined && rawCash !== 0) {
+            setNetBalance(rawCash);
+          }
+        }
+
+        const pairs = await CurrencyService.getMarketRates(viewBaseCurrency);
+        if (!isActive) return;
+
+        setMarketPairs(pairs);
+
+        const defaultPair = pairs.find((p) => p.base === viewBaseCurrency) || pairs[0];
+        if (defaultPair) {
+          setSelectedPair(defaultPair);
+        }
+      } catch (err) {
+        if (isActive) {
+          console.error("Failed to load FX market data:", err);
+        }
+      } finally {
+        if (isActive) {
+          setIsRefreshing(false);
+        }
+      }
+    };
+
+    void run();
+
+    return () => {
+      isActive = false;
+    };
+  }, [viewBaseCurrency]);
 
   // Load chart history whenever selectedPair or timeframe changes
   useEffect(() => {
     if (!selectedPair) return;
 
     let isMounted = true;
+    // This state transition is tied to the async fetch lifecycle and is intentionally
+    // kept in the effect to avoid stale chart loading state when the pair or timeframe changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setChartLoading(true);
 
     CurrencyService.getHistoricalRates(selectedPair.base, selectedPair.target, timeframe)

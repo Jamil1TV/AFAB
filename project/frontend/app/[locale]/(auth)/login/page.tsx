@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ArrowLeft, ShieldCheck, KeyRound } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthService } from "@/lib/api/auth";
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 
 export default function LoginPage() {
   const t = useTranslations("Auth");
+  const locale = useLocale();
   const router = useRouter();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -73,11 +74,11 @@ export default function LoginPage() {
       }
 
       if (!res.user.emailVerified) {
-        router.push("/verify-email");
+        window.location.href = `/${locale}/verify-email`;
       } else if (res.user.onboardingComplete) {
-        router.push("/dashboard");
+        window.location.href = `/${locale}/dashboard`;
       } else {
-        router.push("/onboarding");
+        window.location.href = `/${locale}/onboarding`;
       }
     } catch (err: unknown) {
       const message = getErrorMessage(err);
@@ -100,11 +101,11 @@ export default function LoginPage() {
       });
 
       if (!res.user.emailVerified) {
-        router.push("/verify-email");
+        window.location.href = `/${locale}/verify-email`;
       } else if (res.user.onboardingComplete) {
-        router.push("/dashboard");
+        window.location.href = `/${locale}/dashboard`;
       } else {
-        router.push("/onboarding");
+        window.location.href = `/${locale}/onboarding`;
       }
     } catch (err: unknown) {
       const message = getErrorMessage(err);

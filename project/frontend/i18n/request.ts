@@ -20,6 +20,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const revenue = (await import(`../messages/${locale}/revenue.json`)).default;
   const invoices = (await import(`../messages/${locale}/invoices.json`)).default;
   const currencies = (await import(`../messages/${locale}/currencies.json`)).default;
+  const customers = (await import(`../messages/${locale}/customers.json`)).default;
 
   return {
     locale,
@@ -42,6 +43,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
       invoices: invoices,
       Currencies: currencies,
       currencies: currencies,
+      Customers: customers,
+      customers: customers,
     }
   };
 });

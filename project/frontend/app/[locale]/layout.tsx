@@ -77,7 +77,39 @@ export default async function RootLayout({
       data-scroll-behavior="smooth"
       className={`${inter.variable} ${poppins.variable} ${geistMono.variable}`}
     >
-      <body className="min-h-screen bg-background font-sans antialiased">
+            <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var clean = function() {
+                    var els = document.querySelectorAll('.translate-tooltip-mtz, [class*="translate-tooltip"]');
+                    for (var i = 0; i < els.length; i++) els[i].remove();
+                  };
+                  clean();
+                  var obs = new MutationObserver(function(mutations) {
+                    for (var i = 0; i < mutations.length; i++) {
+                      var m = mutations[i];
+                      for (var j = 0; j < m.addedNodes.length; j++) {
+                        var node = m.addedNodes[j];
+                        if (node.nodeType === 1 && (node.className && typeof node.className === 'string' && node.className.indexOf('translate-tooltip') !== -1)) {
+                          node.remove();
+                        }
+                      }
+                    }
+                  });
+                  obs.observe(document.documentElement, { childList: true, subtree: true });
+                  window.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(function() { obs.disconnect(); }, 1500);
+                  });
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen bg-background font-sans antialiased" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <ThemeProvider
             attribute="class"

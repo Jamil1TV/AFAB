@@ -1,4 +1,4 @@
-# AFAB — Master Roadmap
+﻿# AFAB — Master Roadmap
 
 > **One file to use.** It merges my two earlier files (`AFAB_Next_Steps_Roadmap.md`, `AFAB_Roadmap_Part2_Advanced.md`) and the ChatGPT audit (`AFAB_Project_Audit_and_Development_Roadmap.md`). Where they disagreed, I re-checked the code and chose one answer (§9).
 > **Basis:** static review of `AFAB-master.zip`. I did **not** build, run, or test anything, so "exists" means "the code is there", not "it works". Phase 0 turns that into facts.
@@ -23,7 +23,8 @@
 | Plans & Entitlements Engine (Phase 5) | ✅ | ✅ | **Built & Verified** (V15 migration, plans/entitlements/subscriptions/usage tables, atomic quota engine, 7-day trials, live UI activation & countdown) |
 | Reports & Export (Phase 6) | ✅ | ✅ | **Built & Verified** (Cash-basis P&L, Cash Flow, Two-period comparisons, RFC 4180 CSV + OpenPDF exports, `export.per_month` quota gating) |
 | Automated tests | ✅ | 🟡 | **43 unit tests passing** (`ReportServiceTest`, `EntitlementServiceTest`, `CategoryServiceTest`, `FinanceStatsServiceTest`, `CurrentBusinessServiceTest`, `BusinessControllerTest`, `ExchangeRateServiceTest`) |
-| Customers, Calendar | ❌ | ❌ | Planned in Phases 8, 14 |
+| Customers | 🟡 Backend pending (Phase 8) | ✅ | **Frontend Completed & Connected** (Directory table, 5 KPI cards, Donut chart, Top Customers, CRUD modals, Detail Drawer, CSV export, EN/AR RTL) |
+| Calendar | ❌ | ❌ | Planned in Phase 14 |
 | AI Assistant route | ❌ | placeholder | `/dashboard/ai` renders plans; planned in Phases 15–16 |
 | Settings: Users & Permissions, Notifications, Integrations, Data & Export | ❌ | "Coming soon" | Planned in Phases 7, 14, 17, 21 |
 | Budgets, Savings Goals, Investments, Recurring, Receipts | ❌ | ❌ | In the PRD, planned in Phases 10–13 |
@@ -91,7 +92,7 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 | **5** | Plans & entitlements engine | M | 4 | ✅ **DONE** | M2 |
 | **6** | Reports & Export | M | 2, 5 | ✅ **DONE** | M2 |
 | **7** | Settings quick wins | S | 6 | 🟡 Partial (Security, General, 2FA built) | M2 |
-| **8** | Customers | M | 4 | ❌ Missing | **M3 — SME toolkit** |
+| **8** | Customers | M | 4 | 🟢 In Progress (Frontend Complete) | **M3 — SME toolkit** |
 | **9** | Invoices (real) | M–L | 5, 8 | ❌ Missing | M3 |
 | **10** | Budgets | M | 2 | ❌ Missing | M3 |
 | **11** | Savings goals | S–M | 2 | ❌ Missing | M3 |
@@ -382,8 +383,19 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 ---
 
 ### Phase 8 — Customers · M
+**Status:** 🟢 **Frontend Complete & Connected** (Backend API & V16 migration pending)
 
-**Goal:** customer records that Invoices (and the Dashboard) depend on.
+**Goal:** customer records and orders that Invoices (and the Dashboard) depend on.
+
+**Frontend Delivered:**
+- Customer Directory Table with monospace Customer ID (customerCode, e.g. CST-1001) badge and instant copy button.
+- 5 Top KPI Cards with custom SVG sparklines (Total Customers, New Customers, Total Revenue, Avg. Revenue, Repeat Customers %).
+- Right analytics column: Recharts Customer Overview donut chart, Top Customers widget, and live recent activity feed.
+- **Add Order Modal**: Auto-generates order numbers (e.g. ORD-2024-001), captures order date, amount, status (COMPLETED, PENDING, PROCESSING, CANCELLED), description, payment method (Bank Transfer, Credit Card, Cash, Stripe), and linked invoice reference.
+- **Slide-Over Customer Detail Drawer**: Full customer profile with Customer ID copy button, financial summary, contact information, notes, and **Order History & Details** list showing live status pills, amounts, and payment methods.
+- **Add / Edit Customer Modal**: Form with Customer ID auto-generation and validation.
+- Real active-business local storage bridge (CustomerService with business isolation and fallback for unmerged backend endpoints).
+- Full English and Arabic (RTL) localization and verified light/dark themes.
 
 **Where:** new `customers/` package + migration `customers` (+ nullable `customer_id` on `transactions`); frontend `dashboard/customers/page.tsx` (new), `components/dashboard/TopCustomers.tsx`.
 

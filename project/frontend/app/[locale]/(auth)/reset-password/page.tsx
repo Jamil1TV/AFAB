@@ -57,7 +57,9 @@ function ResetPasswordContent() {
   }, [token]);
 
   useEffect(() => {
-    validateToken();
+    // The token validation result feeds UI state and cannot be performed during render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void validateToken();
   }, [validateToken]);
 
   // Password validation
