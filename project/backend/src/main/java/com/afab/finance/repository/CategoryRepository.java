@@ -18,4 +18,7 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     @Query("SELECT COUNT(t) FROM Transaction t WHERE t.category.id = :categoryId AND t.deletedAt IS NULL")
     long countActiveTransactionsByCategoryId(@Param("categoryId") UUID categoryId);
+
+    @Query("SELECT c FROM Category c WHERE c.business.id = :businessId ORDER BY c.name ASC")
+    List<Category> findAllOwnedByBusiness(@Param("businessId") UUID businessId);
 }

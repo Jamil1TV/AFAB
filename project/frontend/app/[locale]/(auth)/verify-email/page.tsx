@@ -291,7 +291,7 @@ export default function VerifyEmailPage() {
       </p>
 
       {/* ── Dev OTP Helper Banner ── */}
-      {devOtp && status !== "success" && (
+      {/* {devOtp && status !== "success" && (
         <motion.div
           initial={{ opacity: 0, y: -6, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -314,7 +314,7 @@ export default function VerifyEmailPage() {
             <span>Click here to auto-fill code</span>
           </button>
         </motion.div>
-      )}
+      )} */}
 
       {/* ── Error Banner (Smooth slide & shake) ── */}
       <AnimatePresence>

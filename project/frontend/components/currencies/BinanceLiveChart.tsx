@@ -31,12 +31,16 @@ interface BinanceLiveChartProps {
   symbol?: string; // e.g. "EUR/USD" or "USD/TND"
   baseRate?: number; // Initial spot rate e.g. 1.0825
   isArabic?: boolean;
+  compact?: boolean;
 }
+
+const MAX_VISIBLE_TRADES = 8;
 
 export function BinanceLiveChart({
   symbol = "EUR/USD",
   baseRate = 1.0825,
   isArabic = false,
+  compact = false,
 }: BinanceLiveChartProps) {
   const [isPlaying, setIsPlaying] = useState<boolean>(true);
   const [chartType, setChartType] = useState<"candles" | "line">("candles");
@@ -46,60 +50,68 @@ export function BinanceLiveChart({
   const [candles, setCandles] = useState<Candle[]>([]);
   const [recentTrades, setRecentTrades] = useState<TradeTick[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastPriceRef = useRef<number>(baseRate);
+  const tradeSeqRef = useRef<number>(0);
 
-  // Initialize historical candles deterministically from baseRate
+  // Initialize historical candles deterministically from baseRate (client-only to avoid SSR clock mismatch)
   useEffect(() => {
-    const initialCandles: Candle[] = [];
-    let runningPrice = baseRate;
-    const now = Date.now();
-    const count = 36; // 36 candles for rich visual density
-    const pairHash = Math.abs(
-      symbol.split("").reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7)
-    );
+    const frameId = window.requestAnimationFrame(() => {
+      const initialCandles: Candle[] = [];
+      let runningPrice = baseRate;
+      const now = Date.now();
+      const count = 36; // 36 candles for rich visual density
+      const pairHash = Math.abs(
+        symbol.split("").reduce((acc, ch) => acc * 31 + ch.charCodeAt(0), 7)
+      );
 
-    for (let i = count; i >= 1; i--) {
-      const timeMs = now - i * 3000;
-      const date = new Date(timeMs);
-      const timeStr = date.toLocaleTimeString([], { hour12: false, minute: "2-digit", second: "2-digit" });
-      const wave = Math.sin((i + pairHash) * 0.55) * 0.65 + Math.cos((i + pairHash) * 0.27) * 0.35;
-      const delta = wave * (runningPrice * 0.0008);
-      const open = runningPrice;
-      const close = i === 1 ? baseRate : runningPrice + delta;
-      const wickSpan = Math.abs(Math.sin((i + pairHash) * 0.9)) * (runningPrice * 0.0006) + runningPrice * 0.0002;
-      const high = Math.max(open, close) + wickSpan;
-      const low = Math.min(open, close) - wickSpan;
-      const volume = 1200 + ((pairHash + i * 397) % 3800);
+      for (let i = count; i >= 1; i--) {
+        const timeMs = now - i * 3000;
+        const date = new Date(timeMs);
+        const timeStr = date.toLocaleTimeString([], { hour12: false, minute: "2-digit", second: "2-digit" });
+        const wave = Math.sin((i + pairHash) * 0.55) * 0.65 + Math.cos((i + pairHash) * 0.27) * 0.35;
+        const delta = wave * (runningPrice * 0.0008);
+        const open = runningPrice;
+        const close = i === 1 ? baseRate : runningPrice + delta;
+        const wickSpan = Math.abs(Math.sin((i + pairHash) * 0.9)) * (runningPrice * 0.0006) + runningPrice * 0.0002;
+        const high = Math.max(open, close) + wickSpan;
+        const low = Math.min(open, close) - wickSpan;
+        const volume = 1200 + ((pairHash + i * 397) % 3800);
 
-      initialCandles.push({
-        time: timeStr,
-        timestamp: timeMs,
-        open,
-        high,
-        low,
-        close,
-        volume,
-      });
+        initialCandles.push({
+          time: timeStr,
+          timestamp: timeMs,
+          open,
+          high,
+          low,
+          close,
+          volume,
+        });
 
-      runningPrice = close;
-    }
+        runningPrice = close;
+      }
 
-    setCandles(initialCandles);
-    setCurrentPrice(baseRate);
+      lastPriceRef.current = baseRate;
+      setCandles(initialCandles);
+      setCurrentPrice(baseRate);
 
-    // Initial trades anchored to deterministic candle closes
-    const initialTrades: TradeTick[] = [];
-    for (let j = 0; j < 8; j++) {
-      const refCandle = initialCandles[initialCandles.length - 1 - j] || initialCandles[0];
-      const isBuy = refCandle.close >= refCandle.open;
-      initialTrades.push({
-        id: `init-${symbol}-${j}`,
-        time: new Date(now - j * 1200).toLocaleTimeString([], { hour12: false, minute: "2-digit", second: "2-digit" }),
-        price: refCandle.close,
-        amount: 2500 + ((pairHash + j * 1723) % 18000),
-        side: isBuy ? "buy" : "sell",
-      });
-    }
-    setRecentTrades(initialTrades);
+      // Initial trades anchored to deterministic candle closes
+      const initialTrades: TradeTick[] = [];
+      for (let j = 0; j < MAX_VISIBLE_TRADES; j++) {
+        const refCandle = initialCandles[initialCandles.length - 1 - j] || initialCandles[0];
+        const isBuy = refCandle.close >= refCandle.open;
+        tradeSeqRef.current += 1;
+        initialTrades.push({
+          id: `init-${symbol}-${tradeSeqRef.current}`,
+          time: new Date(now - j * 1200).toLocaleTimeString([], { hour12: false, minute: "2-digit", second: "2-digit" }),
+          price: refCandle.close,
+          amount: 2500 + ((pairHash + j * 1723) % 18000),
+          side: isBuy ? "buy" : "sell",
+        });
+      }
+      setRecentTrades(initialTrades);
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
   }, [symbol, baseRate]);
 
   // Real-time ticking engine: deterministic micro-oscillation anchored to live mid-market baseRate
@@ -107,84 +119,86 @@ export function BinanceLiveChart({
     if (!isPlaying) return;
 
     let step = 0;
+    let flashTimeout: number | null = null;
+
     const tickTimer = window.setInterval(() => {
       step += 1;
-      const nowSec = Math.floor(Date.now() / 1000);
-      setCurrentPrice((prevPrice) => {
-        const phase = Math.sin(nowSec * 0.85 + step * 0.6) * 0.00035;
-        const newPrice = Number((baseRate * (1 + phase)).toFixed(4));
-        const isUp = newPrice >= prevPrice;
-
-        // Flash price badge
-        setPriceFlash(isUp ? "up" : "down");
-        setTimeout(() => setPriceFlash(null), 500);
-
-        // Update or append candle
-        setCandles((prevCandles) => {
-          if (prevCandles.length === 0) return prevCandles;
-
-          const lastCandle = prevCandles[prevCandles.length - 1];
-          const now = Date.now();
-          const intervalMs = interval === "1s" ? 3000 : interval === "5s" ? 5000 : 15000;
-
-          // If current candle has exceeded interval, push a new one
-          if (now - lastCandle.timestamp >= intervalMs) {
-            const timeStr = new Date(now).toLocaleTimeString([], {
-              hour12: false,
-              minute: "2-digit",
-              second: "2-digit",
-            });
-
-            const newCandle: Candle = {
-              time: timeStr,
-              timestamp: now,
-              open: lastCandle.close,
-              high: Math.max(lastCandle.close, newPrice),
-              low: Math.min(lastCandle.close, newPrice),
-              close: newPrice,
-              volume: 800 + ((nowSec * 173) % 1400),
-            };
-
-            // Keep max 42 candles on screen
-            const sliced = prevCandles.length >= 42 ? prevCandles.slice(1) : prevCandles;
-            return [...sliced, newCandle];
-          } else {
-            // Update the active candle in real time
-            const updated: Candle = {
-              ...lastCandle,
-              high: Math.max(lastCandle.high, newPrice),
-              low: Math.min(lastCandle.low, newPrice),
-              close: newPrice,
-              volume: lastCandle.volume + 120 + ((nowSec * 67) % 180),
-            };
-
-            return [...prevCandles.slice(0, -1), updated];
-          }
-        });
-
-        // Add to live trade ticker
-        setRecentTrades((prevTrades) => {
-          const nowStr = new Date().toLocaleTimeString([], {
-            hour12: false,
-            minute: "2-digit",
-            second: "2-digit",
-          });
-          const newTrade: TradeTick = {
-            id: `tick-${Date.now()}-${step}`,
-            time: nowStr,
-            price: newPrice,
-            amount: 2000 + ((nowSec * 997) % 24000),
-            side: isUp ? "buy" : "sell",
-          };
-          return [newTrade, ...prevTrades.slice(0, 7)];
-        });
-
-        return newPrice;
+      const now = Date.now();
+      const nowSec = Math.floor(now / 1000);
+      const prevPrice = lastPriceRef.current;
+      const phase = Math.sin(nowSec * 0.85 + step * 0.6) * 0.00035;
+      const newPrice = Number((baseRate * (1 + phase)).toFixed(4));
+      const isUp = newPrice >= prevPrice;
+      const nowStr = new Date(now).toLocaleTimeString([], {
+        hour12: false,
+        minute: "2-digit",
+        second: "2-digit",
       });
+
+      lastPriceRef.current = newPrice;
+      setCurrentPrice(newPrice);
+
+      // Flash price badge
+      setPriceFlash(isUp ? "up" : "down");
+      if (flashTimeout !== null) {
+        window.clearTimeout(flashTimeout);
+      }
+      flashTimeout = window.setTimeout(() => setPriceFlash(null), 500);
+
+      // Update or append candle (pure state updater — no nested setState calls)
+      setCandles((prevCandles) => {
+        if (prevCandles.length === 0) return prevCandles;
+
+        const lastCandle = prevCandles[prevCandles.length - 1];
+        const intervalMs = interval === "1s" ? 3000 : interval === "5s" ? 5000 : 15000;
+
+        if (now - lastCandle.timestamp >= intervalMs) {
+          const newCandle: Candle = {
+            time: nowStr,
+            timestamp: Math.max(now, lastCandle.timestamp + 1),
+            open: lastCandle.close,
+            high: Math.max(lastCandle.close, newPrice),
+            low: Math.min(lastCandle.close, newPrice),
+            close: newPrice,
+            volume: 800 + ((nowSec * 173) % 1400),
+          };
+
+          // Keep max 42 candles on screen
+          const sliced = prevCandles.length >= 42 ? prevCandles.slice(1) : prevCandles;
+          return [...sliced, newCandle];
+        } else {
+          // Update the active candle in real time
+          const updated: Candle = {
+            ...lastCandle,
+            high: Math.max(lastCandle.high, newPrice),
+            low: Math.min(lastCandle.low, newPrice),
+            close: newPrice,
+            volume: lastCandle.volume + 120 + ((nowSec * 67) % 180),
+          };
+
+          return [...prevCandles.slice(0, -1), updated];
+        }
+      });
+
+      // Add to live trade ticker with a strictly unique monotonic id
+      tradeSeqRef.current += 1;
+      const newTrade: TradeTick = {
+        id: `tick-${symbol}-${tradeSeqRef.current}`,
+        time: nowStr,
+        price: newPrice,
+        amount: 2000 + ((nowSec * 997) % 24000),
+        side: isUp ? "buy" : "sell",
+      };
+      setRecentTrades((prevTrades) => [newTrade, ...prevTrades.slice(0, MAX_VISIBLE_TRADES - 1)]);
     }, 1000);
 
-    return () => clearInterval(tickTimer);
-  }, [isPlaying, interval, baseRate]);
+    return () => {
+      window.clearInterval(tickTimer);
+      if (flashTimeout !== null) {
+        window.clearTimeout(flashTimeout);
+      }
+    };
+  }, [isPlaying, interval, baseRate, symbol]);
 
   // Compute scale boundaries
   const { minPrice, maxPrice, priceRange, startPrice, netChange, netChangePct } = useMemo(() => {
@@ -240,25 +254,25 @@ export function BinanceLiveChart({
   const currentPriceY = getY(currentPrice);
 
   return (
-    <div className="afab-card p-6 relative overflow-hidden transition-all">
+    <div className="afab-card p-5 sm:p-6 relative overflow-hidden transition-all">
       {/* Top Banner: Pair Info, 1s Live Ticker, 24h High/Low, Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800/60">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
             <Activity className="h-5 w-5 animate-pulse" />
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white">{symbol}</span>
-              <span className="afab-badge afab-badge-success uppercase tracking-wider">
-                Binance Live Tick
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-lg font-bold tracking-tight text-gray-900 dark:text-white whitespace-nowrap">{symbol}</span>
+              <span className="afab-badge afab-badge-success uppercase tracking-wider whitespace-nowrap shrink-0">
+                {isArabic ? "بث بينانس مباشر" : "Binance Live Tick"}
               </span>
             </div>
 
-            <div className="flex items-baseline gap-3 mt-0.5">
+            <div className="flex items-baseline gap-2.5 mt-0.5 flex-wrap">
               <span
-                className={`text-xl sm:text-2xl font-bold font-mono tracking-tight transition-colors duration-300 ${
+                className={`text-xl sm:text-2xl font-bold font-mono tabular-nums tracking-tight transition-colors duration-300 ${
                   priceFlash === "up"
                     ? "text-emerald-600 dark:text-emerald-400"
                     : priceFlash === "down"
@@ -270,7 +284,7 @@ export function BinanceLiveChart({
               </span>
 
               <div
-                className={`afab-badge ${
+                className={`afab-badge whitespace-nowrap shrink-0 ${
                   netChange >= 0
                     ? "afab-badge-success"
                     : "afab-badge-danger"
@@ -289,22 +303,33 @@ export function BinanceLiveChart({
           <button
             type="button"
             onClick={() => setIsPlaying(!isPlaying)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border whitespace-nowrap transition-all ${
               isPlaying
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 dark:hover:bg-emerald-500/20"
                 : "afab-btn-secondary"
             }`}
-            title={isPlaying ? "Pause Live Feed" : "Resume Live Feed"}
+            title={
+              isPlaying
+                ? isArabic
+                  ? "إيقاف البث المباشر مؤقتاً"
+                  : "Pause Live Feed"
+                : isArabic
+                ? "استئناف البث المباشر"
+                : "Resume Live Feed"
+            }
           >
             {isPlaying ? (
               <>
-                <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping" />
-                <span>Live Active</span>
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 dark:bg-emerald-400" />
+                </span>
+                <span>{isArabic ? "بث مباشر" : "Live Active"}</span>
               </>
             ) : (
               <>
                 <Play className="h-3.5 w-3.5" />
-                <span>Paused</span>
+                <span>{isArabic ? "متوقف" : "Paused"}</span>
               </>
             )}
           </button>
@@ -334,7 +359,7 @@ export function BinanceLiveChart({
                 chartType === "candles" ? "afab-segment-active" : ""
               }`}
             >
-              Candles
+              {isArabic ? "شموع" : "Candles"}
             </button>
             <button
               type="button"
@@ -343,18 +368,24 @@ export function BinanceLiveChart({
                 chartType === "line" ? "afab-segment-active" : ""
               }`}
             >
-              Wave
+              {isArabic ? "موجة" : "Wave"}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Candlestick Chart Area (8 cols) + Real-Time Live Orderbook & Trades (4 cols) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mt-4 items-stretch">
+      {/* Main Grid: Candlestick Chart Area + Real-Time Live Orderbook & Trades */}
+      <div
+        className={`grid grid-cols-1 gap-4 mt-4 items-stretch ${
+          compact ? "xl:grid-cols-12" : "lg:grid-cols-12"
+        }`}
+      >
         {/* Candlestick SVG Viewport */}
-        <div 
+        <div
           ref={containerRef}
-          className="lg:col-span-8 afab-inset p-2 relative h-[320px] select-none"
+          className={`${
+            compact ? "xl:col-span-7" : "lg:col-span-8"
+          } afab-inset p-2 relative h-[320px] overflow-hidden select-none`}
         >
           <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full overflow-visible">
             <defs>
@@ -525,45 +556,60 @@ export function BinanceLiveChart({
         </div>
 
         {/* Right Side: Real-Time Live Stream of Micro Trades (Binance Style) */}
-        <div className="lg:col-span-4 afab-inset p-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-2 border-b border-gray-200/70 dark:border-gray-800/60">
-              <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
-                <Flame className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" />
-                Live Market Trades
+        <div
+          className={`${
+            compact ? "xl:col-span-5" : "lg:col-span-4"
+          } afab-inset p-3.5 h-[320px] overflow-hidden flex flex-col`}
+        >
+          <div className="flex items-center justify-between gap-2 pb-2 border-b border-gray-200/70 dark:border-gray-800/60 shrink-0">
+            <span className="text-xs font-bold text-gray-900 dark:text-white flex items-center gap-1.5 min-w-0 truncate">
+              <Flame className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400 shrink-0" />
+              <span className="truncate">
+                {isArabic ? "صفقات السوق الحية" : "Live Market Trades"}
               </span>
-              <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono">1s stream</span>
-            </div>
+            </span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono whitespace-nowrap shrink-0">
+              {isArabic ? "بث 1ث" : "1s stream"}
+            </span>
+          </div>
 
-            <div className="text-[10px] grid grid-cols-3 text-gray-400 dark:text-gray-500 font-mono py-1.5 border-b border-gray-200/50 dark:border-gray-800/50">
-              <span>Time</span>
-              <span>Price</span>
-              <span className="text-end">Volume</span>
-            </div>
+          <div className="text-[10px] grid grid-cols-3 gap-1 text-gray-400 dark:text-gray-500 font-mono py-1.5 border-b border-gray-200/50 dark:border-gray-800/50 shrink-0">
+            <span>{isArabic ? "الوقت" : "Time"}</span>
+            <span>{isArabic ? "السعر" : "Price"}</span>
+            <span className="text-end">{isArabic ? "الحجم" : "Volume"}</span>
+          </div>
 
-            {/* Trade list ticking in real time */}
-            <div className="space-y-1.5 mt-1 overflow-hidden">
-              {recentTrades.map((t) => (
-                <div
-                  key={t.id}
-                  className="grid grid-cols-3 text-[11px] font-mono py-0.5 items-center animate-in fade-in duration-200"
+          {/* Trade list ticking in real time — fixed height, max 8 rows */}
+          <div className="flex-1 min-h-0 overflow-hidden flex flex-col justify-between py-1">
+            {recentTrades.slice(0, MAX_VISIBLE_TRADES).map((t) => (
+              <div
+                key={t.id}
+                className="grid grid-cols-3 gap-1 text-[11px] font-mono tabular-nums leading-none py-1 items-center"
+              >
+                <span className="text-gray-500 dark:text-gray-400 truncate">{t.time}</span>
+                <span
+                  className={`font-bold truncate ${
+                    t.side === "buy"
+                      ? "text-emerald-600 dark:text-emerald-400"
+                      : "text-red-600 dark:text-red-400"
+                  }`}
                 >
-                  <span className="text-gray-500 dark:text-gray-400">{t.time}</span>
-                  <span className={`font-bold ${t.side === "buy" ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
-                    {t.price.toFixed(4)}
-                  </span>
-                  <span className="text-end text-gray-700 dark:text-gray-300">
-                    {t.amount.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-            </div>
+                  {t.price.toFixed(4)}
+                </span>
+                <span className="text-end text-gray-700 dark:text-gray-300 truncate">
+                  {t.amount.toLocaleString()}
+                </span>
+              </div>
+            ))}
           </div>
 
           {/* Footer spread insight */}
-          <div className="pt-2 border-t border-gray-200/70 dark:border-gray-800/60 flex items-center justify-between text-[11px] text-gray-500 dark:text-gray-400 font-mono">
-            <span>24h Spread: 0.04%</span>
-            <span className="text-emerald-600 dark:text-emerald-400">Orderbook Synced</span>
+          <div className="pt-2 border-t border-gray-200/70 dark:border-gray-800/60 flex items-center justify-between gap-2 text-[10px] text-gray-500 dark:text-gray-400 font-mono shrink-0 whitespace-nowrap">
+            <span className="truncate">{isArabic ? "الفارق: 0.04%" : "Spread: 0.04%"}</span>
+            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shrink-0">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" />
+              <span>{isArabic ? "سجل الأوامر متزامن" : "Orderbook Synced"}</span>
+            </span>
           </div>
         </div>
       </div>

@@ -119,10 +119,12 @@ export class AuthStore {
   }
 
   static updateUser(updates: Partial<UserDto>) {
+    if (typeof window === "undefined") return;
     const user = this.getUser();
     if (!user) return;
     const updated = { ...user, ...updates };
     localStorage.setItem(USER_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent("afab_profile_updated", { detail: updated }));
   }
 
   static isAuthenticated(): boolean {

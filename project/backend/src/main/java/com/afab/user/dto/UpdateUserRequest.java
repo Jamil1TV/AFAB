@@ -13,7 +13,7 @@ public class UpdateUserRequest {
     @Size(max = 50)
     private String phoneNumber;
 
-    @Size(max = 500)
+    @Size(max = 500000, message = "Avatar image is too large")
     private String avatarUrl;
 
     private Boolean enableAiInsights;

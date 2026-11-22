@@ -36,8 +36,18 @@ import {
 } from "@/lib/constants/business-data";
 import { formatCurrency } from "@/lib/currency";
 import { CurrencyMigrationModal } from "./CurrencyMigrationModal";
+import { EditProfileModal } from "./EditProfileModal";
+import { DeleteAccountModal } from "./DeleteAccountModal";
 
-export function GeneralSettings({ profile, business }: { profile: any; business: any }) {
+export function GeneralSettings({
+  profile,
+  business,
+  onRefresh,
+}: {
+  profile: any;
+  business: any;
+  onRefresh?: () => Promise<void>;
+}) {
   const t = useTranslations("settings");
   const locale = useLocale();
   const isArabic = locale === "ar";
@@ -105,6 +115,52 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
   const [pendingCurrency, setPendingCurrency] = useState<string | null>(null);
   const [migrationSuccessMsg, setMigrationSuccessMsg] = useState<string | null>(null);
+
+  // Account card & Other Settings states
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [isExportingData, setIsExportingData] = useState(false);
+  const [exportStatusMsg, setExportStatusMsg] = useState<string | null>(null);
+  const [exportErrorMsg, setExportErrorMsg] = useState<string | null>(null);
+  const [profileUpdatedMsg, setProfileUpdatedMsg] = useState<string | null>(null);
+
+  const handleProfileSaved = async () => {
+    if (onRefresh) {
+      await onRefresh();
+    }
+    setProfileUpdatedMsg(
+      isArabic
+        ? "تم تحديث الملف الشخصي بنجاح!"
+        : "Your profile has been updated successfully!"
+    );
+    setTimeout(() => setProfileUpdatedMsg(null), 4000);
+  };
+
+  const handleExportMyData = async () => {
+    if (isExportingData) return;
+    setIsExportingData(true);
+    setExportErrorMsg(null);
+    setExportStatusMsg(null);
+    try {
+      const result = await SettingsService.exportMyData();
+      setExportStatusMsg(
+        isArabic
+          ? `تم تنزيل ${result.filename} (${result.summary.businessesCount} شركات، ${result.summary.transactionsCount} معاملات)`
+          : `Downloaded ${result.filename} (${result.summary.businessesCount} workspaces, ${result.summary.transactionsCount} transactions)`
+      );
+      setTimeout(() => setExportStatusMsg(null), 7000);
+    } catch (err: unknown) {
+      setExportErrorMsg(
+        err instanceof Error
+          ? err.message
+          : isArabic
+          ? "تعذر تصدير البيانات حالياً. يرجى المحاولة لاحقاً."
+          : "Failed to export account data. Please try again."
+      );
+    } finally {
+      setIsExportingData(false);
+    }
+  };
 
   const handleMigrationSuccess = (newCurr: string, count: number) => {
     setFormData((prev) => ({ ...prev, currency: newCurr }));
@@ -532,8 +588,25 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
             <h3 className="afab-card-title">
               {profile?.firstName} {profile?.lastName}
             </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">{profile?.email}</p>
-            <Button variant="outline" className="afab-btn-secondary w-full">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-1">{profile?.email}</p>
+            {profile?.phoneNumber && (
+              <p className="text-gray-400 dark:text-gray-500 text-xs font-mono mb-4">
+                {profile.phoneNumber}
+              </p>
+            )}
+            {!profile?.phoneNumber && <div className="mb-5" />}
+            {profileUpdatedMsg && (
+              <div className="mb-3 px-3 py-2 rounded-xl border border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs flex items-center justify-center gap-1.5 animate-in fade-in">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>{profileUpdatedMsg}</span>
+              </div>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditProfileOpen(true)}
+              className="afab-btn-secondary w-full"
+            >
               {t("account.editProfile")}
             </Button>
           </div>
@@ -590,26 +663,93 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
         </div>
 
         {/* Other Settings */}
-        <div className="afab-card p-6">
-          <h3 className="afab-card-title mb-4">{t("otherSettings.title")}</h3>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-gray-50 dark:hover:bg-white/[0.04] rounded-xl transition-colors -mx-3">
-              <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
-                <Download className="w-5 h-5" />
-                <p className="text-sm font-medium group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">{t("otherSettings.exportData")}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors rtl:rotate-180" />
-            </div>
-            <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors -mx-3">
-              <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-                <Trash2 className="w-5 h-5" />
-                <p className="text-sm font-medium">{t("otherSettings.deleteAccount")}</p>
-              </div>
-              <ChevronRight className="w-4 h-4 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity rtl:rotate-180" />
+        <div className="afab-card p-6 flex flex-col justify-between">
+          <div>
+            <h3 className="afab-card-title mb-4">{t("otherSettings.title")}</h3>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={handleExportMyData}
+                disabled={isExportingData}
+                className="w-full flex items-center justify-between group cursor-pointer p-3 hover:bg-gray-50 dark:hover:bg-white/[0.04] rounded-xl transition-colors text-start disabled:opacity-60 disabled:cursor-wait"
+              >
+                <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300 min-w-0">
+                  {isExportingData ? (
+                    <AfabLoader size="xs" />
+                  ) : (
+                    <Download className="w-5 h-5 shrink-0 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
+                      {isExportingData
+                        ? isArabic
+                          ? "جاري تصدير بياناتك..."
+                          : "Exporting Your Data..."
+                        : t("otherSettings.exportData")}
+                    </p>
+                    <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
+                      {t("otherSettings.exportDataDesc")}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 shrink-0 text-gray-400 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors rtl:rotate-180" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsDeleteAccountOpen(true)}
+                className="w-full flex items-center justify-between group cursor-pointer p-3 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors text-start"
+              >
+                <div className="flex items-center gap-3 text-red-600 dark:text-red-400 min-w-0">
+                  <Trash2 className="w-5 h-5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{t("otherSettings.deleteAccount")}</p>
+                    <p className="text-[11px] text-red-500/70 dark:text-red-400/70 truncate">
+                      {t("otherSettings.deleteAccountDesc")}
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 shrink-0 text-red-400 opacity-60 group-hover:opacity-100 transition-opacity rtl:rotate-180" />
+              </button>
             </div>
           </div>
+
+          {(exportStatusMsg || exportErrorMsg) && (
+            <div className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800/60">
+              {exportStatusMsg && (
+                <div className="p-3 rounded-xl border border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-start gap-2 text-xs animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{exportStatusMsg}</span>
+                </div>
+              )}
+              {exportErrorMsg && (
+                <div className="p-3 rounded-xl border border-red-500/25 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-start gap-2 text-xs animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{exportErrorMsg}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditProfileOpen && (
+        <EditProfileModal
+          open={isEditProfileOpen}
+          onOpenChange={setIsEditProfileOpen}
+          profile={profile}
+          onSuccess={handleProfileSaved}
+        />
+      )}
+
+      {/* GitHub-Style Delete Account Modal (Export First -> Warning -> Type Phrase) */}
+      <DeleteAccountModal
+        open={isDeleteAccountOpen}
+        onOpenChange={setIsDeleteAccountOpen}
+        profile={profile}
+        business={business}
+      />
 
       {/* Real-Time Currency Migration Modal */}
       {pendingCurrency && (

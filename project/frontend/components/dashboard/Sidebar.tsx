@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, useMemo, useSyncExternalStore } from "react";
 import { UserService } from "@/lib/api/dashboard";
-import { AuthStore } from "@/lib/auth-store";
+import { AuthStore, UserDto } from "@/lib/auth-store";
 import { AuthService } from "@/lib/api/auth";
 import { Link, usePathname, useRouter } from "@/i18n/routing";
 import { 
@@ -70,6 +70,23 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+const subscribeToStorage = (callback: () => void) => {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("storage", callback);
+  window.addEventListener("afab_profile_updated", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("afab_profile_updated", callback);
+  };
+};
+
+const getStoredUserRaw = (): string | null => {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("user");
+};
+
+const getServerUserRaw = (): null => null;
+
 export function Sidebar() {
   const tSidebar = useTranslations("Dashboard.sidebar");
   const t = useTranslations("Dashboard.sidebar");
@@ -77,6 +94,19 @@ export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const storedUserRaw = useSyncExternalStore(
+    subscribeToStorage,
+    getStoredUserRaw,
+    getServerUserRaw
+  );
+  const cachedUser = useMemo<UserDto | null>(() => {
+    if (!storedUserRaw) return null;
+    try {
+      return JSON.parse(storedUserRaw) as UserDto;
+    } catch {
+      return null;
+    }
+  }, [storedUserRaw]);
   const { collapsed, setCollapsed, mobileOpen, setMobileOpen } = useSidebar();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -120,6 +150,20 @@ export function Sidebar() {
       }
     }
     fetchProfile();
+
+    const handleProfileUpdated = (event: Event) => {
+      const detail = (event as CustomEvent).detail;
+      if (detail) {
+        setProfile((prev) => (prev ? { ...prev, ...detail } : prev));
+      } else {
+        fetchProfile();
+      }
+    };
+
+    window.addEventListener("afab_profile_updated", handleProfileUpdated);
+    return () => {
+      window.removeEventListener("afab_profile_updated", handleProfileUpdated);
+    };
   }, []);
 
   const mainNavItems: NavItem[] = [
@@ -258,7 +302,9 @@ export function Sidebar() {
                 />
               ) : (
                 <span>
-                  {profile?.firstName ? `${profile.firstName[0]}${profile?.lastName?.[0] || ""}` : (AuthStore.getUser()?.firstName?.[0] || "U")}
+                  {profile?.firstName
+                    ? `${profile.firstName[0]}${profile?.lastName?.[0] || ""}`
+                    : (cachedUser?.firstName?.[0] || "U")}
                 </span>
               )}
             </div>
@@ -267,10 +313,10 @@ export function Sidebar() {
             <div className="flex-1 min-w-0 text-start flex items-center justify-between">
               <div className="overflow-hidden min-w-0">
                 <p className="text-xs sm:text-sm font-bold text-gray-900 dark:text-white truncate">
-                  {profile?.firstName 
-                    ? `${profile.firstName} ${profile.lastName}` 
-                    : AuthStore.getUser()?.firstName 
-                      ? `${AuthStore.getUser()!.firstName} ${AuthStore.getUser()!.lastName}` 
+                  {profile?.firstName
+                    ? `${profile.firstName} ${profile.lastName}`
+                    : cachedUser?.firstName
+                      ? `${cachedUser.firstName} ${cachedUser.lastName}`
                       : (locale === "ar" ? "حسابي" : "My Account")}
                 </p>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
@@ -291,14 +337,14 @@ export function Sidebar() {
             {/* User Info Header */}
             <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800/80">
               <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                {profile?.firstName 
-                  ? `${profile.firstName} ${profile.lastName}` 
-                  : AuthStore.getUser()?.firstName 
-                    ? `${AuthStore.getUser()!.firstName} ${AuthStore.getUser()!.lastName}` 
+                {profile?.firstName
+                  ? `${profile.firstName} ${profile.lastName}`
+                  : cachedUser?.firstName
+                    ? `${cachedUser.firstName} ${cachedUser.lastName}`
                     : (locale === "ar" ? "حسابي" : "My Account")}
               </p>
               <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                {profile?.email || AuthStore.getUser()?.email || ""}
+                {profile?.email || cachedUser?.email || ""}
               </p>
             </div>
 
