@@ -2,13 +2,13 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { 
-  MailCheck, 
-  ArrowRight, 
-  AlertCircle, 
-  RotateCw, 
-  CheckCircle2, 
-  XCircle, 
+import {
+  MailCheck,
+  ArrowRight,
+  AlertCircle,
+  RotateCw,
+  CheckCircle2,
+  XCircle,
   Sparkles,
   Zap
 } from "lucide-react";
@@ -224,17 +224,16 @@ export default function VerifyEmailPage() {
           status === "success"
             ? { scale: [0.85, 1.22, 1], rotate: [0, 10, 0] }
             : status === "error"
-            ? { x: [0, -7, 7, -5, 5, 0], scale: [1, 1.05, 1] }
-            : { scale: 1 }
+              ? { x: [0, -7, 7, -5, 5, 0], scale: [1, 1.05, 1] }
+              : { scale: 1 }
         }
         transition={{ duration: 0.5, ease: "easeOut" }}
-        className={`relative mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-500 ${
-          status === "success"
-            ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
-            : status === "error"
+        className={`relative mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-500 ${status === "success"
+          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+          : status === "error"
             ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400"
             : "bg-[#8b5cf6]/10 text-[#7c3aed] dark:bg-[#8b5cf6]/15 dark:text-[#a78bfa]"
-        }`}
+          }`}
       >
         <AnimatePresence mode="wait">
           {status === "success" ? (
@@ -375,8 +374,8 @@ export default function VerifyEmailPage() {
                   isSuccess
                     ? { scale: [1, 1.1, 1], y: [0, -4, 0] }
                     : isFilled
-                    ? { scale: [1, 1.08, 1] }
-                    : { scale: 1 }
+                      ? { scale: [1, 1.08, 1] }
+                      : { scale: 1 }
                 }
                 transition={{ duration: 0.25, delay: isSuccess ? index * 0.05 : 0 }}
                 className="relative"
@@ -394,17 +393,16 @@ export default function VerifyEmailPage() {
                   onBlur={() => setFocusedIndex(null)}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className={`h-11 w-10 sm:h-14 sm:w-12 rounded-xl text-center text-lg sm:text-xl font-bold outline-none transition-all duration-200 ${
-                    isSuccess
-                      ? "border-2 border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                      : isError
+                  className={`h-11 w-10 sm:h-14 sm:w-12 rounded-xl text-center text-lg sm:text-xl font-bold outline-none transition-all duration-200 ${isSuccess
+                    ? "border-2 border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                    : isError
                       ? "border-2 border-red-500 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
                       : isFocused
-                      ? "border-2 border-[#8b5cf6] bg-white text-gray-900 ring-2 ring-[#8b5cf6]/20 dark:border-[#8b5cf6] dark:bg-[#0c101c] dark:text-white"
-                      : isFilled
-                      ? "border-2 border-gray-300 bg-white text-gray-900 shadow-sm dark:border-gray-700 dark:bg-[#0c101c] dark:text-white"
-                      : "border border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white"
-                  }`}
+                        ? "border-2 border-[#8b5cf6] bg-white text-gray-900 ring-2 ring-[#8b5cf6]/20 dark:border-[#8b5cf6] dark:bg-[#0c101c] dark:text-white"
+                        : isFilled
+                          ? "border-2 border-gray-300 bg-white text-gray-900 shadow-sm dark:border-gray-700 dark:bg-[#0c101c] dark:text-white"
+                          : "border border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white"
+                    }`}
                 />
 
                 {/* Subtle active pulse dot underneath active input */}
@@ -425,13 +423,12 @@ export default function VerifyEmailPage() {
           whileTap={status !== "loading" && status !== "success" ? { scale: 0.985 } : undefined}
           type="submit"
           disabled={status === "loading" || status === "success" || otp.join("").length < 6}
-          className={`group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 disabled:opacity-50 cursor-pointer ${
-            status === "success"
-              ? "bg-emerald-600 shadow-emerald-500/25 hover:bg-emerald-600"
-              : status === "error"
+          className={`group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 disabled:opacity-50 cursor-pointer ${status === "success"
+            ? "bg-emerald-600 shadow-emerald-500/25 hover:bg-emerald-600"
+            : status === "error"
               ? "bg-red-600 shadow-red-600/20 hover:bg-red-700"
               : "bg-[#8b5cf6] shadow-[#8b5cf6]/25 hover:bg-[#7c3aed]"
-          }`}
+            }`}
         >
           {status === "loading" ? (
             <div className="flex items-center gap-2">
