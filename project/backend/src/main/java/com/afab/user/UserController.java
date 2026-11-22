@@ -6,19 +6,25 @@ import com.afab.auth.domain.RefreshTokenRepository;
 import com.afab.auth.dto.*;
 import com.afab.business.Business;
 import com.afab.business.BusinessRepository;
+import com.afab.user.dto.DeleteAccountRequest;
 import com.afab.user.dto.SessionDTO;
 import com.afab.user.dto.UpdateUserRequest;
 import com.afab.user.dto.UserProfileDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,15 +37,18 @@ public class UserController {
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthService authService;
     private final com.afab.business.CurrentBusinessService currentBusinessService;
+    private final UserAccountService userAccountService;
 
     public UserController(UserRepository userRepository, BusinessRepository businessRepository,
                           RefreshTokenRepository refreshTokenRepository, AuthService authService,
-                          com.afab.business.CurrentBusinessService currentBusinessService) {
+                          com.afab.business.CurrentBusinessService currentBusinessService,
+                          UserAccountService userAccountService) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.authService = authService;
         this.currentBusinessService = currentBusinessService;
+        this.userAccountService = userAccountService;
     }
 
     @GetMapping("/me")
@@ -51,15 +60,126 @@ public class UserController {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+        return ResponseEntity.ok(buildUserProfileDTO(user));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<?> updateProfile(
+            @Valid @RequestBody UpdateUserRequest request,
+            Authentication authentication
+    ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (request.getFirstName() != null) {
+            String trimmedFirst = request.getFirstName().trim();
+            if (trimmedFirst.isEmpty()) {
+                return ResponseEntity.badRequest().body(ErrorResponse.error("INVALID_FIRST_NAME", "First name cannot be empty."));
+            }
+            user.setFirstName(trimmedFirst);
+        }
+        if (request.getLastName() != null) {
+            String trimmedLast = request.getLastName().trim();
+            if (trimmedLast.isEmpty()) {
+                return ResponseEntity.badRequest().body(ErrorResponse.error("INVALID_LAST_NAME", "Last name cannot be empty."));
+            }
+            user.setLastName(trimmedLast);
+        }
+        if (request.getPhoneNumber() != null) {
+            String trimmedPhone = request.getPhoneNumber().trim();
+            if (trimmedPhone.isEmpty()) {
+                user.setPhoneNumber(null);
+            } else {
+                if (userRepository.existsByPhoneNumberAndIdNot(trimmedPhone, user.getId())) {
+                    return ResponseEntity.badRequest().body(ErrorResponse.error("PHONE_TAKEN", "This phone number is already in use by another account."));
+                }
+                user.setPhoneNumber(trimmedPhone);
+            }
+        }
+        if (request.getAvatarUrl() != null) {
+            String trimmedAvatar = request.getAvatarUrl().trim();
+            user.setAvatarUrl(trimmedAvatar.isEmpty() ? null : trimmedAvatar);
+        }
+        if (request.getEnableAiInsights() != null) user.setEnableAiInsights(request.getEnableAiInsights());
+        if (request.getCompactMode() != null) user.setCompactMode(request.getCompactMode());
+        if (request.getAutoCategorizeTransactions() != null) user.setAutoCategorizeTransactions(request.getAutoCategorizeTransactions());
+        if (request.getShowTips() != null) user.setShowTips(request.getShowTips());
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(buildUserProfileDTO(user));
+    }
+
+    @GetMapping("/me/export")
+    public ResponseEntity<?> exportMyData(
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        Map<String, Object> exportData = userAccountService.exportUserData(
+                authentication.getName(),
+                getClientIp(httpRequest),
+                httpRequest.getHeader("User-Agent")
+        );
+
+        String filename = "afab-account-export-" + LocalDate.now() + ".json";
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(exportData);
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<?> deleteMyAccount(
+            @Valid @RequestBody DeleteAccountRequest request,
+            Authentication authentication,
+            HttpServletRequest httpRequest
+    ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        try {
+            userAccountService.deleteUserAccount(
+                    authentication.getName(),
+                    request.getConfirmation(),
+                    getClientIp(httpRequest),
+                    httpRequest.getHeader("User-Agent")
+            );
+
+            ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
+                    .httpOnly(true)
+                    .secure(false)
+                    .sameSite("Lax")
+                    .path("/api/v1/auth")
+                    .maxAge(0)
+                    .build();
+
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                    .body(ErrorResponse.success("Your account and all associated data have been permanently deleted."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.error("DELETE_CONFIRMATION_INVALID", e.getMessage()));
+        }
+    }
+
+    private UserProfileDTO buildUserProfileDTO(User user) {
         Business business = null;
         try {
             business = currentBusinessService.getCurrentBusiness(user.getEmail());
         } catch (Exception e) {
-            // Fallback if not set yet
             business = businessRepository.findFirstByUserIdAndArchivedAtIsNull(user.getId()).orElse(null);
         }
 
-        UserProfileDTO profile = new UserProfileDTO(
+        return new UserProfileDTO(
                 user.getId(),
                 user.getFirstName(),
                 user.getLastName(),
@@ -83,34 +203,6 @@ public class UserController {
                 user.getShowTips(),
                 user.getPlanTier()
         );
-
-        return ResponseEntity.ok(profile);
-    }
-
-    @PutMapping("/me")
-    public ResponseEntity<?> updateProfile(
-            @Valid @RequestBody UpdateUserRequest request,
-            Authentication authentication
-    ) {
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return ResponseEntity.status(401).body("Unauthorized");
-        }
-
-        User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
-        if (request.getLastName() != null) user.setLastName(request.getLastName());
-        if (request.getPhoneNumber() != null) user.setPhoneNumber(request.getPhoneNumber());
-        if (request.getAvatarUrl() != null) user.setAvatarUrl(request.getAvatarUrl());
-        if (request.getEnableAiInsights() != null) user.setEnableAiInsights(request.getEnableAiInsights());
-        if (request.getCompactMode() != null) user.setCompactMode(request.getCompactMode());
-        if (request.getAutoCategorizeTransactions() != null) user.setAutoCategorizeTransactions(request.getAutoCategorizeTransactions());
-        if (request.getShowTips() != null) user.setShowTips(request.getShowTips());
-
-        userRepository.save(user);
-
-        return ResponseEntity.ok().build();
     }
 
     // ── 2FA Management ─────────────────────────────────

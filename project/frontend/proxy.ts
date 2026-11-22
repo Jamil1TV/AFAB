@@ -4,14 +4,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const intlMiddleware = createMiddleware(routing);
 
-export default function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const token = req.cookies.get('accessToken')?.value;
   const { pathname } = req.nextUrl;
 
   // Extract locale from the path if present, otherwise use default
   const segments = pathname.split('/');
   const localeSegment = segments[1];
-  const hasLocale = routing.locales.includes(localeSegment as any);
+  const hasLocale = (routing.locales as readonly string[]).includes(localeSegment);
   const locale = hasLocale ? localeSegment : routing.defaultLocale;
 
   // Define route types
@@ -19,7 +19,7 @@ export default function middleware(req: NextRequest) {
   const isOnboardingRoute = pathname.includes('/onboarding');
   const isSettingsRoute = pathname.includes('/settings');
   const isHomeRoute = pathname === '/' || (hasLocale && pathname === `/${locale}`);
-  
+
   // Protected routes require authentication
   const isProtectedRoute = isDashboardRoute || isOnboardingRoute || isSettingsRoute;
 
@@ -39,7 +39,9 @@ export default function middleware(req: NextRequest) {
   return intlMiddleware(req);
 }
 
+export default proxy;
+
 export const config = {
   // Match all pathnames except internal Next.js paths and static files
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
 };

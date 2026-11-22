@@ -192,4 +192,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.category WHERE t.business.id = :businessId " +
+           "AND t.deletedAt IS NULL " +
+           "ORDER BY t.transactionDate DESC, t.createdAt DESC")
+    List<Transaction> findAllActiveByBusinessIdForExport(@Param("businessId") UUID businessId);
 }

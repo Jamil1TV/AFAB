@@ -476,6 +476,7 @@ export default function CurrenciesPage() {
                   symbol={selectedPair.symbol}
                   baseRate={selectedPair.rate}
                   isArabic={isArabic}
+                  compact
                 />
               )}
 
