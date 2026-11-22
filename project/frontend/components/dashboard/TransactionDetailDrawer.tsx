@@ -110,7 +110,7 @@ export function TransactionDetailDrawer({
             {/* Hero Amount */}
             <div className="mt-2">
               <div
-                className={`text-3xl font-extrabold tracking-tight ${
+                className={`text-3xl font-bold tracking-tight ${
                   isExpense
                     ? "text-rose-600 dark:text-rose-400"
                     : "text-emerald-600 dark:text-emerald-400"
@@ -207,7 +207,7 @@ export function TransactionDetailDrawer({
                   {transaction.splitItems.map((item, idx) => (
                     <div
                       key={item.id || idx}
-                      className="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#101424] flex items-center justify-between text-xs"
+                      className="p-3 rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-[#080c18] flex items-center justify-between text-xs"
                     >
                       <div className="flex items-center gap-2">
                         <span
@@ -260,7 +260,7 @@ export function TransactionDetailDrawer({
           <div className="p-4 border-t border-gray-100 dark:border-gray-800/80 bg-gray-50/50 dark:bg-[#080c18] flex items-center justify-between gap-2">
             <button
               onClick={() => onDuplicate(transaction)}
-              className="flex-1 py-2.5 px-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#101424] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex items-center justify-center gap-1.5"
+              className="flex-1 py-2.5 px-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-colors flex items-center justify-center gap-1.5"
             >
               <Copy className="h-3.5 w-3.5" /> Duplicate
             </button>

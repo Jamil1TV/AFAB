@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { 
   AlertCircle, 
   CheckCircle2, 
@@ -227,42 +228,38 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
   return (
     <div className="space-y-8 pb-10">
       <div className="space-y-8">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-            {t("general.title")}
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {t("general.subtitle")}
-          </p>
-        </div>
+        <PageHeader
+          title={t("general.title")}
+          subtitle={t("general.subtitle")}
+        />
 
         {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg flex items-start gap-3 text-sm animate-in fade-in">
+          <div className="p-4 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-start gap-3 text-sm animate-in fade-in">
             <AlertCircle className="w-5 h-5 shrink-0" />
             <p>{error}</p>
           </div>
         )}
         {success && (
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg flex items-start gap-3 text-sm animate-in fade-in">
+          <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-start gap-3 text-sm animate-in fade-in">
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <p>{t("saved")}</p>
           </div>
         )}
         {migrationSuccessMsg && (
-          <div className="p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 rounded-xl flex items-start gap-3 text-sm animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 shrink-0 text-purple-600 dark:text-purple-400" />
+          <div className="p-4 rounded-xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] flex items-start gap-3 text-sm animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 shrink-0 text-[#7c3aed] dark:text-[#a78bfa]" />
             <p className="font-medium">{migrationSuccessMsg}</p>
           </div>
         )}
 
         {/* Business Settings Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="afab-card overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-800/60 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="afab-card-title">
               {t("general.businessSettings")}
             </h3>
             {isDirty && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse">
+              <span className="afab-badge afab-badge-warning animate-pulse">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 {isArabic ? "تعديلات غير محفوظة" : "Unsaved changes"}
               </span>
@@ -271,17 +268,17 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.businessName")}</Label>
+                <Label className="afab-label">{t("general.businessName")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.businessEmail")}</Label>
+                <Label className="afab-label">{t("general.businessEmail")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   type="email"
                   value={formData.businessEmail}
                   onChange={(e) => setFormData({ ...formData, businessEmail: e.target.value })}
@@ -292,8 +289,8 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
               {/* Currency Dropdown with Real-Time Conversion Modal */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.currency")}</Label>
-                  <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                  <Label className="afab-label mb-0">{t("general.currency")}</Label>
+                  <span className="afab-badge afab-badge-primary">
                     Live FX Engine
                   </span>
                 </div>
@@ -306,12 +303,12 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
                     }
                   }}
                 >
-                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
+                  <SelectTrigger className="afab-input">
                     <SelectValue placeholder="Select Currency">
                       {selectedCurrency ? getLocalizedCurrencyOption(selectedCurrency, locale) : formData.currency}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                  <SelectContent className="afab-popover max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer text-gray-900 dark:text-white">
                     {CURRENCIES.map((curr) => (
                       <SelectItem key={curr.code} value={curr.code}>
                         {getLocalizedCurrencyOption(curr, locale)}
@@ -328,17 +325,17 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
 
               {/* Timezone Dropdown with Scroll */}
               <div className="space-y-2">
-                <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.timezone")}</Label>
+                <Label className="afab-label">{t("general.timezone")}</Label>
                 <Select
                   value={formData.timezone}
                   onValueChange={(val) => setFormData({ ...formData, timezone: val })}
                 >
-                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
+                  <SelectTrigger className="afab-input">
                     <SelectValue placeholder="Select Timezone">
                       {getLocalizedTimezone(formData.timezone, locale) || formData.timezone}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                  <SelectContent className="afab-popover max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer text-gray-900 dark:text-white">
                     {TIMEZONES.map((tz) => (
                       <SelectItem key={tz.value} value={tz.value}>
                         {isArabic ? tz.labelAr : tz.labelEn}
@@ -351,8 +348,8 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
               {/* Fiscal Year Start Dropdown with Rich Working Period Breakdown */}
               <div className="space-y-3 md:col-span-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.fiscalYearStart")}</Label>
-                  <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+                  <Label className="afab-label mb-0">{t("general.fiscalYearStart")}</Label>
+                  <span className="afab-badge afab-badge-primary">
                     {isArabic ? "دورة محاسبية نشطة" : "Active Accounting Cycle"}
                   </span>
                 </div>
@@ -360,14 +357,14 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
                   value={formData.fiscalYearStartMonth}
                   onValueChange={(val) => setFormData({ ...formData, fiscalYearStartMonth: val })}
                 >
-                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white w-full md:w-80">
+                  <SelectTrigger className="afab-input w-full md:w-80">
                     <SelectValue placeholder="Select Month">
                       {selectedMonth
                         ? `${isArabic ? selectedMonth.nameAr : selectedMonth.nameEn} (${isArabic ? `الشهر ${selectedMonth.value}` : `Month ${selectedMonth.value}`})`
                         : formData.fiscalYearStartMonth}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                  <SelectContent className="afab-popover max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer text-gray-900 dark:text-white">
                     {MONTHS.map((m) => (
                       <SelectItem key={m.value} value={m.value.toString()}>
                         {m.value} - {isArabic ? m.nameAr : m.nameEn}
@@ -377,9 +374,9 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
                 </Select>
 
                 {/* Rich Real Working Fiscal Year Breakdown Card */}
-                <div className="p-4 rounded-xl border border-purple-100 dark:border-purple-900/40 bg-purple-50/40 dark:bg-purple-950/20 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-purple-800 dark:text-purple-300">
-                    <Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <div className="afab-inset p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
+                    <Calendar className="w-4 h-4 text-[#8b5cf6] shrink-0" />
                     <span>
                       {isArabic
                         ? `تمتد السنة المالية من 1 ${fiscalYearDetails.startMonthName} إلى ${fiscalYearDetails.endDay} ${fiscalYearDetails.endMonthName}`
@@ -391,9 +388,9 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
                     {fiscalYearDetails.quarters.map((q, idx) => (
                       <div 
                         key={idx} 
-                        className="p-2 rounded-lg bg-white/80 dark:bg-gray-800/80 border border-purple-200/50 dark:border-purple-800/40 text-center"
+                        className="p-2.5 rounded-xl bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 text-center"
                       >
-                        <p className="text-[10px] uppercase font-bold text-purple-600 dark:text-purple-400">
+                        <p className="text-[10px] uppercase font-bold text-[#7c3aed] dark:text-[#a78bfa]">
                           {q.name}
                         </p>
                         <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mt-0.5">
@@ -413,13 +410,13 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
         </div>
 
         {/* Regional Formats Card: Date Format & Number Format Side-by-Side */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-600 flex items-center justify-between">
+        <div className="afab-card overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-800/60 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="bg-[#8b5cf6]/10 p-2 rounded-lg text-[#8b5cf6]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
                 <CalendarDays className="w-5 h-5" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{t("general.regionalFormats")}</h3>
+              <h3 className="afab-card-title">{t("general.regionalFormats")}</h3>
             </div>
             <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
               {isArabic ? "تخصيص العرض المالي والتواريخ" : "Display & Formatting Rules"}
@@ -431,22 +428,22 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
               {/* Date Format Scrollable Select */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.dateFormat")}</Label>
-                  <span className="text-[11px] text-gray-400">
+                  <Label className="afab-label mb-0">{t("general.dateFormat")}</Label>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400">
                     {isArabic ? "معاينة:" : "Preview:"}{" "}
-                    <span className="font-mono font-bold text-[#8b5cf6]">{datePreview}</span>
+                    <span className="font-mono font-bold text-[#7c3aed] dark:text-[#a78bfa]">{datePreview}</span>
                   </span>
                 </div>
                 <Select
                   value={formData.dateFormat}
                   onValueChange={(val) => setFormData({ ...formData, dateFormat: val })}
                 >
-                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
+                  <SelectTrigger className="afab-input">
                     <SelectValue placeholder="Select Date Format">
                       {getLocalizedDateFormat(formData.dateFormat, locale) || formData.dateFormat}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                  <SelectContent className="afab-popover max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer text-gray-900 dark:text-white">
                     {DATE_FORMATS.map((df) => (
                       <SelectItem key={df.value} value={df.value}>
                         {isArabic ? df.labelAr : df.labelEn}
@@ -459,8 +456,8 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
               {/* Number Format Scrollable Select */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-gray-700 dark:text-gray-300 font-semibold">{t("general.numberFormat")}</Label>
-                  <span className="text-[11px] text-gray-400">
+                  <Label className="afab-label mb-0">{t("general.numberFormat")}</Label>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400">
                     {isArabic ? "معاينة:" : "Preview:"}{" "}
                     <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
                       {formatCurrency(1234567.89, formData.currency, formData.numberFormat)}
@@ -471,12 +468,12 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
                   value={formData.numberFormat}
                   onValueChange={(val) => setFormData({ ...formData, numberFormat: val })}
                 >
-                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
+                  <SelectTrigger className="afab-input">
                     <SelectValue placeholder="Select Number Format">
                       {getLocalizedNumberFormat(formData.numberFormat, locale) || formData.numberFormat}
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                  <SelectContent className="afab-popover max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer text-gray-900 dark:text-white">
                     {NUMBER_FORMATS.map((nf) => (
                       <SelectItem key={nf.value} value={nf.value}>
                         {isArabic ? nf.labelAr : nf.labelEn}
@@ -491,28 +488,28 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
         </div>
 
         {/* Action Buttons: Cancel and Save Changes with Real Dirty State */}
-        <div className="flex justify-end gap-3 mt-8 pt-4">
+        <div className="flex flex-wrap justify-end gap-3 mt-8 pt-4">
           <Button 
             type="button"
             variant="outline" 
             onClick={handleCancel}
             disabled={!isDirty || isLoading}
-            className="min-w-[120px] border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="afab-btn-secondary min-w-[120px]"
           >
-            <RotateCcw className="w-4 h-4 ltr:mr-1.5 rtl:ml-1.5 opacity-70" />
+            <RotateCcw className="w-4 h-4 me-1.5 opacity-70" />
             {t("general.cancel")}
           </Button>
           <Button
             type="button"
             onClick={handleSave}
             disabled={!isDirty || isLoading}
-            className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white min-w-[140px] disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md shadow-purple-500/20"
+            className="afab-btn-primary min-w-[140px]"
           >
             {isLoading ? (
               <AfabLoader size="sm" />
             ) : (
               <>
-                <Check className="w-4 h-4 ltr:mr-1.5 rtl:ml-1.5" />
+                <Check className="w-4 h-4 me-1.5" />
                 {t("saveChanges")}
               </>
             )}
@@ -523,33 +520,33 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
       {/* Account & Preferences */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Account Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden relative">
-          <div className="h-24 bg-gradient-to-r from-[#8b5cf6]/20 to-[#8b5cf6]/5"></div>
+        <div className="afab-card overflow-hidden relative">
+          <div className="h-24 bg-gray-50/80 dark:bg-[#080c18] border-b border-gray-100 dark:border-gray-800/60"></div>
           <div className="px-6 pb-6 text-center -mt-12 relative z-10">
-            <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white dark:border-gray-800 shadow-sm bg-white">
+            <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white dark:border-[#0c101c] shadow-sm bg-white dark:bg-[#0c101c]">
               <AvatarImage src={profile?.avatarUrl} />
-              <AvatarFallback className="text-2xl bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold">
+              <AvatarFallback className="text-2xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] font-bold">
                 {getInitials(profile?.firstName, profile?.lastName)}
               </AvatarFallback>
             </Avatar>
-            <h3 className="font-semibold text-gray-900 dark:text-white text-lg">
+            <h3 className="afab-card-title">
               {profile?.firstName} {profile?.lastName}
             </h3>
-            <p className="text-gray-500 text-sm mb-6">{profile?.email}</p>
-            <Button variant="outline" className="w-full border-gray-200 dark:border-gray-600">
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">{profile?.email}</p>
+            <Button variant="outline" className="afab-btn-secondary w-full">
               {t("account.editProfile")}
             </Button>
           </div>
         </div>
 
         {/* Preferences */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-6 text-lg">{t("preferences.title")}</h3>
+        <div className="afab-card p-6">
+          <h3 className="afab-card-title mb-6">{t("preferences.title")}</h3>
           <div className="space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.aiInsights")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("preferences.aiInsightsDesc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("preferences.aiInsightsDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.enableAiInsights} 
@@ -560,7 +557,7 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.compactMode")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("preferences.compactModeDesc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("preferences.compactModeDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.compactMode} 
@@ -571,7 +568,7 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.autoCategorie")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("preferences.autoCategorieDesc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("preferences.autoCategorieDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.autoCategorizeTransactions} 
@@ -582,7 +579,7 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("preferences.showTips")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("preferences.showTipsDesc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("preferences.showTipsDesc")}</p>
               </div>
               <Switch 
                 checked={userPrefs.showTips} 
@@ -593,22 +590,22 @@ export function GeneralSettings({ profile, business }: { profile: any; business:
         </div>
 
         {/* Other Settings */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">{t("otherSettings.title")}</h3>
+        <div className="afab-card p-6">
+          <h3 className="afab-card-title mb-4">{t("otherSettings.title")}</h3>
           <div className="space-y-1">
-            <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors -mx-3">
+            <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-gray-50 dark:hover:bg-white/[0.04] rounded-xl transition-colors -mx-3">
               <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
                 <Download className="w-5 h-5" />
-                <p className="text-sm font-medium group-hover:text-[#8b5cf6] transition-colors">{t("otherSettings.exportData")}</p>
+                <p className="text-sm font-medium group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">{t("otherSettings.exportData")}</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#8b5cf6] transition-colors" />
+              <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors rtl:rotate-180" />
             </div>
-            <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-lg transition-colors -mx-3">
+            <div className="flex items-center justify-between group cursor-pointer p-3 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-colors -mx-3">
               <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
                 <Trash2 className="w-5 h-5" />
                 <p className="text-sm font-medium">{t("otherSettings.deleteAccount")}</p>
               </div>
-              <ChevronRight className="w-4 h-4 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <ChevronRight className="w-4 h-4 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity rtl:rotate-180" />
             </div>
           </div>
         </div>

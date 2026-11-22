@@ -103,8 +103,8 @@ export default function InvoicesPage() {
   const handleExportCSV = () => {
     if (!invoicesData || !invoicesData.content || invoicesData.content.length === 0) return;
     const headers = ["Invoice ID,Customer,Amount,Currency,Issue Date,Status"];
-    const rows = invoicesData.content.map((tx, i) =>
-      `"INV-${1245 - i}","${tx.description.replace(/"/g, '""')}",${tx.amount},"${tx.currency}","${tx.transactionDate}","${tx.status}"`
+    const rows = invoicesData.content.map((tx) =>
+      `"INV-${tx.id.substring(0, 6).toUpperCase()}","${tx.description.replace(/"/g, '""')}",${tx.amount},"${tx.currency}","${tx.transactionDate}","${tx.status}"`
     );
     const csvContent = "data:text/csv;charset=utf-8," + [headers, ...rows].join("\n");
     const encodedUri = encodeURI(csvContent);
@@ -192,48 +192,56 @@ export default function InvoicesPage() {
       </div>
 
       {/* ── 5 KPI Summary Cards ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <KpiCard
-          title={tKpi("totalInvoices")}
-          value={(summary?.totalInvoices || 0).toString()}
-          change={(summary?.totalInvoices || 0) === 0 ? "0.0%" : "+12.5%"}
-          isPositive={true}
-          icon={Receipt}
-          data={totalCountData}
-        />
-        <KpiCard
-          title={tKpi("paidInvoices")}
-          value={(summary?.paidInvoices || 0).toString()}
-          change={(summary?.paidInvoices || 0) === 0 ? "0.0%" : "+20.8%"}
-          isPositive={true}
-          icon={CheckCircle}
-          data={paidData}
-        />
-        <KpiCard
-          title={tKpi("pendingInvoices")}
-          value={(summary?.pendingInvoices || 0).toString()}
-          change={(summary?.pendingInvoices || 0) === 0 ? "0.0%" : "-10.3%"}
-          isPositive={true}
-          icon={Clock}
-          data={pendingData}
-        />
-        <KpiCard
-          title={tKpi("overdueInvoices")}
-          value={(summary?.overdueInvoices || 0).toString()}
-          change={(summary?.overdueInvoices || 0) === 0 ? "0.0%" : "+16.7%"}
-          isPositive={false}
-          icon={AlertTriangle}
-          data={overdueData}
-        />
-        <KpiCard
-          title={tKpi("totalInvoiceAmount")}
-          value={formatCurrency(summary?.totalInvoiceAmount || 0, currency)}
-          change={(summary?.totalInvoiceAmount || 0) === 0 ? "0.0%" : "+18.2%"}
-          isPositive={true}
-          icon={Wallet}
-          data={totalAmountData}
-        />
-      </div>
+      {(() => {
+        const totalCnt = summary?.totalInvoices || 0;
+        const paidPct = totalCnt > 0 ? `${Math.round(((summary?.paidInvoices || 0) / totalCnt) * 100)}%` : "0.0%";
+        const pendPct = totalCnt > 0 ? `${Math.round(((summary?.pendingInvoices || 0) / totalCnt) * 100)}%` : "0.0%";
+        const overPct = totalCnt > 0 ? `${Math.round(((summary?.overdueInvoices || 0) / totalCnt) * 100)}%` : "0.0%";
+        return (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <KpiCard
+              title={tKpi("totalInvoices")}
+              value={totalCnt.toString()}
+              change={`${totalCnt} total`}
+              isPositive={true}
+              icon={Receipt}
+              data={totalCountData}
+            />
+            <KpiCard
+              title={tKpi("paidInvoices")}
+              value={(summary?.paidInvoices || 0).toString()}
+              change={paidPct}
+              isPositive={true}
+              icon={CheckCircle}
+              data={paidData}
+            />
+            <KpiCard
+              title={tKpi("pendingInvoices")}
+              value={(summary?.pendingInvoices || 0).toString()}
+              change={pendPct}
+              isPositive={(summary?.pendingInvoices || 0) === 0}
+              icon={Clock}
+              data={pendingData}
+            />
+            <KpiCard
+              title={tKpi("overdueInvoices")}
+              value={(summary?.overdueInvoices || 0).toString()}
+              change={overPct}
+              isPositive={(summary?.overdueInvoices || 0) === 0}
+              icon={AlertTriangle}
+              data={overdueData}
+            />
+            <KpiCard
+              title={tKpi("totalInvoiceAmount")}
+              value={formatCurrency(summary?.totalInvoiceAmount || 0, currency)}
+              change={paidPct}
+              isPositive={true}
+              icon={Wallet}
+              data={totalAmountData}
+            />
+          </div>
+        );
+      })()}
 
       {/* ── Main Layout Grid: Table (9 cols) & Side Stack (3 cols) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -303,10 +311,20 @@ export default function InvoicesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800/40 text-gray-700 dark:text-gray-300 font-medium">
-                    {invoicesData.content.map((tx, idx) => {
+                    {invoicesData.content
+                      .filter((tx) => {
+                        if (!statusFilter) return true;
+                        const isPaid = tx.status === "COMPLETED" || tx.status === "PAID";
+                        const isPending = tx.status === "PENDING";
+                        if (statusFilter === "PAID") return isPaid;
+                        if (statusFilter === "PENDING") return isPending;
+                        if (statusFilter === "OVERDUE") return !isPaid && !isPending;
+                        return true;
+                      })
+                      .map((tx) => {
                       const isPaid = tx.status === "COMPLETED" || tx.status === "PAID";
                       const isPending = tx.status === "PENDING";
-                      const invoiceNum = `INV-${1245 - idx}`;
+                      const invoiceNum = `INV-${tx.id.substring(0, 6).toUpperCase()}`;
                       const balance = isPaid ? 0 : tx.amount;
 
                       return (
@@ -325,7 +343,9 @@ export default function InvoicesPage() {
                                 <p className="text-xs font-semibold text-gray-900 dark:text-white group-hover:text-[#8b5cf6] transition-colors">
                                   {tx.description}
                                 </p>
-                                <p className="text-[10px] text-gray-400">client@business.com</p>
+                                <p className="text-[10px] text-gray-400">
+                                  {tx.categoryName || tx.paymentMethod?.replace(/_/g, " ") || `Ref #${tx.id.substring(0, 8)}`}
+                                </p>
                               </div>
                             </div>
                           </td>
@@ -440,7 +460,7 @@ export default function InvoicesPage() {
 
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-xs text-gray-400">Total</span>
-                <span className="text-base font-extrabold text-gray-900 dark:text-white font-mono">
+                <span className="text-base font-bold text-gray-900 dark:text-white font-mono">
                   {formatCurrency(summary?.totalInvoiceAmount || 0, currency)}
                 </span>
               </div>
@@ -536,29 +556,29 @@ export default function InvoicesPage() {
                   <p className="text-xs text-gray-400">Ref: #{selectedTx.id}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedTx(null)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setSelectedTx(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="mt-5 space-y-4 text-xs">
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Invoice Amount</span>
-                <span className="text-base font-bold text-emerald-400 font-mono">
+                <span className="text-gray-500 dark:text-gray-400">Invoice Amount</span>
+                <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">
                   {formatCurrency(selectedTx.amount, selectedTx.currency || currency)}
                 </span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Customer</span>
-                <span className="font-semibold text-white">{selectedTx.description}</span>
+                <span className="text-gray-500 dark:text-gray-400">Customer</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{selectedTx.description}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Issue Date</span>
-                <span className="font-semibold text-white">{selectedTx.transactionDate}</span>
+                <span className="text-gray-500 dark:text-gray-400">Issue Date</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{selectedTx.transactionDate}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Payment Status</span>
-                <span className="font-semibold text-emerald-400">{selectedTx.status}</span>
+                <span className="text-gray-500 dark:text-gray-400">Payment Status</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">{selectedTx.status}</span>
               </div>
             </div>
 

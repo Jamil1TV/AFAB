@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { CurrencyPair } from "@/lib/api/currencies";
 
 interface FeaturedPairCardProps {
@@ -60,34 +60,34 @@ export function FeaturedPairCard({
     return Math.min(Math.max(pos, 5), 95);
   }, [pair.rate, pair.high24h, pair.low24h]);
 
-  const strokeColor = isPositive ? "#10B981" : "#F43F5E";
+  const strokeColor = isPositive ? "#10b981" : "#ef4444";
   const gradientId = `spark_${pair.symbol.replace("/", "_")}_${isPositive ? "up" : "down"}`;
 
   return (
     <div
       onClick={() => onSelect && onSelect(pair)}
-      className={`group cursor-pointer rounded-2xl border p-5 transition-all duration-200 relative overflow-hidden ${
+      className={`afab-card afab-card-hover group cursor-pointer p-5 relative overflow-hidden ${
         isSelected
-          ? "border-purple-500 bg-purple-50/30 dark:border-purple-500 dark:bg-purple-950/20 shadow-md ring-2 ring-purple-500/20"
-          : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-700 shadow-xs hover:shadow-md"
+          ? "border-[#8b5cf6] dark:border-[#8b5cf6] ring-2 ring-[#8b5cf6]/20"
+          : ""
       }`}
     >
       {/* Top Header: Pair symbol & 24h change badge */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="font-black text-base text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+          <span className="font-bold text-base text-gray-900 dark:text-white group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
             {pair.symbol}
           </span>
-          <span className="text-[10px] font-semibold text-gray-400 uppercase">
+          <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase">
             FX
           </span>
         </div>
 
         <div
-          className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${
+          className={`afab-badge ${
             isPositive
-              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-              : "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"
+              ? "afab-badge-success"
+              : "afab-badge-danger"
           }`}
         >
           {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -98,7 +98,7 @@ export function FeaturedPairCard({
       {/* Middle: Spot Rate & Mini Sparkline */}
       <div className="flex items-baseline justify-between gap-3 my-2">
         <div>
-          <span className="text-2xl font-black text-gray-900 dark:text-white tracking-tight font-mono">
+          <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white tracking-tight font-mono">
             {pair.rate.toFixed(4)}
           </span>
           <span className="text-[10px] text-gray-400 dark:text-gray-500 block font-medium">
@@ -129,26 +129,26 @@ export function FeaturedPairCard({
       </div>
 
       {/* 24h Low / High Range Bar */}
-      <div className="pt-3 border-t border-gray-100 dark:border-gray-800/80 mt-2 space-y-1">
-        <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono">
+      <div className="pt-3 border-t border-gray-100 dark:border-gray-800/60 mt-2 space-y-1">
+        <div className="flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500 font-mono">
           <span>L: {pair.low24h.toFixed(4)}</span>
           <span>H: {pair.high24h.toFixed(4)}</span>
         </div>
-        <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full relative overflow-hidden">
+        <div className="h-1.5 w-full bg-gray-100 dark:bg-white/[0.06] rounded-full relative overflow-hidden">
           <div
             style={{ width: `${rangePercent}%` }}
             className={`h-full rounded-full transition-all duration-300 ${
-              isPositive ? "bg-emerald-500" : "bg-rose-500"
+              isPositive ? "bg-emerald-500" : "bg-red-500"
             }`}
           />
         </div>
 
         {/* Quick action footer */}
         <div className="flex items-center justify-between pt-2">
-          <span className="text-[11px] font-bold text-purple-600 dark:text-purple-400 group-hover:underline">
+          <span className="text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] group-hover:underline">
             {isArabic ? "تحليل الرسم البياني ←" : "Analyze Chart →"}
           </span>
-          <span className="text-[10px] text-gray-400 font-medium">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
             Spot FX
           </span>
         </div>

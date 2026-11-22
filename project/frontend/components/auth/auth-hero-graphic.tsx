@@ -99,14 +99,14 @@ export function AuthHeroGraphic() {
 
           {/* ── Profit Dark Card (Bottom Left) ── */}
           <div className={`absolute top-[45%] ${isArabic ? 'right-[5%]' : 'left-[5%]'}`} style={{ transform: 'translateZ(100px)' }}>
-            <div className="w-[240px] h-[140px] rounded-[24px] bg-[#161B2B] border border-[#2A3042] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] p-5 animate-float-slow overflow-hidden">
+            <div className="w-[240px] h-[140px] rounded-2xl bg-[#0c101c] border border-gray-800/60 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)] p-5 animate-float-slow overflow-hidden">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-gray-400 text-[13px] font-medium">{isArabic ? 'الأرباح' : 'Profit'}</p>
                   <h3 className="text-white text-[24px] font-bold mt-0.5">{isArabic ? '8,420 ر.ق' : '$8,420'}</h3>
-                  <p className="text-[#22c55e] text-[11px] font-semibold mt-1">+ 8.2%</p>
+                  <p className="text-emerald-400 text-[11px] font-semibold mt-1">+ 8.2%</p>
                 </div>
-                <div className="bg-[#1F2537] w-7 h-7 rounded-full flex items-center justify-center">
+                <div className="bg-[#080c18] border border-gray-800 w-7 h-7 rounded-full flex items-center justify-center">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                   </svg>
@@ -114,12 +114,12 @@ export function AuthHeroGraphic() {
               </div>
               
               <div className="absolute bottom-0 left-5 right-5 flex items-end gap-1.5 h-10">
-                <div className="w-1/6 bg-[#22c55e]/30 rounded-t-sm h-[40%]" />
-                <div className="w-1/6 bg-[#22c55e]/50 rounded-t-sm h-[60%]" />
-                <div className="w-1/6 bg-[#22c55e]/70 rounded-t-sm h-[50%]" />
-                <div className="w-1/6 bg-[#22c55e]/90 rounded-t-sm h-[80%]" />
-                <div className="w-1/6 bg-[#22c55e] rounded-t-sm h-[100%]" />
-                <div className="w-1/6 bg-[#22c55e] rounded-t-sm h-[90%]" />
+                <div className="w-1/6 bg-emerald-500/30 rounded-t-sm h-[40%]" />
+                <div className="w-1/6 bg-emerald-500/50 rounded-t-sm h-[60%]" />
+                <div className="w-1/6 bg-emerald-500/70 rounded-t-sm h-[50%]" />
+                <div className="w-1/6 bg-emerald-500/90 rounded-t-sm h-[80%]" />
+                <div className="w-1/6 bg-emerald-500 rounded-t-sm h-[100%]" />
+                <div className="w-1/6 bg-emerald-500 rounded-t-sm h-[90%]" />
               </div>
             </div>
           </div>

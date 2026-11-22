@@ -1,7 +1,8 @@
 /**
  * AFAB Design Tokens
  * ────────────────────────────────────────────────────
- * Extracted from Stitch "AFAB Project UI" design system.
+ * Source of truth: the approved reference pages (Dashboard, Transactions,
+ * Expenses, Revenue, Invoices). Mirrors the CSS variables in globals.css.
  * Use these constants in TypeScript code (charts, animations, etc.)
  * For CSS-level theming, see globals.css CSS custom properties.
  * ────────────────────────────────────────────────────
@@ -101,57 +102,84 @@ export const breakpoints = {
 export const lightPalette = {
   background: "#f8f9fb",
   surface: "#ffffff",
-  primary: "#7c3aed",
-  primaryContainer: "#7c3aed",
+  surfaceInset: "#f9fafb",
+  primary: "#8b5cf6",
+  primaryHover: "#7c3aed",
   onPrimary: "#ffffff",
-  secondary: "#f3f0ff",
-  secondaryContainer: "#f3f0ff",
+  secondary: "#f5f3ff",
   onSecondary: "#7c3aed",
-  muted: "#f1f3f9",
-  mutedForeground: "#64748b",
-  accent: "#f3f0ff",
+  muted: "#f3f4f6",
+  mutedForeground: "#6b7280",
+  accent: "#f5f3ff",
   accentForeground: "#7c3aed",
   error: "#ef4444",
-  onBackground: "#1a1a2e",
-  onSurface: "#1a1a2e",
+  onBackground: "#111827",
+  onSurface: "#111827",
   outline: "#e5e7eb",
   success: "#10b981",
   warning: "#f59e0b",
-  info: "#3b82f6",
+  info: "#0ea5e9",
 } as const;
 
 /* ── Dark Theme Palette ── */
 export const darkPalette = {
-  background: "#0a0e1a",
-  surface: "#131825",
+  background: "#060813",
+  surface: "#0c101c",
+  surfaceInset: "#080c18",
   primary: "#8b5cf6",
-  primaryContainer: "#0a2540",
+  primaryHover: "#7c3aed",
   onPrimary: "#ffffff",
-  secondary: "#1e1b4b",
-  secondaryContainer: "#1e1b4b",
+  secondary: "#191832",
   onSecondary: "#c4b5fd",
-  muted: "#1a1f2e",
-  mutedForeground: "#94a3b8",
-  accent: "#1e1b4b",
+  muted: "#141826",
+  mutedForeground: "#9ca3af",
+  accent: "#191832",
   accentForeground: "#c4b5fd",
   error: "#ef4444",
-  onBackground: "#e2e8f0",
-  onSurface: "#e2e8f0",
-  outline: "#1e293b",
+  onBackground: "#f9fafb",
+  onSurface: "#f9fafb",
+  outline: "#171f2c",
   success: "#34d399",
   warning: "#fbbf24",
-  info: "#60a5fa",
+  info: "#38bdf8",
 } as const;
 
-/* ── Chart Color Palettes (for recharts / chart.js) ── */
+/* ── Chart Color Palettes (recharts) ──
+   Series order follows the reference charts: revenue purple, expenses sky,
+   then emerald / amber / pink / indigo for categorical breakdowns. */
 export const chartColors = {
-  light: ["#7c3aed", "#10b981", "#f59e0b", "#3b82f6", "#ec4899"],
-  dark: ["#8b5cf6", "#34d399", "#fbbf24", "#60a5fa", "#f472b6"],
+  light: ["#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#6366f1"],
+  dark: ["#8b5cf6", "#38bdf8", "#34d399", "#fbbf24", "#f472b6", "#818cf8"],
+} as const;
+
+/** Single categorical palette that reads well on both themes. */
+export const CHART_PALETTE = ["#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#6366f1"] as const;
+
+export const chartSemantic = {
+  revenue: "#8b5cf6",
+  expenses: "#0ea5e9",
+  positive: "#10b981",
+  negative: "#ef4444",
+  neutral: "#64748b",
+} as const;
+
+/** Tooltip style shared by every recharts chart (same as Dashboard RevenueChart). */
+export const chartTooltipStyle = {
+  contentStyle: {
+    backgroundColor: "rgba(12, 16, 28, 0.9)",
+    borderColor: "rgba(139, 92, 246, 0.2)",
+    borderRadius: "12px",
+    color: "#fff",
+    fontSize: "12px",
+    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+  },
+  itemStyle: { color: "#e5e7eb" },
+  labelStyle: { color: "#9ca3af" },
 } as const;
 
 /* ── Elevation Shadows ── */
 export const shadows = {
-  level1: "none", // uses 1px border instead
+  level1: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", // shadow-sm on cards
   level2: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
   hover: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 10px -5px rgba(0, 0, 0, 0.04)",
 } as const;

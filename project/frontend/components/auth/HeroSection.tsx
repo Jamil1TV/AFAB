@@ -38,13 +38,21 @@ export function HeroSection() {
          ═══════════════════════════════════════════════════ */}
       <div className="relative z-20 flex items-center justify-between px-8 pt-6 pb-2 xl:px-10">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-[10px] bg-white shadow-sm transition-transform duration-200 group-hover:scale-105">
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm transition-transform duration-200 group-hover:scale-105">
             <Image
-              src="/assets/logo.png"
+              src="/assets/afablogo.png"
               alt="AFAB Logo"
-              fill
-              sizes="40px"
-              className="object-cover scale-[1.15]"
+              width={32}
+              height={32}
+              className="object-contain dark:hidden"
+              priority
+            />
+            <Image
+              src="/assets/afablogo_dark.png"
+              alt="AFAB Logo Dark"
+              width={32}
+              height={32}
+              className="object-contain hidden dark:block"
               priority
             />
           </div>
@@ -57,7 +65,7 @@ export function HeroSection() {
           <ThemeToggle />
           <button
             onClick={toggleLanguage}
-            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-white/[0.06] px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/[0.1]"
+            className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/[0.05]"
           >
             <Globe className="h-4 w-4" />
             {tLang("switchTo")}
@@ -74,7 +82,7 @@ export function HeroSection() {
           {/* ── LEFT: Text content ── */}
           <div className="flex flex-col shrink-0 w-[46%] xl:w-[42%]">
             {/* Badge */}
-            <div className="mb-8 inline-flex self-start items-center gap-2 rounded-full border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-white/[0.04] px-4 py-2 text-[13px] font-medium text-gray-600 dark:text-gray-300 shadow-sm dark:shadow-none">
+            <div className="mb-8 inline-flex self-start items-center gap-2 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] px-4 py-2 text-[13px] font-medium text-gray-600 dark:text-gray-300 shadow-sm dark:shadow-none">
               <span className="text-gray-400 dark:text-gray-500">•</span>
               <span>{t("badge")}</span>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#8b5cf6]">
@@ -83,7 +91,7 @@ export function HeroSection() {
             </div>
 
             {/* Title */}
-            <h2 className="text-[2.25rem] xl:text-[2.75rem] font-extrabold tracking-tight text-gray-900 dark:text-white leading-[1.08]">
+            <h2 className="text-[2.25rem] xl:text-[2.75rem] font-bold tracking-tight text-gray-900 dark:text-white leading-[1.08]">
               {t("title_line1")}
               <br />
               <span className="text-[#7c3aed] dark:text-[#8b5cf6] italic">
@@ -146,7 +154,7 @@ export function HeroSection() {
 
               {/* ── Floating Element 1: Bar Chart (Top-Left) ── */}
               <div
-                className="absolute z-20 flex -left-6 xl:-left-8 top-[10%] h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-white dark:bg-[#12162b] border border-gray-100 dark:border-[#2a2050]/50 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_rgba(124,58,237,0.18),0_8px_25px_rgba(0,0,0,0.3)]"
+                className="absolute z-20 flex -left-6 xl:-left-8 top-[10%] h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_rgba(124,58,237,0.18),0_8px_25px_rgba(0,0,0,0.3)]"
                 style={{ transform: "perspective(800px) rotateY(-8deg) translateZ(40px)" }}
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-[#7c3aed] dark:text-[#a78bfa]">
@@ -158,7 +166,7 @@ export function HeroSection() {
 
               {/* ── Floating Element 2: Settings/Gear (Middle-Left) ── */}
               <div
-                className="absolute z-20 flex left-4 xl:left-2 top-[44%] -translate-y-1/2 h-[62px] w-[62px] items-center justify-center rounded-[16px] bg-white dark:bg-[#12162b] border border-gray-100 dark:border-[#2a2050]/50 shadow-[0_12px_35px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(124,58,237,0.2),0_12px_35px_rgba(0,0,0,0.4)]"
+                className="absolute z-20 flex left-4 xl:left-2 top-[44%] -translate-y-1/2 h-[62px] w-[62px] items-center justify-center rounded-[16px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_12px_35px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(124,58,237,0.2),0_12px_35px_rgba(0,0,0,0.4)]"
                 style={{ transform: "perspective(800px) rotateY(-12deg) translateZ(80px)" }}
               >
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#7c3aed] dark:text-[#a78bfa]">
@@ -169,7 +177,7 @@ export function HeroSection() {
 
               {/* ── Floating Element 3: 4-Point Star (Bottom-Left) ── */}
               <div
-                className="absolute z-20 flex -left-1 xl:-left-3 bottom-[14%] h-[48px] w-[48px] items-center justify-center rounded-[12px] bg-white dark:bg-[#12162b] border border-gray-100 dark:border-[#2a2050]/50 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_rgba(124,58,237,0.18),0_8px_25px_rgba(0,0,0,0.3)]"
+                className="absolute z-20 flex -left-1 xl:-left-3 bottom-[14%] h-[48px] w-[48px] items-center justify-center rounded-[12px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_rgba(124,58,237,0.18),0_8px_25px_rgba(0,0,0,0.3)]"
                 style={{ transform: "perspective(800px) rotateY(-5deg) translateZ(60px)" }}
               >
                 <svg width="18" height="18" viewBox="0 0 16 16" fill="none" className="text-[#7c3aed] dark:text-[#a78bfa]">

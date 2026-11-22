@@ -175,12 +175,18 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         } rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group select-none border border-transparent hover:border-purple-200 dark:hover:border-purple-500/20`}
       >
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2.5"} overflow-hidden min-w-0`}>
-          {/* Logo / Business Icon */}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#6c4cf5] to-[#8b5cf6] text-white shadow-md shadow-purple-500/25 group-hover:scale-105 transition-transform">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="currentColor">
-              <path d="M12 2L2 12L12 22L22 12L12 2Z" fill="currentColor" opacity="0.3" />
-              <path d="M12 7L7 12L12 17L17 12L12 7Z" fill="currentColor" />
-            </svg>
+          {/* Official AFAB Logo (Light & Dark variants) */}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+            <img
+              src="/assets/afablogo.png"
+              alt="AFAB Logo"
+              className="h-7 w-7 object-contain dark:hidden"
+            />
+            <img
+              src="/assets/afablogo_dark.png"
+              alt="AFAB Logo Dark"
+              className="h-7 w-7 object-contain hidden dark:block"
+            />
           </div>
 
           {!collapsed && (
@@ -211,7 +217,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         <div
           className={`absolute z-50 top-full mt-2 ${
             collapsed ? "start-full ms-2 -top-1 w-64" : "start-0 end-0 w-full"
-          } rounded-2xl bg-white dark:bg-[#0e1326] border border-gray-200 dark:border-[#232b45] p-2 shadow-2xl shadow-purple-900/10 dark:shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150`}
+          } rounded-2xl bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 p-2 shadow-2xl shadow-purple-900/10 dark:shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150`}
         >
           {/* Header & Plan Limit Status */}
           <div className="px-2.5 py-1.5 border-b border-gray-100 dark:border-gray-800/80 flex items-center justify-between gap-2">
@@ -336,13 +342,13 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
 
       {/* ── Free Plan Limit / Upgrade Dialog ── */}
       <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
-        <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c1024] border border-gray-200 dark:border-purple-500/30 shadow-2xl rounded-2xl">
+        <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl">
           <DialogHeader className="text-start space-y-3">
             <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
               <Crown className="w-6 h-6" />
             </div>
             <div>
-              <DialogTitle className="text-xl font-black text-gray-900 dark:text-white">
+              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
                 {isArabic ? "حد الباقة الحالية للأعمال" : "Workspace Plan Limit Reached"}
               </DialogTitle>
               <DialogDescription className="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -401,9 +407,9 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
 
       {/* ── Create New Business Modal (For Pro Plan / Upgraded Users) ── */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c1024] border border-gray-200 dark:border-purple-500/30 shadow-2xl rounded-2xl">
+        <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl">
           <DialogHeader className="text-start space-y-2">
-            <div className="h-10 w-10 rounded-xl bg-purple-600/10 text-purple-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-[#8b5cf6]/10 text-[#8b5cf6] flex items-center justify-center">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -420,7 +426,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
 
           <form onSubmit={handleCreateBusiness} className="space-y-4 my-2">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                 {isArabic ? "اسم الشركة" : "Business Name"}
               </Label>
               <Input
@@ -428,18 +434,18 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 value={newBusinessName}
                 onChange={(e) => setNewBusinessName(e.target.value)}
                 placeholder="e.g. Acme Global Ltd."
-                className="border-gray-200 dark:border-gray-700 dark:bg-gray-900/60"
+                className="rounded-xl border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18]"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold text-gray-700 dark:text-gray-300">
+              <Label className="text-xs font-medium text-gray-700 dark:text-gray-300">
                 {isArabic ? "العملة الأساسية" : "Base Currency"}
               </Label>
               <select
                 value={newBusinessCurrency}
                 onChange={(e) => setNewBusinessCurrency(e.target.value)}
-                className="w-full rounded-md border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 px-3 py-2 text-xs font-semibold text-gray-900 dark:text-white outline-none focus:border-purple-500"
+                className="afab-select w-full py-2.5 text-sm"
               >
                 <option value="USD">USD ($) — US Dollar</option>
                 <option value="EUR">EUR (€) — Euro</option>
@@ -456,13 +462,13 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 type="button"
                 variant="outline"
                 onClick={() => setIsCreateModalOpen(false)}
-                className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300"
+                className="rounded-xl border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300"
               >
                 {isArabic ? "إلغاء" : "Cancel"}
               </Button>
               <Button
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold"
+                className="rounded-xl bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-bold shadow-lg shadow-[#8b5cf6]/25"
               >
                 {isArabic ? "إنشاء الشركة" : "Create Business"}
               </Button>

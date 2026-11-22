@@ -1,11 +1,12 @@
 import { useTranslations } from "next-intl";
 import { Fragment } from "react";
+import { Briefcase, Upload, Globe, Activity } from "lucide-react";
 
 const stepKeys = [
-  { title: "step1Title", desc: "step1Desc" },
-  { title: "step2Title", desc: "step2Desc" },
-  { title: "step3Title", desc: "step3Desc" },
-  { title: "step4Title", desc: "step4Desc" },
+  { title: "step1Title", desc: "step1Desc", Icon: Briefcase },
+  { title: "step2Title", desc: "step2Desc", Icon: Upload },
+  { title: "step3Title", desc: "step3Desc", Icon: Globe },
+  { title: "step4Title", desc: "step4Desc", Icon: Activity },
 ];
 
 export function HowItWorksSection() {
@@ -31,7 +32,7 @@ export function HowItWorksSection() {
             <Fragment key={step.title}>
 
               {/* ── Card ── */}
-              <div className="relative flex flex-col h-full rounded-[20px] border border-gray-200/80 dark:border-gray-700/50 bg-white dark:bg-[#0d1225] p-7 sm:p-8 transition-all hover:shadow-xl dark:hover:shadow-[0_0_40px_rgba(139,92,246,0.06)]">
+              <div className="relative flex flex-col h-full rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-7 sm:p-8 shadow-sm transition-all hover:shadow-xl dark:hover:shadow-[#8b5cf6]/5">
 
                 {/* Step Number Badge */}
                 <div className="mb-10">
@@ -44,33 +45,7 @@ export function HowItWorksSection() {
                 <div className="mt-auto">
                   {/* Icon */}
                   <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#8b5cf6]/10 dark:bg-[#8b5cf6]/15 text-[#8b5cf6]">
-                    {i === 0 && (
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" />
-                        <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
-                        <line x1="12" y1="12" x2="12" y2="16" />
-                        <line x1="10" y1="14" x2="14" y2="14" />
-                      </svg>
-                    )}
-                    {i === 1 && (
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                      </svg>
-                    )}
-                    {i === 2 && (
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                        <line x1="2" y1="12" x2="22" y2="12" />
-                      </svg>
-                    )}
-                    {i === 3 && (
-                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                      </svg>
-                    )}
+                    <step.Icon className="h-5 w-5" />
                   </div>
 
                   {/* Title */}

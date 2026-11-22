@@ -8,7 +8,7 @@ export default function NotFound() {
   const isArabic = locale === 'ar';
 
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F8F9FB] dark:bg-[#0a0e1a] font-sans overflow-hidden">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-[#f8f9fb] dark:bg-[#060813] px-4 py-8 font-sans overflow-hidden relative">
       
       {/* ── Background Floating Numbers ── */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -79,7 +79,7 @@ export default function NotFound() {
               </div>
               
               {/* Saucer Disc */}
-              <div className="relative z-10 w-[200px] h-[35px] -mt-[10px] bg-gradient-to-b from-[#ffffff] to-[#e2e8f0] dark:from-gray-300 dark:to-gray-500 rounded-full border-[1.5px] border-white dark:border-gray-200 shadow-[0_10px_20px_rgba(139,92,246,0.2)] flex items-center justify-center gap-6">
+              <div className="relative z-10 w-[200px] h-[35px] -mt-[10px] bg-gradient-to-b from-[#ffffff] to-gray-200 dark:from-gray-300 dark:to-gray-500 rounded-full border-[1.5px] border-white dark:border-gray-200 shadow-[0_10px_20px_rgba(139,92,246,0.2)] flex items-center justify-center gap-6">
                  {/* Saucer Base Detail */}
                  <div className="absolute inset-0 rounded-full shadow-[inset_0_-4px_10px_rgba(0,0,0,0.1)]" />
                  {/* Glowing Lights */}
@@ -101,7 +101,7 @@ export default function NotFound() {
 
           {/* Floating 404 inside beam - separate animation so it floats independently! */}
           <div className="absolute top-[130px] z-10 animate-float-delayed" style={{ animationDuration: '5s' }}>
-            <div className="px-8 py-3 border-[2.5px] border-dashed border-[#c084fc] dark:border-[#8b5cf6] rounded-2xl bg-white/60 dark:bg-[#131825]/60 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.2)] flex items-center justify-center">
+            <div className="px-8 py-3 border-[2.5px] border-dashed border-[#c084fc] dark:border-[#8b5cf6] rounded-2xl bg-white/70 dark:bg-[#0c101c]/70 backdrop-blur-md shadow-[0_0_20px_rgba(139,92,246,0.2)] flex items-center justify-center">
               <span className="text-[40px] font-black text-[#8b5cf6] dark:text-[#d8b4fe] tracking-widest leading-none drop-shadow-sm animate-pulse" style={{ animationDuration: '2s' }}>404</span>
             </div>
           </div>
@@ -110,14 +110,14 @@ export default function NotFound() {
       </div>
 
       {/* ── Content Area ── */}
-      <div className="text-center z-10 relative mt-[20px]">
-        <h1 className="text-display-lg text-[#111827] dark:text-white">
+      <div className="text-center z-10 relative mt-[20px] w-full max-w-md">
+        <h1 className="text-display-lg text-gray-900 dark:text-white">
           404
         </h1>
-        <h2 className="mt-2 text-headline-md text-[#1f2937] dark:text-gray-100">
+        <h2 className="mt-2 text-headline-md text-gray-800 dark:text-gray-100">
           {isArabic ? "الصفحة غير موجودة" : "Page Not Found"}
         </h2>
-        <p className="mt-3 text-body-md text-[#6b7280] dark:text-gray-400 max-w-md mx-auto leading-relaxed">
+        <p className="mt-3 text-body-md text-gray-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
           {isArabic ? (
             <>عذراً، الصفحة التي تبحث عنها غير موجودة<br/>أو تم نقلها.</>
           ) : (
@@ -128,14 +128,14 @@ export default function NotFound() {
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href={`/${locale}`}
-            className="flex items-center gap-2 rounded-xl bg-gradient-purple px-6 py-3.5 text-label-md text-white transition-all hover:opacity-90 active:scale-[0.98] shadow-lg shadow-purple-900/20 w-full sm:w-auto justify-center"
+            className="afab-btn-primary px-6 py-3 text-sm w-full sm:w-auto"
           >
             <Home className="w-4 h-4" strokeWidth={2.5} />
             {isArabic ? "العودة للرئيسية" : "Go Back Home"}
           </Link>
           <Link
             href={`/${locale}/dashboard`}
-            className="flex items-center gap-2 rounded-xl border border-border bg-card px-6 py-3.5 text-label-md text-foreground transition-all hover:bg-muted active:scale-[0.98] shadow-sm w-full sm:w-auto justify-center"
+            className="afab-btn-secondary px-6 py-3 text-sm w-full sm:w-auto"
           >
             <LayoutGrid className="w-4 h-4" strokeWidth={2.5} />
             {isArabic ? "الذهاب للوحة القيادة" : "Go to Dashboard"}
@@ -143,9 +143,9 @@ export default function NotFound() {
         </div>
         
         <div className="mt-12">
-          <Link href={`/${locale}/support`} className="text-label-md text-muted-foreground hover:text-foreground flex items-center justify-center gap-1.5 transition-colors">
-            {isArabic ? "تحتاج مساعدة؟" : "Need help?"} <span className="text-primary font-[#8b5cf6] font-semibold">{isArabic ? "اتصل بالدعم" : "Contact Support"}</span> 
-            <ArrowRight className={`w-4 h-4 text-primary transition-transform ${isArabic ? 'rotate-180' : ''}`} />
+          <Link href={`/${locale}/support`} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1.5 transition-colors">
+            {isArabic ? "تحتاج مساعدة؟" : "Need help?"} <span className="text-[#7c3aed] dark:text-[#a78bfa] font-semibold">{isArabic ? "اتصل بالدعم" : "Contact Support"}</span> 
+            <ArrowRight className={`w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa] transition-transform ${isArabic ? 'rotate-180' : ''}`} />
           </Link>
         </div>
       </div>

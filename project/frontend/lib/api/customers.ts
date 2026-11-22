@@ -1,5 +1,6 @@
 import { fetchClient, ApiError } from "./client";
 import { AuthStore } from "@/lib/auth-store";
+import { TransactionService } from "./transactions";
 
 export type CustomerGroup = "Standard" | "Business" | "Premium" | "Enterprise";
 export type CustomerStatus = "Active" | "Inactive" | "New" | "Lead";
@@ -7,14 +8,14 @@ export type OrderStatus = "COMPLETED" | "PENDING" | "PROCESSING" | "CANCELLED";
 
 export interface CustomerOrder {
   id: string;
-  orderNumber: string; // e.g. "ORD-2024-001"
+  orderNumber: string; // e.g. "ORD-2026-001"
   customerId: string;
   amount: number;
   status: OrderStatus;
   orderDate: string; // YYYY-MM-DD
   description: string;
   paymentMethod?: string; // "BANK_TRANSFER" | "CREDIT_CARD" | "CASH" | "STRIPE"
-  invoiceNumber?: string; // e.g. "INV-2024-089"
+  invoiceNumber?: string; // e.g. "INV-2026-001"
   createdAt: string;
 }
 
@@ -132,16 +133,14 @@ export interface CreateOrderRequest {
   invoiceNumber?: string;
 }
 
-// Color palette generator for consistent avatars matching the Stitch design
 const AVATAR_COLORS = [
-  "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  "bg-pink-500/20 text-pink-400 border-pink-500/30",
-  "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
-  "bg-teal-500/20 text-teal-400 border-teal-500/30",
-  "bg-amber-500/20 text-amber-400 border-amber-500/30",
+  "bg-purple-500/15 text-[#7c3aed] dark:text-[#a78bfa] border-purple-500/25",
+  "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/25",
+  "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/25",
+  "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
+  "bg-pink-500/15 text-pink-600 dark:text-pink-400 border-pink-500/25",
+  "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/25",
+  "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/25",
 ];
 
 function getAvatarColor(name: string): string {
@@ -153,260 +152,43 @@ function getAvatarColor(name: string): string {
   return AVATAR_COLORS[index];
 }
 
-// Initial realistic seed dataset matching the Stitch high-fidelity mockup
-function getInitialSeedData(businessId: string): Customer[] {
-  return [
-    {
-      id: "cust-1",
-      customerCode: "CST-1001",
-      businessId,
-      name: "AFAB Pro Plan",
-      email: "info@afab.com",
-      phone: "+1 (555) 123-4567",
-      group: "Premium",
-      status: "Active",
-      totalRevenue: 12450.00,
-      ordersCount: 24,
-      lastActivityDate: "2024-05-18",
-      address: "San Francisco, CA, USA",
-      notes: "Annual corporate subscription with 10 team seats.",
-      createdAt: "2023-11-12",
-      avatarColor: AVATAR_COLORS[0],
-      orders: [
-        {
-          id: "ord-101",
-          orderNumber: "ORD-2024-001",
-          customerId: "cust-1",
-          amount: 4500.00,
-          status: "COMPLETED",
-          orderDate: "2024-05-18",
-          description: "Enterprise Subscription Renewal (Q2)",
-          paymentMethod: "BANK_TRANSFER",
-          invoiceNumber: "INV-2024-089",
-          createdAt: "2024-05-18T10:00:00Z"
-        },
-        {
-          id: "ord-102",
-          orderNumber: "ORD-2024-002",
-          customerId: "cust-1",
-          amount: 2950.00,
-          status: "COMPLETED",
-          orderDate: "2024-04-12",
-          description: "Priority AI Analytics Quota Expansion",
-          paymentMethod: "STRIPE",
-          invoiceNumber: "INV-2024-064",
-          createdAt: "2024-04-12T14:30:00Z"
-        }
-      ]
-    },
-    {
-      id: "cust-2",
-      customerCode: "CST-1002",
-      businessId,
-      name: "AI Assistant Add-on",
-      email: "billing@aiassist.com",
-      phone: "+1 (555) 987-6543",
-      group: "Business",
-      status: "Active",
-      totalRevenue: 8750.00,
-      ordersCount: 18,
-      lastActivityDate: "2024-05-17",
-      address: "Austin, TX, USA",
-      notes: "Custom quota expansion package.",
-      createdAt: "2024-01-15",
-      avatarColor: AVATAR_COLORS[1],
-      orders: [
-        {
-          id: "ord-201",
-          orderNumber: "ORD-2024-015",
-          customerId: "cust-2",
-          amount: 875.00,
-          status: "COMPLETED",
-          orderDate: "2024-05-17",
-          description: "Monthly Intelligence Engine API Quota",
-          paymentMethod: "CREDIT_CARD",
-          invoiceNumber: "INV-2024-088",
-          createdAt: "2024-05-17T09:00:00Z"
-        }
-      ]
-    },
-    {
-      id: "cust-3",
-      customerCode: "CST-1003",
-      businessId,
-      name: "Financial Reports",
-      email: "finance@reports.com",
-      phone: "+1 (555) 456-7890",
-      group: "Standard",
-      status: "Active",
-      totalRevenue: 6320.00,
-      ordersCount: 15,
-      lastActivityDate: "2024-05-16",
-      address: "New York, NY, USA",
-      notes: "Standard monthly reporting subscription.",
-      createdAt: "2024-02-01",
-      avatarColor: AVATAR_COLORS[2],
-      orders: [
-        {
-          id: "ord-301",
-          orderNumber: "ORD-2024-021",
-          customerId: "cust-3",
-          amount: 2450.00,
-          status: "COMPLETED",
-          orderDate: "2024-05-16",
-          description: "Automated Fiscal Audit Statement Pack",
-          paymentMethod: "BANK_TRANSFER",
-          invoiceNumber: "INV-2024-082",
-          createdAt: "2024-05-16T11:20:00Z"
-        }
-      ]
-    },
-    {
-      id: "cust-4",
-      customerCode: "CST-1004",
-      businessId,
-      name: "Consulting Service",
-      email: "contact@consult.com",
-      phone: "+1 (555) 321-0987",
-      group: "Premium",
-      status: "Active",
-      totalRevenue: 5980.00,
-      ordersCount: 11,
-      lastActivityDate: "2024-05-15",
-      address: "London, UK",
-      notes: "Strategic financial advisory retainer.",
-      createdAt: "2024-02-14",
-      avatarColor: AVATAR_COLORS[3],
-      orders: [
-        {
-          id: "ord-401",
-          orderNumber: "ORD-2024-033",
-          customerId: "cust-4",
-          amount: 3200.00,
-          status: "COMPLETED",
-          orderDate: "2024-05-15",
-          description: "Retainer Fee — Q2 Cash Flow Advisory",
-          paymentMethod: "BANK_TRANSFER",
-          invoiceNumber: "INV-2024-074",
-          createdAt: "2024-05-15T16:45:00Z"
-        }
-      ]
-    },
-    {
-      id: "cust-5",
-      customerCode: "CST-1005",
-      businessId,
-      name: "Design Work",
-      email: "hello@designhub.com",
-      phone: "+1 (555) 654-3210",
-      group: "Standard",
-      status: "Inactive",
-      totalRevenue: 4450.00,
-      ordersCount: 9,
-      lastActivityDate: "2024-05-10",
-      address: "Berlin, Germany",
-      notes: "UI/UX sprint deliverables.",
-      createdAt: "2024-02-28",
-      avatarColor: AVATAR_COLORS[4],
-      orders: []
-    },
-    {
-      id: "cust-6",
-      customerCode: "CST-1006",
-      businessId,
-      name: "Web Development",
-      email: "web@devstudio.com",
-      phone: "+1 (555) 789-0123",
-      group: "Business",
-      status: "Active",
-      totalRevenue: 3880.00,
-      ordersCount: 8,
-      lastActivityDate: "2024-05-09",
-      address: "Toronto, Canada",
-      notes: "Full-stack integration contract.",
-      createdAt: "2024-03-05",
-      avatarColor: AVATAR_COLORS[5],
-      orders: []
-    },
-    {
-      id: "cust-7",
-      customerCode: "CST-1007",
-      businessId,
-      name: "Marketing Agency",
-      email: "hello@marketing.com",
-      phone: "+1 (555) 210-9876",
-      group: "Standard",
-      status: "Inactive",
-      totalRevenue: 2950.00,
-      ordersCount: 6,
-      lastActivityDate: "2024-05-08",
-      address: "Dubai, UAE",
-      notes: "Q1 growth campaign.",
-      createdAt: "2024-03-12",
-      avatarColor: AVATAR_COLORS[6],
-      orders: []
-    },
-    {
-      id: "cust-8",
-      customerCode: "CST-1008",
-      businessId,
-      name: "Software Solutions",
-      email: "contact@softsol.com",
-      phone: "+1 (555) 876-5432",
-      group: "Premium",
-      status: "Active",
-      totalRevenue: 2450.00,
-      ordersCount: 5,
-      lastActivityDate: "2024-05-07",
-      address: "Singapore",
-      notes: "ERP data migration consulting.",
-      createdAt: "2024-03-20",
-      avatarColor: AVATAR_COLORS[7],
-      orders: []
-    },
-    {
-      id: "cust-9",
-      customerCode: "CST-1009",
-      businessId,
-      name: "Global Logistics LLC",
-      email: "ops@globallogistics.com",
-      phone: "+1 (555) 345-6789",
-      group: "Enterprise",
-      status: "Active",
-      totalRevenue: 15800.00,
-      ordersCount: 32,
-      lastActivityDate: "2024-05-18",
-      address: "Rotterdam, Netherlands",
-      notes: "Enterprise customs & multi-currency billing.",
-      createdAt: "2023-10-05",
-      avatarColor: AVATAR_COLORS[0],
-      orders: []
-    },
-    {
-      id: "cust-10",
-      customerCode: "CST-1010",
-      businessId,
-      name: "Apex Retail Group",
-      email: "accounts@apexretail.com",
-      phone: "+1 (555) 678-9012",
-      group: "Business",
-      status: "Active",
-      totalRevenue: 11820.00,
-      ordersCount: 22,
-      lastActivityDate: "2024-05-17",
-      address: "Sydney, Australia",
-      notes: "Point-of-sale receipt sync client.",
-      createdAt: "2023-12-10",
-      avatarColor: AVATAR_COLORS[1],
-      orders: []
-    }
-  ];
-}
+// Known mock seed emails from earlier prototype builds — automatically purged so only real user-created records remain.
+const LEGACY_SEED_EMAILS = new Set([
+  "info@afab.com",
+  "billing@aiassist.com",
+  "finance@reports.com",
+  "contact@consult.com",
+  "hello@designhub.com",
+  "web@devstudio.com",
+  "hello@marketing.com",
+  "contact@softsol.com",
+  "ops@globallogistics.com",
+  "accounts@apexretail.com",
+]);
 
-// Storage helpers scoped by active business
 function getStorageKey(): string {
   const activeBusinessId = AuthStore.getActiveBusinessId() || "default";
   return `afab_customers_${activeBusinessId}`;
+}
+
+/**
+ * Recomputes a customer's `ordersCount` and `totalRevenue` strictly from their stored orders
+ * so financial totals are always traceable to actual order records.
+ */
+function normalizeCustomerRecord(c: Customer, index: number): Customer {
+  const orders = Array.isArray(c.orders) ? c.orders : [];
+  const completedRevenue = orders
+    .filter((o) => o.status === "COMPLETED")
+    .reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+
+  return {
+    ...c,
+    customerCode: c.customerCode || `CST-${1001 + index}`,
+    orders,
+    ordersCount: orders.length,
+    totalRevenue: orders.length > 0 ? completedRevenue : Number(c.totalRevenue) || 0,
+    avatarColor: c.avatarColor || getAvatarColor(c.name || "C"),
+  };
 }
 
 function loadLocalCustomers(): Customer[] {
@@ -414,29 +196,22 @@ function loadLocalCustomers(): Customer[] {
   const key = getStorageKey();
   const raw = localStorage.getItem(key);
   if (!raw) {
-    const activeBusinessId = AuthStore.getActiveBusinessId() || "default";
-    const seed = getInitialSeedData(activeBusinessId);
-    localStorage.setItem(key, JSON.stringify(seed));
-    return seed;
+    return [];
   }
   try {
     const parsed: Customer[] = JSON.parse(raw);
-    // Ensure legacy data gets customerCode and orders array
-    let migrated = false;
-    parsed.forEach((c, index) => {
-      if (!c.customerCode) {
-        c.customerCode = `CST-${1001 + index}`;
-        migrated = true;
-      }
-      if (!c.orders) {
-        c.orders = [];
-        migrated = true;
-      }
-    });
-    if (migrated) {
-      localStorage.setItem(key, JSON.stringify(parsed));
+    if (!Array.isArray(parsed)) return [];
+
+    // Strip any legacy prototype seed records that were never created by the user
+    const realOnly = parsed.filter(
+      (c) => !(c.id?.startsWith("cust-") && LEGACY_SEED_EMAILS.has(c.email))
+    );
+    const normalized = realOnly.map((c, idx) => normalizeCustomerRecord(c, idx));
+
+    if (realOnly.length !== parsed.length) {
+      localStorage.setItem(key, JSON.stringify(normalized));
     }
-    return parsed;
+    return normalized;
   } catch {
     return [];
   }
@@ -448,10 +223,35 @@ function saveLocalCustomers(customers: Customer[]): void {
   localStorage.setItem(key, JSON.stringify(customers));
 }
 
+function getPeriodWindowDays(period: string): number {
+  switch (period.toLowerCase()) {
+    case "week":
+    case "weekly":
+      return 7;
+    case "quarter":
+      return 90;
+    case "year":
+    case "yearly":
+      return 365;
+    case "month":
+    case "monthly":
+    default:
+      return 30;
+  }
+}
+
+function computePctDelta(current: number, previous: number): number {
+  if (previous === 0) {
+    return current > 0 ? 100 : 0;
+  }
+  return Math.round(((current - previous) / Math.abs(previous)) * 1000) / 10;
+}
+
 export const CustomerService = {
   /**
    * Retrieves paginated, filtered customers.
-   * Tries backend first; falls back transparently to business-scoped local store.
+   * Queries backend `/customers` if implemented; otherwise uses the business-scoped customer store
+   * containing only user-created customer records (never fabricated seed data).
    */
   async getCustomers(params: CustomerFilterParams = {}): Promise<CustomerPageResponse> {
     const {
@@ -476,7 +276,6 @@ export const CustomerService = {
     try {
       return await fetchClient(`/customers?${query.toString()}`);
     } catch {
-      // Offline/Local data engine
       let list = loadLocalCustomers();
 
       if (search.trim()) {
@@ -498,7 +297,6 @@ export const CustomerService = {
         list = list.filter((c) => c.group.toLowerCase() === group.toLowerCase());
       }
 
-      // Sort
       list.sort((a, b) => {
         const valA = (a as unknown as Record<string, unknown>)[sortBy] ?? "";
         const valB = (b as unknown as Record<string, unknown>)[sortBy] ?? "";
@@ -527,6 +325,7 @@ export const CustomerService = {
 
   /**
    * Retrieves summary metrics (KPIs, donut breakdown, top customers, recent activity).
+   * All metrics and percentage changes are computed directly from actual stored customer & order records.
    */
   async getSummary(period: string = "week", currency: string = "USD"): Promise<CustomerSummaryDTO> {
     try {
@@ -536,14 +335,50 @@ export const CustomerService = {
       const totalCustomers = customers.length;
       const activeCount = customers.filter((c) => c.status === "Active").length;
       const inactiveCount = customers.filter((c) => c.status === "Inactive").length;
-      const newCount = customers.filter((c) => c.status === "New" || c.status === "Lead").length;
+      const newStatusCount = customers.filter((c) => c.status === "New" || c.status === "Lead").length;
+
+      // Period window calculations based on real createdAt / orderDate timestamps
+      const windowDays = getPeriodWindowDays(period);
+      const now = new Date();
+      const currentStart = new Date(now.getTime() - windowDays * 86400000);
+      const prevStart = new Date(now.getTime() - windowDays * 2 * 86400000);
+
+      const currentNewCustomers = customers.filter((c) => {
+        const d = new Date(c.createdAt);
+        return !isNaN(d.getTime()) && d >= currentStart;
+      }).length;
+
+      const prevNewCustomers = customers.filter((c) => {
+        const d = new Date(c.createdAt);
+        return !isNaN(d.getTime()) && d >= prevStart && d < currentStart;
+      }).length;
 
       const totalRevenue = customers.reduce((acc, curr) => acc + (curr.totalRevenue || 0), 0);
       const avgRevenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
       const repeatCustomersCount = customers.filter((c) => c.ordersCount > 1).length;
       const repeatCustomersPct = totalCustomers > 0 ? Math.round((repeatCustomersCount / totalCustomers) * 100) : 0;
 
-      // Top customers ordered by revenue
+      // Period revenue comparison from actual completed orders
+      let currentPeriodRevenue = 0;
+      let prevPeriodRevenue = 0;
+      for (const c of customers) {
+        for (const o of c.orders || []) {
+          if (o.status !== "COMPLETED") continue;
+          const od = new Date(o.orderDate);
+          if (isNaN(od.getTime())) continue;
+          if (od >= currentStart) {
+            currentPeriodRevenue += Number(o.amount) || 0;
+          } else if (od >= prevStart && od < currentStart) {
+            prevPeriodRevenue += Number(o.amount) || 0;
+          }
+        }
+      }
+
+      const activePct = totalCustomers > 0 ? Math.round((activeCount / totalCustomers) * 100) : 0;
+      const inactivePct = totalCustomers > 0 ? Math.round((inactiveCount / totalCustomers) * 100) : 0;
+      const newPct = totalCustomers > 0 ? Math.max(0, 100 - activePct - inactivePct) : 0;
+
+      // Top customers ordered by actual revenue
       const topCustomers = [...customers]
         .sort((a, b) => b.totalRevenue - a.totalRevenue)
         .slice(0, 5)
@@ -557,67 +392,55 @@ export const CustomerService = {
           avatarColor: c.avatarColor || getAvatarColor(c.name),
         }));
 
-      // Generate activity log
-      const recentActivity: CustomerActivityItem[] = [
-        {
-          id: "act-1",
-          customerId: customers[0]?.id || "c1",
-          customerName: customers[0]?.name || "Web Development",
-          type: "NEW_CUSTOMER",
-          description: "Customer account CST-1001 registered",
-          timestamp: "2024-05-18T10:30:00Z",
-        },
-        {
-          id: "act-2",
-          customerId: customers[1]?.id || "c2",
-          customerName: customers[1]?.name || "Financial Reports",
-          type: "INVOICE_PAID",
-          description: "Order #ORD-2024-001 ($4,500.00) completed",
-          amount: 4500.00,
-          timestamp: "2024-05-17T14:15:00Z",
-        },
-        {
-          id: "act-3",
-          customerId: customers[2]?.id || "c3",
-          customerName: customers[2]?.name || "AI Assistant Add-on",
-          type: "PAYMENT_RECEIVED",
-          description: "Order #ORD-2024-015 ($875.00) received",
-          amount: 875.00,
-          timestamp: "2024-05-17T09:00:00Z",
-        },
-        {
-          id: "act-4",
-          customerId: customers[3]?.id || "c4",
-          customerName: customers[3]?.name || "Consulting Service",
-          type: "NEW_ORDER",
-          description: "Order #ORD-2024-033 ($3,200.00) created",
-          amount: 3200.00,
-          timestamp: "2024-05-15T16:45:00Z",
-        },
-      ];
+      // Derive recent activity strictly from real customer registrations and orders
+      const recentActivity: CustomerActivityItem[] = [];
+      for (const c of customers) {
+        if (c.createdAt) {
+          recentActivity.push({
+            id: `act-cust-${c.id}`,
+            customerId: c.id,
+            customerName: c.name,
+            type: "NEW_CUSTOMER",
+            description: `Customer ${c.customerCode} registered`,
+            timestamp: c.createdAt.includes("T") ? c.createdAt : `${c.createdAt}T09:00:00Z`,
+          });
+        }
+        for (const o of c.orders || []) {
+          recentActivity.push({
+            id: `act-ord-${o.id}`,
+            customerId: c.id,
+            customerName: c.name,
+            type: o.status === "COMPLETED" ? "INVOICE_PAID" : "NEW_ORDER",
+            description: `${o.orderNumber} — ${o.description}`,
+            amount: o.amount,
+            timestamp: o.createdAt || `${o.orderDate}T12:00:00Z`,
+          });
+        }
+      }
+      recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
       return {
         totalCustomers,
-        totalCustomersChangePct: 12.5,
-        newCustomers: newCount > 0 ? newCount : 24,
-        newCustomersChangePct: 8.4,
+        totalCustomersChangePct: computePctDelta(currentNewCustomers, prevNewCustomers),
+        newCustomers: currentNewCustomers || newStatusCount,
+        newCustomersChangePct: computePctDelta(currentNewCustomers, prevNewCustomers),
         totalRevenue,
-        totalRevenueChangePct: 18.2,
-        avgRevenuePerCustomer: Math.round(avgRevenuePerCustomer),
-        avgRevenueChangePct: 6.7,
+        totalRevenueChangePct: computePctDelta(currentPeriodRevenue, prevPeriodRevenue),
+        avgRevenuePerCustomer: Math.round(avgRevenuePerCustomer * 100) / 100,
+        avgRevenueChangePct: 0,
         repeatCustomersPct,
-        repeatCustomersChangePct: 5.1,
+        repeatCustomersChangePct: 0,
         currency,
         overviewDonut: {
           activeCount,
-          activePct: totalCustomers > 0 ? Math.round((activeCount / totalCustomers) * 100) : 68,
+          activePct,
           inactiveCount,
-          inactivePct: totalCustomers > 0 ? Math.round((inactiveCount / totalCustomers) * 100) : 22,
-          newCount: totalCustomers > 0 ? totalCustomers - activeCount - inactiveCount : 10,
-          newPct: totalCustomers > 0 ? Math.max(0, 100 - Math.round((activeCount / totalCustomers) * 100) - Math.round((inactiveCount / totalCustomers) * 100)) : 10,
+          inactivePct,
+          newCount: newStatusCount,
+          newPct,
         },
         topCustomers,
-        recentActivity,
+        recentActivity: recentActivity.slice(0, 6),
       };
     }
   },
@@ -695,15 +518,18 @@ export const CustomerService = {
       }
 
       const existing = customers[index];
-      const updated: Customer = {
-        ...existing,
-        ...req,
-        name: req.name !== undefined ? req.name.trim() : existing.name,
-        email: req.email !== undefined ? req.email.trim() : existing.email,
-        customerCode: req.customerCode !== undefined ? req.customerCode.trim() : existing.customerCode,
-        phone: req.phone !== undefined ? req.phone.trim() : existing.phone,
-        avatarColor: req.name ? getAvatarColor(req.name) : existing.avatarColor,
-      };
+      const updated: Customer = normalizeCustomerRecord(
+        {
+          ...existing,
+          ...req,
+          name: req.name !== undefined ? req.name.trim() : existing.name,
+          email: req.email !== undefined ? req.email.trim() : existing.email,
+          customerCode: req.customerCode !== undefined ? req.customerCode.trim() : existing.customerCode,
+          phone: req.phone !== undefined ? req.phone.trim() : existing.phone,
+          avatarColor: req.name ? getAvatarColor(req.name) : existing.avatarColor,
+        },
+        index
+      );
 
       customers[index] = updated;
       saveLocalCustomers(customers);
@@ -712,8 +538,8 @@ export const CustomerService = {
   },
 
   /**
-   * Adds an order to a customer.
-   * Updates the customer's orders array, orders count, revenue, and activity feed.
+   * Adds an order to a customer and records a corresponding INCOME transaction
+   * in the backend ledger so customer revenue, invoices, and dashboard stats stay synchronized.
    */
   async addOrder(req: CreateOrderRequest): Promise<CustomerOrder> {
     try {
@@ -734,6 +560,7 @@ export const CustomerService = {
       const orderSeq = String(existingOrders.length + 1).padStart(3, "0");
       const orderNumber = req.orderNumber?.trim() || `ORD-${orderYear}-${orderSeq}`;
       const orderDate = req.orderDate || new Date().toISOString().split("T")[0];
+      const invoiceNumber = req.invoiceNumber?.trim() || `INV-${orderYear}-${orderSeq}`;
 
       const newOrder: CustomerOrder = {
         id: `ord-${Date.now()}`,
@@ -744,22 +571,41 @@ export const CustomerService = {
         orderDate,
         description: req.description.trim() || `Order ${orderNumber}`,
         paymentMethod: req.paymentMethod || "BANK_TRANSFER",
-        invoiceNumber: req.invoiceNumber || `INV-${orderYear}-${orderSeq}`,
+        invoiceNumber,
         createdAt: new Date().toISOString(),
       };
 
       existingOrders.unshift(newOrder);
       cust.orders = existingOrders;
-      cust.ordersCount = existingOrders.length;
       cust.lastActivityDate = orderDate;
 
-      // Only add to total revenue if completed
-      if (req.status === "COMPLETED") {
-        cust.totalRevenue = (cust.totalRevenue || 0) + newOrder.amount;
+      customers[index] = normalizeCustomerRecord(cust, index);
+      saveLocalCustomers(customers);
+
+      // Synchronize with backend transaction ledger when online so Dashboard/Revenue/Invoices reflect the order
+      try {
+        const txStatus =
+          req.status === "COMPLETED"
+            ? "COMPLETED"
+            : req.status === "CANCELLED"
+            ? "CANCELLED"
+            : "PENDING";
+        await TransactionService.createTransaction({
+          type: "INCOME",
+          amount: newOrder.amount,
+          description: `${cust.name} — ${newOrder.description} (${invoiceNumber})`,
+          transactionDate: orderDate,
+          paymentMethod:
+            req.paymentMethod === "CREDIT_CARD" || req.paymentMethod === "STRIPE"
+              ? "CARD"
+              : req.paymentMethod || "BANK_TRANSFER",
+          status: txStatus,
+          notes: `Customer: ${cust.name} (${cust.customerCode}) | Order: ${orderNumber} | Invoice: ${invoiceNumber}`,
+        });
+      } catch {
+        // Non-blocking if backend is offline
       }
 
-      customers[index] = cust;
-      saveLocalCustomers(customers);
       return newOrder;
     }
   },
@@ -783,7 +629,18 @@ export const CustomerService = {
    * Exports all customer records to CSV with UTF-8 BOM.
    */
   exportCsv(customers: Customer[], filename: string = "AFAB-Customers.csv"): void {
-    const headers = ["Customer ID", "Customer Name", "Email", "Phone", "Group", "Status", "Total Revenue", "Orders Count", "Last Activity", "Created At"];
+    const headers = [
+      "Customer ID",
+      "Customer Name",
+      "Email",
+      "Phone",
+      "Group",
+      "Status",
+      "Total Revenue",
+      "Orders Count",
+      "Last Activity",
+      "Created At",
+    ];
     const rows = customers.map((c) => [
       c.customerCode || c.id,
       `"${c.name.replace(/"/g, '""')}"`,
@@ -798,15 +655,14 @@ export const CustomerService = {
     ]);
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
-    // UTF-8 BOM
     const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   },
 };

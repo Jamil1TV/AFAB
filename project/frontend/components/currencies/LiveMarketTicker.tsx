@@ -2,7 +2,7 @@
 
 import React, { useRef, useState, useMemo } from "react";
 import { CurrencyPair } from "@/lib/api/currencies";
-import { TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Filter } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface LiveMarketTickerProps {
   pairs: CurrencyPair[];
@@ -51,32 +51,32 @@ export function LiveMarketTicker({
   };
 
   return (
-    <div className="w-full rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/90 p-3 shadow-xs space-y-2">
+    <div className="afab-card w-full p-3 space-y-2">
       {/* Category Pills & Navigation Bar */}
       <div className="flex items-center justify-between gap-2 px-1">
-        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none py-0.5">
           {/* Live Indicator */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] shrink-0 border border-emerald-500/20">
+          <div className="afab-badge afab-badge-success px-2.5 py-1 rounded-lg uppercase tracking-wider shrink-0 border border-emerald-500/20">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="uppercase tracking-wider">
+            <span>
               {isArabic ? "مباشر" : "Live FX"}
             </span>
           </div>
 
-          {categories.map((c) => (
-            <button
-              key={c.key}
-              type="button"
-              onClick={() => setActiveCategory(c.key)}
-              className={`px-2.5 py-0.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
-                activeCategory === c.key
-                  ? "bg-purple-600 text-white shadow-xs"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-              }`}
-            >
-              {isArabic ? c.labelAr : c.labelEn}
-            </button>
-          ))}
+          <div className="afab-segmented">
+            {categories.map((c) => (
+              <button
+                key={c.key}
+                type="button"
+                onClick={() => setActiveCategory(c.key)}
+                className={`afab-segment px-2.5 py-1 ${
+                  activeCategory === c.key ? "afab-segment-active" : ""
+                }`}
+              >
+                {isArabic ? c.labelAr : c.labelEn}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Scroll Arrow Buttons */}
@@ -84,7 +84,7 @@ export function LiveMarketTicker({
           <button
             type="button"
             onClick={() => handleScroll(isArabic ? "right" : "left")}
-            className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 transition-colors shadow-2xs"
+            className="afab-page-btn h-7 w-7"
             title="Scroll Left"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
@@ -92,7 +92,7 @@ export function LiveMarketTicker({
           <button
             type="button"
             onClick={() => handleScroll(isArabic ? "left" : "right")}
-            className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 transition-colors shadow-2xs"
+            className="afab-page-btn h-7 w-7"
             title="Scroll Right"
           >
             <ChevronRight className="h-3.5 w-3.5" />
@@ -116,11 +116,11 @@ export function LiveMarketTicker({
               onClick={() => onSelectPair && onSelectPair(p)}
               className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all duration-150 shrink-0 ${
                 isActive
-                  ? "bg-purple-600 text-white border-purple-600 shadow-md ring-1 ring-purple-400"
-                  : "bg-gray-50/80 dark:bg-gray-800/60 border-gray-200/70 dark:border-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-purple-400 dark:hover:border-purple-500 hover:bg-white dark:hover:bg-gray-800"
+                  ? "bg-[#8b5cf6] text-white border-[#8b5cf6] shadow-sm shadow-[#8b5cf6]/25"
+                  : "bg-gray-50/50 dark:bg-[#080c18] border-gray-200 dark:border-gray-800/60 text-gray-700 dark:text-gray-300 hover:border-[#8b5cf6]/50 hover:bg-gray-100/60 dark:hover:bg-white/[0.04]"
               }`}
             >
-              <span className={`font-black ${isActive ? "text-white" : "text-gray-900 dark:text-white"}`}>
+              <span className={`font-bold ${isActive ? "text-white" : "text-gray-900 dark:text-white"}`}>
                 {p.symbol}
               </span>
 
@@ -134,7 +134,7 @@ export function LiveMarketTicker({
                     ? "text-white"
                     : isPositive
                     ? "text-emerald-600 dark:text-emerald-400"
-                    : "text-rose-600 dark:text-rose-400"
+                    : "text-red-600 dark:text-red-400"
                 }`}
               >
                 {isPositive ? "+" : ""}{p.change24h.toFixed(2)}%

@@ -154,16 +154,16 @@ export function Sidebar() {
           title={collapsed ? item.name : undefined}
           className={`group flex items-center ${collapsed ? "justify-center" : "justify-between"} rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
             isActive 
-              ? "bg-[#6c4cf5]/15 text-[#8b5cf6] dark:bg-purple-600/20 dark:text-purple-300 shadow-sm" 
+              ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:bg-purple-600/20 dark:text-purple-300 shadow-sm" 
               : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-200"
           }`}
         >
           <div className={`flex items-center ${collapsed ? "justify-center w-full" : "gap-3 min-w-0"}`}>
-            <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-[#8b5cf6] dark:text-purple-300" : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"}`} />
+            <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-[#7c3aed] dark:text-purple-300" : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"}`} />
             {!collapsed && <span className="truncate">{item.name}</span>}
           </div>
           {item.badge && !collapsed && (
-            <span className="rounded-full bg-purple-600/20 border border-purple-500/30 px-2 py-0.5 text-[10px] font-bold text-purple-300 shadow-sm shrink-0 ms-2">
+            <span className="rounded-full bg-purple-500/10 dark:bg-purple-600/20 border border-purple-500/25 dark:border-purple-500/30 px-2 py-0.5 text-[10px] font-bold text-[#7c3aed] dark:text-purple-300 shadow-sm shrink-0 ms-2">
               {item.badge}
             </span>
           )}
@@ -246,7 +246,7 @@ export function Sidebar() {
           onClick={() => setUserMenuOpen(!userMenuOpen)}
           role="button"
           tabIndex={0}
-          className={`flex items-center ${collapsed ? "justify-center p-1" : "gap-3 w-full bg-white dark:bg-[#0f1429] p-2.5 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm"} cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all`}
+          className={`flex items-center ${collapsed ? "justify-center p-1" : "gap-3 w-full bg-white dark:bg-[#0c101c] p-2.5 rounded-xl border border-gray-200 dark:border-gray-800/60 shadow-sm"} cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all`}
         >
           <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 p-[1.5px] shrink-0">
             <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-900 dark:text-white">
@@ -286,7 +286,7 @@ export function Sidebar() {
         {userMenuOpen && (
           <div 
             onMouseDown={(e) => e.stopPropagation()}
-            className={`absolute z-50 bottom-full ${collapsed ? "start-full ms-2 mb-0" : "start-3 end-3 mb-2"} rounded-2xl bg-white dark:bg-[#0e1328] border border-gray-200 dark:border-purple-500/30 p-2 shadow-2xl shadow-black/50 backdrop-blur-md`}
+            className={`absolute z-50 bottom-full ${collapsed ? "start-full ms-2 mb-0" : "start-3 end-3 mb-2"} rounded-2xl bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 p-2 shadow-2xl shadow-black/50 backdrop-blur-md`}
           >
             {/* User Info Header */}
             <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800/80">

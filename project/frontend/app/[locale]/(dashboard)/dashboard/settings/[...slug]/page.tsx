@@ -31,14 +31,14 @@ export default function SettingsCatchAllPage() {
   const currentTab = tabs.find(t => t.id === activeTab);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-12 text-center">
-      <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4 text-primary">
-        {currentTab?.icon || <Settings className="w-8 h-8" />}
+    <div className="afab-card p-12 text-center">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+        {currentTab?.icon || <Settings className="w-6 h-6" />}
       </div>
-      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+      <h3 className="afab-card-title mb-2">
         {currentTab?.label || t("comingSoon") || "Coming Soon"}
       </h3>
-      <p className="text-gray-500 dark:text-gray-400">
+      <p className="afab-card-subtitle">
         {t("comingSoonDesc") || "This section is coming soon."}
       </p>
     </div>

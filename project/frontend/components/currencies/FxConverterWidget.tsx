@@ -3,14 +3,9 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { 
   ArrowUpDown, 
-  RefreshCw, 
-  Sparkles, 
   Check, 
   Copy, 
   ArrowRightLeft, 
-  Info, 
-  Percent,
-  TrendingUp,
   ShieldCheck
 } from "lucide-react";
 import { CurrencyService } from "@/lib/api/currencies";
@@ -44,7 +39,7 @@ export function FxConverterWidget({
   initialFrom = "EUR",
   initialTo = "USD",
   initialAmount = 1000,
-  businessBalance = 24500,
+  businessBalance = 0,
   onPairChange,
   isArabic = false,
 }: FxConverterWidgetProps) {
@@ -149,20 +144,20 @@ export function FxConverterWidget({
   ];
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-xs flex flex-col justify-between transition-all duration-200">
+    <div className="afab-card p-6 flex flex-col justify-between transition-all duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/80">
+      <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
         <div>
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+          <h3 className="afab-card-title flex items-center gap-2">
             <ArrowRightLeft className="h-5 w-5 text-[#8b5cf6]" />
             <span>{isArabic ? "محول العملات الفوري المتطور" : "Live Two-Way Converter"}</span>
           </h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="afab-card-subtitle text-xs mt-0.5">
             {isArabic ? "تحويل ثنائي الاتجاه بأسعار بين البنوك لحظة بلحظة" : "Two-way live conversion with interbank rates"}
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold border border-emerald-500/20">
+        <div className="afab-badge afab-badge-success px-2.5 py-1 rounded-full text-[11px] border border-emerald-500/20">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
           <span>{isArabic ? "مباشر" : "Real-Time"}</span>
         </div>
@@ -171,10 +166,10 @@ export function FxConverterWidget({
       {/* Converter Body */}
       <div className="py-4 space-y-3 relative">
         {/* FROM (You Send) Input Box */}
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/50 p-4 transition-all focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20">
+        <div className="afab-inset p-4 transition-all focus-within:border-[#8b5cf6] focus-within:ring-1 focus-within:ring-[#8b5cf6]">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">
             <span>{isArabic ? "المبلغ المرسل / الأساسي" : "You Send"}</span>
-            <span className="font-mono text-[11px] text-purple-600 dark:text-purple-400 font-bold">
+            <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-bold">
               {from}
             </span>
           </div>
@@ -187,7 +182,7 @@ export function FxConverterWidget({
               value={sendAmount}
               onChange={(e) => handleSendChange(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-transparent text-2xl font-black text-gray-900 dark:text-white outline-none font-mono placeholder:text-gray-400"
+              className="w-full bg-transparent text-2xl font-bold text-gray-900 dark:text-white outline-none font-mono placeholder:text-gray-400"
             />
 
             <select
@@ -196,7 +191,7 @@ export function FxConverterWidget({
                 setFrom(e.target.value);
                 if (onPairChange) onPairChange(e.target.value, to);
               }}
-              className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-bold text-gray-900 dark:text-white shadow-xs outline-none cursor-pointer hover:border-purple-500 shrink-0"
+              className="afab-select text-sm font-bold text-gray-900 dark:text-white shrink-0 w-auto cursor-pointer"
             >
               {POPULAR_CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -209,13 +204,13 @@ export function FxConverterWidget({
 
         {/* Center Circular Swap Button with Spread Badge */}
         <div className="flex items-center justify-between -my-2 relative z-10 px-2">
-          <div className="h-px bg-gray-100 dark:bg-gray-800 flex-1" />
+          <div className="h-px bg-gray-100 dark:bg-gray-800/60 flex-1" />
           
           <button
             type="button"
             onClick={handleSwap}
             title={isArabic ? "تبديل العملتين" : "Swap currencies"}
-            className="flex h-10 w-10 mx-3 items-center justify-center rounded-full bg-[#6c4cf5] hover:bg-[#5b3ce0] text-white shadow-md shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all duration-200 shrink-0"
+            className="flex h-10 w-10 mx-3 items-center justify-center rounded-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/25 hover:scale-105 active:scale-95 transition-all duration-200 shrink-0"
           >
             <ArrowUpDown
               className={`h-4 w-4 transition-transform duration-300 ${
@@ -224,22 +219,22 @@ export function FxConverterWidget({
             />
           </button>
 
-          <div className="h-px bg-gray-100 dark:bg-gray-800 flex-1" />
+          <div className="h-px bg-gray-100 dark:bg-gray-800/60 flex-1" />
         </div>
 
         {/* TO (You Receive) Input Box — Two-Way Editable */}
-        <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-800/50 p-4 transition-all focus-within:border-purple-500 focus-within:ring-2 focus-within:ring-purple-500/20">
+        <div className="afab-inset p-4 transition-all focus-within:border-[#8b5cf6] focus-within:ring-1 focus-within:ring-[#8b5cf6]">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">
             <span>{isArabic ? "المبلغ المستلم (تقديري)" : "You Receive (Editable)"}</span>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] text-purple-600 dark:text-purple-400 font-bold">
+              <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-bold">
                 {to}
               </span>
               <button
                 type="button"
                 onClick={handleCopy}
                 title={isArabic ? "نسخ النتيجة" : "Copy converted amount"}
-                className="text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                className="text-gray-400 hover:text-[#7c3aed] dark:hover:text-[#a78bfa] transition-colors"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
@@ -254,7 +249,7 @@ export function FxConverterWidget({
               value={receiveAmount}
               onChange={(e) => handleReceiveChange(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-transparent text-2xl font-black text-purple-600 dark:text-purple-400 outline-none font-mono placeholder:text-gray-400"
+              className="w-full bg-transparent text-2xl font-bold text-[#7c3aed] dark:text-[#a78bfa] outline-none font-mono placeholder:text-gray-400"
             />
 
             <select
@@ -263,7 +258,7 @@ export function FxConverterWidget({
                 setTo(e.target.value);
                 if (onPairChange) onPairChange(from, e.target.value);
               }}
-              className="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm font-bold text-gray-900 dark:text-white shadow-xs outline-none cursor-pointer hover:border-purple-500 shrink-0"
+              className="afab-select text-sm font-bold text-gray-900 dark:text-white shrink-0 w-auto cursor-pointer"
             >
               {POPULAR_CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
@@ -288,8 +283,8 @@ export function FxConverterWidget({
                 onClick={() => handleSendChange(val.toString())}
                 className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors ${
                   parseFloat(sendAmount) === val
-                    ? "bg-purple-600 text-white shadow-xs"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                    ? "bg-[#8b5cf6] text-white shadow-sm"
+                    : "bg-gray-100 dark:bg-[#080c18] border border-gray-200/60 dark:border-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-white/[0.05]"
                 }`}
               >
                 +{val.toLocaleString()}
@@ -300,7 +295,7 @@ export function FxConverterWidget({
           {/* Business Portfolio Percentage Presets */}
           {businessBalance > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-              <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 uppercase">
+              <span className="text-[10px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] uppercase">
                 {isArabic ? "من رصيدك:" : "Portfolio:"}
               </span>
               {balancePresets.map((bp) => {
@@ -310,7 +305,7 @@ export function FxConverterWidget({
                     key={bp.label}
                     type="button"
                     onClick={() => handleSendChange(calculated.toString())}
-                    className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-500/20 transition-colors"
+                    className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-500/10 hover:bg-purple-500/20 text-[#7c3aed] dark:text-[#a78bfa] border border-purple-500/20 transition-colors"
                   >
                     {bp.label} ({calculated.toLocaleString()})
                   </button>
@@ -322,12 +317,12 @@ export function FxConverterWidget({
       </div>
 
       {/* Live Conversion Rate Summary with Spread & Transparency */}
-      <div className="pt-3 border-t border-gray-100 dark:border-gray-800/80 space-y-1.5 text-xs">
+      <div className="pt-3 border-t border-gray-100 dark:border-gray-800/60 space-y-1.5 text-xs">
         <div className="flex items-center justify-between">
           <span className="text-gray-500 dark:text-gray-400">
             {isArabic ? "سعر الصرف المباشر:" : "Mid-Market Rate:"}
           </span>
-          <span className="font-extrabold text-gray-900 dark:text-white font-mono">
+          <span className="font-bold text-gray-900 dark:text-white font-mono">
             1 {from} = {rate.toFixed(4)} {to}
           </span>
         </div>

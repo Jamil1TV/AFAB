@@ -83,23 +83,23 @@ export default function SignupPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full max-w-[440px] rounded-[24px] bg-white/80 p-5 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:bg-[#161B2B]/80 dark:border dark:border-[#232A3E]/50 dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)]"
+      className="afab-card w-full max-w-[440px] p-5 sm:p-8"
     >
       {/* Tab Switcher */}
       <motion.div variants={itemVariants} className="mb-6 relative flex justify-center">
-        <div className="absolute bottom-0 w-full h-[1px] bg-gray-200 dark:bg-[#2A3042]"></div>
+        <div className="absolute bottom-0 w-full h-[1px] bg-gray-200 dark:bg-gray-800"></div>
         <div className="flex w-full max-w-[280px]">
           <Link
             href="/login"
-            className="w-1/2 pb-3 text-center text-[15px] font-medium text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors relative z-10"
+            className="w-1/2 pb-3 text-center text-sm font-medium text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors relative z-10"
           >
             {t("loginTab")}
           </Link>
-          <div className="relative w-1/2 pb-3 text-center text-[15px] font-semibold text-[#7c3aed] dark:text-[#8b5cf6]">
+          <div className="relative w-1/2 pb-3 text-center text-sm font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
             {t("signupTab")}
             <motion.div 
               layoutId="activeTab" 
-              className="absolute bottom-0 left-0 w-full h-[2px] bg-[#7c3aed] dark:bg-[#8b5cf6] z-10" 
+              className="absolute bottom-0 start-0 w-full h-[2px] bg-[#8b5cf6] z-10" 
             />
           </div>
         </div>
@@ -107,8 +107,8 @@ export default function SignupPage() {
 
       {/* Title */}
       <motion.div variants={itemVariants} className="mb-6">
-        <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white">{t("signupTitle")}</h2>
-        <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">{t("signupSubtitle")}</p>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">{t("signupTitle")}</h2>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("signupSubtitle")}</p>
       </motion.div>
 
       {/* Error Alert */}
@@ -116,7 +116,7 @@ export default function SignupPage() {
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-5 flex items-center gap-2.5 rounded-[12px] bg-red-50 p-3.5 text-[13px] font-medium text-red-600 border border-red-200/60 dark:bg-red-950/30 dark:border-red-800/40 dark:text-red-400"
+          className="mb-5 flex items-center gap-2.5 rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
@@ -127,24 +127,24 @@ export default function SignupPage() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4">
           <div className="w-full sm:w-1/2">
-            <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+            <label className="afab-label">
               {t("firstName")}
             </label>
             <div className="relative group">
-              <User className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+              <User className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
               <input
                 type="text"
                 placeholder={t("firstNamePlaceholder")}
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11 disabled:opacity-60"
+                className="afab-input py-2.5 ps-11 pe-4"
                 required
                 disabled={loading}
               />
             </div>
           </div>
           <div className="w-full sm:w-1/2">
-            <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+            <label className="afab-label">
               {t("lastName")}
             </label>
             <div className="relative group">
@@ -153,7 +153,7 @@ export default function SignupPage() {
                 placeholder={t("lastNamePlaceholder")}
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 disabled:opacity-60"
+                className="afab-input py-2.5 px-4"
                 required
                 disabled={loading}
               />
@@ -162,17 +162,17 @@ export default function SignupPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+          <label className="afab-label">
             {t("businessName")}
           </label>
           <div className="relative group">
-            <Building className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+            <Building className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
             <input
               type="text"
               placeholder={t("businessNamePlaceholder")}
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
-              className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11 disabled:opacity-60"
+              className="afab-input py-2.5 ps-11 pe-4"
               required
               disabled={loading}
             />
@@ -180,17 +180,17 @@ export default function SignupPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+          <label className="afab-label">
             {t("email")}
           </label>
           <div className="relative group">
-            <Mail className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+            <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
             <input
               type="email"
               placeholder={t("emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11 disabled:opacity-60"
+              className="afab-input py-2.5 ps-11 pe-4"
               required
               disabled={loading}
             />
@@ -198,19 +198,19 @@ export default function SignupPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <div className="mb-2 flex items-center justify-between">
-            <label className="block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+          <div className="mb-1.5 flex items-center justify-between">
+            <label className="afab-label mb-0">
               {t("password")}
             </label>
           </div>
           <div className="relative group">
-            <Lock className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+            <Lock className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
             <input
               type={showPassword ? "text" : "password"}
               placeholder={t("passwordSignupPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-11 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-11 rtl:pr-11 disabled:opacity-60"
+              className="afab-input py-2.5 ps-11 pe-11"
               required
               disabled={loading}
               minLength={8}
@@ -218,7 +218,7 @@ export default function SignupPage() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10 rtl:left-4 rtl:right-auto"
+              className="absolute end-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -231,7 +231,7 @@ export default function SignupPage() {
             whileTap={{ scale: 0.985 }}
             type="submit"
             disabled={loading}
-            className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] bg-[#7c3aed] py-[12px] text-[15px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] hover:shadow-[#7c3aed]/40 dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed] dark:shadow-[#8b5cf6]/10 dark:hover:shadow-[#8b5cf6]/30 disabled:opacity-70"
+            className="afab-btn-primary group relative w-full py-3 text-sm"
           >
             {loading ? (
               <AfabLoader size="xs" />
@@ -248,10 +248,10 @@ export default function SignupPage() {
       {/* Divider */}
       <motion.div variants={itemVariants} className="relative my-8">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200 dark:border-[#2A3042]"></div>
+          <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
         </div>
-        <div className="relative flex justify-center text-[12px]">
-          <span className="bg-white/80 backdrop-blur-sm px-4 text-gray-400 dark:bg-[#161B2B]/80 dark:text-gray-500 rounded-full">
+        <div className="relative flex justify-center text-xs">
+          <span className="bg-white px-4 text-gray-400 dark:bg-[#0c101c] dark:text-gray-500 rounded-full">
             {t("orContinueWith")}
           </span>
         </div>
@@ -263,7 +263,7 @@ export default function SignupPage() {
           whileHover={{ scale: 1.015 }}
           whileTap={{ scale: 0.985 }}
           type="button"
-          className="flex w-full items-center justify-center gap-3 rounded-[14px] border border-gray-200 bg-white py-[12px] text-[14px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow dark:border-[#2A3042] dark:bg-[#111522]/80 dark:text-gray-300 dark:hover:bg-[#1A2035] dark:hover:shadow-none"
+          className="afab-btn-secondary w-full gap-3 py-2.5 text-sm"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25C22.56 11.47 22.49 10.72 22.36 10H12V14.26H17.92C17.66 15.63 16.88 16.79 15.7 17.58V20.34H19.26C21.34 18.42 22.56 15.6 22.56 12.25Z" fill="#4285F4"/>
@@ -276,8 +276,8 @@ export default function SignupPage() {
       </motion.div>
 
       {/* Bottom Link */}
-      <motion.p variants={itemVariants} className="mt-8 text-center text-[14px] text-gray-500 dark:text-gray-400">
-        {t("hasAccount")} <Link href="/login" className="font-semibold text-[#7c3aed] hover:underline dark:text-[#8b5cf6] transition-all">{t("loginTab")}</Link>
+      <motion.p variants={itemVariants} className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+        {t("hasAccount")} <Link href="/login" className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all">{t("loginTab")}</Link>
       </motion.p>
     </motion.div>
   );

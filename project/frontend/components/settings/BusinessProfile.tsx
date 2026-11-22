@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AfabLoader } from "@/components/ui/afab-loader";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { AlertCircle, CheckCircle2, Upload, MapPin, Building2, Calendar, Globe, Building } from "lucide-react";
 import Image from "next/image";
 import {
@@ -65,24 +66,20 @@ export function BusinessProfile({ business }: { business: any }) {
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
       {/* Left Form Content */}
       <div className="xl:col-span-2 space-y-8">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-            {t("businessProfile.title")}
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {t("businessProfile.subtitle")}
-          </p>
-        </div>
+        <PageHeader
+          title={t("businessProfile.title")}
+          subtitle={t("businessProfile.subtitle")}
+        />
 
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6 space-y-8 shadow-sm">
+        <div className="afab-card p-6 space-y-8">
           {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg flex items-start gap-3 text-sm">
+            <div className="p-4 rounded-xl border border-red-500/20 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-start gap-3 text-sm">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <p>{error}</p>
             </div>
           )}
           {success && (
-            <div className="p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-lg flex items-start gap-3 text-sm">
+            <div className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-start gap-3 text-sm">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
               <p>{t("saved")}</p>
             </div>
@@ -90,9 +87,9 @@ export function BusinessProfile({ business }: { business: any }) {
 
           {/* Logo Upload */}
           <div>
-            <Label className="mb-4 block font-semibold text-gray-900 dark:text-white">{t("businessProfile.logo")}</Label>
-            <div className="flex items-center gap-6">
-              <div className="relative w-24 h-24 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-600 overflow-hidden flex items-center justify-center bg-gray-50 dark:bg-gray-900/60">
+            <Label className="afab-label mb-3">{t("businessProfile.logo")}</Label>
+            <div className="flex flex-wrap items-center gap-6">
+              <div className="relative w-24 h-24 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 overflow-hidden flex items-center justify-center bg-gray-50/50 dark:bg-[#080c18]">
                 <Image src={formData.logoUrl} alt="Logo" fill className="object-cover" unoptimized />
               </div>
               <div className="space-y-2">
@@ -117,7 +114,7 @@ export function BusinessProfile({ business }: { business: any }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="gap-2 border-gray-200 dark:border-gray-600"
+                  className="afab-btn-secondary"
                   onClick={() => document.getElementById("logo-upload-input")?.click()}
                 >
                   <Upload className="w-4 h-4" />
@@ -128,31 +125,31 @@ export function BusinessProfile({ business }: { business: any }) {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 dark:border-gray-600"></div>
+          <div className="border-t border-gray-100 dark:border-gray-800/60"></div>
 
           {/* Business Info */}
           <div className="space-y-6">
-            <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{t("businessProfile.businessInfo")}</h3>
+            <h3 className="afab-card-title">{t("businessProfile.businessInfo")}</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.businessName")}</Label>
+                <Label className="afab-label">{t("businessProfile.businessName")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.industry")}</Label>
+                <Label className="afab-label">{t("businessProfile.industry")}</Label>
                 <Select
                   value={formData.industry || "Software"}
                   onValueChange={(val) => setFormData({ ...formData, industry: val })}
                 >
-                  <SelectTrigger className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white">
+                  <SelectTrigger className="afab-input">
                     <SelectValue placeholder="Select Industry" />
                   </SelectTrigger>
-                  <SelectContent className="max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow-xl rounded-xl">
+                  <SelectContent className="afab-popover max-h-64 min-w-[300px] p-2 space-y-1 overflow-y-auto cursor-pointer text-gray-900 dark:text-white">
                     {INDUSTRIES.map((ind) => (
                       <SelectItem key={ind.id} value={ind.nameEn}>
                         {isArabic ? ind.nameAr : ind.nameEn}
@@ -163,9 +160,9 @@ export function BusinessProfile({ business }: { business: any }) {
               </div>
 
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.businessEmail")}</Label>
+                <Label className="afab-label">{t("businessProfile.businessEmail")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   type="email"
                   value={formData.businessEmail}
                   onChange={(e) => setFormData({ ...formData, businessEmail: e.target.value })}
@@ -173,9 +170,9 @@ export function BusinessProfile({ business }: { business: any }) {
                 />
               </div>
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.phoneNumber")}</Label>
+                <Label className="afab-label">{t("businessProfile.phoneNumber")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   value={formData.phoneNumber}
                   onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                   placeholder="+1 (555) 000-0000"
@@ -183,18 +180,18 @@ export function BusinessProfile({ business }: { business: any }) {
               </div>
 
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.website")}</Label>
+                <Label className="afab-label">{t("businessProfile.website")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   value={formData.website}
                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                   placeholder="https://example.com"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.taxId")}</Label>
+                <Label className="afab-label">{t("businessProfile.taxId")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   value={formData.taxId}
                   onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
                   placeholder="Optional"
@@ -202,9 +199,9 @@ export function BusinessProfile({ business }: { business: any }) {
               </div>
 
               <div className="space-y-2 md:col-span-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.address")}</Label>
+                <Label className="afab-label">{t("businessProfile.address")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   value={formData.addressLine}
                   onChange={(e) => setFormData({ ...formData, addressLine: e.target.value })}
                   placeholder="123 Business St, Suite 100"
@@ -212,26 +209,26 @@ export function BusinessProfile({ business }: { business: any }) {
               </div>
 
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.city")}</Label>
+                <Label className="afab-label">{t("businessProfile.city")}</Label>
                 <Input
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                  className="afab-input"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 />
               </div>
               <div className="space-y-2 grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.state")}</Label>
+                  <Label className="afab-label">{t("businessProfile.state")}</Label>
                   <Input
-                    className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                    className="afab-input"
                     value={formData.state}
                     onChange={(e) => setFormData({ ...formData, state: e.target.value })}
                   />
                 </div>
                 <div>
-                  <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.postalCode")}</Label>
+                  <Label className="afab-label">{t("businessProfile.postalCode")}</Label>
                   <Input
-                    className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6]"
+                    className="afab-input"
                     value={formData.postalCode}
                     onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
                   />
@@ -240,13 +237,13 @@ export function BusinessProfile({ business }: { business: any }) {
 
               <div className="space-y-2 md:col-span-2">
                 <div className="flex items-center justify-between">
-                  <Label className="font-semibold text-gray-700 dark:text-gray-300">{t("businessProfile.description")}</Label>
-                  <span className="text-xs text-gray-500">
+                  <Label className="afab-label">{t("businessProfile.description")}</Label>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {t("businessProfile.descriptionCounter", { count: formData.description.length })}
                   </span>
                 </div>
                 <Textarea
-                  className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white focus:border-[#8b5cf6] resize-none"
+                  className="afab-input resize-none"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value.substring(0, 500) })}
                   placeholder="Briefly describe your business..."
@@ -256,12 +253,12 @@ export function BusinessProfile({ business }: { business: any }) {
             </div>
           </div>
 
-          <div className="border-t border-gray-200 dark:border-gray-600 pt-6 flex justify-end gap-4">
-            <Button variant="outline" className="min-w-[120px] border-gray-200 dark:border-gray-600">{t("businessProfile.cancel") || "Cancel"}</Button>
+          <div className="border-t border-gray-100 dark:border-gray-800/60 pt-6 flex flex-wrap justify-end gap-3">
+            <Button variant="outline" className="afab-btn-secondary min-w-[120px]">{t("businessProfile.cancel") || "Cancel"}</Button>
             <Button
               onClick={handleSave}
               disabled={isLoading}
-              className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white min-w-[140px]"
+              className="afab-btn-primary min-w-[140px]"
             >
               {isLoading ? <AfabLoader size="sm" /> : t("saveChanges")}
             </Button>
@@ -272,27 +269,27 @@ export function BusinessProfile({ business }: { business: any }) {
       {/* Right Sidebar Content */}
       <div className="space-y-6">
         {/* Business Summary Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6 shadow-sm">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{t("businessProfile.summary")}</h3>
+        <div className="afab-card p-6">
+          <h3 className="afab-card-title mb-1">{t("businessProfile.summary")}</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">{t("businessProfile.summarySubtitle")}</p>
 
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0">
-                <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <div className="w-9 h-9 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4 text-sky-600 dark:text-sky-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">{t("businessProfile.summaryName")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.summaryName")}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{formData.name}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center shrink-0">
-                <Building className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+              <div className="w-9 h-9 rounded-xl bg-[#8b5cf6]/10 flex items-center justify-center shrink-0">
+                <Building className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">{t("businessProfile.summaryIndustry")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.summaryIndustry")}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {getLocalizedIndustry(formData.industry || "Software", locale)}
                 </p>
@@ -300,21 +297,21 @@ export function BusinessProfile({ business }: { business: any }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-green-50 dark:bg-green-900/20 flex items-center justify-center shrink-0">
-                <Calendar className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">{t("businessProfile.summaryMemberSince")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.summaryMemberSince")}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{memberSince}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center shrink-0">
-                <MapPin className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">{t("businessProfile.summaryLocation")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.summaryLocation")}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {formData.city 
                     ? `${formData.city}, ${getLocalizedCountry(formData.country || business?.country || "US", locale)}`
@@ -324,11 +321,11 @@ export function BusinessProfile({ business }: { business: any }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center shrink-0">
-                <Globe className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <div className="w-9 h-9 rounded-xl bg-[#8b5cf6]/10 flex items-center justify-center shrink-0">
+                <Globe className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-500">{t("businessProfile.summaryTimezone")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.summaryTimezone")}</p>
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                   {getLocalizedTimezone(business?.timezone || "UTC", locale)}
                 </p>
@@ -338,44 +335,44 @@ export function BusinessProfile({ business }: { business: any }) {
         </div>
 
         {/* Documents Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
+        <div className="afab-card p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white text-lg">{t("businessProfile.documents") || "Document Uploads"}</h3>
-              <p className="text-xs text-gray-500">{t("businessProfile.documentsSubtitle") || "Manage your business verification files"}</p>
+              <h3 className="afab-card-title">{t("businessProfile.documents") || "Document Uploads"}</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.documentsSubtitle") || "Manage your business verification files"}</p>
             </div>
-            <Button variant="outline" size="sm" className="gap-2 border-gray-200 dark:border-gray-600">
+            <Button variant="outline" size="sm" className="afab-btn-secondary">
               <Upload className="w-4 h-4" /> Upload
             </Button>
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 transition-colors group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <div className="afab-inset flex items-center justify-between p-3.5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors group">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 dark:text-red-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">tax_certificate_2026.pdf</p>
-                  <p className="text-xs text-gray-500">2.4 MB • Uploaded Jun 12, 2026</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">tax_certificate_2026.pdf</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">2.4 MB • Uploaded Jun 12, 2026</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="icon" className="afab-icon-btn h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
               </Button>
             </div>
 
-            <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 transition-colors group">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center shrink-0">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-500"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+            <div className="afab-inset flex items-center justify-between p-3.5 hover:border-gray-300 dark:hover:border-gray-700 transition-colors group">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600 dark:text-red-400"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">business_license.pdf</p>
-                  <p className="text-xs text-gray-500">1.1 MB • Uploaded May 04, 2026</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">business_license.pdf</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">1.1 MB • Uploaded May 04, 2026</p>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button variant="ghost" size="icon" className="afab-icon-btn h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
               </Button>
             </div>

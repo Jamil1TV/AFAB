@@ -25,6 +25,7 @@ import {
 import { useLocale } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/routing";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SubscriptionService, SubscriptionSnapshot } from "@/lib/api/subscription";
 import { AuthStore } from "@/lib/auth-store";
 import { toast } from "sonner";
@@ -47,7 +48,7 @@ interface PlanData {
   features: PlanFeature[];
 }
 
-export function PlansScreen() {
+export function PlansScreen({ embedded = false }: { embedded?: boolean } = {}) {
   const locale = useLocale();
   const isAr = locale === "ar";
 
@@ -389,569 +390,558 @@ export function PlansScreen() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#f8f9fb] dark:bg-[#070913] text-slate-800 dark:text-slate-200 antialiased selection:bg-purple-600 selection:text-white transition-colors duration-200 pb-16">
-      {/* Background ambient lighting glows in dark mode */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-purple-600/5 dark:bg-gradient-to-b dark:from-purple-900/20 dark:via-indigo-900/10 dark:to-transparent blur-[140px] -z-10" />
-      <div className="pointer-events-none absolute top-[30%] -right-40 w-[600px] h-[600px] bg-purple-600/5 dark:bg-purple-600/10 blur-[150px] -z-10" />
-
-      <div className="px-4 sm:px-6 lg:px-12 py-8 max-w-7xl w-full mx-auto space-y-10">
-        
-        {/* ── Header & Banner Section ── */}
-        <section className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2 flex-wrap">
-              <span>{isAr ? "اختر" : "Choose Your"}</span>
-              <span className="bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600 dark:from-purple-400 dark:via-indigo-400 dark:to-purple-500 bg-clip-text text-transparent">
-                {isAr ? "خطتك" : "Plan"}
-              </span>
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1.5 font-medium">
-              {isAr 
-                ? "احصل على الأدوات المدعومة بالذكاء الاصطناعي التي تحتاجها لإدارة وتنمية أعمالك."
-                : "Get the AI-powered tools you need to manage and grow your business."}
-            </p>
-          </div>
-
-          {/* Manage Multiple Businesses mini banner */}
-          <div className="flex items-center gap-3 bg-white dark:bg-[#0F142A] border border-slate-200 dark:border-indigo-900/40 p-3 px-4 rounded-2xl max-w-sm shadow-sm dark:shadow-none">
-            <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-indigo-950/80 border border-purple-200 dark:border-indigo-700/50 flex items-center justify-center shrink-0 text-purple-600 dark:text-indigo-400">
+    <div className={`${embedded ? "w-full space-y-8" : "afab-page"} animate-in fade-in duration-700`}>
+      {/* ── Header & Banner Section ── */}
+      <PageHeader
+        title={
+          <span className="inline-flex flex-wrap items-center gap-2">
+            <span>{isAr ? "اختر" : "Choose Your"}</span>
+            <span className="bg-gradient-to-r from-[#8b5cf6] via-indigo-500 to-[#7c3aed] dark:from-[#a78bfa] dark:via-indigo-400 dark:to-[#8b5cf6] bg-clip-text text-transparent">
+              {isAr ? "خطتك" : "Plan"}
+            </span>
+          </span>
+        }
+        subtitle={
+          isAr
+            ? "احصل على الأدوات المدعومة بالذكاء الاصطناعي التي تحتاجها لإدارة وتنمية أعمالك."
+            : "Get the AI-powered tools you need to manage and grow your business."
+        }
+        actions={
+          <div className="afab-card flex items-center gap-3 p-3 px-4 max-w-sm">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h5 className="text-xs font-bold text-slate-900 dark:text-white leading-snug">
+              <h5 className="text-xs font-bold text-gray-900 dark:text-white leading-snug">
                 {isAr ? "إدارة شركات متعددة" : "Manage Multiple Businesses"}
               </h5>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                {isAr 
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
+                {isAr
                   ? "أضف وتنقل بين الشركات بسهولة، مع بيانات ورؤى مستقلة لكل شركة."
                   : "Add and switch between businesses easily, with separate data and insights."}
               </p>
             </div>
           </div>
-        </section>
+        }
+      />
 
-        {/* ── Billing Toggle & Free Trial Alert ── */}
-        <div className="flex flex-col items-center justify-center space-y-4">
-          {/* Monthly / Yearly Pill Switcher */}
-          <div className="bg-slate-100 dark:bg-[#0B0F21] p-1.5 rounded-full border border-slate-200 dark:border-slate-800/80 flex items-center gap-1 shadow-inner">
-            <button
-              type="button"
-              onClick={() => setBillingPeriod("monthly")}
-              className={`px-6 py-2 rounded-full text-xs font-semibold transition-all duration-200 cursor-pointer ${
-                billingPeriod === "monthly"
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-900/40"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              }`}
-            >
-              {isAr ? "شهري" : "Monthly"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setBillingPeriod("yearly")}
-              className={`px-6 py-2 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-2 ${
+      {/* ── Billing Toggle & Free Trial Alert ── */}
+      <div className="flex flex-col items-center justify-center space-y-4">
+        {/* Monthly / Yearly Segmented Switcher */}
+        <div className="afab-segmented">
+          <button
+            type="button"
+            onClick={() => setBillingPeriod("monthly")}
+            className={`afab-segment px-5 py-2 ${
+              billingPeriod === "monthly" ? "afab-segment-active" : ""
+            }`}
+          >
+            {isAr ? "شهري" : "Monthly"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setBillingPeriod("yearly")}
+            className={`afab-segment px-5 py-2 ${
+              billingPeriod === "yearly" ? "afab-segment-active" : ""
+            }`}
+          >
+            <span>{isAr ? "سنوي" : "Yearly"}</span>
+            <span
+              className={`afab-badge rounded-full px-2 py-0.5 border ${
                 billingPeriod === "yearly"
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-900/40 font-semibold"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  ? "bg-white/20 text-white border-white/30"
+                  : "afab-badge-success border-emerald-500/20"
               }`}
             >
-              <span>{isAr ? "سنوي" : "Yearly"}</span>
-              <span className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
-                {isAr ? "وفر 20%" : "Save 20%"}
-              </span>
-            </button>
-          </div>
-
-          {/* 7-day free trial banner or active countdown */}
-          {subscription?.isTrial ? (
-            <div className="flex items-center gap-2.5 text-xs text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 border border-purple-400 px-5 py-2.5 rounded-2xl shadow-lg shadow-purple-900/30">
-              <Clock className="w-4 h-4 text-yellow-300 animate-pulse shrink-0" />
-              <span>
-                <strong>
-                  {isAr 
-                    ? `أنت حالياً في فترة تجريبية مجانية لباقة ${subscription.planName}.`
-                    : `You are currently on a 7-day free trial of ${subscription.planName}.`}
-                </strong>{" "}
-                <span className="bg-white/20 px-2 py-0.5 rounded-full font-bold">
-                  {isAr 
-                    ? `متبقي ${subscription.trialDaysRemaining ?? 7} أيام`
-                    : `${subscription.trialDaysRemaining ?? 7} days remaining`}
-                </span>
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/40 px-4 py-2 rounded-xl shadow-sm dark:shadow-none">
-              <Gift className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
-              <span>
-                <strong className="text-purple-600 dark:text-purple-300 font-semibold underline underline-offset-2">
-                  {isAr ? "تجربة مجانية لمدة 7 أيام على باقتي Plus و Pro." : "7-day free trial on Plus & Pro plans."}
-                </strong>{" "}
-                {isAr ? "يمكنك الإلغاء في أي وقت." : "Cancel anytime."}
-              </span>
-            </div>
-          )}
+              {isAr ? "وفر 20%" : "Save 20%"}
+            </span>
+          </button>
         </div>
 
-        {/* ── Pricing Cards Grid ── */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch pt-2">
-          {plans.map((plan) => {
-            const isPlus = plan.id === "plus";
-            const isPro = plan.id === "pro";
-            const isCurrent = activePlan === plan.id;
-            const price = billingPeriod === "monthly" ? plan.priceMonthly : plan.priceYearly;
+        {/* 7-day free trial banner or active countdown */}
+        {subscription?.isTrial ? (
+          <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 border border-purple-400/40 px-5 py-2.5 rounded-2xl shadow-md shadow-purple-600/20">
+            <Clock className="w-4 h-4 text-amber-300 animate-pulse shrink-0" />
+            <span>
+              <strong>
+                {isAr
+                  ? `أنت حالياً في فترة تجريبية مجانية لباقة ${subscription.planName}.`
+                  : `You are currently on a 7-day free trial of ${subscription.planName}.`}
+              </strong>{" "}
+              <span className="bg-white/20 px-2 py-0.5 rounded-full font-bold">
+                {isAr
+                  ? `متبقي ${subscription.trialDaysRemaining ?? 7} أيام`
+                  : `${subscription.trialDaysRemaining ?? 7} days remaining`}
+              </span>
+            </span>
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-700 dark:text-gray-300 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 px-4 py-2 rounded-xl shadow-sm">
+            <Gift className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa] shrink-0" />
+            <span>
+              <strong className="text-[#7c3aed] dark:text-[#a78bfa] font-semibold underline underline-offset-2">
+                {isAr ? "تجربة مجانية لمدة 7 أيام على باقتي Plus و Pro." : "7-day free trial on Plus & Pro plans."}
+              </strong>{" "}
+              {isAr ? "يمكنك الإلغاء في أي وقت." : "Cancel anytime."}
+            </span>
+          </div>
+        )}
+      </div>
 
-            return (
-              <div
-                key={plan.id}
-                className={`rounded-3xl p-6 flex flex-col justify-between relative transition-all duration-300 ${
-                  isPlus
-                    ? "bg-gradient-to-b from-purple-50/90 via-indigo-50/30 to-white dark:from-[#0F142D] dark:via-[#0C1024] dark:to-[#0A0D1E] border-2 border-purple-500 dark:border-purple-500/80 shadow-2xl shadow-purple-500/10 dark:shadow-[0_0_35px_-8px_rgba(124,58,237,0.4)] scale-102 z-20"
-                    : isPro
-                    ? "bg-gradient-to-b from-amber-50/70 via-amber-50/20 to-white dark:from-[#131124] dark:via-[#0E0D1C] dark:to-[#090A16] border-2 border-amber-500/40 dark:border-amber-500/30 hover:border-amber-500/70 dark:hover:border-amber-500/60 shadow-xl shadow-amber-500/10 dark:shadow-[0_0_35px_-10px_rgba(245,158,11,0.25)] group relative overflow-hidden"
-                    : "bg-white dark:bg-[#0A0D1D]/90 border border-slate-200 dark:border-[#171D38] hover:border-slate-300 dark:hover:border-slate-700 shadow-sm dark:shadow-xl group relative overflow-hidden"
-                }`}
-              >
-                {/* Corner ambient glow for Pro */}
-                {isPro && (
-                  <div className="absolute -top-12 -right-12 w-36 h-36 bg-amber-500/10 dark:bg-amber-500/15 rounded-full blur-2xl pointer-events-none" />
-                )}
+      {/* ── Pricing Cards Grid ── */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch pt-2">
+        {plans.map((plan) => {
+          const isPlus = plan.id === "plus";
+          const isPro = plan.id === "pro";
+          const isCurrent = activePlan === plan.id;
+          const price = billingPeriod === "monthly" ? plan.priceMonthly : plan.priceYearly;
 
-                {/* Most Popular Badge on Plus */}
-                {isPlus && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 text-white font-bold text-[11px] px-3.5 py-1 rounded-full border border-purple-400 flex items-center gap-1 shadow-lg shadow-purple-900/50">
-                    <Sparkles className="w-3 h-3 text-yellow-300" />
-                    <span>{plan.badge || (isAr ? "الأكثر شيوعاً" : "Most Popular")}</span>
-                  </div>
-                )}
+          return (
+            <div
+              key={plan.id}
+              className={`rounded-2xl p-6 flex flex-col justify-between relative transition-all duration-300 ${
+                isPlus
+                  ? "bg-gradient-to-b from-purple-50/80 via-white to-white dark:from-[#8b5cf6]/10 dark:via-[#0c101c] dark:to-[#0c101c] border-2 border-[#8b5cf6] dark:border-[#8b5cf6]/80 shadow-lg shadow-[#8b5cf6]/10 lg:scale-[1.02] z-20"
+                  : isPro
+                  ? "bg-gradient-to-b from-amber-50/60 via-white to-white dark:from-amber-500/[0.07] dark:via-[#0c101c] dark:to-[#0c101c] border border-amber-500/40 dark:border-amber-500/30 hover:border-amber-500/60 dark:hover:border-amber-500/50 shadow-sm afab-card-hover group"
+                  : "afab-card afab-card-hover group"
+              }`}
+            >
+              {/* Most Popular Badge on Plus */}
+              {isPlus && (
+                <div className="absolute -top-3.5 inset-x-0 mx-auto w-fit bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-[10px] px-3.5 py-1 rounded-full border border-purple-400/40 flex items-center gap-1 shadow-md shadow-purple-600/30 whitespace-nowrap">
+                  <Sparkles className="w-3 h-3 text-amber-300" />
+                  <span>{plan.badge || (isAr ? "الأكثر شيوعاً" : "Most Popular")}</span>
+                </div>
+              )}
 
-                <div className="relative z-10">
-                  {/* Icon Badge */}
-                  <div className="flex items-center justify-between mb-5">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-sm ${
+              <div className="relative z-10">
+                {/* Icon Badge */}
+                <div className="flex items-center justify-between mb-5">
+                  <div
+                    className={`w-12 h-12 rounded-2xl flex items-center justify-center border shadow-sm ${
                       plan.id === "free"
-                        ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                        ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                         : plan.id === "plus"
-                        ? "bg-indigo-50 dark:bg-indigo-950/80 border-indigo-200 dark:border-indigo-500/40 text-indigo-600 dark:text-indigo-400 shadow-indigo-900/30"
-                        : "bg-amber-100/80 dark:bg-amber-950/60 border-amber-300 dark:border-amber-500/40 text-amber-600 dark:text-amber-400 shadow-amber-500/10 dark:shadow-amber-900/40"
-                    }`}>
-                      {plan.id === "free" && <Globe2 className="w-6 h-6 stroke-[2]" />}
-                      {plan.id === "plus" && <Zap className="w-6 h-6 fill-current" />}
-                      {plan.id === "pro" && <Crown className="w-6 h-6 fill-current text-amber-500 dark:text-amber-400" />}
-                    </div>
-
-                    {isCurrent && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 px-2.5 py-1 rounded-full">
-                        {isAr ? "نشط" : "Active"}
-                      </span>
-                    )}
+                        ? "bg-[#8b5cf6]/10 border-purple-200 dark:border-purple-500/30 text-[#7c3aed] dark:text-[#a78bfa]"
+                        : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400"
+                    }`}
+                  >
+                    {plan.id === "free" && <Globe2 className="w-6 h-6 stroke-[2]" />}
+                    {plan.id === "plus" && <Zap className="w-6 h-6 fill-current" />}
+                    {plan.id === "pro" && <Crown className="w-6 h-6 fill-current text-amber-500 dark:text-amber-400" />}
                   </div>
 
-                  {/* Title & Description */}
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span>{plan.name}</span>
-                    {isPro && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 px-2 py-0.5 rounded-full">
-                        VIP
-                      </span>
-                    )}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    {plan.subtitle}
-                  </p>
-
-                  {/* Price */}
-                  <div className="mt-4 mb-3 flex items-baseline gap-1.5">
-                    <span className={`text-4xl font-extrabold tracking-tight ${
-                      isPro ? "text-slate-900 dark:text-white" : "text-slate-900 dark:text-white"
-                    }`}>
-                      ${price === 0 ? "0" : price.toFixed(2)}
+                  {isCurrent && (
+                    <span className="afab-badge afab-badge-success px-2.5 py-1 rounded-full uppercase tracking-wider border border-emerald-500/20">
+                      {isAr ? "نشط" : "Active"}
                     </span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                      {isAr ? "/ شهر" : "/ month"}
-                    </span>
-                    {billingPeriod === "yearly" && price > 0 && (
-                      <span className="text-[11px] text-purple-600 dark:text-purple-400 font-semibold ms-1">
-                        {isAr ? "(تدفع سنوياً)" : "(billed annually)"}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed min-h-[36px]">
-                    {plan.description}
-                  </p>
-
-                  {/* CTA Button */}
-                  <div>
-                    {isCurrent ? (
-                      <button
-                        type="button"
-                        disabled
-                        className="w-full mt-5 py-2.5 px-4 bg-slate-100 dark:bg-[#11172E] text-slate-500 dark:text-slate-300 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700/60 cursor-default transition-colors text-center flex items-center justify-center gap-1.5"
-                      >
-                        <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        <span>{isAr ? "الخطة الحالية" : "Current Plan"}</span>
-                      </button>
-                    ) : plan.id === "free" ? (
-                      <button
-                        type="button"
-                        disabled={isSubmitting}
-                        onClick={() => handleSwitchPlan("free")}
-                        className="w-full mt-5 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-[#11172E] dark:hover:bg-[#192244] text-slate-700 dark:text-slate-200 font-semibold text-xs rounded-xl border border-slate-200 dark:border-slate-700/60 transition-colors text-center cursor-pointer flex items-center justify-center gap-1.5"
-                      >
-                        {isSubmitting ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <span>{isAr ? "الرجوع للخطة المجانية" : "Downgrade to Free"}</span>
-                        )}
-                      </button>
-                    ) : !hasUsedTrial ? (
-                      <button
-                        type="button"
-                        disabled={isSubmitting}
-                        onClick={() => handleStartTrial(plan.id as "plus" | "pro")}
-                        className={`w-full mt-5 py-2.5 px-4 text-xs font-semibold rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${
-                          isPlus
-                            ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-900/50"
-                            : "bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-bold shadow-amber-900/40"
-                        }`}
-                      >
-                        <span>{isAr ? "ابدأ التجربة المجانية (7 أيام)" : "Start 7-Day Free Trial"}</span>
-                        <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={isSubmitting}
-                        onClick={() => handleSwitchPlan(plan.id as "plus" | "pro")}
-                        className={`w-full mt-5 py-2.5 px-4 text-xs font-semibold rounded-xl shadow-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-[1.01] active:scale-[0.99] ${
-                          isPlus
-                            ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-purple-900/50"
-                            : "bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-bold shadow-amber-900/40"
-                        }`}
-                      >
-                        {isSubmitting ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <>
-                            <span>{isAr ? `الترقية إلى ${plan.name}` : `Upgrade to ${plan.name}`}</span>
-                            <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Feature List */}
-                  <div className={`mt-6 pt-6 border-t ${
-                    isPro ? "border-amber-200/60 dark:border-amber-500/20" : "border-slate-200 dark:border-slate-800/80"
-                  } space-y-3`}>
-                    <p className={`text-xs font-semibold tracking-wide uppercase ${
-                      isPro ? "text-amber-700 dark:text-amber-400" : "text-slate-900 dark:text-white"
-                    }`}>
-                      {plan.featuresHeader}
-                    </p>
-
-                    <ul className="space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
-                      {plan.features.map((feature, idx) => (
-                        <li 
-                          key={idx} 
-                          className={`flex items-center gap-2.5 ${
-                            feature.included ? "" : "text-slate-400 dark:text-slate-600"
-                          }`}
-                        >
-                          {feature.included ? (
-                            <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 stroke-[2.5]" />
-                          ) : (
-                            <X className="w-4 h-4 text-slate-400 dark:text-slate-600 shrink-0 stroke-[2]" />
-                          )}
-
-                          <span className="flex-1">
-                            {feature.name}
-                          </span>
-
-                          {feature.tooltip && (
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onMouseEnter={() => setActiveTooltip(feature.name)}
-                                onMouseLeave={() => setActiveTooltip(null)}
-                                onClick={() => setActiveTooltip(activeTooltip === feature.name ? null : feature.name)}
-                                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none"
-                              >
-                                <Info className="w-3.5 h-3.5" />
-                              </button>
-                              {activeTooltip === feature.name && (
-                                <div className="absolute z-30 bottom-full end-0 mb-2 w-52 p-2 rounded-lg bg-white dark:bg-gray-900 border border-purple-500/40 text-[11px] text-slate-700 dark:text-gray-300 shadow-xl backdrop-blur-md">
-                                  {feature.tooltip}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  )}
                 </div>
 
-                {/* Bottom decorative graphics matching mockupstitch */}
-                {plan.id === "free" && (
-                  <div className="absolute -bottom-8 -right-8 w-44 h-44 bg-cyan-500/5 dark:bg-cyan-950/20 rounded-full blur-2xl pointer-events-none" />
-                )}
-
-                {plan.id === "plus" && (
-                  <div className="mt-6 flex justify-end items-end gap-1.5 opacity-70 pointer-events-none">
-                    <div className="w-3 h-4 bg-indigo-400/40 dark:bg-indigo-500/40 rounded-t" />
-                    <div className="w-3 h-7 bg-indigo-500/60 dark:bg-indigo-500/60 rounded-t" />
-                    <div className="w-3 h-10 bg-purple-500/70 dark:bg-purple-500/70 rounded-t" />
-                    <div className="w-3 h-14 bg-gradient-to-t from-purple-500 to-indigo-400 rounded-t shadow-md" />
-                  </div>
-                )}
-
-                {plan.id === "pro" && (
-                  <div className="mt-6 flex justify-end items-end gap-2 opacity-90 pointer-events-none">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 dark:text-amber-400 shadow-sm shadow-amber-500/20">
-                      <Crown className="w-4 h-4 fill-current text-amber-500 dark:text-amber-400" />
-                    </div>
-                    <div className="w-3 h-8 bg-amber-500/30 rounded-t" />
-                    <div className="w-3 h-12 bg-amber-500/60 rounded-t" />
-                    <div className="w-3.5 h-16 bg-gradient-to-t from-amber-500 via-amber-400 to-yellow-300 rounded-t shadow-md shadow-amber-500/30" />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </section>
-
-        {/* ── Compare Plans Table ── */}
-        <section className="bg-white dark:bg-[#0A0D1F] border border-slate-200 dark:border-[#171D38] rounded-3xl overflow-hidden mt-12 shadow-sm dark:shadow-xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-start text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 dark:border-[#1A213D] bg-slate-50 dark:bg-[#0C1026]">
-                  <th className="py-5 px-6 font-bold text-slate-900 dark:text-white text-base w-2/5 text-start">
-                    {isAr ? "مقارنة الخطط" : "Compare Plans"}
-                  </th>
-                  {/* Free Column */}
-                  <th className="py-5 px-6 text-center w-1/5">
-                    <div className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-sm">
-                      <span className="w-5 h-5 rounded-md bg-emerald-100 dark:bg-emerald-950 border border-emerald-300 dark:border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                        <Globe2 className="w-3.5 h-3.5 stroke-[2.5]" />
-                      </span>
-                      <span>{isAr ? "مجاني" : "Free"}</span>
-                    </div>
-                  </th>
-                  {/* Plus Column */}
-                  <th className="py-5 px-6 text-center w-1/5 bg-purple-50 dark:bg-purple-950/20 border-x border-purple-100 dark:border-purple-900/30 relative">
-                    <span className="text-[9px] uppercase tracking-wider font-bold text-purple-600 dark:text-purple-300 block mb-0.5">
-                      {isAr ? "☆ الأكثر شيوعاً" : "☆ Most Popular"}
+                {/* Title & Description */}
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+                  <span>{plan.name}</span>
+                  {isPro && (
+                    <span className="afab-badge afab-badge-warning px-2 py-0.5 rounded-full uppercase tracking-wider border border-amber-500/20">
+                      VIP
                     </span>
-                    <div className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-sm">
-                      <span className="w-5 h-5 rounded-md bg-indigo-100 dark:bg-indigo-950 border border-indigo-300 dark:border-indigo-500/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                        <Zap className="w-3 h-3 fill-current" />
+                  )}
+                </h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+                  {plan.subtitle}
+                </p>
+
+                {/* Price */}
+                <div className="mt-4 mb-3 flex items-baseline gap-1.5 flex-wrap">
+                  <span className="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    ${price === 0 ? "0" : price.toFixed(2)}
+                  </span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                    {isAr ? "/ شهر" : "/ month"}
+                  </span>
+                  {billingPeriod === "yearly" && price > 0 && (
+                    <span className="text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-semibold ms-1">
+                      {isAr ? "(تدفع سنوياً)" : "(billed annually)"}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed min-h-[36px]">
+                  {plan.description}
+                </p>
+
+                {/* CTA Button */}
+                <div>
+                  {isCurrent ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="afab-btn-secondary w-full mt-5 py-2.5 cursor-default disabled:opacity-80"
+                    >
+                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>{isAr ? "الخطة الحالية" : "Current Plan"}</span>
+                    </button>
+                  ) : plan.id === "free" ? (
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => handleSwitchPlan("free")}
+                      className="afab-btn-secondary w-full mt-5 py-2.5"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <span>{isAr ? "الرجوع للخطة المجانية" : "Downgrade to Free"}</span>
+                      )}
+                    </button>
+                  ) : !hasUsedTrial ? (
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => handleStartTrial(plan.id as "plus" | "pro")}
+                      className="afab-btn-premium w-full mt-5 py-2.5"
+                    >
+                      <span>{isAr ? "ابدأ التجربة المجانية (7 أيام)" : "Start 7-Day Free Trial"}</span>
+                      <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => handleSwitchPlan(plan.id as "plus" | "pro")}
+                      className="afab-btn-premium w-full mt-5 py-2.5"
+                    >
+                      {isSubmitting ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <span>{isAr ? `الترقية إلى ${plan.name}` : `Upgrade to ${plan.name}`}</span>
+                          <ArrowRight className="w-3.5 h-3.5 rtl:rotate-180" />
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Feature List */}
+                <div
+                  className={`mt-6 pt-6 border-t ${
+                    isPro
+                      ? "border-amber-200/60 dark:border-amber-500/20"
+                      : "border-gray-200 dark:border-gray-800/60"
+                  } space-y-3`}
+                >
+                  <p
+                    className={`text-xs font-semibold tracking-wide uppercase ${
+                      isPro ? "text-amber-700 dark:text-amber-400" : "text-gray-900 dark:text-white"
+                    }`}
+                  >
+                    {plan.featuresHeader}
+                  </p>
+
+                  <ul className="space-y-2.5 text-xs text-gray-700 dark:text-gray-300">
+                    {plan.features.map((feature, idx) => (
+                      <li
+                        key={idx}
+                        className={`flex items-center gap-2.5 ${
+                          feature.included ? "" : "text-gray-400 dark:text-gray-600"
+                        }`}
+                      >
+                        {feature.included ? (
+                          <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 stroke-[2.5]" />
+                        ) : (
+                          <X className="w-4 h-4 text-gray-400 dark:text-gray-600 shrink-0 stroke-[2]" />
+                        )}
+
+                        <span className="flex-1">{feature.name}</span>
+
+                        {feature.tooltip && (
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onMouseEnter={() => setActiveTooltip(feature.name)}
+                              onMouseLeave={() => setActiveTooltip(null)}
+                              onClick={() =>
+                                setActiveTooltip(activeTooltip === feature.name ? null : feature.name)
+                              }
+                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
+                            >
+                              <Info className="w-3.5 h-3.5" />
+                            </button>
+                            {activeTooltip === feature.name && (
+                              <div className="afab-popover absolute z-30 bottom-full end-0 mb-2 w-52 text-[11px] font-normal text-gray-700 dark:text-gray-300">
+                                {feature.tooltip}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              {/* Bottom decorative bar graphics for Plus & Pro */}
+              {plan.id === "plus" && (
+                <div className="mt-6 flex justify-end items-end gap-1.5 opacity-70 pointer-events-none">
+                  <div className="w-3 h-4 bg-indigo-400/40 dark:bg-indigo-500/40 rounded-t" />
+                  <div className="w-3 h-7 bg-indigo-500/60 dark:bg-indigo-500/60 rounded-t" />
+                  <div className="w-3 h-10 bg-purple-500/70 dark:bg-purple-500/70 rounded-t" />
+                  <div className="w-3 h-14 bg-gradient-to-t from-purple-500 to-indigo-400 rounded-t shadow-sm" />
+                </div>
+              )}
+
+              {plan.id === "pro" && (
+                <div className="mt-6 flex justify-end items-end gap-2 opacity-90 pointer-events-none">
+                  <div className="w-7 h-7 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 dark:text-amber-400">
+                    <Crown className="w-4 h-4 fill-current text-amber-500 dark:text-amber-400" />
+                  </div>
+                  <div className="w-3 h-8 bg-amber-500/30 rounded-t" />
+                  <div className="w-3 h-12 bg-amber-500/60 rounded-t" />
+                  <div className="w-3.5 h-16 bg-gradient-to-t from-amber-500 via-amber-400 to-yellow-300 rounded-t shadow-sm" />
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      {/* ── Compare Plans Table ── */}
+      <section className="afab-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="afab-table border-collapse">
+            <thead className="afab-thead normal-case tracking-normal">
+              <tr>
+                <th className="afab-th py-4 font-bold text-gray-900 dark:text-white text-base w-2/5">
+                  {isAr ? "مقارنة الخطط" : "Compare Plans"}
+                </th>
+                {/* Free Column */}
+                <th className="afab-th py-4 text-center w-1/5">
+                  <div className="inline-flex items-center gap-1.5 font-bold text-gray-900 dark:text-white text-sm">
+                    <span className="w-5 h-5 rounded-md bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                      <Globe2 className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </span>
+                    <span>{isAr ? "مجاني" : "Free"}</span>
+                  </div>
+                </th>
+                {/* Plus Column */}
+                <th className="afab-th py-4 text-center w-1/5 bg-purple-50/50 dark:bg-[#8b5cf6]/[0.06] border-x border-purple-100 dark:border-purple-500/20 relative">
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-[#7c3aed] dark:text-[#a78bfa] block mb-0.5">
+                    {isAr ? "☆ الأكثر شيوعاً" : "☆ Most Popular"}
+                  </span>
+                  <div className="inline-flex items-center gap-1.5 font-bold text-gray-900 dark:text-white text-sm">
+                    <span className="w-5 h-5 rounded-md bg-[#8b5cf6]/10 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-[#7c3aed] dark:text-[#a78bfa]">
+                      <Zap className="w-3 h-3 fill-current" />
+                    </span>
+                    <span>Plus</span>
+                  </div>
+                </th>
+                {/* Pro Column */}
+                <th className="afab-th py-4 text-center w-1/5">
+                  <div className="inline-flex items-center gap-1.5 font-bold text-gray-900 dark:text-white text-sm">
+                    <span className="w-5 h-5 rounded-md bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                      <Crown className="w-3.5 h-3.5 fill-current" />
+                    </span>
+                    <span>Pro</span>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="afab-tbody">
+              {comparisonRows.map((row, index) => (
+                <tr key={index} className="afab-tr">
+                  <td className="afab-td font-medium flex items-center gap-1.5 text-start text-gray-900 dark:text-white">
+                    <span>{row.name}</span>
+                    {row.hasInfo && (
+                      <div className="relative inline-block">
+                        <button
+                          type="button"
+                          onMouseEnter={() => setActiveTooltip(`comp-${row.name}`)}
+                          onMouseLeave={() => setActiveTooltip(null)}
+                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                        >
+                          <Info className="w-3.5 h-3.5" />
+                        </button>
+                        {activeTooltip === `comp-${row.name}` && (
+                          <div className="afab-popover absolute z-30 bottom-full start-0 mb-2 w-56 text-[11px] font-normal text-gray-700 dark:text-gray-300">
+                            {row.tooltip}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </td>
+
+                  {/* Free Column */}
+                  <td className="afab-td text-center text-gray-500 dark:text-gray-400">
+                    {typeof row.free === "boolean" ? (
+                      row.free ? (
+                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto stroke-[2.5]" />
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-600">✕</span>
+                      )
+                    ) : (
+                      <span>{row.free}</span>
+                    )}
+                  </td>
+
+                  {/* Plus Column */}
+                  <td className="afab-td text-center bg-purple-50/40 dark:bg-[#8b5cf6]/[0.04] border-x border-purple-100 dark:border-purple-500/20">
+                    {typeof row.plus === "boolean" ? (
+                      row.plus ? (
+                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto stroke-[2.5]" />
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-600">✕</span>
+                      )
+                    ) : (
+                      <span
+                        className={`font-semibold ${
+                          row.highlight
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-gray-900 dark:text-white"
+                        }`}
+                      >
+                        {row.plus}
                       </span>
-                      <span>Plus</span>
-                    </div>
-                  </th>
+                    )}
+                  </td>
+
                   {/* Pro Column */}
-                  <th className="py-5 px-6 text-center w-1/5">
-                    <div className="inline-flex items-center gap-1.5 font-bold text-slate-900 dark:text-white text-sm">
-                      <span className="w-5 h-5 rounded-md bg-amber-100 dark:bg-amber-950 border border-amber-300 dark:border-amber-500/40 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                        <Crown className="w-3.5 h-3.5 fill-current" />
+                  <td className="afab-td text-center">
+                    {typeof row.pro === "boolean" ? (
+                      row.pro ? (
+                        <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto stroke-[2.5]" />
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-600">✕</span>
+                      )
+                    ) : (
+                      <span
+                        className={`font-semibold ${
+                          row.highlight
+                            ? "text-emerald-600 dark:text-emerald-400"
+                            : "text-gray-900 dark:text-white"
+                        }`}
+                      >
+                        {row.pro}
                       </span>
-                      <span>Pro</span>
-                    </div>
-                  </th>
+                    )}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-[#151B33] text-slate-700 dark:text-slate-300">
-                {comparisonRows.map((row, index) => (
-                  <tr key={index} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3.5 px-6 font-medium flex items-center gap-1.5 text-start">
-                      <span>{row.name}</span>
-                      {row.hasInfo && (
-                        <div className="relative inline-block">
-                          <button
-                            type="button"
-                            onMouseEnter={() => setActiveTooltip(`comp-${row.name}`)}
-                            onMouseLeave={() => setActiveTooltip(null)}
-                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                          >
-                            <Info className="w-3.5 h-3.5" />
-                          </button>
-                          {activeTooltip === `comp-${row.name}` && (
-                            <div className="absolute z-30 bottom-full start-0 mb-2 w-56 p-2 rounded-lg bg-white dark:bg-gray-900 border border-purple-500/40 text-[11px] text-slate-700 dark:text-gray-300 shadow-xl">
-                              {row.tooltip}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </td>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-                    {/* Free Column */}
-                    <td className="py-3.5 px-6 text-center text-slate-500 dark:text-slate-400">
-                      {typeof row.free === "boolean" ? (
-                        row.free ? (
-                          <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto stroke-[2.5]" />
-                        ) : (
-                          <span className="text-slate-400 dark:text-slate-600">✕</span>
-                        )
-                      ) : (
-                        <span>{row.free}</span>
-                      )}
-                    </td>
-
-                    {/* Plus Column */}
-                    <td className="py-3.5 px-6 text-center bg-purple-50/60 dark:bg-purple-950/20 border-x border-purple-100 dark:border-purple-900/30">
-                      {typeof row.plus === "boolean" ? (
-                        row.plus ? (
-                          <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto stroke-[2.5]" />
-                        ) : (
-                          <span className="text-slate-400 dark:text-slate-600">✕</span>
-                        )
-                      ) : (
-                        <span className={`font-semibold ${
-                          row.highlight ? "text-emerald-600 dark:text-emerald-400" : "text-slate-800 dark:text-slate-200"
-                        }`}>
-                          {row.plus}
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Pro Column */}
-                    <td className="py-3.5 px-6 text-center">
-                      {typeof row.pro === "boolean" ? (
-                        row.pro ? (
-                          <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto stroke-[2.5]" />
-                        ) : (
-                          <span className="text-slate-400 dark:text-slate-600">✕</span>
-                        )
-                      ) : (
-                        <span className={`font-semibold ${
-                          row.highlight ? "text-emerald-600 dark:text-emerald-400" : "text-slate-800 dark:text-slate-200"
-                        }`}>
-                          {row.pro}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* ── Why Upgrade Section ── */}
-        <section className="pt-4">
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
-            {isAr ? "لماذا الترقية؟" : "Why Upgrade?"}
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Save Time */}
-            <div className="bg-white dark:bg-[#0A0E21] border border-slate-200 dark:border-[#161D38] p-4 rounded-2xl flex items-center gap-3.5 shadow-sm dark:shadow-none">
-              <div className="w-11 h-11 rounded-xl bg-purple-50 dark:bg-purple-950/70 border border-purple-200 dark:border-purple-700/50 flex items-center justify-center shrink-0 text-purple-600 dark:text-purple-400">
-                <Clock className="w-5 h-5" />
-              </div>
-              <div>
-                <h5 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                  {isAr ? "توفير الوقت" : "Save Time"}
-                </h5>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  {isAr ? "دع الذكاء الاصطناعي يتولى الأرقام نيابة عنك." : "Let AI handle the numbers for you."}
-                </p>
-              </div>
-            </div>
-
-            {/* Card 2: Make Better Decisions */}
-            <div className="bg-white dark:bg-[#0A0E21] border border-slate-200 dark:border-[#161D38] p-4 rounded-2xl flex items-center gap-3.5 shadow-sm dark:shadow-none">
-              <div className="w-11 h-11 rounded-xl bg-sky-50 dark:bg-sky-950/70 border border-sky-200 dark:border-sky-700/50 flex items-center justify-center shrink-0 text-sky-600 dark:text-sky-400">
-                <BarChart3 className="w-5 h-5" />
-              </div>
-              <div>
-                <h5 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                  {isAr ? "قرارات أكثر ذكاءً" : "Make Better Decisions"}
-                </h5>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  {isAr ? "احصل على رؤى فورية تساعدك على النمو والازدهار." : "Get insights that help you grow."}
-                </p>
-              </div>
-            </div>
-
-            {/* Card 3: Manage More Businesses */}
-            <div className="bg-white dark:bg-[#0A0E21] border border-slate-200 dark:border-[#161D38] p-4 rounded-2xl flex items-center gap-3.5 shadow-sm dark:shadow-none">
-              <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/70 border border-amber-200 dark:border-amber-700/50 flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div>
-                <h5 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                  {isAr ? "إدارة شركات متعددة" : "Manage More Businesses"}
-                </h5>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  {isAr ? "أدر أعمالك المتعددة في مكان واحد بسهولة." : "Handle multiple businesses in one place."}
-                </p>
-              </div>
-            </div>
-
-            {/* Card 4: Secure & Private */}
-            <div className="bg-white dark:bg-[#0A0E21] border border-slate-200 dark:border-[#161D38] p-4 rounded-2xl flex items-center gap-3.5 shadow-sm dark:shadow-none">
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-200 dark:border-emerald-700/50 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div>
-                <h5 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">
-                  {isAr ? "أمان وخصوصية تامة" : "Secure & Private"}
-                </h5>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                  {isAr ? "بياناتك مشفرة ولا تتم مشاركتها أبدًا." : "Your data is encrypted and never shared."}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Bottom Free Trial Banner ── */}
-        <section className="rounded-3xl bg-gradient-to-r from-purple-900 via-indigo-900 to-violet-950 dark:from-[#171336] dark:via-[#1E1949] dark:to-[#120F2E] border border-purple-500/30 dark:border-purple-600/30 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl relative overflow-hidden">
-          <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex items-center gap-4 relative z-10">
-            <div className="w-12 h-12 rounded-2xl bg-white/10 dark:bg-purple-800/40 border border-white/20 dark:border-purple-400/40 flex items-center justify-center shrink-0 text-purple-200 dark:text-purple-300">
-              <Sparkles className="w-6 h-6" />
+      {/* ── Why Upgrade Section ── */}
+      <section className="space-y-4">
+        <h3 className="afab-card-title">
+          {isAr ? "لماذا الترقية؟" : "Why Upgrade?"}
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Save Time */}
+          <div className="afab-card afab-card-hover p-5 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+              <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-base md:text-lg font-bold text-white">
-                {isAr ? "جرب Plus أو Pro مجاناً لمدة 7 أيام" : "Try Plus or Pro free for 7 days"}
-              </h4>
-              <p className="text-xs text-purple-200 dark:text-slate-300 mt-0.5">
-                {isAr 
-                  ? "افتح أدوات الذكاء الاصطناعي المتقدمة وأدر شركاتك المتعددة بكل سهولة."
-                  : "Unlock powerful AI tools and manage multiple businesses with ease."}
+              <h5 className="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                {isAr ? "توفير الوقت" : "Save Time"}
+              </h5>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                {isAr ? "دع الذكاء الاصطناعي يتولى الأرقام نيابة عنك." : "Let AI handle the numbers for you."}
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => handleStartTrial("plus")}
-            className="relative z-10 shrink-0 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-bold text-xs rounded-xl shadow-lg shadow-purple-900/50 flex items-center gap-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <span>{isAr ? "ابدأ التجربة المجانية" : "Start Free Trial"}</span>
-            <ArrowRight className="w-4 h-4 rtl:rotate-180" />
-          </button>
-        </section>
+          {/* Card 2: Make Better Decisions */}
+          <div className="afab-card afab-card-hover p-5 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+            <div>
+              <h5 className="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                {isAr ? "قرارات أكثر ذكاءً" : "Make Better Decisions"}
+              </h5>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                {isAr ? "احصل على رؤى فورية تساعدك على النمو والازدهار." : "Get insights that help you grow."}
+              </p>
+            </div>
+          </div>
 
-      </div>
+          {/* Card 3: Manage More Businesses */}
+          <div className="afab-card afab-card-hover p-5 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <h5 className="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                {isAr ? "إدارة شركات متعددة" : "Manage More Businesses"}
+              </h5>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                {isAr ? "أدر أعمالك المتعددة في مكان واحد بسهولة." : "Handle multiple businesses in one place."}
+              </p>
+            </div>
+          </div>
+
+          {/* Card 4: Secure & Private */}
+          <div className="afab-card afab-card-hover p-5 flex items-center gap-3.5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <h5 className="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                {isAr ? "أمان وخصوصية تامة" : "Secure & Private"}
+              </h5>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
+                {isAr ? "بياناتك مشفرة ولا تتم مشاركتها أبدًا." : "Your data is encrypted and never shared."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Bottom Free Trial Banner ── */}
+      <section className="afab-card bg-gradient-to-r from-purple-50 via-indigo-50/60 to-purple-50 dark:from-[#8b5cf6]/15 dark:via-[#0c101c] dark:to-[#0c101c] border-purple-200 dark:border-purple-500/30 p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#8b5cf6]/10 border border-purple-500/20 flex items-center justify-center shrink-0 text-[#7c3aed] dark:text-[#a78bfa]">
+            <Sparkles className="w-6 h-6" />
+          </div>
+          <div>
+            <h4 className="text-base md:text-lg font-bold text-gray-900 dark:text-white">
+              {isAr ? "جرب Plus أو Pro مجاناً لمدة 7 أيام" : "Try Plus or Pro free for 7 days"}
+            </h4>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-0.5">
+              {isAr
+                ? "افتح أدوات الذكاء الاصطناعي المتقدمة وأدر شركاتك المتعددة بكل سهولة."
+                : "Unlock powerful AI tools and manage multiple businesses with ease."}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => handleStartTrial("plus")}
+          className="afab-btn-premium px-6 py-3"
+        >
+          <span>{isAr ? "ابدأ التجربة المجانية" : "Start Free Trial"}</span>
+          <ArrowRight className="w-4 h-4 rtl:rotate-180" />
+        </button>
+      </section>
 
       {/* ── 7-Day Free Trial Checkout Modal ── */}
       <AnimatePresence>
         {isCheckoutOpen && selectedPlanForTrial && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 dark:bg-black/75 backdrop-blur-md">
+          <div className="afab-overlay">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-lg rounded-3xl bg-white dark:bg-[#0f1428] border border-slate-200 dark:border-purple-500/40 p-6 sm:p-8 text-slate-900 dark:text-white shadow-2xl overflow-hidden"
+              className="afab-modal max-w-lg text-gray-900 dark:text-white"
             >
               <button
                 type="button"
                 onClick={() => setIsCheckoutOpen(false)}
-                className="absolute top-4 end-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 flex items-center justify-center text-slate-500 dark:text-gray-300 transition-colors"
+                className="afab-icon-btn absolute top-4 end-4 flex h-9 w-9 items-center justify-center rounded-xl"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -960,40 +950,44 @@ export function PlansScreen() {
                 <form onSubmit={handleConfirmCheckout} className="space-y-6">
                   {/* Modal Header */}
                   <div className="space-y-1">
-                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-50 dark:bg-purple-500/15 border border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-300 text-xs font-semibold">
+                    <div className="afab-badge afab-badge-primary px-3 py-1 rounded-full text-xs font-semibold border border-purple-500/20">
                       <Gift className="w-3.5 h-3.5" />
                       <span>{isAr ? "تجربة مجانية 7 أيام" : "7-Day Free Trial"}</span>
                     </div>
-                    <h3 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
-                      {isAr 
+                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                      {isAr
                         ? `ابدأ تجربتك المجانية لباقة ${selectedPlanForTrial === "plus" ? "Plus" : "Pro"}`
                         : `Start your trial on ${selectedPlanForTrial === "plus" ? "Plus" : "Pro"}`}
                     </h3>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400">
-                      {isAr 
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                      {isAr
                         ? "بدون أي خصم اليوم. وصول كامل لمدة 7 أيام. يمكنك الإلغاء في أي وقت بنقرة واحدة."
                         : "Zero charge today. Full access for 7 days. Cancel anytime with 1-click."}
                     </p>
                   </div>
 
                   {/* Summary Box */}
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-purple-950/30 border border-slate-200 dark:border-purple-500/30 space-y-3">
+                  <div className="afab-inset p-4 space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600 dark:text-gray-300 font-medium">
+                      <span className="text-gray-600 dark:text-gray-300 font-medium">
                         {isAr ? "المستحق اليوم (فترة تجريبية):" : "Due Today (Trial):"}
                       </span>
                       <span className="text-emerald-600 dark:text-emerald-400 font-bold">$0.00</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-gray-400 border-t border-slate-200 dark:border-white/10 pt-2">
+                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800/60 pt-2">
                       <span>
-                        {isAr 
+                        {isAr
                           ? `بعد 7 أيام (${billingPeriod === "monthly" ? "شهري" : "سنوي"}):`
                           : `After 7 days (${billingPeriod}):`}
                       </span>
-                      <span className="font-semibold text-slate-900 dark:text-white">
+                      <span className="font-semibold text-gray-900 dark:text-white">
                         {selectedPlanForTrial === "plus"
-                          ? billingPeriod === "monthly" ? "$9.99 / mo" : "$95.88 / yr ($7.99/mo)"
-                          : billingPeriod === "monthly" ? "$19.99 / mo" : "$191.88 / yr ($15.99/mo)"}
+                          ? billingPeriod === "monthly"
+                            ? "$9.99 / mo"
+                            : "$95.88 / yr ($7.99/mo)"
+                          : billingPeriod === "monthly"
+                          ? "$19.99 / mo"
+                          : "$191.88 / yr ($15.99/mo)"}
                       </span>
                     </div>
                   </div>
@@ -1001,19 +995,19 @@ export function PlansScreen() {
                   {/* Payment Inputs */}
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                      <label className="afab-label">
                         {isAr ? "اسم حامل البطاقة" : "Cardholder Name"}
                       </label>
                       <input
                         type="text"
                         defaultValue="Ahmed Al-Kindi"
                         placeholder="Ahmed Al-Kindi"
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                        className="afab-input"
                       />
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                      <label className="afab-label">
                         {isAr ? "رقم البطاقة" : "Card Number"}
                       </label>
                       <div className="relative">
@@ -1021,40 +1015,40 @@ export function PlansScreen() {
                           type="text"
                           defaultValue="4242 •••• •••• 4242"
                           placeholder="•••• •••• •••• 4242"
-                          className="w-full px-3.5 py-2.5 ps-10 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                          className="afab-input ps-10"
                         />
-                        <CreditCard className="w-4 h-4 text-slate-400 absolute start-3 top-3" />
+                        <CreditCard className="w-4 h-4 text-gray-400 absolute start-3 top-1/2 -translate-y-1/2" />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                        <label className="afab-label">
                           {isAr ? "تاريخ الانتهاء" : "Expires"}
                         </label>
                         <input
                           type="text"
                           defaultValue="12/28"
                           placeholder="MM/YY"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                          className="afab-input"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-gray-300 mb-1">
+                        <label className="afab-label">
                           {isAr ? "رمز التحقق (CVC)" : "CVC"}
                         </label>
                         <input
                           type="text"
                           defaultValue="123"
                           placeholder="123"
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#12162b] text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                          className="afab-input"
                         />
                       </div>
                     </div>
                   </div>
 
                   {errorMessage && (
-                    <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 font-medium">
+                    <div className="rounded-xl bg-red-50 dark:bg-red-500/10 p-3 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20">
                       {errorMessage}
                     </div>
                   )}
@@ -1063,7 +1057,7 @@ export function PlansScreen() {
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-sm shadow-xl shadow-purple-900/40 transition-all hover:scale-[1.01] active:scale-[0.99] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
+                    className="afab-btn-premium w-full py-3 px-4 text-sm font-bold"
                   >
                     {isSubmitting ? (
                       <>
@@ -1078,23 +1072,23 @@ export function PlansScreen() {
                     )}
                   </button>
 
-                  <p className="text-[11px] text-center text-slate-400 flex items-center justify-center gap-1">
+                  <p className="text-[11px] text-center text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1">
                     <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                     <span>{isAr ? "مشفر وآمن 100%. بدون مخاطر." : "256-bit encrypted. Cancel in 1-click from dashboard."}</span>
                   </p>
                 </form>
               ) : (
                 <div className="py-8 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-500 border border-emerald-500/40 flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h3 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                    {isAr 
+                  <h3 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+                    {isAr
                       ? `أهلاً بك في ${selectedPlanForTrial === "plus" ? "Plus" : "Pro"}! 🎉`
                       : `Welcome to ${selectedPlanForTrial === "plus" ? "Plus" : "Pro"}! 🎉`}
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 max-w-sm mx-auto">
-                    {isAr 
+                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+                    {isAr
                       ? "تم تفعيل تجربتك المجانية لمدة 7 أيام بنجاح. استمتع بكامل ميزات الذكاء الاصطناعي وإدارة الشركات."
                       : "Your 7-day free trial has been activated. Enjoy advanced AI insights, forecasting, and multi-business tools."}
                   </p>
@@ -1102,7 +1096,7 @@ export function PlansScreen() {
                     <button
                       type="button"
                       onClick={() => setIsCheckoutOpen(false)}
-                      className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs transition-colors"
+                      className="afab-btn-primary px-6 py-2.5"
                     >
                       {isAr ? "الانتقال إلى لوحة التحكم" : "Go to Dashboard"}
                     </button>

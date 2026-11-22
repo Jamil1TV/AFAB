@@ -211,7 +211,7 @@ export function SplitTransactionModal({
                 value={totalAmount}
                 onChange={(e) => setTotalAmount(e.target.value)}
                 placeholder="1000.00"
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101424] px-3 py-2 text-sm font-bold text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm font-bold text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
               />
             </div>
             <div>
@@ -224,7 +224,7 @@ export function SplitTransactionModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Amazon, Office Depot, etc."
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101424] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
               />
             </div>
             <div>
@@ -236,7 +236,7 @@ export function SplitTransactionModal({
                 required
                 value={transactionDate}
                 onChange={(e) => setTransactionDate(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101424] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ export function SplitTransactionModal({
               {lines.map((line, idx) => (
                 <div
                   key={line.id}
-                  className="p-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-[#101424] flex items-center gap-2.5"
+                  className="p-3 rounded-2xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] flex items-center gap-2.5"
                 >
                   <span className="text-xs font-mono text-gray-400 w-4 text-center">
                     {idx + 1}

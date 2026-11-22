@@ -23,7 +23,7 @@ export function StatsTestimonialSection() {
           {/* ═══════════════════════════════════════ */}
           {/* LEFT — Stats Card                      */}
           {/* ═══════════════════════════════════════ */}
-          <div className="flex flex-col justify-center rounded-[20px] border border-gray-200/80 dark:border-gray-700/50 bg-white dark:bg-[#0d1225] p-8 lg:col-span-3 lg:p-10">
+          <div className="flex flex-col justify-center rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-8 shadow-sm lg:col-span-3 lg:p-10">
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
               {/* Title */}
               <h2 className="max-w-[200px] text-xl font-bold leading-snug text-gray-900 dark:text-white">
@@ -49,7 +49,7 @@ export function StatsTestimonialSection() {
           {/* ═══════════════════════════════════════ */}
           {/* RIGHT — Testimonial Card                */}
           {/* ═══════════════════════════════════════ */}
-          <div className="flex flex-col justify-between rounded-[20px] border border-gray-200/80 dark:border-gray-700/50 bg-white dark:bg-[#0d1225] p-8 lg:col-span-2 lg:p-10">
+          <div className="flex flex-col justify-between rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-8 shadow-sm lg:col-span-2 lg:p-10">
             {/* Quote */}
             <div>
               {/* Purple Quote Icon */}

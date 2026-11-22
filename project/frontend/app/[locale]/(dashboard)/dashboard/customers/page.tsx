@@ -5,8 +5,6 @@ import { useTranslations, useLocale } from "next-intl";
 import { 
   Users, 
   UserPlus, 
-  DollarSign, 
-  ShoppingBag, 
   Search, 
   Download, 
   ChevronLeft, 
@@ -14,7 +12,7 @@ import {
   MoreVertical, 
   Plus, 
   Eye, 
-  Edit3, 
+  Pencil, 
   Trash2, 
   X, 
   Phone, 
@@ -24,12 +22,19 @@ import {
   CreditCard, 
   FileText,
   Copy,
-  Check
+  Wallet,
+  TrendingUp,
+  Repeat,
+  Receipt
 } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { toast } from "sonner";
 
 import { AfabLoader } from "@/components/ui/afab-loader";
+import { PageHeader } from "@/components/dashboard/PageHeader";
+import { KpiCard } from "@/components/dashboard/KpiCard";
+import { EmptyState } from "@/components/dashboard/EmptyState";
+import { CHART_PALETTE, chartSemantic, chartTooltipStyle } from "@/lib/design-tokens";
 import { 
   CustomerService, 
   Customer, 
@@ -42,36 +47,6 @@ import {
 } from "@/lib/api/customers";
 import { UserService } from "@/lib/api/dashboard";
 import { formatCurrency } from "@/lib/currency";
-
-// SVG Sparkline Generator matching the Stitch design
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  const points = data.length > 0 ? data : [10, 25, 18, 30, 22, 40, 35];
-  const min = Math.min(...points);
-  const max = Math.max(...points);
-  const range = max - min || 1;
-  const width = 120;
-  const height = 36;
-  const padding = 4;
-
-  const coords = points.map((val, idx) => {
-    const x = padding + (idx / (points.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((val - min) / range) * (height - padding * 2);
-    return `${x},${y}`;
-  });
-
-  return (
-    <svg width={width} height={height} className="overflow-visible">
-      <polyline
-        fill="none"
-        stroke={color}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        points={coords.join(" ")}
-      />
-    </svg>
-  );
-}
 
 export default function CustomersPage() {
   const t = useTranslations("Customers");
@@ -430,264 +405,181 @@ export default function CustomersPage() {
   const getGroupBadge = (group: CustomerGroup) => {
     switch (group) {
       case "Premium":
-        return "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20";
+        return "afab-badge afab-badge-primary";
       case "Business":
-        return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20";
+        return "afab-badge afab-badge-info";
       case "Enterprise":
-        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+        return "afab-badge afab-badge-success";
       case "Standard":
       default:
-        return "bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20";
+        return "afab-badge afab-badge-neutral";
     }
   };
 
   const getStatusBadge = (status: CustomerStatus) => {
     switch (status) {
       case "Active":
-        return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20";
+        return "afab-badge afab-badge-success";
       case "Inactive":
-        return "bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20";
+        return "afab-badge afab-badge-neutral";
       case "New":
-        return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20";
+        return "afab-badge afab-badge-primary";
       case "Lead":
-        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20";
+        return "afab-badge afab-badge-warning";
       default:
-        return "bg-gray-500/10 text-gray-500";
+        return "afab-badge afab-badge-neutral";
     }
   };
 
-  // Sparkline Trends Data
-  const sparklineData = useMemo(() => ({
-    total: [190, 205, 215, 228, 235, 242, 248],
-    newCust: [14, 18, 16, 20, 22, 19, 24],
-    revenue: [52000, 58000, 61000, 67000, 71000, 69000, 74850],
-    avgRev: [270, 282, 290, 285, 295, 298, 302],
-    repeat: [58, 60, 62, 61, 65, 66, 68],
-  }), []);
+  // Sparkline Trends Data derived from actual customer records
+  const sparklineData = useMemo(() => {
+    const total = summary?.totalCustomers || 0;
+    const newC = summary?.newCustomers || 0;
+    const rev = summary?.totalRevenue || 0;
+    const avg = summary?.avgRevenuePerCustomer || 0;
+    const rep = summary?.repeatCustomersPct || 0;
 
-  // Overview Donut Chart Data
+    const revSeries = customers.length > 0
+      ? [...customers].reverse().map((c) => c.totalRevenue || 0)
+      : [0, 0, 0, 0, 0];
+
+    return {
+      total: total > 0 ? [0, Math.max(1, Math.floor(total * 0.5)), total] : [0, 0, 0, 0, 0],
+      newCust: newC > 0 ? [0, Math.max(1, Math.floor(newC * 0.5)), newC] : [0, 0, 0, 0, 0],
+      revenue: rev > 0 ? [0, ...revSeries] : [0, 0, 0, 0, 0],
+      avgRev: avg > 0 ? [0, avg * 0.6, avg] : [0, 0, 0, 0, 0],
+      repeat: rep > 0 ? [0, rep * 0.6, rep] : [0, 0, 0, 0, 0],
+    };
+  }, [summary, customers]);
+
+  // Overview Donut Chart Data — aligned with AFAB reference palette (Emerald, Purple, Sky)
   const donutData = useMemo(() => {
-    if (!summary) return [];
+    if (!summary || summary.totalCustomers === 0) {
+      return [{ name: tWidgets("total"), value: 1, color: "#374151" }];
+    }
     return [
-      { name: tStatuses("active"), value: summary.overviewDonut.activeCount, color: "#10b981" },
-      { name: tStatuses("inactive"), value: summary.overviewDonut.inactiveCount, color: "#8b5cf6" },
-      { name: tStatuses("new"), value: summary.overviewDonut.newCount, color: "#f43f5e" },
+      { name: tStatuses("active"), value: summary.overviewDonut.activeCount, color: chartSemantic.positive },
+      { name: tStatuses("inactive"), value: summary.overviewDonut.inactiveCount, color: CHART_PALETTE[0] },
+      { name: tStatuses("new"), value: summary.overviewDonut.newCount, color: CHART_PALETTE[1] },
     ];
-  }, [summary, tStatuses]);
+  }, [summary, tStatuses, tWidgets]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-16">
+    <div className="afab-page animate-in fade-in duration-700">
       
-      {/* ── Page Header matching Stitch Mockup ── */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
-            {t("title")}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {t("subtitle")}
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Header Search Input with ⌘K badge */}
-          <div className="relative w-full sm:w-64">
-            <Search className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 ${isRtl ? "right-3" : "left-3"}`} />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder={t("searchPlaceholder")}
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setPage(0);
-              }}
-              className={`w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0f1422] py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] transition-all shadow-sm ${
-                isRtl ? "pr-9 pl-9" : "pl-9 pr-9"
-              }`}
-            />
-            <kbd className={`absolute top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md ${
-              isRtl ? "left-2.5" : "right-2.5"
-            }`}>
-              ⌘K
-            </kbd>
-          </div>
-
-          {/* Period Selector Dropdown */}
-          <div className="flex items-center rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0f1422] p-1 shadow-sm">
-            {(["week", "month", "quarter", "year"] as const).map((p) => (
-              <button
-                key={p}
-                onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                  period === p
-                    ? "bg-[#8b5cf6] text-white shadow-sm"
-                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-                }`}
-              >
-                {t(`period.${p}`)}
-              </button>
-            ))}
-          </div>
-
-          {/* Add Customer Button (Purple Gradient CTA) */}
-          <button
-            onClick={openAddModal}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold px-4 py-2 text-xs shadow-lg shadow-purple-600/25 active:scale-95 transition-all"
-          >
-            <Plus className="h-4 w-4" />
-            <span>{t("addCustomer")}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ── 5 Top KPI Cards with Sparklines ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        
-        {/* Total Customers */}
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm transition-all hover:border-[#8b5cf6]/40">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {tKpi("totalCustomers")}
-            </span>
-            <div className="h-8 w-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[#8b5cf6] flex items-center justify-center">
-              <Users className="h-4 w-4" />
+      {/* ── Page Header ── */}
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        actions={
+          <>
+            {/* Header Search Input with ⌘K badge */}
+            <div className="relative w-full sm:w-64">
+              <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder={t("searchPlaceholder")}
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(0);
+                }}
+                className="afab-input ps-9 pe-12 py-2 text-xs font-medium"
+              />
+              <kbd className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
+                ⌘K
+              </kbd>
             </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {summary ? summary.totalCustomers : "—"}
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs font-semibold text-emerald-500 flex items-center gap-0.5">
-              ↑ {summary?.totalCustomersChangePct ?? 12.5}%
-              <span className="text-[11px] font-normal text-gray-400 ms-1">
-                {tKpi("vsLastWeek")}
-              </span>
-            </span>
-          </div>
-          <div className="mt-2 pt-1 border-t border-gray-100 dark:border-gray-800/40">
-            <Sparkline data={sparklineData.total} color="#8b5cf6" />
-          </div>
-        </div>
 
-        {/* New Customers */}
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm transition-all hover:border-emerald-500/40">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {tKpi("newCustomers")}
-            </span>
-            <div className="h-8 w-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center">
-              <UserPlus className="h-4 w-4" />
+            {/* Period Selector Tabs */}
+            <div className="afab-segmented">
+              {(["week", "month", "quarter", "year"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPeriod(p)}
+                  className={`afab-segment capitalize ${
+                    period === p ? "afab-segment-active" : ""
+                  }`}
+                >
+                  {t(`period.${p}`)}
+                </button>
+              ))}
             </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {summary ? summary.newCustomers : "—"}
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs font-semibold text-emerald-500 flex items-center gap-0.5">
-              ↑ {summary?.newCustomersChangePct ?? 8.4}%
-              <span className="text-[11px] font-normal text-gray-400 ms-1">
-                {tKpi("vsLastWeek")}
-              </span>
-            </span>
-          </div>
-          <div className="mt-2 pt-1 border-t border-gray-100 dark:border-gray-800/40">
-            <Sparkline data={sparklineData.newCust} color="#10b981" />
-          </div>
-        </div>
 
-        {/* Total Revenue */}
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm transition-all hover:border-amber-500/40">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {tKpi("totalRevenue")}
-            </span>
-            <div className="h-8 w-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center">
-              <DollarSign className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2 truncate">
-            {summary ? formatCurrency(summary.totalRevenue, currency) : "—"}
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs font-semibold text-emerald-500 flex items-center gap-0.5">
-              ↑ {summary?.totalRevenueChangePct ?? 15.2}%
-              <span className="text-[11px] font-normal text-gray-400 ms-1">
-                {tKpi("vsLastWeek")}
-              </span>
-            </span>
-          </div>
-          <div className="mt-2 pt-1 border-t border-gray-100 dark:border-gray-800/40">
-            <Sparkline data={sparklineData.revenue} color="#f59e0b" />
-          </div>
-        </div>
+            {/* Add Customer Button */}
+            <button
+              onClick={openAddModal}
+              className="afab-btn-primary"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{t("addCustomer")}</span>
+            </button>
+          </>
+        }
+      />
 
-        {/* Avg. Revenue Per Customer */}
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm transition-all hover:border-blue-500/40">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {tKpi("avgRevenue")}
-            </span>
-            <div className="h-8 w-8 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-500 flex items-center justify-center">
-              <ShoppingBag className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2 truncate">
-            {summary ? formatCurrency(summary.avgRevenuePerCustomer, currency) : "—"}
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs font-semibold text-rose-500 flex items-center gap-0.5">
-              ↓ {summary?.avgRevenueChangePct ?? -2.1}%
-              <span className="text-[11px] font-normal text-gray-400 ms-1">
-                {tKpi("vsLastWeek")}
-              </span>
-            </span>
-          </div>
-          <div className="mt-2 pt-1 border-t border-gray-100 dark:border-gray-800/40">
-            <Sparkline data={sparklineData.avgRev} color="#3b82f6" />
-          </div>
-        </div>
+      {/* ── 5 Top KPI Cards (identical KpiCard component as Dashboard, Expenses, Revenue, Invoices) ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <KpiCard
+          title={tKpi("totalCustomers")}
+          value={(summary?.totalCustomers ?? 0).toString()}
+          change={`${(summary?.totalCustomersChangePct ?? 0) > 0 ? "+" : ""}${summary?.totalCustomersChangePct ?? 0}%`}
+          isPositive={(summary?.totalCustomersChangePct ?? 0) >= 0}
+          icon={Users}
+          data={sparklineData.total}
+        />
 
-        {/* Repeat Customers */}
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm transition-all hover:border-purple-500/40">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
-              {tKpi("repeatCustomers")}
-            </span>
-            <div className="h-8 w-8 rounded-xl bg-purple-500/10 border border-purple-500/20 text-[#8b5cf6] flex items-center justify-center">
-              <Users className="h-4 w-4" />
-            </div>
-          </div>
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mt-2">
-            {summary ? `${summary.repeatCustomersPct}%` : "—"}
-          </div>
-          <div className="flex items-center justify-between mt-2">
-            <span className="text-xs font-semibold text-emerald-500 flex items-center gap-0.5">
-              ↑ {summary?.repeatCustomersChangePct ?? 4.0}%
-              <span className="text-[11px] font-normal text-gray-400 ms-1">
-                {tKpi("vsLastWeek")}
-              </span>
-            </span>
-          </div>
-          <div className="mt-2 pt-1 border-t border-gray-100 dark:border-gray-800/40">
-            <Sparkline data={sparklineData.repeat} color="#a855f7" />
-          </div>
-        </div>
+        <KpiCard
+          title={tKpi("newCustomers")}
+          value={(summary?.newCustomers ?? 0).toString()}
+          change={`${(summary?.newCustomersChangePct ?? 0) > 0 ? "+" : ""}${summary?.newCustomersChangePct ?? 0}%`}
+          isPositive={(summary?.newCustomersChangePct ?? 0) >= 0}
+          icon={UserPlus}
+          data={sparklineData.newCust}
+        />
 
+        <KpiCard
+          title={tKpi("totalRevenue")}
+          value={formatCurrency(summary?.totalRevenue || 0, currency)}
+          change={`${(summary?.totalRevenueChangePct ?? 0) > 0 ? "+" : ""}${summary?.totalRevenueChangePct ?? 0}%`}
+          isPositive={(summary?.totalRevenueChangePct ?? 0) >= 0}
+          icon={Wallet}
+          data={sparklineData.revenue}
+        />
+
+        <KpiCard
+          title={tKpi("avgRevenue")}
+          value={formatCurrency(summary?.avgRevenuePerCustomer || 0, currency)}
+          change={`${(summary?.avgRevenueChangePct ?? 0) > 0 ? "+" : ""}${summary?.avgRevenueChangePct ?? 0}%`}
+          isPositive={(summary?.avgRevenueChangePct ?? 0) >= 0}
+          icon={TrendingUp}
+          data={sparklineData.avgRev}
+        />
+
+        <KpiCard
+          title={tKpi("repeatCustomers")}
+          value={`${summary?.repeatCustomersPct ?? 0}%`}
+          change={`${(summary?.repeatCustomersChangePct ?? 0) > 0 ? "+" : ""}${summary?.repeatCustomersChangePct ?? 0}%`}
+          isPositive={(summary?.repeatCustomersChangePct ?? 0) >= 0}
+          icon={Repeat}
+          data={sparklineData.repeat}
+        />
       </div>
 
       {/* ── Main Layout: 2/3 Directory Table & 1/3 Analytics Widgets ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Column: Customer Directory Table (8 Cols) */}
-        <div className="lg:col-span-8 rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] shadow-sm overflow-hidden">
+        <div className="lg:col-span-8 afab-card overflow-hidden">
           
           {/* Table Controls (Search, Filters, CSV Export) */}
-          <div className="p-4 border-b border-gray-200 dark:border-gray-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-5 border-b border-gray-100 dark:border-gray-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             
             {/* Table inline search */}
             <div className="relative flex-1 max-w-sm">
-              <Search className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 ${isRtl ? "right-3" : "left-3"}`} />
+              <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 placeholder={tTable("search")}
@@ -696,13 +588,11 @@ export default function CustomersPage() {
                   setSearch(e.target.value);
                   setPage(0);
                 }}
-                className={`w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] transition-all ${
-                  isRtl ? "pr-9 pl-3" : "pl-9 pr-3"
-                }`}
+                className="afab-input ps-9 pe-3 py-2 text-xs font-medium"
               />
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Group Filter */}
               <select
                 value={groupFilter}
@@ -710,7 +600,7 @@ export default function CustomersPage() {
                   setGroupFilter(e.target.value);
                   setPage(0);
                 }}
-                className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                className="afab-select"
               >
                 <option value="ALL">{tGroups("all")}</option>
                 <option value="Standard">{tGroups("standard")}</option>
@@ -726,7 +616,7 @@ export default function CustomersPage() {
                   setStatusFilter(e.target.value);
                   setPage(0);
                 }}
-                className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                className="afab-select"
               >
                 <option value="ALL">{tStatuses("all")}</option>
                 <option value="Active">{tStatuses("active")}</option>
@@ -738,9 +628,9 @@ export default function CustomersPage() {
               {/* Export CSV Button */}
               <button
                 onClick={handleExportCsv}
-                className="flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                className="afab-btn-secondary"
               >
-                <Download className="h-3.5 w-3.5 text-gray-500" />
+                <Download className="h-3.5 w-3.5" />
                 <span className="hidden sm:inline">{tTable("export")}</span>
               </button>
             </div>
@@ -748,7 +638,7 @@ export default function CustomersPage() {
 
           {/* Active selection banner */}
           {selectedIds.length > 0 && (
-            <div className="px-4 py-2 bg-purple-500/10 border-b border-purple-500/20 flex items-center justify-between text-xs text-purple-600 dark:text-purple-400 font-medium">
+            <div className="px-6 py-2.5 bg-purple-500/10 border-b border-purple-500/20 flex items-center justify-between text-xs text-[#7c3aed] dark:text-[#a78bfa] font-medium">
               <span>{tTable("selected", { count: selectedIds.length })}</span>
               <button
                 onClick={() => setSelectedIds([])}
@@ -761,10 +651,10 @@ export default function CustomersPage() {
 
           {/* Customers Data Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-start border-collapse">
-              <thead>
-                <tr className="border-b border-gray-200 dark:border-gray-800/60 bg-gray-50/40 dark:bg-[#0a0e1a]/40 text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  <th className="py-3 px-4 w-10 text-center">
+            <table className="afab-table border-collapse">
+              <thead className="afab-thead">
+                <tr>
+                  <th className="afab-th px-4 w-10 text-center">
                     <input
                       type="checkbox"
                       checked={customers.length > 0 && selectedIds.length === customers.length}
@@ -772,17 +662,17 @@ export default function CustomersPage() {
                       className="rounded border-gray-300 dark:border-gray-700 text-[#8b5cf6] focus:ring-[#8b5cf6]"
                     />
                   </th>
-                  <th className={`py-3 px-4 ${isRtl ? "text-right" : "text-left"}`}>{tTable("customer")}</th>
-                  <th className={`py-3 px-4 ${isRtl ? "text-right" : "text-left"}`}>{tTable("contact")}</th>
-                  <th className={`py-3 px-4 ${isRtl ? "text-right" : "text-left"}`}>{tTable("group")}</th>
-                  <th className={`py-3 px-4 ${isRtl ? "text-right" : "text-left"}`}>{tTable("totalRevenue")}</th>
-                  <th className="py-3 px-4 text-center">{tTable("orders")}</th>
-                  <th className="py-3 px-4 text-center">{tTable("status")}</th>
-                  <th className={`py-3 px-4 ${isRtl ? "text-right" : "text-left"}`}>{tTable("lastActivity")}</th>
-                  <th className="py-3 px-4 text-center w-12">{tTable("actions")}</th>
+                  <th className="afab-th px-4">{tTable("customer")}</th>
+                  <th className="afab-th px-4">{tTable("contact")}</th>
+                  <th className="afab-th px-4">{tTable("group")}</th>
+                  <th className="afab-th px-4">{tTable("totalRevenue")}</th>
+                  <th className="afab-th px-4 text-center">{tTable("orders")}</th>
+                  <th className="afab-th px-4 text-center">{tTable("status")}</th>
+                  <th className="afab-th px-4">{tTable("lastActivity")}</th>
+                  <th className="afab-th px-4 text-center w-12">{tTable("actions")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800/40 text-xs font-medium text-gray-700 dark:text-gray-300">
+              <tbody className="afab-tbody">
                 {loading && customers.length === 0 ? (
                   <tr>
                     <td colSpan={9} className="py-12 text-center">
@@ -791,10 +681,22 @@ export default function CustomersPage() {
                   </tr>
                 ) : customers.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="py-12 text-center text-gray-400">
-                      <Users className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                      <p className="font-semibold">{tTable("noResults")}</p>
-                      <p className="text-xs mt-1 text-gray-500">{tTable("noCustomersYet")}</p>
+                    <td colSpan={9}>
+                      <EmptyState
+                        icon={Users}
+                        title={search || statusFilter !== "ALL" || groupFilter !== "ALL" ? tTable("noResults") : "No customers yet."}
+                        description={tTable("noCustomersYet")}
+                        action={
+                          <button
+                            type="button"
+                            onClick={openAddModal}
+                            className="afab-btn-primary"
+                          >
+                            <Plus className="h-4 w-4" />
+                            <span>{t("addCustomer")}</span>
+                          </button>
+                        }
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -807,15 +709,13 @@ export default function CustomersPage() {
                       <tr
                         key={cust.id}
                         onClick={() => setSelectedCustomer(cust)}
-                        className={`group transition-colors cursor-pointer ${
-                          isSelected
-                            ? "bg-purple-500/5 dark:bg-purple-900/10"
-                            : "hover:bg-gray-50/70 dark:hover:bg-white/[0.02]"
+                        className={`afab-tr group cursor-pointer ${
+                          isSelected ? "bg-[#8b5cf6]/5 dark:bg-[#8b5cf6]/10" : ""
                         }`}
                       >
                         {/* Checkbox */}
                         <td
-                          className="py-3.5 px-4 text-center"
+                          className="afab-td px-4 text-center"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <input
@@ -827,9 +727,9 @@ export default function CustomersPage() {
                         </td>
 
                         {/* Customer Avatar, Name & Customer ID Badge */}
-                        <td className="py-3.5 px-4">
+                        <td className="afab-td px-4">
                           <div className="flex items-center gap-3">
-                            <div className={`h-9 w-9 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${cust.avatarColor || "bg-purple-500/20 text-purple-400 border-purple-500/30"}`}>
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold text-xs">
                               {initialLetter}
                             </div>
                             <div className="min-w-0">
@@ -844,7 +744,7 @@ export default function CustomersPage() {
                                     toast.success(tDrawer("idCopied", { code }));
                                   }}
                                   title={tDrawer("copyId")}
-                                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[10px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 hover:bg-purple-500/20 transition-colors"
+                                  className="afab-badge afab-badge-primary font-mono hover:bg-purple-500/20 transition-colors"
                                 >
                                   {code}
                                   <Copy className="h-2.5 w-2.5 opacity-60" />
@@ -858,95 +758,95 @@ export default function CustomersPage() {
                         </td>
 
                         {/* Contact */}
-                        <td className="py-3.5 px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        <td className="afab-td px-4 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                           {cust.phone || "—"}
                         </td>
 
                         {/* Group */}
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-semibold ${getGroupBadge(cust.group)}`}>
+                        <td className="afab-td px-4 whitespace-nowrap">
+                          <span className={getGroupBadge(cust.group)}>
                             {tGroups(cust.group.toLowerCase()) || cust.group}
                           </span>
                         </td>
 
                         {/* Total Revenue */}
-                        <td className="py-3.5 px-4 font-bold text-gray-900 dark:text-white whitespace-nowrap">
+                        <td className="afab-td px-4 font-bold text-gray-900 dark:text-white whitespace-nowrap">
                           {formatCurrency(cust.totalRevenue, currency)}
                         </td>
 
                         {/* Orders count badge with quick Add Order on hover */}
-                        <td className="py-3.5 px-4 text-center">
+                        <td className="afab-td px-4 text-center">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedCustomer(cust);
                             }}
-                            className="inline-flex items-center gap-1 font-semibold text-gray-700 dark:text-gray-300 hover:text-[#8b5cf6] dark:hover:text-[#8b5cf6] px-2 py-0.5 rounded-md hover:bg-purple-500/10 transition-colors"
+                            className="inline-flex items-center gap-1 font-semibold text-gray-700 dark:text-gray-300 hover:text-[#7c3aed] dark:hover:text-[#a78bfa] px-2 py-0.5 rounded-md hover:bg-purple-500/10 transition-colors"
                           >
-                            <ShoppingBag className="h-3 w-3 text-gray-400" />
+                            <Receipt className="h-3 w-3 text-gray-400" />
                             <span>{cust.ordersCount}</span>
                           </button>
                         </td>
 
                         {/* Status */}
-                        <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${getStatusBadge(cust.status)}`}>
+                        <td className="afab-td px-4 text-center whitespace-nowrap">
+                          <span className={getStatusBadge(cust.status)}>
                             {tStatuses(cust.status.toLowerCase()) || cust.status}
                           </span>
                         </td>
 
                         {/* Last Activity */}
-                        <td className="py-3.5 px-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                        <td className="afab-td px-4 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                           {cust.lastActivityDate}
                         </td>
 
                         {/* Actions Menu */}
                         <td
-                          className="py-3.5 px-4 text-center relative"
+                          className="afab-td px-4 text-center relative"
                           onClick={(e) => e.stopPropagation()}
                           data-row-menu
                         >
                           <button
                             onClick={() => setActiveRowMenuId(activeRowMenuId === cust.id ? null : cust.id)}
-                            className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                            className="afab-icon-btn"
                           >
                             <MoreVertical className="h-4 w-4" />
                           </button>
 
                           {activeRowMenuId === cust.id && (
-                            <div className={`absolute top-8 ${isRtl ? "left-4" : "right-4"} z-30 w-40 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#131825] shadow-xl py-1 text-xs text-start animate-in fade-in zoom-in-95`}>
+                            <div className="afab-popover absolute top-9 end-4 z-30 w-44 p-1.5 text-xs text-start animate-in fade-in zoom-in-95">
                               <button
                                 onClick={() => {
                                   setSelectedCustomer(cust);
                                   setActiveRowMenuId(null);
                                 }}
-                                className="flex items-center gap-2 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                                className="flex items-center gap-2 w-full rounded-xl px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
                               >
                                 <Eye className="h-3.5 w-3.5" />
                                 <span>{tTable("viewDetails")}</span>
                               </button>
                               <button
                                 onClick={() => openAddOrderModal(cust)}
-                                className="flex items-center gap-2 w-full px-3 py-2 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors font-semibold"
+                                className="flex items-center gap-2 w-full rounded-xl px-3 py-2 text-[#7c3aed] dark:text-[#a78bfa] hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors font-semibold"
                               >
-                                <ShoppingBag className="h-3.5 w-3.5" />
+                                <Receipt className="h-3.5 w-3.5" />
                                 <span>{tTable("addOrder")}</span>
                               </button>
                               <button
                                 onClick={() => openEditModal(cust)}
-                                className="flex items-center gap-2 w-full px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                                className="flex items-center gap-2 w-full rounded-xl px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
                               >
-                                <Edit3 className="h-3.5 w-3.5" />
+                                <Pencil className="h-3.5 w-3.5" />
                                 <span>{tTable("edit")}</span>
                               </button>
-                              <div className="my-1 border-t border-gray-100 dark:border-gray-800" />
+                              <div className="my-1 border-t border-gray-100 dark:border-gray-800/60" />
                               <button
                                 onClick={() => {
                                   setCustomerToDelete(cust);
                                   setActiveRowMenuId(null);
                                 }}
-                                className="flex items-center gap-2 w-full px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                                className="flex items-center gap-2 w-full rounded-xl px-3 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                                 <span>{tTable("delete")}</span>
@@ -963,7 +863,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Table Pagination Footer */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
+          <div className="afab-pagination flex-col sm:flex-row gap-3 text-xs text-gray-500 dark:text-gray-400">
             <div>
               {tTable("showing", {
                 from: totalElements > 0 ? page * pageSize + 1 : 0,
@@ -972,7 +872,7 @@ export default function CustomersPage() {
               })}
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               {/* Rows Per Page */}
               <div className="flex items-center gap-1.5">
                 <span>{tTable("rowsPerPage")}</span>
@@ -982,7 +882,7 @@ export default function CustomersPage() {
                     setPageSize(Number(e.target.value));
                     setPage(0);
                   }}
-                  className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#080c18] px-2 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                  className="afab-select py-1 px-2.5 text-xs"
                 >
                   <option value={10}>10</option>
                   <option value={25}>25</option>
@@ -995,19 +895,19 @@ export default function CustomersPage() {
                 <button
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
                   disabled={page === 0}
-                  className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-white/[0.05] disabled:opacity-40 transition-colors"
+                  className="afab-page-btn"
                 >
-                  <ChevronLeft className="h-3.5 w-3.5" />
+                  <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" />
                 </button>
-                <span className="px-3 py-1 font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 rounded-lg">
+                <span className="px-3 py-1 font-semibold text-gray-900 dark:text-white bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 rounded-lg">
                   {page + 1} / {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
                   disabled={page >= totalPages - 1}
-                  className="p-1.5 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-white/[0.05] disabled:opacity-40 transition-colors"
+                  className="afab-page-btn"
                 >
-                  <ChevronRight className="h-3.5 w-3.5" />
+                  <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
                 </button>
               </div>
             </div>
@@ -1019,7 +919,7 @@ export default function CustomersPage() {
         <div className="lg:col-span-4 space-y-6">
           
           {/* Widget 1: Customer Overview Donut Chart */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm">
+          <div className="afab-card p-6">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
               {tWidgets("overviewTitle")}
             </h3>
@@ -1031,12 +931,7 @@ export default function CustomersPage() {
                   <PieChart>
                     <Tooltip
                       formatter={(val) => [`${val} customers`, ""]}
-                      contentStyle={{
-                        backgroundColor: "#131825",
-                        border: "1px solid #1e293b",
-                        borderRadius: "12px",
-                        fontSize: "12px",
-                      }}
+                      {...chartTooltipStyle}
                     />
                     <Pie
                       data={donutData}
@@ -1066,34 +961,34 @@ export default function CustomersPage() {
               </div>
 
               {/* Legend & Breakdown */}
-              <div className="flex-1 space-y-2 text-xs">
+              <div className="flex-1 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <span className="flex items-center gap-2 font-medium text-gray-600 dark:text-gray-300">
+                    <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                     <span>{tStatuses("active")}</span>
                   </span>
                   <span className="font-bold text-gray-900 dark:text-white">
-                    {summary?.overviewDonut.activePct ?? 65}%
+                    {summary?.overviewDonut.activePct ?? 0}%
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                    <span className="h-2 w-2 rounded-full bg-[#8b5cf6]" />
+                  <span className="flex items-center gap-2 font-medium text-gray-600 dark:text-gray-300">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#8b5cf6]" />
                     <span>{tStatuses("inactive")}</span>
                   </span>
                   <span className="font-bold text-gray-900 dark:text-white">
-                    {summary?.overviewDonut.inactivePct ?? 22}%
+                    {summary?.overviewDonut.inactivePct ?? 0}%
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                    <span className="h-2 w-2 rounded-full bg-rose-500" />
+                  <span className="flex items-center gap-2 font-medium text-gray-600 dark:text-gray-300">
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#0ea5e9]" />
                     <span>{tStatuses("new")}</span>
                   </span>
                   <span className="font-bold text-gray-900 dark:text-white">
-                    {summary?.overviewDonut.newPct ?? 13}%
+                    {summary?.overviewDonut.newPct ?? 0}%
                   </span>
                 </div>
               </div>
@@ -1101,7 +996,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Widget 2: Top Customers by Revenue */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm">
+          <div className="afab-card p-6">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                 {tWidgets("topCustomersTitle")}
@@ -1111,7 +1006,7 @@ export default function CustomersPage() {
                   setGroupFilter("Premium");
                   setPage(0);
                 }}
-                className="text-xs font-semibold text-[#8b5cf6] hover:underline"
+                className="text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline"
               >
                 {tWidgets("viewAll")}
               </button>
@@ -1128,10 +1023,10 @@ export default function CustomersPage() {
                       const fullCust = customers.find((c) => c.id === top.id);
                       if (fullCust) setSelectedCustomer(fullCust);
                     }}
-                    className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50/70 dark:hover:bg-white/[0.03] transition-colors cursor-pointer"
+                    className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50/80 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`h-8 w-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 border ${top.avatarColor}`}>
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold text-xs">
                         {top.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -1158,7 +1053,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Widget 3: Recent Activity Log */}
-          <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0f1422] p-5 shadow-sm">
+          <div className="afab-card p-6">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
               {tWidgets("activityTitle")}
             </h3>
@@ -1168,27 +1063,27 @@ export default function CustomersPage() {
                 <p className="text-xs text-gray-400 py-3 text-center">{tWidgets("noActivity")}</p>
               ) : (
                 summary.recentActivity.map((act) => {
-                  let iconColor = "bg-purple-500/10 text-[#8b5cf6] border-purple-500/20";
+                  let iconColor = "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] border-[#8b5cf6]/20";
                   let IconComponent = UserPlus;
                   let actionText = tWidgets("newCustomerActivity");
 
                   if (act.type === "INVOICE_PAID") {
-                    iconColor = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
+                    iconColor = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
                     IconComponent = FileText;
                     actionText = tWidgets("invoicePaidActivity");
                   } else if (act.type === "PAYMENT_RECEIVED") {
-                    iconColor = "bg-blue-500/10 text-blue-500 border-blue-500/20";
+                    iconColor = "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20";
                     IconComponent = CreditCard;
                     actionText = tWidgets("paymentReceivedActivity");
                   } else if (act.type === "NEW_ORDER") {
-                    iconColor = "bg-indigo-500/10 text-indigo-500 border-indigo-500/20";
-                    IconComponent = ShoppingBag;
+                    iconColor = "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] border-[#8b5cf6]/20";
+                    IconComponent = Receipt;
                     actionText = tWidgets("newOrderActivity");
                   }
 
                   return (
-                    <div key={act.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-gray-50/70 dark:hover:bg-white/[0.03] transition-colors">
-                      <div className={`h-8 w-8 rounded-xl flex items-center justify-center shrink-0 border ${iconColor} mt-0.5`}>
+                    <div key={act.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-gray-50/80 dark:hover:bg-white/[0.02] transition-colors">
+                      <div className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border ${iconColor} mt-0.5`}>
                         <IconComponent className="h-4 w-4" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -1218,13 +1113,13 @@ export default function CustomersPage() {
 
       {/* ── Slide-Over Customer Details Drawer ── */}
       {selectedCustomer && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md bg-white dark:bg-[#101422] h-full shadow-2xl border-s border-gray-200 dark:border-gray-800/80 p-6 overflow-y-auto animate-in slide-in-from-right duration-200 flex flex-col justify-between">
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className={`w-full max-w-md bg-white dark:bg-[#0c101c] h-full shadow-2xl border-s border-gray-200 dark:border-gray-800/80 p-6 overflow-y-auto animate-in ${isRtl ? "slide-in-from-left" : "slide-in-from-right"} duration-200 flex flex-col justify-between`}>
             <div>
               {/* Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
                 <div className="flex items-center gap-3">
-                  <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-sm border ${selectedCustomer.avatarColor || "bg-purple-500/20 text-purple-400 border-purple-500/30"}`}>
+                  <div className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-sm bg-[#8b5cf6]/10 text-[#8b5cf6] border border-[#8b5cf6]/20">
                     {selectedCustomer.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -1232,7 +1127,7 @@ export default function CustomersPage() {
                       {selectedCustomer.name}
                     </h2>
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded font-mono text-[11px] font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                      <span className="afab-badge afab-badge-primary font-mono">
                         {selectedCustomer.customerCode || `CST-${selectedCustomer.id.slice(-4).toUpperCase()}`}
                       </span>
                       <button
@@ -1243,11 +1138,11 @@ export default function CustomersPage() {
                           toast.success(tDrawer("idCopied", { code }));
                         }}
                         title={tDrawer("copyId")}
-                        className="p-1 rounded text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                        className="afab-icon-btn p-1"
                       >
                         <Copy className="h-3 w-3" />
                       </button>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${getStatusBadge(selectedCustomer.status)}`}>
+                      <span className={getStatusBadge(selectedCustomer.status)}>
                         {selectedCustomer.status}
                       </span>
                     </div>
@@ -1255,27 +1150,40 @@ export default function CustomersPage() {
                 </div>
                 <button
                   onClick={() => setSelectedCustomer(null)}
-                  className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                  className="afab-icon-btn"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               {/* Financial Stats Cards */}
-              <div className="grid grid-cols-2 gap-3 my-5">
-                <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60">
-                  <span className="text-[11px] text-gray-400 font-medium">{tDrawer("totalSpent")}</span>
-                  <div className="text-lg font-bold text-gray-900 dark:text-white mt-1">
-                    {formatCurrency(selectedCustomer.totalRevenue, currency)}
+              {(() => {
+                const pendingBalance = (selectedCustomer.orders || [])
+                  .filter((o) => o.status === "PENDING" || o.status === "PROCESSING")
+                  .reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
+                return (
+                  <div className="grid grid-cols-3 gap-2.5 my-5">
+                    <div className="afab-inset p-3">
+                      <span className="text-[10px] text-gray-400 font-medium block truncate">{tDrawer("totalSpent")}</span>
+                      <div className="text-sm font-bold text-gray-900 dark:text-white mt-1 truncate">
+                        {formatCurrency(selectedCustomer.totalRevenue, currency)}
+                      </div>
+                    </div>
+                    <div className="afab-inset p-3">
+                      <span className="text-[10px] text-gray-400 font-medium block truncate">Outstanding</span>
+                      <div className={`text-sm font-bold mt-1 truncate ${pendingBalance > 0 ? "text-amber-600 dark:text-amber-400" : "text-gray-900 dark:text-white"}`}>
+                        {formatCurrency(pendingBalance, currency)}
+                      </div>
+                    </div>
+                    <div className="afab-inset p-3">
+                      <span className="text-[10px] text-gray-400 font-medium block truncate">{tDrawer("completedOrders")}</span>
+                      <div className="text-sm font-bold text-gray-900 dark:text-white mt-1 truncate">
+                        {selectedCustomer.ordersCount}
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60">
-                  <span className="text-[11px] text-gray-400 font-medium">{tDrawer("completedOrders")}</span>
-                  <div className="text-lg font-bold text-gray-900 dark:text-white mt-1">
-                    {selectedCustomer.ordersCount} orders
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Contact Information */}
               <div className="space-y-4">
@@ -1304,20 +1212,20 @@ export default function CustomersPage() {
               </div>
 
               {/* ── Order History & Details Section ── */}
-              <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-800">
+              <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-800/60">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <ShoppingBag className="h-4 w-4 text-[#8b5cf6]" />
+                    <Receipt className="h-4 w-4 text-[#8b5cf6]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-white">
                       {tDrawer("invoicesAndOrders")}
                     </h4>
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                    <span className="afab-badge afab-badge-neutral">
                       {selectedCustomer.orders?.length || selectedCustomer.ordersCount || 0}
                     </span>
                   </div>
                   <button
                     onClick={() => openAddOrderModal(selectedCustomer)}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6]/20 transition-colors"
+                    className="afab-btn-soft px-2.5 py-1 text-xs"
                   >
                     <Plus className="h-3 w-3" />
                     <span>{tDrawer("addOrderBtn")}</span>
@@ -1325,42 +1233,42 @@ export default function CustomersPage() {
                 </div>
 
                 {(!selectedCustomer.orders || selectedCustomer.orders.length === 0) ? (
-                  <div className="p-4 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 text-center">
-                    <ShoppingBag className="h-6 w-6 mx-auto mb-1 text-gray-400 opacity-50" />
+                  <div className="afab-inset p-4 border-dashed text-center">
+                    <Receipt className="h-6 w-6 mx-auto mb-1 text-gray-400 opacity-50" />
                     <p className="text-xs text-gray-500 dark:text-gray-400">{tDrawer("noOrders")}</p>
                     <button
                       onClick={() => openAddOrderModal(selectedCustomer)}
-                      className="mt-2 text-xs font-semibold text-[#8b5cf6] hover:underline"
+                      className="mt-2 text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline"
                     >
                       {tDrawer("addOrderBtn")}
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-2.5 max-h-72 overflow-y-auto pr-1 custom-scrollbar">
+                  <div className="space-y-2.5 max-h-72 overflow-y-auto pe-1 custom-scrollbar">
                     {selectedCustomer.orders.map((ord: CustomerOrder) => (
                       <div
                         key={ord.id}
-                        className="p-3 rounded-xl bg-gray-50/70 dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 hover:border-[#8b5cf6]/40 transition-all text-xs"
+                        className="afab-inset p-3.5 hover:border-[#8b5cf6]/40 transition-all text-xs"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-gray-900 dark:text-white text-[11px] bg-gray-200/60 dark:bg-gray-800 px-1.5 py-0.5 rounded">
+                          <span className="afab-badge afab-badge-neutral font-mono">
                             {ord.orderNumber}
                           </span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                          <span className={`afab-badge ${
                             ord.status === "COMPLETED"
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                              ? "afab-badge-success"
                               : ord.status === "PENDING"
-                              ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                              ? "afab-badge-warning"
                               : ord.status === "PROCESSING"
-                              ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                              : "bg-red-500/10 text-red-600 dark:text-red-400"
+                              ? "afab-badge-info"
+                              : "afab-badge-danger"
                           }`}>
                             {tOrderStatuses(ord.status.toLowerCase()) || ord.status}
                           </span>
                         </div>
 
                         <div className="flex items-center justify-between mt-1.5 font-semibold">
-                          <span className="text-gray-800 dark:text-gray-200 truncate pr-2">
+                          <span className="text-gray-800 dark:text-gray-200 truncate pe-2">
                             {ord.description}
                           </span>
                           <span className="text-gray-900 dark:text-white shrink-0">
@@ -1396,7 +1304,7 @@ export default function CustomersPage() {
                   <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
                     {tDrawer("notes")}
                   </h4>
-                  <div className="p-3 rounded-xl bg-gray-50 dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-300">
+                  <div className="afab-inset p-3.5 text-xs text-gray-600 dark:text-gray-300">
                     {selectedCustomer.notes}
                   </div>
                 </div>
@@ -1404,21 +1312,21 @@ export default function CustomersPage() {
             </div>
 
             {/* Bottom Actions */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-between gap-3 mt-4">
+            <div className="pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-between gap-3 mt-4">
               <button
                 onClick={() => {
                   const toDelete = selectedCustomer;
                   setSelectedCustomer(null);
                   setCustomerToDelete(toDelete);
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
               >
                 {tTable("delete")}
               </button>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => openAddOrderModal(selectedCustomer)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#8b5cf6]/10 text-[#8b5cf6] hover:bg-[#8b5cf6]/20 transition-colors"
+                  className="afab-btn-soft"
                 >
                   {tDrawer("addOrderBtn")}
                 </button>
@@ -1428,7 +1336,7 @@ export default function CustomersPage() {
                     setSelectedCustomer(null);
                     openEditModal(toEdit);
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#8b5cf6] text-white hover:bg-[#7c3aed] transition-colors shadow-sm"
+                  className="afab-btn-primary"
                 >
                   {tTable("edit")}
                 </button>
@@ -1440,31 +1348,31 @@ export default function CustomersPage() {
 
       {/* ── Add / Edit Customer Modal ── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101422] p-6 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="afab-overlay animate-in fade-in duration-200">
+          <div className="afab-modal max-w-lg animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
               <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
                   {customerToEdit ? tModal("editTitle") : tModal("addTitle")}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {tModal("subtitle")}
                 </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                className="afab-icon-btn"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveCustomer} className="mt-5 space-y-4">
+            <form onSubmit={handleSaveCustomer} className="mt-6 space-y-4">
               
               {/* Customer ID & Name in 2 columns */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-1">
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tModal("customerCode")}
                   </label>
                   <input
@@ -1472,11 +1380,11 @@ export default function CustomersPage() {
                     placeholder={tModal("customerCodePlaceholder")}
                     value={formData.customerCode || ""}
                     onChange={(e) => setFormData({ ...formData, customerCode: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 font-mono text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input font-mono text-xs"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tModal("name")} *
                   </label>
                   <input
@@ -1485,15 +1393,15 @@ export default function CustomersPage() {
                     placeholder={tModal("namePlaceholder")}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input text-xs"
                   />
                 </div>
               </div>
 
               {/* Email & Phone Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tModal("email")} *
                   </label>
                   <input
@@ -1502,11 +1410,11 @@ export default function CustomersPage() {
                     placeholder={tModal("emailPlaceholder")}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tModal("phone")}
                   </label>
                   <input
@@ -1514,21 +1422,21 @@ export default function CustomersPage() {
                     placeholder={tModal("phonePlaceholder")}
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input text-xs"
                   />
                 </div>
               </div>
 
               {/* Group & Status Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tModal("group")}
                   </label>
                   <select
                     value={formData.group}
                     onChange={(e) => setFormData({ ...formData, group: e.target.value as CustomerGroup })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-select w-full py-2 text-xs"
                   >
                     <option value="Standard">{tGroups("standard")}</option>
                     <option value="Business">{tGroups("business")}</option>
@@ -1537,13 +1445,13 @@ export default function CustomersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tModal("status")}
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as CustomerStatus })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-select w-full py-2 text-xs"
                   >
                     <option value="Active">{tStatuses("active")}</option>
                     <option value="Inactive">{tStatuses("inactive")}</option>
@@ -1555,7 +1463,7 @@ export default function CustomersPage() {
 
               {/* Address */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="afab-label">
                   {tModal("address")}
                 </label>
                 <input
@@ -1563,13 +1471,13 @@ export default function CustomersPage() {
                   placeholder={tModal("addressPlaceholder")}
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                  className="afab-input text-xs"
                 />
               </div>
 
               {/* Internal Notes */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="afab-label">
                   {tModal("notes")}
                 </label>
                 <textarea
@@ -1577,23 +1485,23 @@ export default function CustomersPage() {
                   placeholder={tModal("notesPlaceholder")}
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6] resize-none"
+                  className="afab-input text-xs resize-none"
                 />
               </div>
 
               {/* Modal Actions */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                  className="afab-btn-secondary"
                 >
                   {tModal("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#8b5cf6] text-white hover:bg-[#7c3aed] transition-colors shadow-sm disabled:opacity-50"
+                  className="afab-btn-primary"
                 >
                   {formSubmitting
                     ? "Saving..."
@@ -1610,31 +1518,31 @@ export default function CustomersPage() {
 
       {/* ── Add Order Modal ── */}
       {isAddOrderModalOpen && orderTargetCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101422] p-6 shadow-2xl animate-in zoom-in-95">
-            <div className="flex items-center justify-between pb-4 border-b border-gray-200 dark:border-gray-800">
+        <div className="afab-overlay animate-in fade-in duration-200">
+          <div className="afab-modal max-w-lg animate-in zoom-in-95">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
               <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <ShoppingBag className="h-5 w-5 text-[#8b5cf6]" />
+                <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
+                  <Receipt className="h-5 w-5 text-[#8b5cf6]" />
                   <span>{tOrderModal("title")}</span>
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  {orderTargetCustomer.name} • <span className="font-mono text-purple-600 dark:text-purple-400">{orderTargetCustomer.customerCode}</span>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {orderTargetCustomer.name} • <span className="font-mono text-[#7c3aed] dark:text-[#a78bfa]">{orderTargetCustomer.customerCode}</span>
                 </p>
               </div>
               <button
                 onClick={() => setIsAddOrderModalOpen(false)}
-                className="p-1.5 rounded-xl text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                className="afab-icon-btn"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveOrder} className="mt-5 space-y-4">
+            <form onSubmit={handleSaveOrder} className="mt-6 space-y-4">
               {/* Order Number & Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tOrderModal("orderNumber")} *
                   </label>
                   <input
@@ -1642,11 +1550,11 @@ export default function CustomersPage() {
                     required
                     value={orderFormData.orderNumber}
                     onChange={(e) => setOrderFormData({ ...orderFormData, orderNumber: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 font-mono text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input font-mono text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tOrderModal("orderDate")} *
                   </label>
                   <input
@@ -1654,15 +1562,15 @@ export default function CustomersPage() {
                     required
                     value={orderFormData.orderDate}
                     onChange={(e) => setOrderFormData({ ...orderFormData, orderDate: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input text-xs"
                   />
                 </div>
               </div>
 
               {/* Amount & Status */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tOrderModal("amount")} ({currency}) *
                   </label>
                   <input
@@ -1673,17 +1581,17 @@ export default function CustomersPage() {
                     placeholder="0.00"
                     value={orderFormData.amount}
                     onChange={(e) => setOrderFormData({ ...orderFormData, amount: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input text-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tOrderModal("status")}
                   </label>
                   <select
                     value={orderFormData.status}
                     onChange={(e) => setOrderFormData({ ...orderFormData, status: e.target.value as OrderStatus })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-select w-full py-2 text-xs"
                   >
                     <option value="COMPLETED">{tOrderStatuses("completed")}</option>
                     <option value="PENDING">{tOrderStatuses("pending")}</option>
@@ -1695,7 +1603,7 @@ export default function CustomersPage() {
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                <label className="afab-label">
                   {tOrderModal("description")} *
                 </label>
                 <input
@@ -1704,20 +1612,20 @@ export default function CustomersPage() {
                   placeholder={tOrderModal("descriptionPlaceholder")}
                   value={orderFormData.description}
                   onChange={(e) => setOrderFormData({ ...orderFormData, description: e.target.value })}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                  className="afab-input text-xs"
                 />
               </div>
 
               {/* Payment Method & Linked Invoice */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tOrderModal("paymentMethod")}
                   </label>
                   <select
                     value={orderFormData.paymentMethod}
                     onChange={(e) => setOrderFormData({ ...orderFormData, paymentMethod: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 text-xs font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-select w-full py-2 text-xs"
                   >
                     <option value="BANK_TRANSFER">{tPaymentMethods("bankTransfer")}</option>
                     <option value="CREDIT_CARD">{tPaymentMethods("creditCard")}</option>
@@ -1726,7 +1634,7 @@ export default function CustomersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1.5">
+                  <label className="afab-label">
                     {tOrderModal("invoiceNumber")}
                   </label>
                   <input
@@ -1734,24 +1642,24 @@ export default function CustomersPage() {
                     placeholder={tOrderModal("invoiceNumberPlaceholder")}
                     value={orderFormData.invoiceNumber}
                     onChange={(e) => setOrderFormData({ ...orderFormData, invoiceNumber: e.target.value })}
-                    className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2 font-mono text-xs font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]"
+                    className="afab-input font-mono text-xs"
                   />
                 </div>
               </div>
 
               {/* Form Actions */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-800 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-800/60 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsAddOrderModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                  className="afab-btn-secondary"
                 >
                   {tOrderModal("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={orderSubmitting}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-md shadow-purple-600/20 disabled:opacity-50 transition-all"
+                  className="afab-btn-primary"
                 >
                   {orderSubmitting ? tOrderModal("submitting") : tOrderModal("submit")}
                 </button>
@@ -1763,9 +1671,9 @@ export default function CustomersPage() {
 
       {/* ── Delete Confirmation Modal ── */}
       {customerToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-sm rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101422] p-6 shadow-2xl animate-in zoom-in-95">
-            <h3 className="text-base font-bold text-gray-900 dark:text-white">
+        <div className="afab-overlay animate-in fade-in duration-200">
+          <div className="afab-modal max-w-sm animate-in zoom-in-95">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
               {tDelete("title")}
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -1774,13 +1682,13 @@ export default function CustomersPage() {
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 onClick={() => setCustomerToDelete(null)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+                className="afab-btn-secondary"
               >
                 {tDelete("cancel")}
               </button>
               <button
                 onClick={handleDeleteConfirm}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-red-600 text-white hover:bg-red-700 transition-colors shadow-sm"
+                className="afab-btn-danger"
               >
                 {tDelete("confirm")}
               </button>

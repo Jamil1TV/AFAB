@@ -52,7 +52,7 @@ export function FeaturesSection() {
             return (
               <div
                 key={feature.title}
-                className="group rounded-[20px] border border-gray-200/80 dark:border-gray-700/50 bg-white dark:bg-[#0d1225] p-8 transition-all hover:shadow-xl dark:hover:shadow-[0_0_40px_rgba(139,92,246,0.06)] hover:-translate-y-1"
+                className="group rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-8 shadow-sm transition-all hover:shadow-xl dark:hover:shadow-[#8b5cf6]/5 hover:-translate-y-1"
               >
                 <div
                   className={`mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl ${iconColors[i]}`}

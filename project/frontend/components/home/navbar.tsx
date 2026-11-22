@@ -34,13 +34,21 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-[10px] bg-white shadow-sm">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm">
               <Image 
-                src="/assets/logo.png" 
+                src="/assets/afablogo.png" 
                 alt="AFAB Logo" 
-                fill
-                sizes="40px"
-                className="object-cover scale-[1.15]"
+                width={32}
+                height={32}
+                className="object-contain dark:hidden"
+                priority
+              />
+              <Image 
+                src="/assets/afablogo_dark.png" 
+                alt="AFAB Logo Dark" 
+                width={32}
+                height={32}
+                className="object-contain hidden dark:block"
                 priority
               />
             </div>
@@ -77,12 +85,12 @@ export function Navbar() {
               {tLang("switchTo")}
             </Button>
             <Link href="/login">
-              <Button variant="outline" size="sm" className="rounded-full px-6 border-gray-700 bg-transparent hover:bg-white/5">
+              <Button variant="outline" size="sm" className="rounded-full px-6 border-gray-200 dark:border-gray-800 bg-transparent hover:bg-gray-50 dark:hover:bg-white/5">
                 {t("login")}
               </Button>
             </Link>
             <Link href="/signup">
-              <Button size="sm" className="rounded-full bg-[#8b5cf6] hover:bg-[#8b5cf6]/90 px-6 text-white font-medium border-0">
+              <Button size="sm" className="rounded-full bg-[#8b5cf6] hover:bg-[#7c3aed] px-6 text-white font-medium border-0">
                 {t("getStarted")}
               </Button>
             </Link>
@@ -112,7 +120,7 @@ export function Navbar() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="block text-[16px] font-semibold text-[#64748B] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  className="block text-[16px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   onClick={() => setMobileOpen(false)}
                 >
                   {link.label}
@@ -120,7 +128,7 @@ export function Navbar() {
               ))}
               <a
                 href="#resources"
-                className="block text-[16px] font-semibold text-[#64748B] dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                className="block text-[16px] font-semibold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                 onClick={() => setMobileOpen(false)}
               >
                 {t("resources")}

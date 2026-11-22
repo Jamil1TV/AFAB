@@ -144,7 +144,7 @@ export default function LoginPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full max-w-[440px] rounded-[24px] bg-white/80 p-5 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:bg-[#161B2B]/80 dark:border dark:border-[#232A3E]/50 dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)]"
+      className="afab-card w-full max-w-[440px] p-5 sm:p-8"
     >
       <AnimatePresence mode="wait">
         {requiresTwoFactor ? (
@@ -158,13 +158,13 @@ export default function LoginPage() {
           >
             {/* 2FA Header */}
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#7c3aed]/20 to-[#a855f7]/20 border border-[#7c3aed]/30 shadow-lg shadow-[#7c3aed]/10 dark:from-[#8b5cf6]/20 dark:to-[#c084fc]/20 dark:border-[#8b5cf6]/40">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 shadow-sm">
                 <ShieldCheck className="h-7 w-7 text-[#7c3aed] dark:text-[#a78bfa]" />
               </div>
-              <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">
                 {t("twoFactorTitle")}
               </h2>
-              <p className="mt-1.5 text-[14px] text-gray-500 dark:text-gray-400">
+              <p className="mt-1.5 text-sm text-gray-500 dark:text-gray-400">
                 {t("twoFactorSubtitle")}
               </p>
             </div>
@@ -173,7 +173,7 @@ export default function LoginPage() {
             <form onSubmit={handleTwoFactorVerify} className="space-y-5">
               {!useBackupCode ? (
                 <div className="flex flex-col items-center justify-center space-y-3">
-                  <label className="text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="afab-label mb-0">
                     {t("twoFactorEnterCode")}
                   </label>
                   <InputOTP
@@ -184,23 +184,23 @@ export default function LoginPage() {
                     autoFocus
                     containerClassName="justify-center"
                   >
-                    <InputOTPGroup className="gap-2">
-                      <InputOTPSlot index={0} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-300 dark:border-[#2A3042] dark:bg-[#111522]/70 focus:border-[#7c3aed]" />
-                      <InputOTPSlot index={1} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-300 dark:border-[#2A3042] dark:bg-[#111522]/70 focus:border-[#7c3aed]" />
-                      <InputOTPSlot index={2} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-300 dark:border-[#2A3042] dark:bg-[#111522]/70 focus:border-[#7c3aed]" />
-                      <InputOTPSlot index={3} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-300 dark:border-[#2A3042] dark:bg-[#111522]/70 focus:border-[#7c3aed]" />
-                      <InputOTPSlot index={4} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-300 dark:border-[#2A3042] dark:bg-[#111522]/70 focus:border-[#7c3aed]" />
-                      <InputOTPSlot index={5} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-300 dark:border-[#2A3042] dark:bg-[#111522]/70 focus:border-[#7c3aed]" />
+                    <InputOTPGroup className="gap-1.5 sm:gap-2">
+                      <InputOTPSlot index={0} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
+                      <InputOTPSlot index={1} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
+                      <InputOTPSlot index={2} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
+                      <InputOTPSlot index={3} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
+                      <InputOTPSlot index={4} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
+                      <InputOTPSlot index={5} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
               ) : (
                 <div>
-                  <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="afab-label">
                     {t("backupCodeLabel")}
                   </label>
                   <div className="relative group">
-                    <KeyRound className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+                    <KeyRound className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
                     <input
                       type="text"
                       placeholder={t("backupCodePlaceholder")}
@@ -210,7 +210,7 @@ export default function LoginPage() {
                       disabled={loading}
                       autoFocus
                       id="login-2fa-backup"
-                      className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 font-mono tracking-widest text-[15px] uppercase text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11 disabled:opacity-60"
+                      className="afab-input py-2.5 ps-11 pe-4 font-mono tracking-widest text-sm uppercase"
                     />
                   </div>
                 </div>
@@ -224,7 +224,7 @@ export default function LoginPage() {
                     setUseBackupCode(!useBackupCode);
                     setTwoFactorCode("");
                   }}
-                  className="text-[13px] font-medium text-[#7c3aed] hover:underline dark:text-[#8b5cf6] transition-colors"
+                  className="text-xs font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-colors"
                 >
                   {useBackupCode ? t("useTotpCode") : t("useBackupCode")}
                 </button>
@@ -237,7 +237,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={loading || twoFactorCode.trim().length < (useBackupCode ? 8 : 6)}
                 id="login-2fa-submit"
-                className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] bg-[#7c3aed] py-[12px] text-[15px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] hover:shadow-[#7c3aed]/40 dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed] dark:shadow-[#8b5cf6]/10 dark:hover:shadow-[#8b5cf6]/30 disabled:opacity-50"
+                className="afab-btn-primary group relative w-full py-3 text-sm"
               >
                 {loading ? (
                   <AfabLoader size="xs" />
@@ -257,7 +257,7 @@ export default function LoginPage() {
                     setRequiresTwoFactor(false);
                     setTwoFactorCode("");
                   }}
-                  className="inline-flex items-center gap-1.5 text-[13px] text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
                 >
                   <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" />
                   <span>{t("backToLogin")}</span>
@@ -275,18 +275,18 @@ export default function LoginPage() {
           >
             {/* Tab Switcher */}
             <motion.div variants={itemVariants} className="mb-8 relative flex justify-center">
-              <div className="absolute bottom-0 w-full h-[1px] bg-gray-200 dark:bg-[#2A3042]"></div>
+              <div className="absolute bottom-0 w-full h-[1px] bg-gray-200 dark:bg-gray-800"></div>
               <div className="flex w-full max-w-[280px]">
-                <div className="relative w-1/2 pb-3 text-center text-[15px] font-semibold text-[#7c3aed] dark:text-[#8b5cf6]">
+                <div className="relative w-1/2 pb-3 text-center text-sm font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
                   {t("loginTab")}
                   <motion.div 
                     layoutId="activeTab" 
-                    className="absolute bottom-0 left-0 w-full h-[2px] bg-[#7c3aed] dark:bg-[#8b5cf6] z-10" 
+                    className="absolute bottom-0 start-0 w-full h-[2px] bg-[#8b5cf6] z-10" 
                   />
                 </div>
                 <Link
                   href="/signup"
-                  className="w-1/2 pb-3 text-center text-[15px] font-medium text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors relative z-10"
+                  className="w-1/2 pb-3 text-center text-sm font-medium text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors relative z-10"
                 >
                   {t("signupTab")}
                 </Link>
@@ -295,18 +295,18 @@ export default function LoginPage() {
 
             {/* Title */}
             <motion.div variants={itemVariants} className="mb-6">
-              <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white">{t("loginTitle")}</h2>
-              <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">{t("loginSubtitle")}</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">{t("loginTitle")}</h2>
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("loginSubtitle")}</p>
             </motion.div>
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <motion.div variants={itemVariants}>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+                <label className="afab-label">
                   {t("email")}
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+                  <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
                   <input
                     type="email"
                     placeholder={t("emailPlaceholder")}
@@ -316,17 +316,17 @@ export default function LoginPage() {
                     disabled={loading}
                     autoComplete="email"
                     id="login-email"
-                    className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-4 rtl:pr-11 disabled:opacity-60"
+                    className="afab-input py-2.5 ps-11 pe-4"
                   />
                 </div>
               </motion.div>
 
               <motion.div variants={itemVariants}>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300">
+                <label className="afab-label">
                   {t("password")}
                 </label>
                 <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+                  <Lock className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder={t("passwordPlaceholder")}
@@ -336,13 +336,13 @@ export default function LoginPage() {
                     disabled={loading}
                     autoComplete="current-password"
                     id="login-password"
-                    className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] pl-11 pr-[44px] text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10 rtl:pl-[44px] rtl:pr-11 disabled:opacity-60"
+                    className="afab-input py-2.5 ps-11 pe-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     aria-label={showPassword ? "Hide password" : "Show password"}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10 rtl:left-4 rtl:right-auto"
+                    className="absolute end-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors z-10"
                   >
                     {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
                   </button>
@@ -357,17 +357,17 @@ export default function LoginPage() {
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                       id="login-remember"
-                      className="peer h-[18px] w-[18px] cursor-pointer appearance-none rounded-[4px] border border-gray-300 checked:border-[#7c3aed] checked:bg-[#7c3aed] transition-all dark:border-[#303850] dark:bg-[#111522] dark:checked:border-[#8b5cf6] dark:checked:bg-[#8b5cf6]"
+                      className="peer h-[18px] w-[18px] cursor-pointer appearance-none rounded-[4px] border border-gray-300 bg-gray-50/50 checked:border-[#8b5cf6] checked:bg-[#8b5cf6] transition-all dark:border-gray-700 dark:bg-[#080c18] dark:checked:border-[#8b5cf6] dark:checked:bg-[#8b5cf6]"
                     />
                     <svg className="absolute h-3 w-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity duration-200" viewBox="0 0 14 10" fill="none">
                       <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </div>
-                  <span className="text-[13px] font-medium text-gray-600 dark:text-gray-400 select-none transition-colors hover:text-gray-900 dark:hover:text-gray-200">
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400 select-none transition-colors hover:text-gray-900 dark:hover:text-gray-200">
                     {t("rememberMe")}
                   </span>
                 </label>
-                <Link href="/forgot-password" className="text-[13px] font-medium text-[#7c3aed] hover:underline dark:text-[#8b5cf6] transition-all">
+                <Link href="/forgot-password" className="text-xs font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all">
                   {t("forgotPassword")}
                 </Link>
               </motion.div>
@@ -379,7 +379,7 @@ export default function LoginPage() {
                   type="submit"
                   disabled={loading}
                   id="login-submit"
-                  className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] bg-[#7c3aed] py-[12px] text-[15px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] hover:shadow-[#7c3aed]/40 dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed] dark:shadow-[#8b5cf6]/10 dark:hover:shadow-[#8b5cf6]/30 disabled:opacity-70"
+                  className="afab-btn-primary group relative w-full py-3 text-sm"
                 >
                   {loading ? (
                     <AfabLoader size="xs" />
@@ -396,10 +396,10 @@ export default function LoginPage() {
             {/* Divider */}
             <motion.div variants={itemVariants} className="relative my-8">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-[#2A3042]"></div>
+                <div className="w-full border-t border-gray-200 dark:border-gray-800"></div>
               </div>
-              <div className="relative flex justify-center text-[12px]">
-                <span className="bg-white/80 backdrop-blur-sm px-4 text-gray-400 dark:bg-[#161B2B]/80 dark:text-gray-500 rounded-full">
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-white px-4 text-gray-400 dark:bg-[#0c101c] dark:text-gray-500 rounded-full">
                   {t("orContinueWith")}
                 </span>
               </div>
@@ -412,7 +412,7 @@ export default function LoginPage() {
                 whileTap={{ scale: 0.985 }}
                 type="button"
                 id="login-google"
-                className="flex w-full items-center justify-center gap-3 rounded-[14px] border border-gray-200 bg-white py-[12px] text-[14px] font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow dark:border-[#2A3042] dark:bg-[#111522]/80 dark:text-gray-300 dark:hover:bg-[#1A2035] dark:hover:shadow-none"
+                className="afab-btn-secondary w-full gap-3 py-2.5 text-sm"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M22.56 12.25C22.56 11.47 22.49 10.72 22.36 10H12V14.26H17.92C17.66 15.63 16.88 16.79 15.7 17.58V20.34H19.26C21.34 18.42 22.56 15.6 22.56 12.25Z" fill="#4285F4"/>
@@ -425,8 +425,8 @@ export default function LoginPage() {
             </motion.div>
 
             {/* Bottom Link */}
-            <motion.p variants={itemVariants} className="mt-8 text-center text-[14px] text-gray-500 dark:text-gray-400">
-              {t("noAccount")} <Link href="/signup" className="font-semibold text-[#7c3aed] hover:underline dark:text-[#8b5cf6] transition-all">{t("signupTab")}</Link>
+            <motion.p variants={itemVariants} className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
+              {t("noAccount")} <Link href="/signup" className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all">{t("signupTab")}</Link>
             </motion.p>
           </motion.div>
         )}

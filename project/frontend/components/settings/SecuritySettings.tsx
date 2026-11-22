@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 
@@ -221,44 +222,40 @@ export function SecuritySettings({ profile }: { profile: any }) {
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
       {/* Left Form Content */}
       <div className="xl:col-span-2 space-y-8">
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">
-            {t("security.title")}
-          </h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {t("security.subtitle")}
-          </p>
-        </div>
+        <PageHeader
+          title={t("security.title")}
+          subtitle={t("security.subtitle")}
+        />
 
         {/* Security Overview */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6 shadow-sm">
+        <div className="afab-card p-6">
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-12 h-12 bg-green-50 dark:bg-green-900/20 rounded-full flex items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white">{t("security.accountSecure")}</h3>
-              <p className="text-sm text-gray-500">{t("security.accountSecureDesc")}</p>
+              <h3 className="afab-card-title">{t("security.accountSecure")}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t("security.accountSecureDesc")}</p>
             </div>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-600 rounded-lg">
-              <div className={`w-2.5 h-2.5 rounded-full ${twoFactorEnabled ? 'bg-green-500' : 'bg-amber-500'}`} />
+            <div className="afab-inset flex items-center gap-3 p-3.5">
+              <div className={`w-2.5 h-2.5 rounded-full ${twoFactorEnabled ? 'bg-emerald-500' : 'bg-amber-500'}`} />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {t("security.twoFactor")}: {twoFactorEnabled ? t("security.enabled") : t("security.disabled")}
               </span>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-600 rounded-lg">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+            <div className="afab-inset flex items-center gap-3 p-3.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("security.strongPassword")}</span>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-600 rounded-lg">
-              <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+            <div className="afab-inset flex items-center gap-3 p-3.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("security.loginAlerts")}</span>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-900/60 border border-gray-200 dark:border-gray-600 rounded-lg">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+            <div className="afab-inset flex items-center gap-3 p-3.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 {sessions.length} {t("security.activeSessions")}
               </span>
@@ -267,22 +264,22 @@ export function SecuritySettings({ profile }: { profile: any }) {
         </div>
 
         {/* Password & Authentication */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 divide-y divide-gray-200 dark:divide-gray-600 shadow-sm">
+        <div className="afab-card divide-y divide-gray-100 dark:divide-gray-800/60">
           
           {/* Password */}
           <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-gray-50 dark:bg-gray-900 rounded-lg flex items-center justify-center shrink-0">
-                <Key className="w-5 h-5 text-gray-500" />
+              <div className="afab-icon-tile">
+                <Key className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white mb-1">{t("security.password")}</h3>
-                <p className="text-sm text-gray-500 mb-2">{t("security.passwordSubtitle")}</p>
-                <div className="flex items-center gap-4 text-xs">
-                  <span className="text-gray-500">
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{t("security.password")}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t("security.passwordSubtitle")}</p>
+                <div className="flex flex-wrap items-center gap-4 text-xs">
+                  <span className="text-gray-500 dark:text-gray-400">
                     {t("security.lastChanged")}: {profile?.passwordChangedAt ? new Date(profile.passwordChangedAt).toLocaleDateString() : "Never"}
                   </span>
-                  <span className="flex items-center gap-1.5 text-green-600 dark:text-green-400 font-semibold">
+                  <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     {t("security.strong")}
                   </span>
@@ -290,54 +287,54 @@ export function SecuritySettings({ profile }: { profile: any }) {
               </div>
             </div>
             <Dialog open={isPwdModalOpen} onOpenChange={setIsPwdModalOpen}>
-              <DialogTrigger render={<Button variant="outline" className="shrink-0 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500">{t("security.changePassword")}</Button>} />
-              <DialogContent className="sm:max-w-[425px] border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800">
+              <DialogTrigger render={<Button variant="outline" className="afab-btn-secondary shrink-0">{t("security.changePassword")}</Button>} />
+              <DialogContent className="sm:max-w-[425px] rounded-3xl border-gray-200 dark:border-gray-800/80 bg-white dark:bg-[#0c101c] p-6 sm:p-8 shadow-2xl">
                 <DialogHeader>
-                  <DialogTitle className="text-gray-900 dark:text-white">{t("security.changePassword")}</DialogTitle>
+                  <DialogTitle className="afab-card-title">{t("security.changePassword")}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handlePasswordChange} className="space-y-4 pt-4">
                   {pwdError && (
-                    <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md text-sm">
+                    <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-sm">
                       {pwdError}
                     </div>
                   )}
                   {pwdSuccess && (
-                    <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-md text-sm">
+                    <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl text-sm">
                       {t("security.passwordChanged")}
                     </div>
                   )}
                   <div className="space-y-2">
-                    <Label className="text-gray-700 dark:text-gray-300">{t("security.currentPassword")}</Label>
+                    <Label className="afab-label">{t("security.currentPassword")}</Label>
                     <Input 
                       type="password" 
                       required 
-                      className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white"
+                      className="afab-input"
                       value={pwdData.currentPassword}
                       onChange={e => setPwdData({...pwdData, currentPassword: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-700 dark:text-gray-300">{t("security.newPassword")}</Label>
+                    <Label className="afab-label">{t("security.newPassword")}</Label>
                     <Input 
                       type="password" 
                       required 
-                      className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white"
+                      className="afab-input"
                       value={pwdData.newPassword}
                       onChange={e => setPwdData({...pwdData, newPassword: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-gray-700 dark:text-gray-300">{t("security.confirmPassword")}</Label>
+                    <Label className="afab-label">{t("security.confirmPassword")}</Label>
                     <Input 
                       type="password" 
                       required 
-                      className="border-gray-200 dark:border-gray-600 dark:bg-gray-900/60 dark:text-white"
+                      className="afab-input"
                       value={pwdData.confirmPassword}
                       onChange={e => setPwdData({...pwdData, confirmPassword: e.target.value})}
                     />
                   </div>
                   <div className="pt-4 flex justify-end">
-                    <Button type="submit" disabled={pwdLoading} className="w-full sm:w-auto bg-[#8b5cf6] hover:bg-[#7c3aed] text-white">
+                    <Button type="submit" disabled={pwdLoading} className="afab-btn-primary w-full sm:w-auto">
                       {pwdLoading ? <AfabLoader size="sm" /> : t("saveChanges")}
                     </Button>
                   </div>
@@ -349,18 +346,18 @@ export function SecuritySettings({ profile }: { profile: any }) {
           {/* 2FA Setup & Management */}
           <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-gray-50 dark:bg-gray-900 rounded-lg flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5 text-gray-500" />
+              <div className="afab-icon-tile">
+                <Lock className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white mb-1">{t("security.twoFactorTitle")}</h3>
-                <p className="text-sm text-gray-500 mb-2">{t("security.twoFactorSubtitle")}</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{t("security.twoFactorTitle")}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t("security.twoFactorSubtitle")}</p>
                 {twoFactorEnabled ? (
-                   <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
+                   <span className="afab-badge afab-badge-success">
                      {t("security.enabled")}
                    </span>
                 ) : (
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 ring-1 ring-inset ring-gray-500/20">
+                  <span className="afab-badge afab-badge-neutral">
                      {t("security.disabled")}
                    </span>
                 )}
@@ -376,7 +373,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
                   setRegeneratedCodes(null);
                   setIsManageModalOpen(true);
                 }}
-                className="shrink-0 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500"
+                className="afab-btn-secondary shrink-0"
               >
                 {t("security.manage2FA")}
               </Button>
@@ -384,7 +381,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
               <Button 
                 onClick={handleStartSetup2FA}
                 disabled={setupLoading}
-                className="shrink-0 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                className="afab-btn-primary shrink-0"
               >
                 {setupLoading ? <AfabLoader size="xs" /> : t("security.enable2FA")}
               </Button>
@@ -394,12 +391,12 @@ export function SecuritySettings({ profile }: { profile: any }) {
           {/* Login Alerts */}
           <div className="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-gray-50 dark:bg-gray-900 rounded-lg flex items-center justify-center shrink-0">
-                <Bell className="w-5 h-5 text-gray-500" />
+              <div className="afab-icon-tile">
+                <Bell className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-medium text-gray-900 dark:text-white mb-1">{t("security.loginAlertsTitle")}</h3>
-                <p className="text-sm text-gray-500">{t("security.loginAlertsSubtitle")}</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{t("security.loginAlertsTitle")}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t("security.loginAlertsSubtitle")}</p>
               </div>
             </div>
             <Switch defaultChecked />
@@ -408,79 +405,79 @@ export function SecuritySettings({ profile }: { profile: any }) {
         </div>
 
         {/* Active Sessions */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 overflow-hidden shadow-sm">
-          <div className="p-6 border-b border-gray-200 dark:border-gray-600 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="afab-card overflow-hidden">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{t("security.sessionsTitle")}</h3>
-              <p className="text-sm text-gray-500">{t("security.sessionsSubtitle")}</p>
+              <h3 className="afab-card-title mb-1">{t("security.sessionsTitle")}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t("security.sessionsSubtitle")}</p>
             </div>
             <Button 
               variant="outline" 
               onClick={handleRevokeAll} 
-              className="shrink-0 border-gray-200 dark:border-gray-600 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+              className="afab-btn-secondary shrink-0 !text-red-600 dark:!text-red-400 hover:!bg-red-50 dark:hover:!bg-red-500/10"
             >
               {t("security.logOutAll")}
             </Button>
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm whitespace-nowrap">
-              <thead className="bg-gray-50/50 dark:bg-gray-900/50 text-gray-500">
+            <table className="afab-table whitespace-nowrap">
+              <thead className="afab-thead">
                 <tr>
-                  <th className="px-6 py-4 font-medium">{t("security.device")}</th>
-                  <th className="px-6 py-4 font-medium">{t("security.ipAddress")}</th>
-                  <th className="px-6 py-4 font-medium">{t("security.lastActive")}</th>
-                  <th className="px-6 py-4 font-medium">{t("security.status")}</th>
-                  <th className="px-6 py-4 font-medium text-right">{t("security.action")}</th>
+                  <th className="afab-th">{t("security.device")}</th>
+                  <th className="afab-th">{t("security.ipAddress")}</th>
+                  <th className="afab-th">{t("security.lastActive")}</th>
+                  <th className="afab-th">{t("security.status")}</th>
+                  <th className="afab-th text-end">{t("security.action")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+              <tbody className="afab-tbody">
                 {isLoadingSessions ? (
                    <tr>
-                     <td colSpan={5} className="px-6 py-8 text-center">
+                     <td colSpan={5} className="afab-td py-8 text-center">
                        <AfabLoader size="sm" />
                      </td>
                    </tr>
                 ) : sessions.length === 0 ? (
                    <tr>
-                     <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                     <td colSpan={5} className="afab-td py-8 text-center text-gray-500 dark:text-gray-400">
                        No active sessions found.
                      </td>
                    </tr>
                 ) : (
                   sessions.map((session) => (
-                    <tr key={session.id} className="group">
-                      <td className="px-6 py-4">
+                    <tr key={session.id} className="afab-tr group">
+                      <td className="afab-td">
                         <div className="flex items-center gap-3">
                           {getDeviceIcon(session.deviceInfo)}
                           <span className="font-medium text-gray-900 dark:text-white">{session.deviceInfo || "Unknown Device"}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-gray-500">
+                      <td className="afab-td">
+                        <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                           <Globe className="w-4 h-4" />
                           {session.ipAddress || "Unknown IP"}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-gray-500">
+                      <td className="afab-td text-gray-500 dark:text-gray-400">
                         {new Date(session.createdAt).toLocaleDateString()}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="afab-td">
                         {session.currentSession ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 ring-1 ring-inset ring-green-600/20">
+                          <span className="afab-badge afab-badge-success">
                             {t("security.currentSession")}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 ring-1 ring-inset ring-gray-500/10">
+                          <span className="afab-badge afab-badge-neutral">
                             {t("security.active")}
                           </span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="afab-td text-end">
                         {!session.currentSession && (
                           <button 
                             onClick={() => handleRevokeSession(session.id)}
-                            className="text-gray-400 hover:text-red-600 transition-colors p-2"
+                            className="afab-icon-btn hover:!text-red-600 dark:hover:!text-red-400"
                             title={t("security.logOut")}
                           >
                             <LogOut className="w-4 h-4" />
@@ -499,27 +496,27 @@ export function SecuritySettings({ profile }: { profile: any }) {
       {/* Right Sidebar Content */}
       <div className="space-y-6">
         {/* Tips */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-600 p-6 shadow-sm">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t("security.tips")}</h3>
-          <p className="text-xs text-gray-500 mb-6">{t("security.tipsSubtitle")}</p>
+        <div className="afab-card p-6">
+          <h3 className="afab-card-title mb-1">{t("security.tips")}</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-6">{t("security.tipsSubtitle")}</p>
           
           <div className="space-y-5">
             <div className="flex gap-3">
               <div className="mt-0.5">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("security.tip1Title")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("security.tip1Desc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("security.tip1Desc")}</p>
               </div>
             </div>
             <div className="flex gap-3">
               <div className="mt-0.5">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("security.tip2Title")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("security.tip2Desc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("security.tip2Desc")}</p>
               </div>
             </div>
             <div className="flex gap-3">
@@ -528,31 +525,31 @@ export function SecuritySettings({ profile }: { profile: any }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("security.tip3Title")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("security.tip3Desc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("security.tip3Desc")}</p>
               </div>
             </div>
             <div className="flex gap-3">
               <div className="mt-0.5">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-white">{t("security.tip4Title")}</p>
-                <p className="text-xs text-gray-500 mt-1">{t("security.tip4Desc")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("security.tip4Desc")}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Support */}
-        <div className="bg-primary/5 dark:bg-primary/10 rounded-xl border border-primary/10 p-6 text-center">
-          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="w-6 h-6 text-primary" />
+        <div className="afab-card p-6 text-center">
+          <div className="w-12 h-12 bg-[#8b5cf6]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck className="w-6 h-6 text-[#7c3aed] dark:text-[#a78bfa]" />
           </div>
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-2">{t("security.needHelp")}</h3>
-          <p className="text-xs text-gray-600 dark:text-gray-400 mb-6 leading-relaxed">
+          <h3 className="afab-card-title mb-2">{t("security.needHelp")}</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
             {t("security.needHelpDesc")}
           </p>
-          <Button variant="outline" className="w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600">
+          <Button variant="outline" className="afab-btn-secondary w-full">
             {t("security.contactSupport")}
           </Button>
         </div>
@@ -560,9 +557,9 @@ export function SecuritySettings({ profile }: { profile: any }) {
 
       {/* 2FA Setup Modal */}
       <Dialog open={isSetupModalOpen} onOpenChange={setIsSetupModalOpen}>
-        <DialogContent className="sm:max-w-[480px] border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <DialogContent className="sm:max-w-[480px] rounded-3xl border-gray-200 dark:border-gray-800/80 bg-white dark:bg-[#0c101c] p-6 sm:p-8 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <DialogTitle className="afab-card-title flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[#8b5cf6]" />
               {t("security.setup2FATitle")}
             </DialogTitle>
@@ -580,29 +577,29 @@ export function SecuritySettings({ profile }: { profile: any }) {
               </div>
 
               {/* QR Code */}
-              <div className="flex justify-center p-4 bg-white rounded-xl border border-gray-200 shadow-sm mx-auto w-fit">
+              <div className="flex justify-center p-4 bg-white rounded-2xl border border-gray-200 shadow-sm mx-auto w-fit">
                 <QRCodeSVG value={setupData.qrCodeUri} size={180} level="M" />
               </div>
 
               {/* Manual Secret Key */}
               <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">
+                <label className="afab-label">
                   {t("security.cantScanQr")}
                 </label>
                 <div className="flex items-center gap-2">
                   <input
                     readOnly
                     value={setupData.secret}
-                    className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/80 px-3 py-2 text-xs font-mono text-gray-800 dark:text-gray-200"
+                    className="afab-input font-mono text-xs"
                   />
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={handleCopySecret}
-                    className="shrink-0 gap-1.5 text-xs"
+                    className="afab-btn-secondary"
                   >
-                    {copiedSecret ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedSecret ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                     {copiedSecret ? t("security.copied") : t("security.copySecret")}
                   </Button>
                 </div>
@@ -611,7 +608,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
               <div className="pt-2 flex justify-end">
                 <Button 
                   onClick={() => setSetupStep(2)}
-                  className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white w-full"
+                  className="afab-btn-primary w-full"
                 >
                   {t("security.setup2FAStep2")}
                 </Button>
@@ -631,7 +628,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
               </div>
 
               {setupError && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md text-xs flex items-center gap-2">
+                <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 rounded-xl text-xs flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   {setupError}
                 </div>
@@ -646,24 +643,24 @@ export function SecuritySettings({ profile }: { profile: any }) {
                   autoFocus
                 >
                   <InputOTPGroup className="gap-2">
-                    <InputOTPSlot index={0} className="h-12 w-11 rounded-lg text-lg font-bold border-gray-300 dark:border-gray-700 dark:bg-gray-800" />
-                    <InputOTPSlot index={1} className="h-12 w-11 rounded-lg text-lg font-bold border-gray-300 dark:border-gray-700 dark:bg-gray-800" />
-                    <InputOTPSlot index={2} className="h-12 w-11 rounded-lg text-lg font-bold border-gray-300 dark:border-gray-700 dark:bg-gray-800" />
-                    <InputOTPSlot index={3} className="h-12 w-11 rounded-lg text-lg font-bold border-gray-300 dark:border-gray-700 dark:bg-gray-800" />
-                    <InputOTPSlot index={4} className="h-12 w-11 rounded-lg text-lg font-bold border-gray-300 dark:border-gray-700 dark:bg-gray-800" />
-                    <InputOTPSlot index={5} className="h-12 w-11 rounded-lg text-lg font-bold border-gray-300 dark:border-gray-700 dark:bg-gray-800" />
+                    <InputOTPSlot index={0} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] text-gray-900 dark:text-white" />
+                    <InputOTPSlot index={1} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] text-gray-900 dark:text-white" />
+                    <InputOTPSlot index={2} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] text-gray-900 dark:text-white" />
+                    <InputOTPSlot index={3} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] text-gray-900 dark:text-white" />
+                    <InputOTPSlot index={4} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] text-gray-900 dark:text-white" />
+                    <InputOTPSlot index={5} className="h-12 w-11 rounded-xl text-lg font-bold border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] text-gray-900 dark:text-white" />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
 
               <div className="flex gap-3 justify-end pt-2">
-                <Button variant="outline" onClick={() => setSetupStep(1)}>
+                <Button variant="outline" className="afab-btn-secondary" onClick={() => setSetupStep(1)}>
                   Back
                 </Button>
                 <Button
                   onClick={handleVerifyAndEnable2FA}
                   disabled={setupLoading || setupCode.length !== 6}
-                  className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white flex-1"
+                  className="afab-btn-primary flex-1"
                 >
                   {setupLoading ? <AfabLoader size="xs" /> : t("security.verifyAndEnable")}
                 </Button>
@@ -673,7 +670,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
 
           {setupStep === 3 && setupData && (
             <div className="space-y-5 pt-2">
-              <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg text-sm">
+              <div className="flex items-center gap-2 p-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm">
                 <CheckCircle2 className="w-5 h-5 shrink-0" />
                 <span>{t("security.twoFactorEnabled")}</span>
               </div>
@@ -688,9 +685,9 @@ export function SecuritySettings({ profile }: { profile: any }) {
               </div>
 
               {/* Codes Grid */}
-              <div className="grid grid-cols-2 gap-2 bg-gray-50 dark:bg-gray-800/80 p-4 rounded-xl border border-gray-200 dark:border-gray-700">
+              <div className="afab-inset grid grid-cols-2 gap-2 p-4">
                 {setupData.backupCodes.map((code, idx) => (
-                  <div key={idx} className="font-mono text-center text-xs py-1.5 px-2 bg-white dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700 font-semibold tracking-wider text-gray-800 dark:text-gray-200">
+                  <div key={idx} className="font-mono text-center text-xs py-1.5 px-2 bg-white dark:bg-[#0c101c] rounded-lg border border-gray-200 dark:border-gray-800/60 font-semibold tracking-wider text-gray-800 dark:text-gray-200">
                     {code}
                   </div>
                 ))}
@@ -701,16 +698,16 @@ export function SecuritySettings({ profile }: { profile: any }) {
                   type="button"
                   variant="outline"
                   onClick={() => handleCopyBackupCodes(setupData.backupCodes)}
-                  className="flex-1 gap-1.5 text-xs"
+                  className="afab-btn-secondary flex-1"
                 >
-                  {copiedCodes ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copiedCodes ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
                   {copiedCodes ? t("security.copied") : t("security.copyAllCodes")}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => handleDownloadBackupCodes(setupData.backupCodes)}
-                  className="flex-1 gap-1.5 text-xs"
+                  className="afab-btn-secondary flex-1"
                 >
                   <Download className="w-3.5 h-3.5" />
                   {t("security.downloadCodes")}
@@ -720,7 +717,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
               <div className="pt-2">
                 <Button
                   onClick={() => setIsSetupModalOpen(false)}
-                  className="w-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                  className="afab-btn-primary w-full"
                 >
                   {t("security.done")}
                 </Button>
@@ -732,23 +729,23 @@ export function SecuritySettings({ profile }: { profile: any }) {
 
       {/* 2FA Manage / Disable Modal */}
       <Dialog open={isManageModalOpen} onOpenChange={setIsManageModalOpen}>
-        <DialogContent className="sm:max-w-[480px] border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-6">
+        <DialogContent className="sm:max-w-[480px] rounded-3xl border-gray-200 dark:border-gray-800/80 bg-white dark:bg-[#0c101c] p-6 sm:p-8 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-green-500" />
+            <DialogTitle className="afab-card-title flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-emerald-500" />
               {t("security.manage2FA")}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6 pt-2">
             {/* Backup Codes Section */}
-            <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/40 space-y-3">
-              <div className="flex items-center justify-between">
+            <div className="afab-inset p-4 space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                     {t("security.setup2FAStep3")}
                   </h4>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     Generate new recovery codes if you have lost or used your current ones.
                   </p>
                 </div>
@@ -758,7 +755,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
                   size="sm"
                   onClick={handleRegenerateBackupCodes}
                   disabled={regeneratingCodes}
-                  className="shrink-0 gap-1.5 text-xs"
+                  className="afab-btn-secondary shrink-0"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${regeneratingCodes ? "animate-spin" : ""}`} />
                   {t("security.regenerateCodes")}
@@ -767,9 +764,9 @@ export function SecuritySettings({ profile }: { profile: any }) {
 
               {regeneratedCodes && (
                 <div className="pt-2 space-y-3">
-                  <div className="grid grid-cols-2 gap-2 bg-white dark:bg-gray-900 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                  <div className="grid grid-cols-2 gap-2 bg-white dark:bg-[#0c101c] p-3 rounded-xl border border-gray-200 dark:border-gray-800/60">
                     {regeneratedCodes.map((code, idx) => (
-                      <div key={idx} className="font-mono text-center text-xs py-1 px-2 bg-gray-50 dark:bg-gray-800 rounded font-semibold tracking-wider text-gray-800 dark:text-gray-200">
+                      <div key={idx} className="font-mono text-center text-xs py-1 px-2 bg-gray-50 dark:bg-[#080c18] rounded-lg font-semibold tracking-wider text-gray-800 dark:text-gray-200">
                         {code}
                       </div>
                     ))}
@@ -780,7 +777,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
                       variant="outline"
                       size="sm"
                       onClick={() => handleCopyBackupCodes(regeneratedCodes)}
-                      className="flex-1 gap-1 text-xs"
+                      className="afab-btn-secondary flex-1"
                     >
                       <Copy className="w-3 h-3" />
                       {t("security.copyAllCodes")}
@@ -790,7 +787,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDownloadBackupCodes(regeneratedCodes)}
-                      className="flex-1 gap-1 text-xs"
+                      className="afab-btn-secondary flex-1"
                     >
                       <Download className="w-3 h-3" />
                       {t("security.downloadCodes")}
@@ -801,7 +798,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
             </div>
 
             {/* Disable 2FA Section */}
-            <form onSubmit={handleDisable2FA} className="p-4 rounded-xl border border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-900/10 space-y-3">
+            <form onSubmit={handleDisable2FA} className="p-4 rounded-2xl border border-red-500/20 bg-red-50/50 dark:bg-red-500/5 space-y-3">
               <div>
                 <h4 className="text-sm font-semibold text-red-700 dark:text-red-400 flex items-center gap-1.5">
                   <AlertTriangle className="w-4 h-4" />
@@ -813,7 +810,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
               </div>
 
               {disableError && (
-                <div className="p-2.5 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded text-xs">
+                <div className="p-2.5 bg-red-50 dark:bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 rounded-xl text-xs">
                   {disableError}
                 </div>
               )}
@@ -824,7 +821,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
                   placeholder="Enter current password"
                   value={disablePassword}
                   onChange={e => setDisablePassword(e.target.value)}
-                  className="bg-white dark:bg-gray-900 text-xs"
+                  className="afab-input text-xs"
                   required
                 />
               </div>
@@ -833,7 +830,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
                 type="submit"
                 variant="destructive"
                 disabled={disableLoading || !disablePassword}
-                className="w-full text-xs"
+                className="afab-btn-danger w-full"
               >
                 {disableLoading ? <AfabLoader size="xs" /> : t("security.disableConfirm")}
               </Button>

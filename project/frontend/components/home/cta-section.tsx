@@ -7,19 +7,16 @@ export function CTASection() {
   return (
     <section className="py-8 lg:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[20px] border border-gray-200/80 dark:border-gray-700/50 bg-white dark:bg-[#0d1225] px-6 py-8 sm:px-10 lg:px-12">
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] px-6 py-8 shadow-sm sm:px-10 lg:px-12">
 
           <div className="relative z-10 flex flex-col items-center justify-between gap-8 lg:flex-row lg:gap-12">
 
             {/* Left — Icon + Text */}
             <div className="flex items-center gap-5 flex-1">
-              {/* AFAB Diamond Logo */}
-              <div className="flex-shrink-0 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8b5cf6]/10">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-[#8b5cf6]">
-                  <path d="M12 2L2 12L12 22L22 12L12 2Z" fill="currentColor" />
-                  <path d="M12 7L7 12L12 17L17 12L12 7Z" fill="white" className="dark:fill-[#0d1225]" />
-                  <path d="M12 9.5L9.5 12L12 14.5L14.5 12L12 9.5Z" fill="currentColor" />
-                </svg>
+              {/* Official AFAB Logo */}
+              <div className="flex-shrink-0 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm overflow-hidden">
+                <img src="/assets/afablogo.png" alt="AFAB Logo" className="h-10 w-10 object-contain dark:hidden" />
+                <img src="/assets/afablogo_dark.png" alt="AFAB Logo Dark" className="h-10 w-10 object-contain hidden dark:block" />
               </div>
 
               <div>

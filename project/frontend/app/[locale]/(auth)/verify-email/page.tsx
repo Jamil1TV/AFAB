@@ -186,7 +186,7 @@ export default function VerifyEmailPage() {
       initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.45, ease: "easeOut" }}
-      className="relative w-full max-w-[440px] overflow-hidden rounded-[26px] bg-white/80 p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:bg-[#161B2B]/85 dark:border dark:border-[#232A3E]/60 dark:shadow-[0_25px_65px_-15px_rgba(0,0,0,0.4)] text-center"
+      className="afab-card relative w-full max-w-[440px] overflow-hidden p-5 sm:p-8 text-center"
     >
       {/* ── Celebration Confetti Particles on Success ── */}
       {status === "success" && (
@@ -230,10 +230,10 @@ export default function VerifyEmailPage() {
         transition={{ duration: 0.5, ease: "easeOut" }}
         className={`relative mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full transition-colors duration-500 ${
           status === "success"
-            ? "bg-emerald-500/15 text-emerald-500 shadow-[0_0_35px_rgba(16,185,129,0.35)] dark:bg-emerald-500/20 dark:text-emerald-400"
+            ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
             : status === "error"
-            ? "bg-red-500/15 text-red-500 shadow-[0_0_30px_rgba(239,68,68,0.25)] dark:bg-red-500/20 dark:text-red-400"
-            : "bg-[#7c3aed]/10 text-[#7c3aed] shadow-[0_0_25px_rgba(124,58,237,0.15)] dark:bg-[#8b5cf6]/20 dark:text-[#8b5cf6]"
+            ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400"
+            : "bg-[#8b5cf6]/10 text-[#7c3aed] dark:bg-[#8b5cf6]/15 dark:text-[#a78bfa]"
         }`}
       >
         <AnimatePresence mode="wait">
@@ -245,7 +245,7 @@ export default function VerifyEmailPage() {
               exit={{ scale: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              <CheckCircle2 className="h-8 w-8 text-emerald-500 dark:text-emerald-400" />
+              <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
             </motion.div>
           ) : status === "error" ? (
             <motion.div
@@ -255,7 +255,7 @@ export default function VerifyEmailPage() {
               exit={{ scale: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              <XCircle className="h-8 w-8 text-red-500 dark:text-red-400" />
+              <XCircle className="h-8 w-8 text-red-600 dark:text-red-400" />
             </motion.div>
           ) : (
             <motion.div
@@ -271,12 +271,12 @@ export default function VerifyEmailPage() {
       </motion.div>
 
       {/* ── Title & Subtitle ── */}
-      <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white">
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">
         {status === "success"
           ? "Email Verified!"
           : t("verifyEmailTitle") || "Verify your email"}
       </h2>
-      <p className="mt-2 text-[14px] text-gray-500 dark:text-gray-400 leading-relaxed">
+      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
         {status === "success" ? (
           <span className="text-emerald-600 dark:text-emerald-400 font-medium">
             Your account is verified! Preparing your workspace...
@@ -297,19 +297,19 @@ export default function VerifyEmailPage() {
           initial={{ opacity: 0, y: -6, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="mt-4 flex flex-col items-center gap-1.5 rounded-[14px] bg-violet-500/10 border border-violet-500/30 p-3 text-xs text-violet-700 dark:text-violet-300"
+          className="mt-4 flex flex-col items-center gap-1.5 rounded-xl bg-purple-50 border border-purple-200 p-3 text-xs text-purple-700 dark:bg-purple-500/10 dark:border-purple-500/30 dark:text-purple-300"
         >
-          <div className="flex items-center gap-1.5 font-medium">
-            <Sparkles className="h-3.5 w-3.5 text-violet-500 animate-pulse" />
+          <div className="flex flex-wrap items-center justify-center gap-1.5 font-medium">
+            <Sparkles className="h-3.5 w-3.5 text-[#8b5cf6] animate-pulse" />
             <span>Development Verification Code:</span>
-            <span className="font-mono text-sm font-bold tracking-wider text-violet-900 dark:text-violet-100 bg-violet-500/25 px-2 py-0.5 rounded shadow-sm">
+            <span className="font-mono text-sm font-bold tracking-wider text-purple-900 dark:text-purple-100 bg-purple-500/20 px-2 py-0.5 rounded shadow-sm">
               {devOtp}
             </span>
           </div>
           <button
             type="button"
             onClick={() => handleAutoFill(devOtp)}
-            className="group flex items-center gap-1 text-[11px] font-semibold text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-200 hover:underline cursor-pointer transition-colors"
+            className="group flex items-center gap-1 text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline cursor-pointer transition-colors"
           >
             <Zap className="h-3 w-3 text-amber-500 transition-transform group-hover:scale-125" />
             <span>Click here to auto-fill code</span>
@@ -325,7 +325,7 @@ export default function VerifyEmailPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 450, damping: 25 }}
-            className="mt-4 flex items-center justify-center gap-2 rounded-[12px] bg-red-50 p-3 text-[13px] font-medium text-red-600 border border-red-200/70 shadow-sm dark:bg-red-950/35 dark:border-red-800/40 dark:text-red-400"
+            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-red-50 p-3 text-xs font-medium text-red-700 border border-red-200 shadow-sm dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400"
           >
             <AlertCircle className="h-4 w-4 shrink-0" />
             <span>{error}</span>
@@ -340,9 +340,9 @@ export default function VerifyEmailPage() {
             initial={{ opacity: 0, y: -10, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10 }}
-            className="mt-4 flex items-center justify-center gap-2 rounded-[12px] bg-emerald-50 p-3 text-[13px] font-medium text-emerald-600 border border-emerald-200/70 shadow-sm dark:bg-emerald-950/35 dark:border-emerald-800/40 dark:text-emerald-400"
+            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-50 p-3 text-xs font-medium text-emerald-700 border border-emerald-200 shadow-sm dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400"
           >
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-500" />
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>{successMsg}</span>
           </motion.div>
         )}
@@ -359,7 +359,7 @@ export default function VerifyEmailPage() {
               : undefined
           }
           transition={{ duration: 0.48, ease: "easeInOut" }}
-          className="flex justify-center gap-2.5 sm:gap-3"
+          className="flex justify-center gap-1.5 sm:gap-3"
           onPaste={handlePaste}
         >
           {otp.map((digit, index) => {
@@ -394,16 +394,16 @@ export default function VerifyEmailPage() {
                   onBlur={() => setFocusedIndex(null)}
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className={`h-12 w-11 sm:h-14 sm:w-12 rounded-[14px] text-center text-xl font-bold outline-none transition-all duration-200 ${
+                  className={`h-11 w-10 sm:h-14 sm:w-12 rounded-xl text-center text-lg sm:text-xl font-bold outline-none transition-all duration-200 ${
                     isSuccess
-                      ? "border-2 border-emerald-500 bg-emerald-500/10 text-emerald-600 shadow-[0_0_18px_rgba(16,185,129,0.3)] dark:bg-emerald-500/15 dark:text-emerald-400"
+                      ? "border-2 border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
                       : isError
-                      ? "border-2 border-red-500 bg-red-500/10 text-red-600 shadow-[0_0_18px_rgba(239,68,68,0.25)] dark:bg-red-500/15 dark:text-red-400"
+                      ? "border-2 border-red-500 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
                       : isFocused
-                      ? "border-2 border-[#7c3aed] bg-white text-gray-900 shadow-[0_0_20px_rgba(124,58,237,0.25)] ring-4 ring-[#7c3aed]/15 dark:border-[#8b5cf6] dark:bg-[#161B2B] dark:text-white dark:shadow-[0_0_20px_rgba(139,92,246,0.25)] dark:ring-[#8b5cf6]/20"
+                      ? "border-2 border-[#8b5cf6] bg-white text-gray-900 ring-2 ring-[#8b5cf6]/20 dark:border-[#8b5cf6] dark:bg-[#0c101c] dark:text-white"
                       : isFilled
-                      ? "border-2 border-gray-300 bg-white text-gray-900 shadow-sm dark:border-[#384360] dark:bg-[#121624] dark:text-white"
-                      : "border border-gray-200 bg-gray-50/60 text-gray-900 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white"
+                      ? "border-2 border-gray-300 bg-white text-gray-900 shadow-sm dark:border-gray-700 dark:bg-[#0c101c] dark:text-white"
+                      : "border border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white"
                   }`}
                 />
 
@@ -411,7 +411,7 @@ export default function VerifyEmailPage() {
                 {isFocused && !isSuccess && !isError && (
                   <motion.div
                     layoutId="active-indicator"
-                    className="absolute -bottom-1.5 left-1/2 -ml-1 h-1 w-2 rounded-full bg-[#7c3aed] dark:bg-[#8b5cf6]"
+                    className="absolute -bottom-1.5 left-1/2 -ml-1 h-1 w-2 rounded-full bg-[#8b5cf6]"
                   />
                 )}
               </motion.div>
@@ -425,12 +425,12 @@ export default function VerifyEmailPage() {
           whileTap={status !== "loading" && status !== "success" ? { scale: 0.985 } : undefined}
           type="submit"
           disabled={status === "loading" || status === "success" || otp.join("").length < 6}
-          className={`group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] py-[13px] text-[15px] font-semibold text-white shadow-md transition-all duration-300 disabled:opacity-50 cursor-pointer ${
+          className={`group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl py-3 text-sm font-bold text-white shadow-lg transition-all duration-300 disabled:opacity-50 cursor-pointer ${
             status === "success"
-              ? "bg-emerald-600 shadow-emerald-500/30 hover:bg-emerald-600"
+              ? "bg-emerald-600 shadow-emerald-500/25 hover:bg-emerald-600"
               : status === "error"
-              ? "bg-red-600 shadow-red-500/30 hover:bg-red-700"
-              : "bg-[#7c3aed] shadow-[#7c3aed]/25 hover:bg-[#6d28d9] dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed]"
+              ? "bg-red-600 shadow-red-600/20 hover:bg-red-700"
+              : "bg-[#8b5cf6] shadow-[#8b5cf6]/25 hover:bg-[#7c3aed]"
           }`}
         >
           {status === "loading" ? (
@@ -458,12 +458,12 @@ export default function VerifyEmailPage() {
 
       {/* ── Resend Code Footer ── */}
       {status !== "success" && (
-        <div className="mt-6 text-[13px] text-gray-500 dark:text-gray-400">
+        <div className="mt-6 text-xs text-gray-500 dark:text-gray-400">
           <span>{t("didntReceiveCode") || "Didn't receive the code?"} </span>
           <button
             onClick={handleResend}
             disabled={countdown > 0 || resending}
-            className="font-semibold text-[#7c3aed] hover:underline dark:text-[#8b5cf6] disabled:opacity-50 disabled:no-underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+            className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] disabled:opacity-50 disabled:no-underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
           >
             {resending && <RotateCw className="h-3.5 w-3.5 animate-spin" />}
             {countdown > 0

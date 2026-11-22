@@ -221,16 +221,16 @@ export default function ExpensesPage() {
         <KpiCard
           title={tKpi("totalExpenses")}
           value={formatCurrency(summary?.totalExpenses || 0, currency)}
-          change={(summary?.totalExpenses || 0) === 0 ? "0.0%" : "+8.4%"}
-          isPositive={false}
+          change={`${expensesData?.totalElements ?? 0} records`}
+          isPositive={(summary?.totalExpenses || 0) === 0}
           icon={Wallet}
           data={totalExpData}
         />
         <KpiCard
           title={tKpi("avgPerDay")}
           value={formatCurrency(summary?.avgPerDay || 0, currency)}
-          change={(summary?.avgPerDay || 0) === 0 ? "0.0%" : "+12.6%"}
-          isPositive={false}
+          change={(summary?.avgPerDay || 0) === 0 ? "0.0%" : period}
+          isPositive={(summary?.avgPerDay || 0) === 0}
           icon={CalendarIcon}
           data={avgExpData}
         />
@@ -355,7 +355,7 @@ export default function ExpensesPage() {
             </ChartContainer>
 
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-lg font-extrabold text-gray-900 dark:text-white">
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
                 {formatCurrency(summary?.totalExpenses || 0, currency)}
               </span>
               <span className="text-[10px] font-medium text-gray-400 uppercase">
@@ -631,29 +631,29 @@ export default function ExpensesPage() {
                   <p className="text-xs text-gray-400">Ref: #{selectedTx.id}</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedTx(null)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setSelectedTx(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <div className="mt-5 space-y-4 text-xs">
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Amount</span>
-                <span className="text-base font-bold text-white">
+                <span className="text-gray-500 dark:text-gray-400">Amount</span>
+                <span className="text-base font-bold text-gray-900 dark:text-white">
                   -{formatCurrency(selectedTx.amount, selectedTx.currency || currency)}
                 </span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Category</span>
-                <span className="font-semibold text-white">{selectedTx.categoryName}</span>
+                <span className="text-gray-500 dark:text-gray-400">Category</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{selectedTx.categoryName}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Payment Method</span>
-                <span className="font-semibold text-white">{selectedTx.paymentMethod.replace(/_/g, " ")}</span>
+                <span className="text-gray-500 dark:text-gray-400">Payment Method</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{selectedTx.paymentMethod.replace(/_/g, " ")}</span>
               </div>
               <div className="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-800/40">
-                <span className="text-gray-400">Date</span>
-                <span className="font-semibold text-white">{selectedTx.transactionDate}</span>
+                <span className="text-gray-500 dark:text-gray-400">Date</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{selectedTx.transactionDate}</span>
               </div>
             </div>
 

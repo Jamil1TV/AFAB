@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Calculator, ArrowRight, ShieldAlert, Sparkles, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
+import { Calculator } from "lucide-react";
 import { CurrencyPair } from "@/lib/api/currencies";
 
 interface FxInvoiceRiskSimulatorProps {
@@ -51,33 +51,33 @@ export function FxInvoiceRiskSimulator({
   const supportedCurrencies = ["USD", "EUR", "GBP", "TND", "AED", "SAR", "CAD"];
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-xs flex flex-col justify-between transition-all duration-200">
+    <div className="afab-card p-6 flex flex-col justify-between transition-all duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/80">
+      <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
             <Calculator className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h3 className="afab-card-title">
               {isArabic ? "حاسبة مخاطر الفواتير الأجنبية" : "Invoice FX Risk & Sensitivity Simulator"}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="afab-card-subtitle text-xs mt-0.5">
               {isArabic ? "تقدير أثر تقلبات أسعار الصرف على فواتير ومشتريات العملاء الدوليين" : "Simulate how currency shifts impact your foreign receivables over time"}
             </p>
           </div>
         </div>
 
-        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+        <span className="afab-badge afab-badge-primary uppercase tracking-wider">
           Risk Tool
         </span>
       </div>
 
       {/* Simulator Inputs Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 py-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-4">
         {/* Invoice Amount */}
         <div>
-          <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+          <label className="afab-label">
             {isArabic ? "مبلغ الفاتورة بالعملة الأجنبية" : "Foreign Invoice Amount"}
           </label>
           <input
@@ -85,19 +85,19 @@ export function FxInvoiceRiskSimulator({
             min="0"
             value={invoiceAmount || ""}
             onChange={(e) => setInvoiceAmount(parseFloat(e.target.value) || 0)}
-            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-800/60 p-2.5 text-sm font-black font-mono text-gray-900 dark:text-white outline-none focus:border-purple-500"
+            className="afab-input font-bold font-mono"
           />
         </div>
 
         {/* Foreign Currency */}
         <div>
-          <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+          <label className="afab-label">
             {isArabic ? "عملة الفاتورة" : "Billing Currency"}
           </label>
           <select
             value={foreignCurrency}
             onChange={(e) => setForeignCurrency(e.target.value)}
-            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-800/60 p-2.5 text-sm font-bold text-gray-900 dark:text-white outline-none cursor-pointer focus:border-purple-500"
+            className="afab-select w-full py-2 text-sm font-bold text-gray-900 dark:text-white cursor-pointer"
           >
             {supportedCurrencies.map((c) => (
               <option key={c} value={c}>
@@ -109,13 +109,13 @@ export function FxInvoiceRiskSimulator({
 
         {/* Payment Terms */}
         <div>
-          <label className="text-xs font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+          <label className="afab-label">
             {isArabic ? "أجل السداد (أيام)" : "Payment Terms (Net Days)"}
           </label>
           <select
             value={paymentTermsDays}
             onChange={(e) => setPaymentTermsDays(parseInt(e.target.value, 10))}
-            className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-800/60 p-2.5 text-sm font-bold text-gray-900 dark:text-white outline-none cursor-pointer focus:border-purple-500"
+            className="afab-select w-full py-2 text-sm font-bold text-gray-900 dark:text-white cursor-pointer"
           >
             <option value={15}>Net 15 Days</option>
             <option value={30}>Net 30 Days</option>
@@ -126,17 +126,17 @@ export function FxInvoiceRiskSimulator({
       </div>
 
       {/* Current Spot Valuation Banner */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/30">
+      <div className="afab-inset flex items-center justify-between p-4">
         <div>
           <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block">
             {isArabic ? "القيمة الحالية بالعملة الأساسية" : "Today's Value in Base Currency"}
           </span>
-          <span className="text-xl font-black text-gray-900 dark:text-white font-mono">
+          <span className="text-xl font-bold text-gray-900 dark:text-white font-mono">
             {currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
           </span>
         </div>
-        <div className="text-right">
-          <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 block">
+        <div className="text-end">
+          <span className="text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] block">
             Spot Rate Applied
           </span>
           <span className="text-xs font-mono font-bold text-gray-700 dark:text-gray-300">
@@ -163,27 +163,27 @@ export function FxInvoiceRiskSimulator({
                 key={idx}
                 className={`p-3 rounded-xl border transition-all ${
                   isZero
-                    ? "border-purple-300 dark:border-purple-800 bg-purple-50/30 dark:bg-purple-950/30"
+                    ? "border-[#8b5cf6]/40 bg-[#8b5cf6]/5 dark:border-[#8b5cf6]/40 dark:bg-[#8b5cf6]/10"
                     : s.isPositive
-                    ? "border-emerald-200/80 dark:border-emerald-900/30 bg-emerald-50/20 dark:bg-emerald-950/10"
-                    : "border-rose-200/80 dark:border-rose-900/30 bg-rose-50/20 dark:bg-rose-950/10"
+                    ? "border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/5"
+                    : "border-red-200 dark:border-red-500/20 bg-red-50/40 dark:bg-red-500/5"
                 }`}
               >
                 <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 block">
                   {s.deltaPct > 0 ? `+${(s.deltaPct * 100).toFixed(1)}%` : s.deltaPct < 0 ? `${(s.deltaPct * 100).toFixed(1)}%` : "Spot"}
                 </span>
 
-                <span className="text-sm font-black font-mono text-gray-900 dark:text-white block mt-1">
+                <span className="text-sm font-bold font-mono text-gray-900 dark:text-white block mt-1">
                   {scenarioVal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </span>
 
                 <span
                   className={`text-[10px] font-bold block mt-0.5 ${
                     isZero
-                      ? "text-gray-400"
+                      ? "text-gray-400 dark:text-gray-500"
                       : s.isPositive
                       ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-rose-600 dark:text-rose-400"
+                      : "text-red-600 dark:text-red-400"
                   }`}
                 >
                   {isZero ? "Base Value" : `${diff > 0 ? "+" : ""}${diff.toLocaleString(undefined, { maximumFractionDigits: 0 })} ${baseCurrency}`}

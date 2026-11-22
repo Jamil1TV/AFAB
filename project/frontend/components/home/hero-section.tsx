@@ -92,7 +92,7 @@ export function HeroSection() {
                     key={i}
                     src={src}
                     alt=""
-                    className="h-10 w-10 rounded-full border-[2.5px] border-white dark:border-[#0a0e1a] object-cover"
+                    className="h-10 w-10 rounded-full border-[2.5px] border-white dark:border-[#060813] object-cover"
                   />
                 ))}
               </div>

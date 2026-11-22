@@ -44,7 +44,7 @@ export function LoginCard() {
   return (
     <div className="w-full max-w-[440px] animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Card */}
-      <div className="rounded-2xl border border-gray-200/80 dark:border-gray-700/40 bg-white dark:bg-[#131825] p-8 sm:p-10 shadow-xl shadow-black/[0.03] dark:shadow-[0_0_60px_rgba(139,92,246,0.06)]">
+      <div className="afab-card p-6 sm:p-8">
         {/* Tabs */}
         <AuthTabs activeTab="login" />
 
@@ -61,7 +61,7 @@ export function LoginCard() {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
-            <div className="p-3 text-sm text-red-500 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-xl">
+            <div className="p-3 text-xs font-medium text-red-700 bg-red-50 dark:bg-red-500/10 dark:text-red-400 border border-red-200 dark:border-red-500/20 rounded-xl">
               {error}
             </div>
           )}
@@ -70,7 +70,7 @@ export function LoginCard() {
           <div>
             <label
               htmlFor="email"
-              className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300"
+              className="afab-label"
             >
               {t("emailLabel")}
             </label>
@@ -82,22 +82,22 @@ export function LoginCard() {
               placeholder={t("emailPlaceholder")}
               required
               autoComplete="email"
-              className="w-full rounded-xl border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-[#0d1120] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 transition-all duration-200 focus:border-[#8b5cf6] focus:ring-2 focus:ring-[#8b5cf6]/20 focus:outline-none"
+              className="afab-input py-2.5 px-3.5"
             />
           </div>
 
           {/* Password */}
           <div>
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-1.5 flex items-center justify-between">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="afab-label mb-0"
               >
                 {t("passwordLabel")}
               </label>
               <Link
                 href="/forgot-password"
-                className="text-sm font-medium text-[#8b5cf6] hover:text-[#7c3aed] transition-colors"
+                className="text-xs font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-colors"
               >
                 {t("forgotPassword")}
               </Link>
@@ -118,12 +118,12 @@ export function LoginCard() {
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="peer h-4.5 w-4.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-[#0d1120] text-[#8b5cf6] transition-colors focus:ring-2 focus:ring-[#8b5cf6]/20 focus:ring-offset-0 checked:bg-[#8b5cf6] checked:border-[#8b5cf6] cursor-pointer"
+                className="peer h-4.5 w-4.5 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-[#080c18] text-[#8b5cf6] transition-colors focus:ring-2 focus:ring-[#8b5cf6]/20 focus:ring-offset-0 checked:bg-[#8b5cf6] checked:border-[#8b5cf6] cursor-pointer"
               />
             </div>
             <label
               htmlFor="remember"
-              className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none"
+              className="text-xs font-medium text-gray-600 dark:text-gray-400 cursor-pointer select-none"
             >
               {t("rememberMe")}
             </label>
@@ -133,10 +133,10 @@ export function LoginCard() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full flex justify-center items-center rounded-xl bg-[#7c3aed] dark:bg-[#8b5cf6] px-6 py-3.5 text-sm font-bold text-white transition-all duration-200 hover:bg-[#6d28d9] dark:hover:bg-[#7c3aed] shadow-lg shadow-[#7c3aed]/25 dark:shadow-[#8b5cf6]/25 hover:shadow-xl hover:shadow-[#7c3aed]/30 dark:hover:shadow-[#8b5cf6]/30 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[#8b5cf6]/50 focus:ring-offset-2 dark:focus:ring-offset-[#131825] active:translate-y-0 active:shadow-md disabled:opacity-70 disabled:pointer-events-none"
+            className="afab-btn-primary w-full py-3 text-sm"
           >
             {isLoading ? (
-              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+              <svg className="animate-spin -ms-1 me-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -188,7 +188,7 @@ export function LoginCard() {
           {t("noAccount")}{" "}
           <Link
             href="/signup"
-            className="font-semibold text-[#8b5cf6] hover:text-[#7c3aed] transition-colors"
+            className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-colors"
           >
             {t("signUpLink")}
           </Link>

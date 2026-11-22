@@ -38,10 +38,10 @@ export function DashboardHeader() {
           <input
             type="text"
             placeholder={tHeader("search") || (locale === "ar" ? "ابحث عن أي شيء..." : "Search anything...")}
-            className="block w-full rounded-full border border-gray-200 dark:border-gray-700/60 bg-gray-50 dark:bg-[#12162b] py-2 ps-10 pe-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-500 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+            className="block w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0c101c] py-2 ps-10 pe-12 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
           />
           <div className="absolute inset-y-0 end-0 flex items-center pe-2">
-            <kbd className="hidden items-center gap-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-1.5 font-mono text-[10px] font-medium text-gray-500 sm:flex">
+            <kbd className="hidden items-center gap-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#080c18] px-1.5 font-mono text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:flex">
               <span className="text-xs">⌘</span>K
             </kbd>
           </div>
@@ -56,7 +56,7 @@ export function DashboardHeader() {
         {/* Language Switcher */}
         <button 
           onClick={toggleLanguage}
-          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-700/60 bg-white dark:bg-white/[0.06] px-3.5 py-1.5 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/[0.1]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] px-3.5 py-1.5 text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/[0.06]"
         >
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline-block">{tLang("switchTo")}</span>

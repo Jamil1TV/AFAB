@@ -41,7 +41,7 @@ export default function SettingsLayout({
       <div className="flex h-full">
         
         {/* ── Desktop Settings Sidebar (fixed, scrolls independently) ── */}
-        <aside className={`hidden lg:flex flex-col shrink-0 border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-white/50 dark:bg-[#080c18]/50 transition-all duration-300 ease-in-out overflow-x-hidden ${
+        <aside className={`hidden lg:flex flex-col shrink-0 border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] transition-all duration-300 ease-in-out overflow-x-hidden ${
           collapsed ? "w-[60px]" : "w-60"
         }`}>
           
@@ -73,17 +73,17 @@ export default function SettingsLayout({
                   key={tab.id}
                   href={tab.path}
                   title={collapsed ? tab.label : undefined}
-                  className={`group flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 relative
+                  className={`group flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative
                     ${isActive 
-                      ? "bg-primary/10 text-primary" 
+                      ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]" 
                       : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white"
                     }`}
                 >
                   {/* Active indicator bar */}
                   {isActive && (
-                    <div className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-primary rounded-full" />
+                    <div className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#8b5cf6] rounded-full" />
                   )}
-                  <span className={`shrink-0 ${isActive ? "text-primary" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
+                  <span className={`shrink-0 ${isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
                     {tab.icon}
                   </span>
                   {!collapsed && <span className="truncate">{tab.label}</span>}
@@ -97,7 +97,7 @@ export default function SettingsLayout({
             <button
               onClick={() => setCollapsed(!collapsed)}
               title={collapsed ? (t("expand") || "Expand") : (t("collapse") || "Collapse")}
-              className="flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-medium text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
             >
               {collapsed ? <PanelLeftOpen className="h-4 w-4 rtl:rotate-180" /> : <PanelLeftClose className="h-4 w-4 rtl:rotate-180" />}
               {!collapsed && <span>{t("collapse") || "Collapse"}</span>}
@@ -107,23 +107,53 @@ export default function SettingsLayout({
 
         {/* ── Main Content Column ── */}
         <div className="flex-1 min-w-0 overflow-y-auto custom-scrollbar">
-          <div className="max-w-5xl mx-auto p-4 md:p-8 pt-6">
+          <div className="afab-page">
 
-            {/* Mobile Navigation Dropdown (only visible < lg) */}
-            <div className="lg:hidden mb-6">
+            {/* Mobile Navigation (horizontally scrollable tab strip + dropdown, visible < lg) */}
+            <div className="lg:hidden space-y-3">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {t("title")}
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  {t("subtitle")}
+                </p>
+              </div>
+              <nav className="flex items-center gap-1.5 overflow-x-auto scrollbar-none rounded-2xl border border-gray-200 bg-white p-1.5 shadow-sm dark:border-gray-800/60 dark:bg-[#0c101c]">
+                {tabs.map((tab) => {
+                  const isActive = pathname === tab.path;
+                  return (
+                    <Link
+                      key={tab.id}
+                      href={tab.path}
+                      className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                        isActive
+                          ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]"
+                          : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white"
+                      }`}
+                    >
+                      <span className={isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500"}>
+                        {tab.icon}
+                      </span>
+                      {tab.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+
               <button
                 onClick={() => setMobileNavOpen(!mobileNavOpen)}
-                className="flex items-center justify-between w-full px-4 py-3 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-900 dark:text-white shadow-sm"
+                className="afab-card flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-gray-900 dark:text-white"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-primary">{activeTab.icon}</span>
+                  <span className="text-[#7c3aed] dark:text-[#a78bfa]">{activeTab.icon}</span>
                   {activeTab.label}
                 </div>
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileNavOpen ? "rotate-180" : ""}`} />
               </button>
               
               {mobileNavOpen && (
-                <div className="mt-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="afab-popover overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                   {tabs.map((tab) => {
                     const isActive = pathname === tab.path;
                     return (
@@ -131,13 +161,13 @@ export default function SettingsLayout({
                         key={tab.id}
                         href={tab.path}
                         onClick={() => setMobileNavOpen(false)}
-                        className={`flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors
+                        className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors
                           ${isActive 
-                            ? "bg-primary/5 text-primary border-l-2 rtl:border-l-0 rtl:border-r-2 border-primary" 
-                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-white"
+                            ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]" 
+                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white"
                           }`}
                       >
-                        <span className={isActive ? "text-primary" : "text-gray-400 dark:text-gray-500"}>
+                        <span className={isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500"}>
                           {tab.icon}
                         </span>
                         {tab.label}

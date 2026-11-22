@@ -166,7 +166,7 @@ export default function DashboardPage() {
         </div>
         {/* AI Insights takes 1 column */}
         <div className="lg:col-span-1">
-          <AIInsightsCard />
+          <AIInsightsCard summary={data} currency={currency} />
         </div>
       </div>
 

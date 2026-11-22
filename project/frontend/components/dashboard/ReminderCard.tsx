@@ -34,24 +34,36 @@ export function ReminderCard({ reminders }: { reminders: any[] }) {
       </div>
 
       <div className="space-y-4">
-        {(reminders || []).map((reminder) => (
-          <div key={reminder.id} className="flex items-start gap-3 group">
-            <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${getColor(reminder.type)}`}>
-              {getIcon(reminder.type)}
+        {(!reminders || reminders.length === 0) ? (
+          <div className="py-8 flex flex-col items-center justify-center text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-100 dark:bg-white/5 text-gray-400 mb-2.5">
+              <Clock className="h-5 w-5" />
             </div>
-            <div className="flex-1 border-b border-gray-100 dark:border-gray-800/60 pb-3 group-last:border-0 group-last:pb-0">
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {reminder.title}
-              </p>
-              <div className="flex items-center gap-2 mt-1">
-                <Clock className="h-3 w-3 text-gray-400" />
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {reminder.date}
+            <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">No upcoming reminders</p>
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5 max-w-xs">
+              Scheduled tax deadlines and billing reminders will appear here.
+            </p>
+          </div>
+        ) : (
+          reminders.map((reminder) => (
+            <div key={reminder.id} className="flex items-start gap-3 group">
+              <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${getColor(reminder.type)}`}>
+                {getIcon(reminder.type)}
+              </div>
+              <div className="flex-1 border-b border-gray-100 dark:border-gray-800/60 pb-3 group-last:border-0 group-last:pb-0">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {reminder.title}
                 </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Clock className="h-3 w-3 text-gray-400" />
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {reminder.date}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

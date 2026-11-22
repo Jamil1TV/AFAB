@@ -22,7 +22,7 @@ export default function AuthLayout({
   const isArabic = locale === 'ar';
 
   return (
-    <div className="flex h-[100dvh] w-full font-sans bg-[#F9FAFB] dark:bg-[#0D111C] relative overflow-hidden">
+    <div className="flex h-[100dvh] w-full font-sans bg-[#f8f9fb] dark:bg-[#060813] relative overflow-hidden">
       
       {/* ── Animated Stars Background ── */}
       <AnimatedStars />
@@ -41,21 +41,21 @@ export default function AuthLayout({
           
           {/* Top Logo */}
           <div className="flex items-center gap-4 relative z-20 shrink-0">
-            <div className="flex h-14 w-14 items-center justify-center rounded-[18px] bg-white shadow-sm dark:bg-[#161B2B] overflow-hidden">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800/60 dark:bg-[#0c101c] overflow-hidden">
               <Image src="/assets/afablogo.png" alt="AFAB Logo" width={44} height={44} className="object-contain dark:hidden" />
               <Image src="/assets/afablogo_dark.png" alt="AFAB Logo Dark" width={44} height={44} className="object-contain hidden dark:block" />
             </div>
             <div>
-              <h2 className="text-[28px] font-extrabold text-gray-900 tracking-tight dark:text-white leading-none">AFAB</h2>
+              <h2 className="text-[28px] font-bold text-gray-900 tracking-tight dark:text-white leading-none">AFAB</h2>
             </div>
           </div>
 
           {/* Text Content */}
-          <div className="relative z-20 mt-6 flex flex-col pl-2 shrink-0">
+          <div className="relative z-20 mt-6 flex flex-col ps-2 shrink-0">
             {/* Reduced text size slightly so it fits perfectly on smaller screens without forced breaks */}
             <h1 className="text-[2.5rem] font-bold leading-[1.15] tracking-[-0.02em] text-gray-900 dark:text-white relative z-20 xl:text-[3rem] flex flex-col gap-0.5">
               <span>{t("heroTitlePart1")}</span>
-              <span className="text-[#6c2bd9] dark:text-[#8b5cf6]">{t("heroTitlePart2")}</span>
+              <span className="text-[#7c3aed] dark:text-[#8b5cf6]">{t("heroTitlePart2")}</span>
             </h1>
             <p className="mt-3 text-[14px] leading-relaxed text-gray-600 dark:text-gray-400 relative z-20 max-w-[480px]">
               {t("heroSubtitle")}
@@ -70,7 +70,7 @@ export default function AuthLayout({
           </div>
 
           {/* Bottom Testimonial */}
-          <div className="relative z-20 pl-2 shrink-0">
+          <div className="relative z-20 ps-2 shrink-0">
             <span className="block font-serif text-[50px] leading-none text-[#8b5cf6] opacity-60 mb-[-15px]">&ldquo;</span>
             <p className="text-[13px] italic leading-relaxed text-gray-700 dark:text-gray-300 max-w-[260px] font-medium">
               {t("testimonialPart1")}<br/>{t("testimonialPart2")}
@@ -84,11 +84,11 @@ export default function AuthLayout({
           <div className="my-auto w-full flex flex-col items-center justify-center gap-6">
             {/* Mobile Logo (Hidden on Desktop) */}
             <div className="flex lg:hidden items-center gap-4 shrink-0">
-              <div className="flex h-16 w-16 items-center justify-center rounded-[20px] bg-white shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:bg-[#161B2B] dark:border dark:border-[#2A3042]/50 overflow-hidden">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800/60 dark:bg-[#0c101c] overflow-hidden">
                 <Image src="/assets/afablogo.png" alt="AFAB Logo" width={52} height={52} className="object-contain dark:hidden" />
                 <Image src="/assets/afablogo_dark.png" alt="AFAB Logo Dark" width={52} height={52} className="object-contain hidden dark:block" />
               </div>
-              <h2 className="text-[32px] font-extrabold text-gray-900 tracking-tight dark:text-white leading-none">AFAB</h2>
+              <h2 className="text-[32px] font-bold text-gray-900 tracking-tight dark:text-white leading-none">AFAB</h2>
             </div>
 
             {children}

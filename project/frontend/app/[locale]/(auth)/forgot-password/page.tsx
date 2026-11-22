@@ -88,13 +88,13 @@ export default function ForgotPasswordPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="w-full max-w-[440px] rounded-[24px] bg-white/80 p-5 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] backdrop-blur-xl dark:bg-[#161B2B]/80 dark:border dark:border-[#232A3E]/50 dark:shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)]"
+      className="afab-card w-full max-w-[440px] p-5 sm:p-8"
     >
       {/* Back to Login */}
       <motion.div variants={itemVariants} className="mb-6">
         <Link
           href="/login"
-          className="inline-flex items-center gap-2 text-[13px] font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
         >
           <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
           {t("backToLogin")}
@@ -112,13 +112,13 @@ export default function ForgotPasswordPage() {
           >
             {/* Title */}
             <motion.div variants={itemVariants} className="mb-6">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#7c3aed]/10 dark:bg-[#8b5cf6]/10">
-                <Mail className="h-7 w-7 text-[#7c3aed] dark:text-[#8b5cf6]" />
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8b5cf6]/10">
+                <Mail className="h-7 w-7 text-[#7c3aed] dark:text-[#a78bfa]" />
               </div>
-              <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">
                 {t("forgotPasswordTitle")}
               </h2>
-              <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">
+              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {t("forgotPasswordSubtitle")}
               </p>
             </motion.div>
@@ -128,12 +128,12 @@ export default function ForgotPasswordPage() {
               <motion.div variants={itemVariants}>
                 <label
                   htmlFor="forgot-email"
-                  className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300"
+                  className="afab-label"
                 >
                   {t("email")}
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#8b5cf6] transition-colors rtl:left-auto rtl:right-4 z-10" />
+                  <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
                   <input
                     id="forgot-email"
                     type="email"
@@ -151,10 +151,10 @@ export default function ForgotPasswordPage() {
                     autoComplete="email"
                     aria-invalid={!!emailError}
                     aria-describedby={emailError ? "forgot-email-error" : undefined}
-                    className={`w-full rounded-[14px] border bg-gray-50/50 py-[12px] pl-11 pr-4 text-[14px] text-gray-900 outline-none transition-all focus:bg-white focus:ring-4 dark:bg-[#111522]/50 dark:text-white rtl:pl-4 rtl:pr-11 disabled:opacity-60 ${
+                    className={`afab-input py-2.5 ps-11 pe-4 ${
                       emailError
-                        ? "border-red-400 focus:border-red-500 focus:ring-red-500/10 dark:border-red-500/50 dark:focus:border-red-500 dark:focus:ring-red-500/10"
-                        : "border-gray-200 focus:border-[#7c3aed] focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
+                        ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500/60 dark:focus:border-red-500"
+                        : ""
                     }`}
                   />
                 </div>
@@ -163,7 +163,7 @@ export default function ForgotPasswordPage() {
                     id="forgot-email-error"
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="mt-1.5 text-[12px] text-red-500 dark:text-red-400"
+                    className="mt-1.5 text-xs text-red-500 dark:text-red-400"
                     role="alert"
                   >
                     {emailError}
@@ -178,7 +178,7 @@ export default function ForgotPasswordPage() {
                   type="submit"
                   disabled={loading}
                   id="forgot-submit"
-                  className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-[14px] bg-[#7c3aed] py-[12px] text-[15px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] hover:shadow-[#7c3aed]/40 dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed] dark:shadow-[#8b5cf6]/10 dark:hover:shadow-[#8b5cf6]/30 disabled:opacity-70"
+                  className="afab-btn-primary group relative w-full py-3 text-sm"
                 >
                   {loading ? (
                     <AfabLoader size="xs" />
@@ -206,25 +206,25 @@ export default function ForgotPasswordPage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.1 }}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-500/15"
+                className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/10"
               >
                 <CheckCircle2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
               </motion.div>
             </div>
 
-            <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white mb-2">
               {t("resetEmailSent")}
             </h2>
-            <p className="text-[14px] text-gray-500 dark:text-gray-400 mb-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
               {t("resetEmailSentSubtitle")}
             </p>
-            <p className="text-[14px] font-medium text-gray-700 dark:text-gray-300 mb-8">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-8">
               {email}
             </p>
 
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#7c3aed] hover:underline dark:text-[#8b5cf6] transition-all"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all"
             >
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
               {t("backToLogin")}

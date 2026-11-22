@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { 
-  Coins, 
   RefreshCw, 
   Search, 
   TrendingUp, 
@@ -16,6 +15,7 @@ import {
   Layers,
   Zap,
 } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { CurrencyService, CurrencyPair, HistoricalRatePoint } from "@/lib/api/currencies";
 import { DashboardService } from "@/lib/api/dashboard";
 import { LiveMarketTicker } from "@/components/currencies/LiveMarketTicker";
@@ -70,7 +70,9 @@ export default function CurrenciesPage() {
   const [businessName, setBusinessName] = useState<string>("My Business");
   const [baseCurrency, setBaseCurrency] = useState<string>("USD");
   const [viewBaseCurrency, setViewBaseCurrency] = useState<string>("USD");
-  const [netBalance, setNetBalance] = useState<number>(24500);
+  const [netBalance, setNetBalance] = useState<number>(0);
+  const [ratesError, setRatesError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<string>("");
 
   // Active sub-view tab
   const [activeTab, setActiveTab] = useState<"markets" | "binance" | "risk" | "alerts" | "directory">("markets");
@@ -98,9 +100,9 @@ export default function CurrenciesPage() {
           }
           const rawProfit = summary.kpiData?.profit?.rawValue;
           const rawCash = summary.kpiData?.cashFlow?.rawValue;
-          if (rawProfit !== undefined && rawProfit !== 0) {
+          if (rawProfit !== undefined) {
             setNetBalance(rawProfit);
-          } else if (rawCash !== undefined && rawCash !== 0) {
+          } else if (rawCash !== undefined) {
             setNetBalance(rawCash);
           }
         }
@@ -111,14 +113,17 @@ export default function CurrenciesPage() {
       // 2. Fetch live market pairs based on active view base currency
       const pairs = await CurrencyService.getMarketRates(viewBaseCurrency);
       setMarketPairs(pairs);
+      setRatesError(null);
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
 
       // Default selected pair: first pair matching viewBase or EUR/USD
       const defaultPair = pairs.find((p) => p.base === viewBaseCurrency) || pairs[0];
       if (defaultPair) {
         setSelectedPair(defaultPair);
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to load FX market data:", err);
+      setRatesError(err instanceof Error ? err.message : "Exchange rates cannot currently be retrieved.");
     } finally {
       setIsRefreshing(false);
     }
@@ -142,9 +147,9 @@ export default function CurrenciesPage() {
           }
           const rawProfit = summary.kpiData?.profit?.rawValue;
           const rawCash = summary.kpiData?.cashFlow?.rawValue;
-          if (rawProfit !== undefined && rawProfit !== 0) {
+          if (rawProfit !== undefined) {
             setNetBalance(rawProfit);
-          } else if (rawCash !== undefined && rawCash !== 0) {
+          } else if (rawCash !== undefined) {
             setNetBalance(rawCash);
           }
         }
@@ -153,14 +158,17 @@ export default function CurrenciesPage() {
         if (!isActive) return;
 
         setMarketPairs(pairs);
+        setRatesError(null);
+        setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
 
         const defaultPair = pairs.find((p) => p.base === viewBaseCurrency) || pairs[0];
         if (defaultPair) {
           setSelectedPair(defaultPair);
         }
-      } catch (err) {
+      } catch (err: unknown) {
         if (isActive) {
           console.error("Failed to load FX market data:", err);
+          setRatesError(err instanceof Error ? err.message : "Exchange rates cannot currently be retrieved.");
         }
       } finally {
         if (isActive) {
@@ -255,75 +263,94 @@ export default function CurrenciesPage() {
   }, [marketPairs, viewBaseCurrency]);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in duration-500">
+    <div className="afab-page animate-in fade-in duration-500">
       {/* 1. Header Bar with Controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="shrink min-w-0">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6c4cf5] to-[#8b5cf6] text-white shadow-lg shadow-purple-500/25">
-              <Coins className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight">
-                {t("title")}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                {t("subtitle")}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Action Controls: Live Status Pill, Base Currency View Switcher, Migration Button, Refresh Button — Strictly Single Line */}
-        <div className="flex items-center gap-2 flex-nowrap shrink-0 overflow-x-auto scrollbar-none py-1">
-          {/* Live Status Pill */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold border border-emerald-500/20 shrink-0 whitespace-nowrap">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{t("liveStatus")}</span>
-          </div>
-
-          {/* View Base Currency Switcher Dropdown */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xs shrink-0 whitespace-nowrap">
-            <Globe className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-            <span className="text-[11px] font-semibold text-gray-400">View:</span>
-            <select
-              value={viewBaseCurrency}
-              onChange={(e) => setViewBaseCurrency(e.target.value)}
-              className="bg-transparent text-xs font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+      <PageHeader
+        title={t("title")}
+        subtitle={t("subtitle")}
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Live Status Pill with Source & Timestamp */}
+            <div
+              className={`afab-badge px-3 py-2 rounded-xl text-xs font-semibold border shrink-0 whitespace-nowrap ${
+                ratesError
+                  ? "afab-badge-warning border-amber-500/20"
+                  : "afab-badge-success border-emerald-500/20"
+              }`}
+              title="Source: Open Exchange Rates API (open.er-api.com)"
             >
-              {ALL_CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.code}
-                </option>
-              ))}
-            </select>
+              <span className={`h-2 w-2 rounded-full ${ratesError ? "bg-amber-500" : "bg-emerald-500 animate-pulse"}`} />
+              <span>{ratesError ? (isArabic ? "تعذر تحديث الأسعار" : "Feed Unavailable") : t("liveStatus")}</span>
+              {lastUpdated && !ratesError && (
+                <span className="text-[10px] opacity-75 font-mono ms-1">• {lastUpdated}</span>
+              )}
+            </div>
+
+            {/* View Base Currency Switcher Dropdown */}
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] shadow-sm shrink-0 whitespace-nowrap">
+              <Globe className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">View:</span>
+              <select
+                value={viewBaseCurrency}
+                onChange={(e) => setViewBaseCurrency(e.target.value)}
+                className="bg-transparent text-xs font-bold text-gray-900 dark:text-white outline-none cursor-pointer"
+              >
+                {ALL_CURRENCIES.map((c) => (
+                  <option key={c.code} value={c.code} className="bg-white text-gray-900 dark:bg-[#0c101c] dark:text-gray-200">
+                    {c.code}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Change Accounting Currency trigger */}
+            <button
+              type="button"
+              onClick={() => {
+                setPendingCurrency(baseCurrency === "USD" ? "EUR" : "USD");
+                setMigrationModalOpen(true);
+              }}
+              className="afab-btn-soft"
+            >
+              <Wallet className="h-3.5 w-3.5 shrink-0" />
+              <span>Base: {baseCurrency}</span>
+            </button>
+
+            {/* Manual Refresh Button */}
+            <button
+              type="button"
+              onClick={loadInitialData}
+              disabled={isRefreshing}
+              className="afab-btn-primary"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 shrink-0 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>{t("refresh")}</span>
+            </button>
           </div>
+        }
+      />
 
-          {/* Change Accounting Currency trigger */}
-          <button
-            type="button"
-            onClick={() => {
-              setPendingCurrency(baseCurrency === "USD" ? "EUR" : "USD");
-              setMigrationModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-purple-200 dark:border-purple-800/60 bg-purple-50/50 dark:bg-purple-950/20 text-xs font-bold text-purple-700 dark:text-purple-300 hover:border-purple-400 transition-colors shadow-2xs shrink-0 whitespace-nowrap"
-          >
-            <Wallet className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 shrink-0" />
-            <span>Base: {baseCurrency}</span>
-          </button>
-
-          {/* Manual Refresh Button */}
+      {/* Honest Error Banner if Exchange Rate API is Unavailable */}
+      {ratesError && (
+        <div className="afab-card border-amber-500/30 bg-amber-50/60 dark:bg-amber-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="text-amber-800 dark:text-amber-300">
+            <span className="font-bold block">
+              {isArabic ? "تعذر الوصول إلى خدمة أسعار الصرف الحية حالياً" : "Live exchange rates cannot currently be retrieved"}
+            </span>
+            <span className="text-amber-700/80 dark:text-amber-400/80">
+              {ratesError} (Source: open.er-api.com / backend `/api/v1/currencies/rates`)
+            </span>
+          </div>
           <button
             type="button"
             onClick={loadInitialData}
-            disabled={isRefreshing}
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-md shadow-purple-500/20 transition-all duration-150 active:scale-95 disabled:opacity-50 shrink-0 whitespace-nowrap"
+            className="afab-btn-secondary shrink-0"
           >
-            <RefreshCw className={`h-3.5 w-3.5 shrink-0 ${isRefreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className="h-3.5 w-3.5" />
             <span>{t("refresh")}</span>
           </button>
         </div>
-      </div>
+      )}
 
       {/* 2. Top Live Market Ticker Marquee / Strip */}
       {marketPairs.length > 0 && (
@@ -336,15 +363,11 @@ export default function CurrenciesPage() {
       )}
 
       {/* 3. Section Navigation Tabs (All-in-One vs Segmented) */}
-      <div className="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-2 overflow-x-auto scrollbar-none">
+      <div className="afab-segmented w-fit max-w-full">
         <button
           type="button"
           onClick={() => setActiveTab("markets")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-            activeTab === "markets"
-              ? "bg-[#6c4cf5] text-white shadow-md shadow-purple-500/25"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-          }`}
+          className={`afab-segment ${activeTab === "markets" ? "afab-segment-active" : ""}`}
         >
           <Sparkles className="h-4 w-4" />
           <span>{isArabic ? "الأسواق والمحول المباشر" : "Markets & Converter"}</span>
@@ -353,13 +376,9 @@ export default function CurrenciesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("binance")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-            activeTab === "binance"
-              ? "bg-[#6c4cf5] text-white shadow-md shadow-purple-500/25"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-          }`}
+          className={`afab-segment ${activeTab === "binance" ? "afab-segment-active" : ""}`}
         >
-          <Zap className="h-4 w-4 text-amber-400 fill-amber-400" />
+          <Zap className="h-4 w-4 text-amber-400" />
           <span>{isArabic ? "مخطط بينانس اللحظي (ثانية بثانية)" : "Live Binance Ticker (1s)"}</span>
           <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
         </button>
@@ -367,11 +386,7 @@ export default function CurrenciesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("risk")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-            activeTab === "risk"
-              ? "bg-[#6c4cf5] text-white shadow-md shadow-purple-500/25"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-          }`}
+          className={`afab-segment ${activeTab === "risk" ? "afab-segment-active" : ""}`}
         >
           <Calculator className="h-4 w-4" />
           <span>{isArabic ? "حاسبة مخاطر الفواتير" : "Invoice Risk Simulator"}</span>
@@ -380,11 +395,7 @@ export default function CurrenciesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("alerts")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-            activeTab === "alerts"
-              ? "bg-[#6c4cf5] text-white shadow-md shadow-purple-500/25"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-          }`}
+          className={`afab-segment ${activeTab === "alerts" ? "afab-segment-active" : ""}`}
         >
           <Bell className="h-4 w-4" />
           <span>{isArabic ? "تنبيهات الأسعار المستهدفة" : "Price Alerts"}</span>
@@ -393,11 +404,7 @@ export default function CurrenciesPage() {
         <button
           type="button"
           onClick={() => setActiveTab("directory")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-            activeTab === "directory"
-              ? "bg-[#6c4cf5] text-white shadow-md shadow-purple-500/25"
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
-          }`}
+          className={`afab-segment ${activeTab === "directory" ? "afab-segment-active" : ""}`}
         >
           <Layers className="h-4 w-4" />
           <span>{isArabic ? "دليل جميع العملات" : "Rates Directory"}</span>
@@ -437,31 +444,23 @@ export default function CurrenciesPage() {
             {/* Left Column: Interactive Trailing Rate Chart (7 cols) */}
             <div className="lg:col-span-7 flex flex-col space-y-3">
               {/* Chart Mode Switcher Bar */}
-              <div className="flex items-center justify-between bg-white dark:bg-gray-900/70 p-2 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xs">
-                <div className="flex items-center gap-1.5">
+              <div className="afab-card flex flex-wrap items-center justify-between gap-2 p-2.5">
+                <div className="afab-segmented">
                   <button
                     type="button"
                     onClick={() => setChartMode("binance")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      chartMode === "binance"
-                        ? "bg-[#6c4cf5] text-white shadow-sm shadow-purple-500/30"
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
+                    className={`afab-segment ${chartMode === "binance" ? "afab-segment-active" : ""}`}
                   >
-                    <Zap className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                    <Zap className="h-3.5 w-3.5 text-amber-400" />
                     <span>{isArabic ? "بينانس اللحظي (ثانية بثانية)" : "Binance Live (1s Ticks)"}</span>
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setChartMode("macro")}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                      chartMode === "macro"
-                        ? "bg-[#6c4cf5] text-white shadow-sm shadow-purple-500/30"
-                        : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
+                    className={`afab-segment ${chartMode === "macro" ? "afab-segment-active" : ""}`}
                   >
-                    <TrendingUp className="h-3.5 w-3.5 text-purple-400" />
+                    <TrendingUp className={`h-3.5 w-3.5 ${chartMode === "macro" ? "text-white" : "text-[#8b5cf6] dark:text-[#a78bfa]"}`} />
                     <span>{isArabic ? "المسار التاريخي (1M - 1Y)" : "Historical Trajectory"}</span>
                   </button>
                 </div>
@@ -523,10 +522,10 @@ export default function CurrenciesPage() {
       {activeTab === "binance" && selectedPair && (
         <div className="space-y-6 animate-in fade-in">
           {/* Pair quick selector pills */}
-          <div className="bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xs space-y-3">
+          <div className="afab-card p-5 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                <Zap className="h-3.5 w-3.5 text-amber-400" />
                 <span>{isArabic ? "اختر زوج التداول المباشر:" : "Select Live Ticker Pair:"}</span>
               </span>
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
@@ -535,23 +534,34 @@ export default function CurrenciesPage() {
               </span>
             </div>
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
-              {marketPairs.slice(0, 10).map((pair) => (
-                <button
-                  key={pair.symbol}
-                  type="button"
-                  onClick={() => setSelectedPair(pair)}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all shrink-0 ${
-                    selectedPair.symbol === pair.symbol
-                      ? "bg-[#6c4cf5] text-white shadow-md shadow-purple-500/25"
-                      : "bg-gray-50 dark:bg-gray-800/80 border border-gray-200 dark:border-gray-700/60 text-gray-700 dark:text-gray-300 hover:border-purple-400"
-                  }`}
-                >
-                  <span>{pair.symbol}</span>
-                  <span className={pair.change24h >= 0 ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
-                    {pair.rate.toFixed(4)}
-                  </span>
-                </button>
-              ))}
+              {marketPairs.slice(0, 10).map((pair) => {
+                const isSelected = selectedPair.symbol === pair.symbol;
+                return (
+                  <button
+                    key={pair.symbol}
+                    type="button"
+                    onClick={() => setSelectedPair(pair)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all shrink-0 border ${
+                      isSelected
+                        ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-sm shadow-[#8b5cf6]/25"
+                        : "bg-gray-50/50 dark:bg-[#080c18] border-gray-200 dark:border-gray-800/60 text-gray-700 dark:text-gray-300 hover:border-[#8b5cf6]/50"
+                    }`}
+                  >
+                    <span>{pair.symbol}</span>
+                    <span
+                      className={
+                        isSelected
+                          ? "text-white/90 font-bold"
+                          : pair.change24h >= 0
+                          ? "text-emerald-600 dark:text-emerald-400 font-bold"
+                          : "text-red-600 dark:text-red-400 font-bold"
+                      }
+                    >
+                      {pair.rate.toFixed(4)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -587,13 +597,13 @@ export default function CurrenciesPage() {
 
       {/* Tab 4: All Rates Reference Directory Table */}
       {activeTab === "directory" && (
-        <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden shadow-xs animate-in fade-in">
-          <div className="p-5 border-b border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="afab-card overflow-hidden animate-in fade-in">
+          <div className="p-6 border-b border-gray-100 dark:border-gray-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              <h3 className="afab-card-title">
                 {t("table.title")}
               </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              <p className="afab-card-subtitle mt-0.5">
                 {isArabic 
                   ? `قائمة أسعار الصرف الحية المقومة بـ (${viewBaseCurrency})`
                   : `Live exchange rates indexed against (${viewBaseCurrency})`}
@@ -602,30 +612,30 @@ export default function CurrenciesPage() {
 
             {/* Search filter input */}
             <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("searchPlaceholder")}
-                className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50/70 dark:bg-gray-800/70 text-gray-900 dark:text-white outline-none focus:border-purple-500 transition-colors"
+                className="afab-input ps-9 text-xs"
               />
             </div>
           </div>
 
           {/* Table Content */}
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-gray-50/70 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider text-[10px] border-b border-gray-100 dark:border-gray-800">
+            <table className="afab-table">
+              <thead className="afab-thead">
                 <tr>
-                  <th className="py-3.5 px-6">{t("table.currency")}</th>
-                  <th className="py-3.5 px-4">{t("table.code")}</th>
-                  <th className="py-3.5 px-4 font-mono">{t("table.rateAgainstBase", { base: viewBaseCurrency })}</th>
-                  <th className="py-3.5 px-4">{t("table.change")}</th>
-                  <th className="py-3.5 px-6 text-right">{t("table.action")}</th>
+                  <th className="afab-th">{t("table.currency")}</th>
+                  <th className="afab-th">{t("table.code")}</th>
+                  <th className="afab-th font-mono">{t("table.rateAgainstBase", { base: viewBaseCurrency })}</th>
+                  <th className="afab-th">{t("table.change")}</th>
+                  <th className="afab-th text-end">{t("table.action")}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+              <tbody className="afab-tbody">
                 {filteredCurrencies.map((c) => {
                   const directPair = marketPairs.find((p) => p.base === viewBaseCurrency && p.target === c.code);
                   const inversePair = marketPairs.find((p) => p.base === c.code && p.target === viewBaseCurrency);
@@ -651,38 +661,38 @@ export default function CurrenciesPage() {
                   return (
                     <tr
                       key={c.code}
-                      className="hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition-colors"
+                      className="afab-tr"
                     >
-                      <td className="py-3.5 px-6">
+                      <td className="afab-td">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 font-bold text-gray-700 dark:text-gray-300 font-mono text-xs shadow-2xs">
+                          <div className="afab-icon-tile h-8 w-8 rounded-lg font-bold text-gray-700 dark:text-gray-300 font-mono text-xs">
                             {c.symbol}
                           </div>
                           <div>
                             <span className="font-bold text-gray-900 dark:text-white block">
                               {isArabic ? c.nameAr : c.nameEn}
                             </span>
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500">
                               {c.code}
                             </span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono font-bold text-gray-800 dark:text-gray-200">
+                      <td className="afab-td font-mono font-bold text-gray-800 dark:text-gray-200">
                         {c.code}
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono font-black text-gray-900 dark:text-white">
+                      <td className="afab-td font-mono font-bold text-gray-900 dark:text-white">
                         {rate.toFixed(4)}
                       </td>
 
-                      <td className="py-3.5 px-4">
+                      <td className="afab-td">
                         <div
-                          className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full ${
+                          className={`afab-badge ${
                             isPositive
-                              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                              : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                              ? "afab-badge-success"
+                              : "afab-badge-danger"
                           }`}
                         >
                           {isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -690,7 +700,7 @@ export default function CurrenciesPage() {
                         </div>
                       </td>
 
-                      <td className="py-3.5 px-6 text-right">
+                      <td className="afab-td text-end">
                         <button
                           type="button"
                           onClick={() => {
@@ -698,7 +708,7 @@ export default function CurrenciesPage() {
                             setActiveTab("markets");
                             window.scrollTo({ top: 380, behavior: "smooth" });
                           }}
-                          className="px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-purple-500 text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                          className="afab-btn-secondary"
                         >
                           {t("table.useInConverter")}
                         </button>

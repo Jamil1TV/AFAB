@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bell, Plus, Trash2, CheckCircle2, AlertTriangle, ArrowRight } from "lucide-react";
+import { Bell, Plus, Trash2 } from "lucide-react";
 import { CurrencyPair } from "@/lib/api/currencies";
+import { EmptyState } from "@/components/dashboard/EmptyState";
 
 interface FxRateAlert {
   id: string;
@@ -19,25 +20,28 @@ interface FxRateAlertsProps {
   isArabic?: boolean;
 }
 
+const ALERTS_STORAGE_KEY = "afab_fx_rate_alerts";
+
 export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: FxRateAlertsProps) {
-  const [alerts, setAlerts] = useState<FxRateAlert[]>([
-    {
-      id: "1",
-      pair: `${baseCurrency}/USD`,
-      targetRate: 0.28,
-      direction: "above",
-      createdAt: "Today",
-      isActive: true,
-    },
-    {
-      id: "2",
-      pair: `${baseCurrency}/EUR`,
-      targetRate: 0.25,
-      direction: "above",
-      createdAt: "Today",
-      isActive: true,
-    },
-  ]);
+  const [alerts, setAlerts] = useState<FxRateAlert[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const saved = localStorage.getItem(ALERTS_STORAGE_KEY);
+      return saved ? (JSON.parse(saved) as FxRateAlert[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const persistAlerts = (updater: (prev: FxRateAlert[]) => FxRateAlert[]) => {
+    setAlerts((prev) => {
+      const next = updater(prev);
+      if (typeof window !== "undefined") {
+        localStorage.setItem(ALERTS_STORAGE_KEY, JSON.stringify(next));
+      }
+      return next;
+    });
+  };
 
   const [newPair, setNewPair] = useState<string>(pairs[0]?.symbol || `${baseCurrency}/USD`);
   const [newTarget, setNewTarget] = useState<string>("");
@@ -58,34 +62,34 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
       isActive: true,
     };
 
-    setAlerts((prev) => [alert, ...prev]);
+    persistAlerts((prev) => [alert, ...prev]);
     setNewTarget("");
     setShowAddForm(false);
   };
 
   const handleDeleteAlert = (id: string) => {
-    setAlerts((prev) => prev.filter((a) => a.id !== id));
+    persistAlerts((prev) => prev.filter((a) => a.id !== id));
   };
 
   const handleToggleAlert = (id: string) => {
-    setAlerts((prev) =>
+    persistAlerts((prev) =>
       prev.map((a) => (a.id === id ? { ...a, isActive: !a.isActive } : a))
     );
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-xs flex flex-col justify-between transition-all duration-200">
+    <div className="afab-card p-6 flex flex-col justify-between transition-all duration-200">
       {/* Header */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/80">
+      <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
             <Bell className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <h3 className="afab-card-title">
               {isArabic ? "تنبيهات أسعار الصرف المستهدفة" : "Target Rate Alerts"}
             </h3>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="afab-card-subtitle text-xs mt-0.5">
               {isArabic ? "تلقي إشعارات فورية عند بلوغ سعر صرف مستهدف" : "Monitor FX thresholds and get notified automatically"}
             </p>
           </div>
@@ -94,7 +98,7 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
         <button
           type="button"
           onClick={() => setShowAddForm(!showAddForm)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xs font-bold transition-colors"
+          className="afab-btn-soft"
         >
           <Plus className="h-4 w-4" />
           <span>{showAddForm ? (isArabic ? "إلغاء" : "Cancel") : (isArabic ? "إضافة تنبيه" : "New Alert")}</span>
@@ -103,16 +107,16 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
 
       {/* Add Alert Inline Form */}
       {showAddForm && (
-        <form onSubmit={handleAddAlert} className="p-4 my-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700 space-y-3 animate-in fade-in">
+        <form onSubmit={handleAddAlert} className="afab-inset p-4 my-3 space-y-3 animate-in fade-in">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="afab-label">
                 {isArabic ? "زوج العملات" : "Currency Pair"}
               </label>
               <select
                 value={newPair}
                 onChange={(e) => setNewPair(e.target.value)}
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 text-xs font-bold text-gray-900 dark:text-white"
+                className="afab-select w-full font-bold text-gray-900 dark:text-white"
               >
                 {pairs.map((p) => (
                   <option key={p.symbol} value={p.symbol}>
@@ -123,13 +127,13 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="afab-label">
                 {isArabic ? "الشرط" : "Condition"}
               </label>
               <select
                 value={newDirection}
                 onChange={(e) => setNewDirection(e.target.value as "above" | "below")}
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 text-xs font-bold text-gray-900 dark:text-white"
+                className="afab-select w-full font-bold text-gray-900 dark:text-white"
               >
                 <option value="above">{isArabic ? "يرتفع فوق" : "Rises above"}</option>
                 <option value="below">{isArabic ? "ينخفض تحت" : "Drops below"}</option>
@@ -137,7 +141,7 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 block mb-1">
+              <label className="afab-label">
                 {isArabic ? "السعر المستهدف" : "Target Rate"}
               </label>
               <input
@@ -147,7 +151,7 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
                 value={newTarget}
                 onChange={(e) => setNewTarget(e.target.value)}
                 placeholder="e.g. 0.2850"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-2 text-xs font-mono font-bold text-gray-900 dark:text-white outline-none focus:border-purple-500"
+                className="afab-input font-mono font-bold text-xs"
               />
             </div>
           </div>
@@ -155,7 +159,7 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
           <div className="flex justify-end gap-2 pt-1">
             <button
               type="submit"
-              className="px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold shadow-xs transition-colors"
+              className="afab-btn-primary"
             >
               {isArabic ? "حفظ التنبيه" : "Save Alert"}
             </button>
@@ -164,11 +168,13 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
       )}
 
       {/* Alerts List */}
-      <div className="divide-y divide-gray-100 dark:divide-gray-800/80 py-2 space-y-1">
+      <div className="divide-y divide-gray-100 dark:divide-gray-800/40 py-2 space-y-1">
         {alerts.length === 0 ? (
-          <div className="text-center py-6 text-xs text-gray-400">
-            {isArabic ? "لا توجد تنبيهات أسعار نشطة حالياً." : "No target rate alerts created yet."}
-          </div>
+          <EmptyState
+            icon={Bell}
+            title={isArabic ? "لا توجد تنبيهات أسعار نشطة حالياً." : "No target rate alerts created yet."}
+            className="py-8"
+          />
         ) : (
           alerts.map((a) => {
             const currentPair = pairs.find((p) => p.symbol === a.pair);
@@ -178,14 +184,14 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
             return (
               <div
                 key={a.id}
-                className="flex items-center justify-between py-3 px-2 rounded-xl hover:bg-gray-50/80 dark:hover:bg-gray-800/40 transition-colors"
+                className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-50/80 dark:hover:bg-white/[0.02] transition-colors"
               >
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
                     checked={a.isActive}
                     onChange={() => handleToggleAlert(a.id)}
-                    className="h-4 w-4 rounded text-purple-600 focus:ring-purple-500"
+                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-700 accent-[#8b5cf6] focus:ring-[#8b5cf6]"
                   />
                   <div>
                     <div className="flex items-center gap-2">
@@ -196,7 +202,7 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
                         {a.direction === "above" ? "≥" : "≤"} {a.targetRate.toFixed(4)}
                       </span>
                     </div>
-                    <span className="text-[10px] text-gray-400 block mt-0.5">
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 block mt-0.5">
                       Current: {currentRate.toFixed(4)} • {Math.abs(diffPct).toFixed(2)}% away
                     </span>
                   </div>
@@ -204,10 +210,10 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
 
                 <div className="flex items-center gap-3">
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    className={`afab-badge ${
                       a.isActive
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                        ? "afab-badge-success"
+                        : "afab-badge-neutral"
                     }`}
                   >
                     {a.isActive ? (isArabic ? "نشط" : "Active") : (isArabic ? "معطل" : "Paused")}
@@ -216,7 +222,7 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
                   <button
                     type="button"
                     onClick={() => handleDeleteAlert(a.id)}
-                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                    className="afab-icon-btn hover:text-red-600 dark:hover:text-red-400"
                     title="Delete alert"
                   >
                     <Trash2 className="h-4 w-4" />

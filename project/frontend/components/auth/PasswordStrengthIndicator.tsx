@@ -54,10 +54,10 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
 
   // Strength level: 0-1 = weak, 2-3 = fair, 4 = good, 5 = strong
   const getStrengthInfo = () => {
-    if (password.length === 0) return { level: 0, label: "", color: "bg-gray-200 dark:bg-gray-700" };
+    if (password.length === 0) return { level: 0, label: "", color: "bg-gray-200 dark:bg-gray-800" };
     if (passed <= 1) return { level: 1, label: t("pwStrengthWeak"), color: "bg-red-500" };
-    if (passed <= 2) return { level: 2, label: t("pwStrengthFair"), color: "bg-orange-500" };
-    if (passed <= 3) return { level: 3, label: t("pwStrengthGood"), color: "bg-yellow-500" };
+    if (passed <= 2) return { level: 2, label: t("pwStrengthFair"), color: "bg-amber-500" };
+    if (passed <= 3) return { level: 3, label: t("pwStrengthGood"), color: "bg-amber-500" };
     if (passed === 4) return { level: 4, label: t("pwStrengthStrong"), color: "bg-emerald-500" };
     return { level: 5, label: t("pwStrengthVeryStrong"), color: "bg-emerald-500" };
   };
@@ -89,11 +89,9 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
                 animate={{ opacity: 1, y: 0 }}
                 className={`text-[11px] font-semibold ${
                   strength.level <= 1
-                    ? "text-red-500"
-                    : strength.level <= 2
-                    ? "text-orange-500"
+                    ? "text-red-600 dark:text-red-400"
                     : strength.level <= 3
-                    ? "text-yellow-600 dark:text-yellow-400"
+                    ? "text-amber-600 dark:text-amber-400"
                     : "text-emerald-600 dark:text-emerald-400"
                 }`}
               >
@@ -101,7 +99,7 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
               </motion.span>
             )}
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200 dark:bg-gray-800">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progressWidth}%` }}
@@ -128,13 +126,12 @@ export function PasswordStrengthIndicator({ password }: PasswordStrengthIndicato
                   animate={{
                     scale: met ? [1, 1.2, 1] : 1,
                     backgroundColor: met ? "rgb(16, 185, 129)" : "transparent",
-                    borderColor: met ? "rgb(16, 185, 129)" : "rgb(209, 213, 219)",
                   }}
                   transition={{ duration: 0.2 }}
                   className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
                     met
                       ? "border-emerald-500 bg-emerald-500"
-                      : "border-gray-300 dark:border-gray-600"
+                      : "border-gray-300 dark:border-gray-700"
                   }`}
                 >
                   {met ? (

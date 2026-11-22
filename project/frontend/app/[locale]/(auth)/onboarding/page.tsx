@@ -139,18 +139,18 @@ export default function OnboardingPage() {
     : (t("onboardingStep3Tab") || "Review & Complete");
 
   return (
-    <div className="w-full max-w-[540px] rounded-[28px] bg-white/80 p-6 sm:p-9 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.06)] backdrop-blur-xl dark:bg-[#161B2B]/80 dark:border dark:border-[#232A3E]/50 dark:shadow-[0_25px_70px_-15px_rgba(0,0,0,0.4)]">
+    <div className="afab-card w-full max-w-[540px] p-5 sm:p-8">
       {/* Step Indicator Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#7c3aed] dark:text-[#8b5cf6] mb-3">
+        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#7c3aed] dark:text-[#a78bfa] mb-3">
           <span>{t("onboardingStep", { step }) || `Step ${step} of 3`}</span>
           <span>{stepTabText}</span>
         </div>
 
         {/* Progress Bar */}
-        <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-[#232A3E] overflow-hidden">
+        <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-[#080c18] overflow-hidden">
           <motion.div
-            className="h-full bg-gradient-to-r from-[#7c3aed] to-[#8b5cf6]"
+            className="h-full bg-[#8b5cf6]"
             initial={{ width: "33%" }}
             animate={{ width: step === 1 ? "33%" : step === 2 ? "66%" : "100%" }}
             transition={{ duration: 0.3 }}
@@ -163,7 +163,7 @@ export default function OnboardingPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 flex items-center gap-2.5 rounded-[14px] bg-red-50 p-4 text-[13px] font-medium text-red-600 border border-red-200/60 dark:bg-red-950/30 dark:border-red-800/40 dark:text-red-400"
+          className="mb-6 flex items-center gap-2.5 rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400"
         >
           <AlertCircle className="h-4 w-4 shrink-0" />
           <span>{error}</span>
@@ -185,28 +185,28 @@ export default function OnboardingPage() {
               className="space-y-5"
             >
               <div>
-                <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white flex items-center gap-2">
-                  <Building2 className="h-6 w-6 text-[#7c3aed] dark:text-[#8b5cf6]" />
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white flex items-center gap-2">
+                  <Building2 className="h-6 w-6 text-[#7c3aed] dark:text-[#a78bfa]" />
                   <span>{t("onboardingStep1Title") || "Tell us about your business"}</span>
                 </h2>
-                <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {t("onboardingStep1Subtitle") || "This helps us tailor financial reports and AI insights for you."}
                 </p>
               </div>
 
               {/* Country */}
               <div>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <label className="afab-label flex items-center gap-1.5">
                   <Globe2 className="h-4 w-4 text-gray-400" />
                   <span>{t("countryLabel") || "Country of Operation"}</span>
                 </label>
                 <select
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
-                  className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
+                  className="afab-select w-full py-2.5 px-3.5 text-sm"
                 >
                   {COUNTRIES.map((c) => (
-                    <option key={c.code} value={c.nameEn} className="dark:bg-[#161B2B]">
+                    <option key={c.code} value={c.nameEn}>
                       {isArabic ? c.nameAr : c.nameEn}
                     </option>
                   ))}
@@ -215,17 +215,17 @@ export default function OnboardingPage() {
 
               {/* Industry */}
               <div>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <label className="afab-label flex items-center gap-1.5">
                   <Briefcase className="h-4 w-4 text-gray-400" />
                   <span>{t("industryLabel") || "Industry"}</span>
                 </label>
                 <select
                   value={industry}
                   onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
+                  className="afab-select w-full py-2.5 px-3.5 text-sm"
                 >
                   {INDUSTRIES.map((ind) => (
-                    <option key={ind.id} value={ind.nameEn} className="dark:bg-[#161B2B]">
+                    <option key={ind.id} value={ind.nameEn}>
                       {isArabic ? ind.nameAr : ind.nameEn}
                     </option>
                   ))}
@@ -234,17 +234,17 @@ export default function OnboardingPage() {
 
               {/* Business Type */}
               <div>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <label className="afab-label flex items-center gap-1.5">
                   <Building2 className="h-4 w-4 text-gray-400" />
                   <span>{t("businessTypeLabel") || "Entity Type"}</span>
                 </label>
                 <select
                   value={businessType}
                   onChange={(e) => setBusinessType(e.target.value)}
-                  className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
+                  className="afab-select w-full py-2.5 px-3.5 text-sm"
                 >
                   {BUSINESS_TYPES.map((bt) => (
-                    <option key={bt.id} value={bt.nameEn} className="dark:bg-[#161B2B]">
+                    <option key={bt.id} value={bt.nameEn}>
                       {isArabic ? bt.nameAr : bt.nameEn}
                     </option>
                   ))}
@@ -265,28 +265,28 @@ export default function OnboardingPage() {
               className="space-y-5"
             >
               <div>
-                <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white flex items-center gap-2">
-                  <Coins className="h-6 w-6 text-[#7c3aed] dark:text-[#8b5cf6]" />
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white flex items-center gap-2">
+                  <Coins className="h-6 w-6 text-[#7c3aed] dark:text-[#a78bfa]" />
                   <span>{t("onboardingStep2Title") || "Configure your financial preferences"}</span>
                 </h2>
-                <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {t("onboardingStep2Subtitle") || "Set up your accounting currency, timezone, and fiscal calendar."}
                 </p>
               </div>
 
               {/* Currency */}
               <div>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <label className="afab-label flex items-center gap-1.5">
                   <Coins className="h-4 w-4 text-gray-400" />
                   <span>{t("currencyLabel") || "Main Currency"}</span>
                 </label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
+                  className="afab-select w-full py-2.5 px-3.5 text-sm"
                 >
                   {CURRENCIES.map((curr) => (
-                    <option key={curr.code} value={curr.code} className="dark:bg-[#161B2B]">
+                    <option key={curr.code} value={curr.code}>
                       {getLocalizedCurrencyOption(curr, locale)}
                     </option>
                   ))}
@@ -295,17 +295,17 @@ export default function OnboardingPage() {
 
               {/* Timezone */}
               <div>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <label className="afab-label flex items-center gap-1.5">
                   <Clock className="h-4 w-4 text-gray-400" />
                   <span>{t("timezoneLabel") || "Timezone"}</span>
                 </label>
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
-                  className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
+                  className="afab-select w-full py-2.5 px-3.5 text-sm"
                 >
                   {TIMEZONES.map((tz) => (
-                    <option key={tz.value} value={tz.value} className="dark:bg-[#161B2B]">
+                    <option key={tz.value} value={tz.value}>
                       {isArabic ? tz.labelAr : tz.labelEn}
                     </option>
                   ))}
@@ -314,17 +314,17 @@ export default function OnboardingPage() {
 
               {/* Fiscal Year Start */}
               <div>
-                <label className="mb-2 block text-[13px] font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <label className="afab-label flex items-center gap-1.5">
                   <Calendar className="h-4 w-4 text-gray-400" />
                   <span>{t("fiscalYearLabel") || "Fiscal Year Starts In"}</span>
                 </label>
                 <select
                   value={fiscalYearStartMonth}
                   onChange={(e) => setFiscalYearStartMonth(Number(e.target.value))}
-                  className="w-full rounded-[14px] border border-gray-200 bg-gray-50/50 py-[12px] px-4 text-[14px] text-gray-900 outline-none transition-all focus:border-[#7c3aed] focus:bg-white focus:ring-4 focus:ring-[#7c3aed]/10 dark:border-[#2A3042] dark:bg-[#111522]/50 dark:text-white dark:focus:border-[#8b5cf6] dark:focus:ring-[#8b5cf6]/10"
+                  className="afab-select w-full py-2.5 px-3.5 text-sm"
                 >
                   {MONTHS.map((m) => (
-                    <option key={m.value} value={m.value} className="dark:bg-[#161B2B]">
+                    <option key={m.value} value={m.value}>
                       {isArabic ? m.nameAr : m.nameEn}
                     </option>
                   ))}
@@ -345,50 +345,50 @@ export default function OnboardingPage() {
               className="space-y-6 text-center"
             >
               <div>
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-tr from-[#7c3aed] to-[#8b5cf6] text-white shadow-lg shadow-[#7c3aed]/25">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/25">
                   <Sparkles className="h-7 w-7" />
                 </div>
-                <h2 className="text-[22px] font-bold text-gray-900 tracking-tight dark:text-white">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">
                   {t("onboardingStep3Title") || "You're all set to launch!"}
                 </h2>
-                <p className="mt-1 text-[14px] text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                   {t("onboardingStep3Subtitle") || "Review your business configuration below."}
                 </p>
               </div>
 
               {/* Summary Card */}
-              <div className="rounded-[18px] border border-gray-200/80 bg-gray-50/60 p-5 text-start dark:border-[#232A3E] dark:bg-[#111522]/60 space-y-3 text-[14px]">
-                <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
+              <div className="afab-inset p-5 text-start space-y-3 text-sm">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-200/60 dark:border-gray-800/60">
                   <span className="text-gray-500 dark:text-gray-400">{t("summaryCountry") || "Country"}</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white text-end">
                     {getLocalizedCountry(country, locale)}
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-200/60 dark:border-gray-800/60">
                   <span className="text-gray-500 dark:text-gray-400">{t("summaryIndustry") || "Industry"}</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white text-end">
                     {getLocalizedIndustry(industry, locale)}
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-200/60 dark:border-gray-800/60">
                   <span className="text-gray-500 dark:text-gray-400">{t("summaryBusinessType") || "Entity Type"}</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white text-end">
                     {getLocalizedBusinessType(businessType, locale)}
                   </span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-200/60 dark:border-gray-800/60">
                   <span className="text-gray-500 dark:text-gray-400">{t("summaryCurrency") || "Base Currency"}</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{currency}</span>
+                  <span className="font-semibold text-gray-900 dark:text-white text-end">{currency}</span>
                 </div>
-                <div className="flex justify-between py-1 border-b border-gray-200/60 dark:border-[#232A3E]">
+                <div className="flex justify-between gap-2 py-1 border-b border-gray-200/60 dark:border-gray-800/60">
                   <span className="text-gray-500 dark:text-gray-400">{t("summaryTimezone") || "Timezone"}</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white text-end">
                     {getLocalizedTimezone(timezone, locale)}
                   </span>
                 </div>
-                <div className="flex justify-between py-1">
+                <div className="flex justify-between gap-2 py-1">
                   <span className="text-gray-500 dark:text-gray-400">{t("summaryFiscalYear") || "Fiscal Year"}</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
+                  <span className="font-semibold text-gray-900 dark:text-white text-end">
                     {getLocalizedMonth(fiscalYearStartMonth, locale)}
                   </span>
                 </div>
@@ -399,13 +399,13 @@ export default function OnboardingPage() {
       </div>
 
       {/* Navigation Controls */}
-      <div className="mt-8 flex items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-[#232A3E]">
+      <div className="mt-8 flex items-center justify-between gap-4 pt-4 border-t border-gray-100 dark:border-gray-800/60">
         {step > 1 ? (
           <button
             type="button"
             onClick={handleBack}
             disabled={loading}
-            className="flex items-center gap-2 rounded-[14px] border border-gray-200 bg-white py-2.5 px-4 text-[14px] font-semibold text-gray-700 transition-all hover:bg-gray-50 dark:border-[#2A3042] dark:bg-[#111522] dark:text-gray-300 dark:hover:bg-[#1A2035]"
+            className="afab-btn-secondary py-2.5 px-4 text-sm"
           >
             <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
             <span>{t("back") || "Back"}</span>
@@ -420,7 +420,7 @@ export default function OnboardingPage() {
             whileTap={{ scale: 0.98 }}
             type="button"
             onClick={handleNext}
-            className="flex items-center gap-2 rounded-[14px] bg-[#7c3aed] py-2.5 px-6 text-[14px] font-semibold text-white shadow-md shadow-[#7c3aed]/20 transition-all hover:bg-[#6d28d9] dark:bg-[#8b5cf6] dark:hover:bg-[#7c3aed]"
+            className="afab-btn-primary py-2.5 px-6 text-sm"
           >
             <span>{t("next") || "Continue"}</span>
             <ArrowRight className="h-4 w-4 rtl:rotate-180" />
@@ -432,7 +432,7 @@ export default function OnboardingPage() {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="flex flex-1 items-center justify-center gap-2 rounded-[14px] bg-gradient-to-r from-[#7c3aed] to-[#8b5cf6] py-3 px-6 text-[15px] font-bold text-white shadow-lg shadow-[#7c3aed]/25 transition-all hover:shadow-[#7c3aed]/40 disabled:opacity-70"
+            className="afab-btn-primary flex-1 py-3 px-6 text-sm"
           >
             {loading ? (
               <AfabLoader size="xs" />
