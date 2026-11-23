@@ -112,12 +112,23 @@ function buildAuthHeaders(
   return merged;
 }
 
-function redirectToLogin() {
+let redirectingToLogin = false;
+
+function redirectToLogin(): boolean {
   AuthStore.clearAuth();
   if (typeof window !== "undefined") {
-    const currentLang = window.location.pathname.split("/")[1] || "en";
-    window.location.href = `/${currentLang}/login`;
+    const path = window.location.pathname;
+    if (path.endsWith("/login") || path.endsWith("/signup")) {
+      return false;
+    }
+    if (!redirectingToLogin) {
+      redirectingToLogin = true;
+      const currentLang = path.split("/")[1] || "en";
+      window.location.href = `/${currentLang}/login`;
+    }
+    return true;
   }
+  return false;
 }
 
 export async function fetchRawClient(endpoint: string, options: FetchOptions = {}): Promise<Response> {
@@ -126,7 +137,13 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
 
   // After a hard page reload, in-memory accessToken is null — silently refresh via HttpOnly cookie first.
   if (requireAuth && !AuthStore.getAccessToken() && !endpoint.includes("/auth/")) {
-    await tryRefreshToken();
+    const refreshed = await tryRefreshToken();
+    if (!refreshed && !AuthStore.getAccessToken()) {
+      if (redirectToLogin()) {
+        return new Promise<Response>(() => {});
+      }
+      throw new ApiError("Authentication required. Please sign in again.", "UNAUTHORIZED", 401);
+    }
   }
 
   const buildConfig = (): RequestInit => ({
@@ -239,8 +256,9 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
     }
 
     if (response.status === 401 && requireAuth) {
-      redirectToLogin();
-      return new Promise(() => {});
+      if (redirectToLogin()) {
+        return new Promise(() => {});
+      }
     }
 
     throw new ApiError(errorMsg, errorCode, response.status, errorDetails);

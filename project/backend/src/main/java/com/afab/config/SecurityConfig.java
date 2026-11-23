@@ -1,8 +1,10 @@
 package com.afab.config;
 
 import com.afab.auth.security.JwtAuthenticationFilter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -78,6 +80,22 @@ public class SecurityConfig {
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.getWriter().write(
+                        "{\"success\":false,\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required.\"}"
+                    );
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.getWriter().write(
+                        "{\"success\":false,\"code\":\"FORBIDDEN\",\"message\":\"Access denied.\"}"
+                    );
+                })
             )
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
