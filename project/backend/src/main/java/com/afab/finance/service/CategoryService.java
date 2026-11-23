@@ -1,6 +1,7 @@
 package com.afab.finance.service;
 
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ConflictException;
 import com.afab.common.exception.ForbiddenException;
@@ -39,6 +40,7 @@ public class CategoryService {
     @Transactional
     public CategoryDTO createCategory(String userEmail, CreateCategoryRequest request) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         String trimmedName = request.getName().trim();
         String upperType = request.getType().toUpperCase().trim();
@@ -61,6 +63,7 @@ public class CategoryService {
     @Transactional
     public CategoryDTO updateCategory(String userEmail, UUID id, UpdateCategoryRequest request) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + id));
 
@@ -96,6 +99,7 @@ public class CategoryService {
     @Transactional
     public void deleteCategory(String userEmail, UUID id) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with ID: " + id));
 

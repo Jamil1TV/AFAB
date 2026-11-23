@@ -125,15 +125,15 @@ class AfabEndToEndIntegrationTest {
 
     @Test
     @Order(1)
-    void flywayMigrationsV1ThroughV23AppliedCleanly() {
+    void flywayMigrationsV1ThroughV26AppliedCleanly() {
         Integer appliedCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM flyway_schema_history WHERE success = true", Integer.class);
-        assertThat(appliedCount).isNotNull().isGreaterThanOrEqualTo(23);
+        assertThat(appliedCount).isNotNull().isGreaterThanOrEqualTo(26);
 
         String latestVersion = jdbcTemplate.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success = true ORDER BY installed_rank DESC LIMIT 1",
                 String.class);
-        assertThat(latestVersion).isEqualTo("23");
+        assertThat(latestVersion).isEqualTo("26");
     }
 
     @Test

@@ -381,6 +381,17 @@ components:
           type: string
         onboardingComplete:
           type: boolean
+        accessMode:
+          type: string
+          enum: [EDITABLE, READ_ONLY]
+        editable:
+          type: boolean
+        primary:
+          type: boolean
+        active:
+          type: boolean
+        userRole:
+          type: string
 
     UserProfileDTO:
       type: object

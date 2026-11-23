@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface PlanRepository extends JpaRepository<Plan, UUID> {
     Optional<Plan> findBySlug(String slug);
     List<Plan> findAllByIsActiveTrue();
+    Optional<Plan> findByStripePriceIdMonthlyOrStripePriceIdYearly(String monthlyPriceId, String yearlyPriceId);
 }

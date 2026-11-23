@@ -32,6 +32,9 @@ public class BusinessDTO {
     private String numberFormat;
     private String userRole;
     private boolean active;
+    private String accessMode = "EDITABLE";
+    private boolean editable = true;
+    private boolean primary;
 
     public BusinessDTO() {}
 
@@ -87,6 +90,12 @@ public class BusinessDTO {
     public void setUserRole(String userRole) { this.userRole = userRole; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public String getAccessMode() { return accessMode; }
+    public void setAccessMode(String accessMode) { this.accessMode = accessMode; }
+    public boolean isEditable() { return editable; }
+    public void setEditable(boolean editable) { this.editable = editable; }
+    public boolean isPrimary() { return primary; }
+    public void setPrimary(boolean primary) { this.primary = primary; }
 
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public void setDateFormat(String dateFormat) { this.dateFormat = dateFormat; }

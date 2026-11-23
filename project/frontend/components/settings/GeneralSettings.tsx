@@ -110,6 +110,7 @@ export function GeneralSettings({
   }, [formData, baselineFormData, userPrefs, baselineUserPrefs]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const isReadOnly = business?.editable === false;
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isMigrationModalOpen, setIsMigrationModalOpen] = useState(false);
@@ -558,7 +559,7 @@ export function GeneralSettings({
           <Button
             type="button"
             onClick={handleSave}
-            disabled={!isDirty || isLoading}
+            disabled={!isDirty || isLoading || isReadOnly}
             className="afab-btn-primary min-w-[140px]"
           >
             {isLoading ? (

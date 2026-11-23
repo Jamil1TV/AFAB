@@ -223,6 +223,21 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
       throw new ApiError(errorMsg, errorCode, response.status, errorDetails);
     }
 
+    if (response.status === 403 && errorCode === "BUSINESS_READ_ONLY") {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("afab:business-read-only", {
+            detail: {
+              businessId: errorDetails?.businessId,
+              businessName: errorDetails?.businessName,
+              message: errorMsg,
+            },
+          })
+        );
+      }
+      throw new ApiError(errorMsg, errorCode, response.status, errorDetails);
+    }
+
     if (response.status === 401 && requireAuth) {
       redirectToLogin();
       return new Promise(() => {});

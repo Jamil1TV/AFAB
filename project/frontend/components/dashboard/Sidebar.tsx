@@ -195,8 +195,7 @@ export function Sidebar() {
     return items.map((item) => {
       const isActive = 
         pathname === item.href || 
-        (item.href !== "/dashboard" && pathname.startsWith(item.href)) ||
-        (item.href === "/dashboard/ai" && (pathname.includes("/plans") || pathname.includes("/upgrade")));
+        (item.href !== "/dashboard" && pathname.startsWith(item.href));
       
       return (
         <Link
@@ -279,7 +278,7 @@ export function Sidebar() {
             </div>
 
             <Link 
-              href="/dashboard/plans"
+              href="/dashboard/settings/subscription"
               className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 dark:shadow-purple-900/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>{locale === "ar" ? "الترقية الآن" : (tSidebar("upgradeBtn") || "Upgrade Now")}</span>

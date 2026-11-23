@@ -2,6 +2,7 @@
 
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
 
 export function UpgradeBanner() {
   const tBanner = useTranslations("Dashboard.banner");
@@ -37,10 +38,13 @@ export function UpgradeBanner() {
         </div>
 
         <div className="flex w-full md:w-auto shrink-0 flex-col items-center gap-3">
-          <button className="group flex w-full md:w-auto items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-bold text-[#7c3aed] transition-all hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-white/10">
+          <Link
+            href="/dashboard/settings/subscription"
+            className="group flex w-full md:w-auto items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 font-bold text-[#7c3aed] transition-all hover:bg-gray-50 hover:scale-[1.02] active:scale-[0.98] shadow-md shadow-white/10"
+          >
             {tBanner("upgradeBtn")}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </button>
+          </Link>
           <p className="text-xs font-medium text-white/60">
             {tBanner("price")}
           </p>

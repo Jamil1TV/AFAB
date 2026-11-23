@@ -33,6 +33,15 @@ public class Plan extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "stripe_product_id")
+    private String stripeProductId;
+
+    @Column(name = "stripe_price_id_monthly")
+    private String stripePriceIdMonthly;
+
+    @Column(name = "stripe_price_id_yearly")
+    private String stripePriceIdYearly;
+
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<PlanEntitlement> entitlements = new ArrayList<>();
 
@@ -69,4 +78,13 @@ public class Plan extends BaseEntity {
 
     public List<PlanEntitlement> getEntitlements() { return entitlements; }
     public void setEntitlements(List<PlanEntitlement> entitlements) { this.entitlements = entitlements; }
+
+    public String getStripeProductId() { return stripeProductId; }
+    public void setStripeProductId(String stripeProductId) { this.stripeProductId = stripeProductId; }
+
+    public String getStripePriceIdMonthly() { return stripePriceIdMonthly; }
+    public void setStripePriceIdMonthly(String stripePriceIdMonthly) { this.stripePriceIdMonthly = stripePriceIdMonthly; }
+
+    public String getStripePriceIdYearly() { return stripePriceIdYearly; }
+    public void setStripePriceIdYearly(String stripePriceIdYearly) { this.stripePriceIdYearly = stripePriceIdYearly; }
 }

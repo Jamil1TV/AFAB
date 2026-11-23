@@ -18,7 +18,29 @@ public class SubscriptionSnapshotDTO {
     private Long trialDaysRemaining;
     private Instant periodStart;
     private Instant periodEnd;
+    private Instant trialStart;
     private Instant trialEnd;
+    private String billingInterval;
+    private boolean cancelAtPeriodEnd;
+    private Instant canceledAt;
+    private Instant effectiveCancelAt;
+    private String pendingPlanSlug;
+    private String pendingPlanName;
+    private String pendingBillingInterval;
+    private Instant pendingChangeEffectiveAt;
+    private Instant firstPaymentFailureAt;
+    private Instant gracePeriodEndsAt;
+    private Long gracePeriodHoursRemaining;
+    private String lastPaymentFailureReason;
+    private boolean trialUsed;
+    private boolean trialEligible;
+    private boolean allocationAttentionRequired;
+    private int editableBusinessLimit;
+    private int editableBusinessCount;
+    private int totalBusinessCount;
+    private boolean hasStripeCustomer;
+    private boolean hasActiveStripeSubscription;
+    private boolean stripeConfigured;
     private Map<String, Object> entitlements;
     private Map<String, Integer> usage;
 
@@ -57,6 +79,9 @@ public class SubscriptionSnapshotDTO {
     public Instant getPeriodEnd() { return periodEnd; }
     public void setPeriodEnd(Instant periodEnd) { this.periodEnd = periodEnd; }
 
+    public Instant getTrialStart() { return trialStart; }
+    public void setTrialStart(Instant trialStart) { this.trialStart = trialStart; }
+
     public Instant getTrialEnd() { return trialEnd; }
     public void setTrialEnd(Instant trialEnd) { this.trialEnd = trialEnd; }
 
@@ -65,4 +90,67 @@ public class SubscriptionSnapshotDTO {
 
     public Map<String, Integer> getUsage() { return usage; }
     public void setUsage(Map<String, Integer> usage) { this.usage = usage; }
+
+    public String getBillingInterval() { return billingInterval; }
+    public void setBillingInterval(String billingInterval) { this.billingInterval = billingInterval; }
+
+    public boolean isCancelAtPeriodEnd() { return cancelAtPeriodEnd; }
+    public void setCancelAtPeriodEnd(boolean cancelAtPeriodEnd) { this.cancelAtPeriodEnd = cancelAtPeriodEnd; }
+
+    public Instant getCanceledAt() { return canceledAt; }
+    public void setCanceledAt(Instant canceledAt) { this.canceledAt = canceledAt; }
+
+    public Instant getEffectiveCancelAt() { return effectiveCancelAt; }
+    public void setEffectiveCancelAt(Instant effectiveCancelAt) { this.effectiveCancelAt = effectiveCancelAt; }
+
+    public String getPendingPlanSlug() { return pendingPlanSlug; }
+    public void setPendingPlanSlug(String pendingPlanSlug) { this.pendingPlanSlug = pendingPlanSlug; }
+
+    public String getPendingPlanName() { return pendingPlanName; }
+    public void setPendingPlanName(String pendingPlanName) { this.pendingPlanName = pendingPlanName; }
+
+    public String getPendingBillingInterval() { return pendingBillingInterval; }
+    public void setPendingBillingInterval(String pendingBillingInterval) { this.pendingBillingInterval = pendingBillingInterval; }
+
+    public Instant getPendingChangeEffectiveAt() { return pendingChangeEffectiveAt; }
+    public void setPendingChangeEffectiveAt(Instant pendingChangeEffectiveAt) { this.pendingChangeEffectiveAt = pendingChangeEffectiveAt; }
+
+    public Instant getFirstPaymentFailureAt() { return firstPaymentFailureAt; }
+    public void setFirstPaymentFailureAt(Instant firstPaymentFailureAt) { this.firstPaymentFailureAt = firstPaymentFailureAt; }
+
+    public Instant getGracePeriodEndsAt() { return gracePeriodEndsAt; }
+    public void setGracePeriodEndsAt(Instant gracePeriodEndsAt) { this.gracePeriodEndsAt = gracePeriodEndsAt; }
+
+    public Long getGracePeriodHoursRemaining() { return gracePeriodHoursRemaining; }
+    public void setGracePeriodHoursRemaining(Long gracePeriodHoursRemaining) { this.gracePeriodHoursRemaining = gracePeriodHoursRemaining; }
+
+    public String getLastPaymentFailureReason() { return lastPaymentFailureReason; }
+    public void setLastPaymentFailureReason(String lastPaymentFailureReason) { this.lastPaymentFailureReason = lastPaymentFailureReason; }
+
+    public boolean isTrialUsed() { return trialUsed; }
+    public void setTrialUsed(boolean trialUsed) { this.trialUsed = trialUsed; }
+
+    public boolean isTrialEligible() { return trialEligible; }
+    public void setTrialEligible(boolean trialEligible) { this.trialEligible = trialEligible; }
+
+    public boolean isAllocationAttentionRequired() { return allocationAttentionRequired; }
+    public void setAllocationAttentionRequired(boolean allocationAttentionRequired) { this.allocationAttentionRequired = allocationAttentionRequired; }
+
+    public int getEditableBusinessLimit() { return editableBusinessLimit; }
+    public void setEditableBusinessLimit(int editableBusinessLimit) { this.editableBusinessLimit = editableBusinessLimit; }
+
+    public int getEditableBusinessCount() { return editableBusinessCount; }
+    public void setEditableBusinessCount(int editableBusinessCount) { this.editableBusinessCount = editableBusinessCount; }
+
+    public int getTotalBusinessCount() { return totalBusinessCount; }
+    public void setTotalBusinessCount(int totalBusinessCount) { this.totalBusinessCount = totalBusinessCount; }
+
+    public boolean isHasStripeCustomer() { return hasStripeCustomer; }
+    public void setHasStripeCustomer(boolean hasStripeCustomer) { this.hasStripeCustomer = hasStripeCustomer; }
+
+    public boolean isHasActiveStripeSubscription() { return hasActiveStripeSubscription; }
+    public void setHasActiveStripeSubscription(boolean hasActiveStripeSubscription) { this.hasActiveStripeSubscription = hasActiveStripeSubscription; }
+
+    public boolean isStripeConfigured() { return stripeConfigured; }
+    public void setStripeConfigured(boolean stripeConfigured) { this.stripeConfigured = stripeConfigured; }
 }

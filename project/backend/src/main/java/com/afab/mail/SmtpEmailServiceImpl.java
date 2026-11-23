@@ -123,6 +123,36 @@ public class SmtpEmailServiceImpl implements EmailService {
         log.info("Security alert email dispatched to {}", LogSanitizer.maskEmail(to));
     }
 
+    @Override
+    public void sendBillingNotification(
+            String to,
+            String firstName,
+            String subject,
+            String title,
+            String message,
+            String ctaLabel,
+            String ctaUrl,
+            String accentColor
+    ) {
+        String safeFirstName = (firstName != null && !firstName.isBlank()) ? firstName : "there";
+        String resolvedUrl = (ctaUrl != null && ctaUrl.startsWith("http"))
+                ? ctaUrl
+                : frontendUrl + "/en" + (ctaUrl != null && !ctaUrl.isBlank() ? ctaUrl : "/dashboard/settings/subscription");
+        String resolvedLabel = (ctaLabel != null && !ctaLabel.isBlank()) ? ctaLabel : "Manage Subscription";
+        String resolvedAccent = (accentColor != null && !accentColor.isBlank()) ? accentColor : "#7C3AED";
+        String html = buildLinkEmailTemplate(
+                safeFirstName,
+                title,
+                message,
+                resolvedLabel,
+                resolvedUrl,
+                "You can review your AFAB subscription, invoices, and business allocations anytime in Billing Settings.",
+                resolvedAccent
+        );
+        sendHtmlEmail(to, subject, html);
+        log.info("Billing notification dispatched to {}: {}", LogSanitizer.maskEmail(to), LogSanitizer.sanitizeMessage(subject));
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // Private Helpers
     // ═══════════════════════════════════════════════════════════════

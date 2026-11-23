@@ -43,6 +43,7 @@ export function BusinessProfile({ business }: { business: any }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const isReadOnly = business?.editable === false;
 
   const handleSave = async () => {
     setIsLoading(true);
@@ -257,7 +258,7 @@ export function BusinessProfile({ business }: { business: any }) {
             <Button variant="outline" className="afab-btn-secondary min-w-[120px]">{t("businessProfile.cancel") || "Cancel"}</Button>
             <Button
               onClick={handleSave}
-              disabled={isLoading}
+              disabled={isLoading || isReadOnly}
               className="afab-btn-primary min-w-[140px]"
             >
               {isLoading ? <AfabLoader size="sm" /> : t("saveChanges")}

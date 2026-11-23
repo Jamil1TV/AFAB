@@ -1,15 +1,15 @@
 openapi: 3.0.1
 info:
-  title: AFAB Subscription & Entitlements API
-  version: 1.0.0
-  description: OpenAPI specification for the Plans, Entitlements, and Subscriptions module of AFAB.
+  title: AFAB Subscription, Billing Lifecycle, Business Allocation & Notifications API
+  version: 2.0.0
+  description: OpenAPI specification for AFAB Plans, Entitlements, Stripe Subscription Lifecycle, Grace Period, Business Allocations, and Notifications.
 servers:
   - url: http://localhost:8080
 paths:
   /api/v1/subscription/me:
     get:
       summary: Get current user subscription snapshot
-      description: Returns the user's active subscription, trial status, days remaining, entitlements map, and current monthly usage counters. Automatically reconciles expired trials to the FREE plan.
+      description: Returns the user's active subscription, trial status, grace-period state, pending downgrade/cancellation state, business allocation counts, entitlements map, and monthly usage counters.
       operationId: getMySubscription
       security:
         - bearerAuth: []
@@ -25,8 +25,8 @@ paths:
 
   /api/v1/subscription/trial:
     post:
-      summary: Activate a 7-day free trial
-      description: Starts a strictly one-time 7-day trial on PLUS or PRO plan. If the user has previously used a trial, returns 400 Bad Request.
+      summary: Activate a 7-day free trial (local/dev fallback only; Plus plan exclusively)
+      description: Starts a strictly one-time 7-day trial exclusively on the PLUS plan when Stripe is not configured in local/dev profiles.
       operationId: activateTrial
       security:
         - bearerAuth: []
@@ -44,18 +44,18 @@ paths:
               schema:
                 $ref: '#/components/schemas/SubscriptionSnapshotDTO'
         '400':
-          description: Trial already used or invalid plan
+          description: Trial already used or non-Plus plan requested
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
-        '401':
-          description: Unauthorized
+        '403':
+          description: Disabled when Stripe Billing is active
 
   /api/v1/subscription/switch:
     post:
-      summary: Switch subscription plan tier
-      description: Switches active plan tier directly (e.g. during onboarding or administrative plan changes). Upgrades user.planTier and persists active subscription.
+      summary: Switch subscription plan tier (local/dev fallback only)
+      description: Disabled with 403 Forbidden once Stripe Billing is configured or outside local/dev profiles.
       operationId: switchPlan
       security:
         - bearerAuth: []
@@ -72,14 +72,276 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SubscriptionSnapshotDTO'
-        '400':
-          description: Invalid plan slug or payload
+        '403':
+          description: Disabled when Stripe Billing is active
+
+  /api/v1/billing/checkout:
+    post:
+      summary: Create a Stripe Checkout session (or Customer Portal redirect if already subscribed)
+      description: Grants a 7-day trial exclusively on the Plus plan when the account has never used a trial. Pro subscriptions never receive a trial.
+      operationId: createCheckoutSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          description: Checkout or Portal redirect URL created
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiError'
-        '401':
-          description: Unauthorized
+                $ref: '#/components/schemas/CheckoutSessionResponse'
+
+  /api/v1/billing/portal:
+    post:
+      summary: Create a Stripe Customer Portal session
+      operationId: createPortalSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortalRequest'
+      responses:
+        '200':
+          description: Portal URL created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalSessionResponse'
+
+  /api/v1/billing/checkout/verify:
+    post:
+      summary: Verify and synchronize a completed Stripe Checkout session
+      operationId: verifyCheckoutSession
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyCheckoutRequest'
+      responses:
+        '200':
+          description: Updated subscription snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+        '403':
+          description: Checkout session belongs to a different user
+
+  /api/v1/billing/cancel:
+    post:
+      summary: Schedule subscription cancellation at end of current billing period or trial
+      description: Sets cancel_at_period_end=true on Stripe, preserving paid entitlements until expiration and preventing renewal or first trial charge. Optionally stores pending 1-business selection for Free downgrade.
+      operationId: cancelSubscription
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelSubscriptionRequest'
+      responses:
+        '200':
+          description: Cancellation scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+
+  /api/v1/billing/resume:
+    post:
+      summary: Reverse a scheduled cancellation or scheduled downgrade before effective date
+      operationId: resumeSubscription
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Scheduled cancellation/downgrade reversed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+
+  /api/v1/billing/downgrade:
+    post:
+      summary: Schedule a downgrade at period end and persist pending editable business allocation
+      description: Supports Pro->Plus (select 3 editable businesses), Pro->Free (select 1), and Plus->Free (select 1). Keeps current plan benefits active until period end.
+      operationId: scheduleDowngrade
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DowngradeSubscriptionRequest'
+      responses:
+        '200':
+          description: Downgrade and pending business allocation scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+
+  /api/v1/billing/upgrade:
+    post:
+      summary: Upgrade subscription plan tier and restore restricted businesses
+      description: Performs direct prorated Stripe upgrade for existing paid subscribers (Plus->Pro) or creates a Stripe Checkout session when upgrading from Free (Free->Plus, Free->Pro). Automatically restores read-only businesses up to the new plan limit.
+      operationId: upgradeSubscription
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpgradeSubscriptionRequest'
+      responses:
+        '200':
+          description: Upgrade completed or Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpgradeSubscriptionResponse'
+
+  /api/v1/billing/history:
+    get:
+      summary: Get user subscription change history and Stripe invoice/payment history
+      operationId: getBillingHistory
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Subscription and payment history records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BillingHistoryResponse'
+
+  /api/v1/billing/webhook:
+    post:
+      summary: Receive verified Stripe Billing webhooks
+      description: Handles checkout.session.completed, customer.subscription.created/updated/deleted, invoice.paid, invoice.payment_succeeded, and invoice.payment_failed with HMAC verification, event ID idempotency, and out-of-order protection.
+      operationId: handleStripeWebhook
+      responses:
+        '200':
+          description: Webhook processed or already handled idempotently
+        '400':
+          description: Invalid Stripe webhook signature
+
+  /api/v1/business/allocations:
+    get:
+      summary: Get current editable business allocation summary and pending downgrade selection
+      operationId: getBusinessAllocations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Business allocation summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAllocationDTO'
+    put:
+      summary: Change which owned businesses are EDITABLE vs READ_ONLY under active plan limit
+      operationId: updateBusinessAllocations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBusinessAllocationRequest'
+      responses:
+        '200':
+          description: Updated business allocation summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAllocationDTO'
+        '403':
+          description: Foreign business ID or plan limit exceeded
+
+  /api/v1/business/allocations/pending:
+    put:
+      summary: Configure or update pending editable business selection for a scheduled downgrade
+      operationId: savePendingBusinessAllocations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavePendingAllocationRequest'
+      responses:
+        '200':
+          description: Pending allocation saved without modifying active allocation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessAllocationDTO'
+
+  /api/v1/notifications:
+    get:
+      summary: List user notifications and unread badge count
+      operationId: listNotifications
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Notifications list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsResponse'
+
+  /api/v1/notifications/{id}/read:
+    put:
+      summary: Mark a single notification as read
+      operationId: markNotificationRead
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Updated notifications list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsResponse'
+
+  /api/v1/notifications/read-all:
+    put:
+      summary: Mark all user notifications as read
+      operationId: markAllNotificationsRead
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Updated notifications list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationsResponse'
 
 components:
   securitySchemes:
@@ -91,70 +353,346 @@ components:
   schemas:
     TrialActivationRequest:
       type: object
-      required:
-        - planSlug
+      required: [planSlug]
       properties:
         planSlug:
           type: string
           example: plus
-          enum: [plus, pro]
+          enum: [plus]
 
     PlanSwitchRequest:
       type: object
-      required:
-        - planSlug
+      required: [planSlug]
       properties:
         planSlug:
           type: string
-          example: pro
           enum: [free, plus, pro]
 
     SubscriptionSnapshotDTO:
       type: object
       properties:
+        planId:
+          type: string
+          format: uuid
         planSlug:
           type: string
-          example: plus
+          enum: [free, plus, pro]
         planName:
           type: string
-          example: Plus
+        priceMonthly:
+          type: number
+        priceYearly:
+          type: number
+        currency:
+          type: string
         status:
           type: string
-          example: TRIAL
-          enum: [ACTIVE, TRIAL, CANCELLED, EXPIRED, PAST_DUE]
+          enum: [ACTIVE, TRIALING, CANCELED, EXPIRED, PAST_DUE]
         trial:
           type: boolean
-          example: true
         trialDaysRemaining:
           type: integer
-          example: 7
+        trialStart:
+          type: string
+          format: date-time
+          nullable: true
         trialEnd:
           type: string
           format: date-time
-        currentPeriodStart:
+          nullable: true
+        trialUsed:
+          type: boolean
+        trialEligible:
+          type: boolean
+        billingInterval:
+          type: string
+          nullable: true
+          enum: [MONTHLY, YEARLY]
+        cancelAtPeriodEnd:
+          type: boolean
+        canceledAt:
           type: string
           format: date-time
-        currentPeriodEnd:
+          nullable: true
+        effectiveCancelAt:
           type: string
           format: date-time
+          nullable: true
+        pendingPlanSlug:
+          type: string
+          nullable: true
+        pendingPlanName:
+          type: string
+          nullable: true
+        pendingBillingInterval:
+          type: string
+          nullable: true
+        pendingChangeEffectiveAt:
+          type: string
+          format: date-time
+          nullable: true
+        firstPaymentFailureAt:
+          type: string
+          format: date-time
+          nullable: true
+        gracePeriodEndsAt:
+          type: string
+          format: date-time
+          nullable: true
+        gracePeriodHoursRemaining:
+          type: integer
+          nullable: true
+        lastPaymentFailureReason:
+          type: string
+          nullable: true
+        allocationAttentionRequired:
+          type: boolean
+        editableBusinessLimit:
+          type: integer
+        editableBusinessCount:
+          type: integer
+        totalBusinessCount:
+          type: integer
+        hasStripeCustomer:
+          type: boolean
+        hasActiveStripeSubscription:
+          type: boolean
+        stripeConfigured:
+          type: boolean
+        periodStart:
+          type: string
+          format: date-time
+        periodEnd:
+          type: string
+          format: date-time
+          nullable: true
         entitlements:
           type: object
-          additionalProperties:
-            type: string
-          example:
-            business.max: "3"
-            invoices.per_month: "50"
-            export.per_month: "15"
-            ai.chat.queries_per_month: "100"
-            ai.recommendations: "true"
+          additionalProperties: true
         usage:
           type: object
           additionalProperties:
             type: integer
-          example:
-            invoices.per_month: 2
-            export.per_month: 0
-            ai.chat.queries_per_month: 12
+
+    CheckoutRequest:
+      type: object
+      required: [planSlug, billingInterval]
+      properties:
+        planSlug:
+          type: string
+          enum: [plus, pro]
+        billingInterval:
+          type: string
+          enum: [monthly, yearly]
+        locale:
+          type: string
+          enum: [en, ar]
+        returnPath:
+          type: string
+
+    CheckoutSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          nullable: true
+        url:
+          type: string
+        mode:
+          type: string
+          enum: [CHECKOUT, PORTAL]
+
+    PortalRequest:
+      type: object
+      properties:
+        locale:
+          type: string
+          enum: [en, ar]
+        returnPath:
+          type: string
+
+    PortalSessionResponse:
+      type: object
+      properties:
+        url:
+          type: string
+
+    VerifyCheckoutRequest:
+      type: object
+      required: [sessionId]
+      properties:
+        sessionId:
+          type: string
+
+    CancelSubscriptionRequest:
+      type: object
+      properties:
+        selectedBusinessIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    DowngradeSubscriptionRequest:
+      type: object
+      required: [targetPlanSlug]
+      properties:
+        targetPlanSlug:
+          type: string
+          enum: [free, plus]
+        billingInterval:
+          type: string
+          enum: [monthly, yearly]
+        selectedBusinessIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        deferAllocation:
+          type: boolean
+
+    UpgradeSubscriptionRequest:
+      type: object
+      required: [planSlug]
+      properties:
+        planSlug:
+          type: string
+          enum: [plus, pro]
+        billingInterval:
+          type: string
+          enum: [monthly, yearly]
+        locale:
+          type: string
+          enum: [en, ar]
+        returnPath:
+          type: string
+
+    UpgradeSubscriptionResponse:
+      type: object
+      properties:
+        mode:
+          type: string
+          enum: [DIRECT_UPGRADE, CHECKOUT, PORTAL]
+        sessionId:
+          type: string
+          nullable: true
+        url:
+          type: string
+          nullable: true
+        snapshot:
+          $ref: '#/components/schemas/SubscriptionSnapshotDTO'
+
+    BillingHistoryResponse:
+      type: object
+      properties:
+        subscriptionHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              eventType: { type: string }
+              fromPlanSlug: { type: string, nullable: true }
+              toPlanSlug: { type: string, nullable: true }
+              fromStatus: { type: string, nullable: true }
+              toStatus: { type: string, nullable: true }
+              effectiveAt: { type: string, format: date-time, nullable: true }
+              details: { type: string, nullable: true }
+              createdAt: { type: string, format: date-time }
+        paymentHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              stripeInvoiceId: { type: string }
+              amountCents: { type: integer }
+              currency: { type: string }
+              status: { type: string }
+              failureReason: { type: string, nullable: true }
+              hostedInvoiceUrl: { type: string, nullable: true }
+              invoicePdfUrl: { type: string, nullable: true }
+              paidAt: { type: string, format: date-time, nullable: true }
+              failedAt: { type: string, format: date-time, nullable: true }
+              createdAt: { type: string, format: date-time }
+
+    BusinessAllocationDTO:
+      type: object
+      properties:
+        currentPlanSlug: { type: string }
+        currentPlanName: { type: string }
+        editableLimit: { type: integer }
+        editableCount: { type: integer }
+        readOnlyCount: { type: integer }
+        totalOwnedCount: { type: integer }
+        allocationAttentionRequired: { type: boolean }
+        pendingPlanSlug: { type: string, nullable: true }
+        pendingPlanName: { type: string, nullable: true }
+        pendingEditableLimit: { type: integer, nullable: true }
+        pendingChangeEffectiveAt: { type: string, format: date-time, nullable: true }
+        pendingBusinessIds:
+          type: array
+          items: { type: string, format: uuid }
+        businesses:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              name: { type: string }
+              currency: { type: string }
+              industry: { type: string, nullable: true }
+              country: { type: string, nullable: true }
+              logoUrl: { type: string, nullable: true }
+              accessMode: { type: string, enum: [EDITABLE, READ_ONLY] }
+              editable: { type: boolean }
+              primary: { type: boolean }
+              active: { type: boolean }
+              selectedForPending: { type: boolean }
+              createdAt: { type: string, format: date-time }
+
+    UpdateBusinessAllocationRequest:
+      type: object
+      required: [selectedBusinessIds]
+      properties:
+        selectedBusinessIds:
+          type: array
+          items: { type: string, format: uuid }
+        primaryBusinessId:
+          type: string
+          format: uuid
+          nullable: true
+
+    SavePendingAllocationRequest:
+      type: object
+      required: [targetPlanSlug, selectedBusinessIds]
+      properties:
+        targetPlanSlug:
+          type: string
+          enum: [free, plus]
+        selectedBusinessIds:
+          type: array
+          items: { type: string, format: uuid }
+
+    NotificationsResponse:
+      type: object
+      properties:
+        unreadCount:
+          type: integer
+        notifications:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string, format: uuid }
+              type: { type: string }
+              severity: { type: string, enum: [INFO, SUCCESS, WARNING, ERROR] }
+              title: { type: string }
+              message: { type: string }
+              actionUrl: { type: string, nullable: true }
+              read: { type: boolean }
+              readAt: { type: string, format: date-time, nullable: true }
+              createdAt: { type: string, format: date-time }
 
     ApiError:
       type: object
@@ -170,19 +708,25 @@ components:
           example: Forbidden
         code:
           type: string
-          example: PLAN_LIMIT_REACHED
+          example: BUSINESS_READ_ONLY
         message:
           type: string
-          example: "Plan limit reached for: invoices.per_month. Current: 5 / Max: 5. Upgrade your plan."
+        businessId:
+          type: string
+          format: uuid
+          nullable: true
+        businessName:
+          type: string
+          nullable: true
         feature:
           type: string
-          example: invoices.per_month
+          nullable: true
         limit:
           type: integer
-          example: 5
+          nullable: true
         used:
           type: integer
-          example: 5
+          nullable: true
         upgradeTo:
           type: string
-          example: plus
+          nullable: true

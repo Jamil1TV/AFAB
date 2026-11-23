@@ -17,8 +17,11 @@ import com.afab.finance.repository.TransactionRepository;
 import com.afab.security.AuditService;
 import com.afab.subscription.Subscription;
 import com.afab.subscription.SubscriptionRepository;
+import com.afab.subscription.stripe.StripeBillingService;
 import com.afab.user.dto.AccountDeletionPreflightDTO;
 import com.afab.user.dto.AccountDeletionPreflightDTO.BlockingBusinessDTO;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +41,7 @@ public class UserAccountService {
     private final VerificationTokenRepository verificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final AuditService auditService;
+    private final ObjectProvider<StripeBillingService> stripeBillingServiceProvider;
 
     public UserAccountService(
             UserRepository userRepository,
@@ -51,6 +55,25 @@ public class UserAccountService {
             PasswordResetTokenRepository passwordResetTokenRepository,
             AuditService auditService
     ) {
+        this(userRepository, businessRepository, businessMemberRepository, categoryRepository,
+                transactionRepository, subscriptionRepository, refreshTokenRepository,
+                verificationTokenRepository, passwordResetTokenRepository, auditService, null);
+    }
+
+    @Autowired
+    public UserAccountService(
+            UserRepository userRepository,
+            BusinessRepository businessRepository,
+            BusinessMemberRepository businessMemberRepository,
+            CategoryRepository categoryRepository,
+            TransactionRepository transactionRepository,
+            SubscriptionRepository subscriptionRepository,
+            RefreshTokenRepository refreshTokenRepository,
+            VerificationTokenRepository verificationTokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
+            AuditService auditService,
+            ObjectProvider<StripeBillingService> stripeBillingServiceProvider
+    ) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
         this.businessMemberRepository = businessMemberRepository;
@@ -61,6 +84,7 @@ public class UserAccountService {
         this.verificationTokenRepository = verificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.auditService = auditService;
+        this.stripeBillingServiceProvider = stripeBillingServiceProvider;
     }
 
     /**
@@ -313,7 +337,15 @@ public class UserAccountService {
                 "{\"deletedUserId\":\"" + deletedUserId + "\",\"anonymized\":true}"
         );
 
-        // 4. Soft-delete and anonymize user PII while keeping tombstone row intact for FK & ledger retention
+        // 4. Best-effort cancellation of any active Stripe subscription before account anonymization
+        StripeBillingService billingService = stripeBillingServiceProvider != null
+                ? stripeBillingServiceProvider.getIfAvailable()
+                : null;
+        if (billingService != null) {
+            billingService.cancelStripeSubscriptionIfPresent(user);
+        }
+
+        // 5. Soft-delete and anonymize user PII while keeping tombstone row intact for FK & ledger retention
         user.setStatus("DELETED");
         user.setDeletedAt(now);
         user.setActiveBusinessId(null);

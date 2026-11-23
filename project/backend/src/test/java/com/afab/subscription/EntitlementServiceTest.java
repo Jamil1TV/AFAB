@@ -1,6 +1,7 @@
 package com.afab.subscription;
 
 import com.afab.subscription.dto.SubscriptionSnapshotDTO;
+import com.afab.subscription.stripe.StripeProperties;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,9 @@ class EntitlementServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private StripeProperties stripeProperties;
 
     @InjectMocks
     private EntitlementService entitlementService;
@@ -185,6 +189,18 @@ class EntitlementServiceTest {
         assertThatThrownBy(() -> entitlementService.activateTrial(userEmail, "plus"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("7-day trial has already been used");
+    }
+
+    @Test
+    @DisplayName("activateTrial: rejects trial activation on Pro plan (7-day trial is Plus-exclusive)")
+    void testActivateTrialRejectedForPro() {
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+        when(subscriptionRepository.findWithPlanAndEntitlementsByUserId(testUser.getId()))
+                .thenReturn(Optional.of(activeSubscription));
+
+        assertThatThrownBy(() -> entitlementService.activateTrial(userEmail, "pro"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("exclusively for the Plus plan");
     }
 
     @Test

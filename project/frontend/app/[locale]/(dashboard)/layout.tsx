@@ -2,6 +2,7 @@
 
 import { Sidebar, SidebarProvider, useSidebar } from "@/components/dashboard/Sidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
+import { LifecycleBanners } from "@/components/dashboard/LifecycleBanners";
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   return (
@@ -9,6 +10,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="flex w-0 flex-1 flex-col h-screen overflow-hidden min-w-0">
         <DashboardHeader />
+        <LifecycleBanners />
         <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {children}
         </main>
