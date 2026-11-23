@@ -18,6 +18,9 @@ export interface UpdateBusinessPayload {
   state?: string;
   postalCode?: string;
   description?: string;
+  logoUrl?: string;
+  dateFormat?: string;
+  numberFormat?: string;
 }
 
 export interface CreateBusinessPayload {
@@ -38,10 +41,46 @@ export interface BusinessData {
   fiscalYearStartMonth: number;
   industry?: string;
   businessType?: string;
+  logoUrl?: string;
   status: string;
   userRole?: string;
   active?: boolean;
+  accessMode?: "EDITABLE" | "READ_ONLY";
+  editable?: boolean;
+  primary?: boolean;
   onboardingComplete: boolean;
+  createdAt?: string;
+}
+
+export interface BusinessAllocationItem {
+  id: string;
+  name: string;
+  currency: string;
+  industry?: string;
+  country?: string;
+  logoUrl?: string;
+  accessMode: "EDITABLE" | "READ_ONLY";
+  editable: boolean;
+  primary: boolean;
+  active: boolean;
+  selectedForPending: boolean;
+  createdAt?: string;
+}
+
+export interface BusinessAllocationSummary {
+  currentPlanSlug: "free" | "plus" | "pro";
+  currentPlanName: string;
+  editableLimit: number;
+  editableCount: number;
+  readOnlyCount: number;
+  totalOwnedCount: number;
+  allocationAttentionRequired: boolean;
+  pendingPlanSlug?: "free" | "plus" | "pro" | null;
+  pendingPlanName?: string | null;
+  pendingEditableLimit?: number | null;
+  pendingChangeEffectiveAt?: string | null;
+  pendingBusinessIds: string[];
+  businesses: BusinessAllocationItem[];
 }
 
 export class BusinessService {
@@ -99,7 +138,7 @@ export class BusinessService {
       method: "PUT",
       body: JSON.stringify(payload),
     });
-    if (updated.onboardingComplete) {
+    if (updated?.onboardingComplete) {
       AuthStore.updateUser({ onboardingComplete: true });
     }
     return updated;
@@ -115,5 +154,38 @@ export class BusinessService {
     if (AuthStore.getActiveBusinessId() === businessId) {
       AuthStore.setActiveBusinessId(null);
     }
+  }
+
+  /**
+   * Get editable vs read-only business allocation summary & pending downgrade selection
+   */
+  static async getAllocations(): Promise<BusinessAllocationSummary> {
+    return fetchClient("/business/allocations");
+  }
+
+  /**
+   * Change which owned businesses are EDITABLE vs READ_ONLY under the active plan limit
+   */
+  static async updateAllocations(
+    selectedBusinessIds: string[],
+    primaryBusinessId?: string
+  ): Promise<BusinessAllocationSummary> {
+    return fetchClient("/business/allocations", {
+      method: "PUT",
+      body: JSON.stringify({ selectedBusinessIds, primaryBusinessId }),
+    });
+  }
+
+  /**
+   * Save or update pending editable business selection for a scheduled downgrade
+   */
+  static async savePendingAllocations(
+    targetPlanSlug: "free" | "plus",
+    selectedBusinessIds: string[]
+  ): Promise<BusinessAllocationSummary> {
+    return fetchClient("/business/allocations/pending", {
+      method: "PUT",
+      body: JSON.stringify({ targetPlanSlug, selectedBusinessIds }),
+    });
   }
 }

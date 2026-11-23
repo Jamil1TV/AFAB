@@ -1,6 +1,7 @@
 package com.afab.finance.currency;
 
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.BusinessRepository;
 import com.afab.finance.domain.Transaction;
 import com.afab.finance.repository.TransactionRepository;
@@ -62,6 +63,7 @@ public class CurrencyConversionService {
 
     @Transactional
     public CurrencyChangeResultDTO changeBusinessCurrency(User user, Business business, String newCurrency, boolean convertExistingTransactions) {
+        BusinessAccessGuard.assertEditable(business);
         String oldCurrency = (business.getCurrency() != null && !business.getCurrency().isBlank())
                 ? business.getCurrency().toUpperCase().trim() : "USD";
         String targetCurrency = (newCurrency != null && !newCurrency.isBlank())

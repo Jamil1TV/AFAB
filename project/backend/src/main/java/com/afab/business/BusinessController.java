@@ -1,12 +1,15 @@
 package com.afab.business;
 
-import com.afab.business.dto.BusinessDTO;
-import com.afab.business.dto.CreateBusinessRequest;
-import com.afab.business.dto.UpdateBusinessRequest;
+import com.afab.business.dto.*;
 import com.afab.common.exception.ForbiddenException;
+import com.afab.subscription.EntitlementService;
+import com.afab.subscription.Plan;
+import com.afab.subscription.PlanEntitlement;
+import com.afab.subscription.Subscription;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -26,17 +29,35 @@ public class BusinessController {
     private final BusinessMemberRepository businessMemberRepository;
     private final UserRepository userRepository;
     private final CurrentBusinessService currentBusinessService;
+    private final EntitlementService entitlementService;
+    private final BusinessAllocationService businessAllocationService;
 
     public BusinessController(
             BusinessRepository businessRepository,
             BusinessMemberRepository businessMemberRepository,
             UserRepository userRepository,
-            CurrentBusinessService currentBusinessService
+            CurrentBusinessService currentBusinessService,
+            EntitlementService entitlementService
+    ) {
+        this(businessRepository, businessMemberRepository, userRepository,
+                currentBusinessService, entitlementService, null);
+    }
+
+    @Autowired
+    public BusinessController(
+            BusinessRepository businessRepository,
+            BusinessMemberRepository businessMemberRepository,
+            UserRepository userRepository,
+            CurrentBusinessService currentBusinessService,
+            EntitlementService entitlementService,
+            BusinessAllocationService businessAllocationService
     ) {
         this.businessRepository = businessRepository;
         this.businessMemberRepository = businessMemberRepository;
         this.userRepository = userRepository;
         this.currentBusinessService = currentBusinessService;
+        this.entitlementService = entitlementService;
+        this.businessAllocationService = businessAllocationService;
     }
 
     /**
@@ -70,30 +91,54 @@ public class BusinessController {
     ) {
         User user = currentBusinessService.getCurrentUser(authentication.getName());
 
-        // Enforce Plan Limits: FREE = 1, PLUS = 3, PRO = 5
-        String planTier = user.getPlanTier() != null ? user.getPlanTier().toUpperCase() : "FREE";
-        int maxAllowed;
-        if (planTier.contains("PRO") || planTier.contains("ENTERPRISE")) {
-            maxAllowed = 5;
-        } else if (planTier.contains("PLUS")) {
-            maxAllowed = 3;
+        // Reconcile active subscription before checking Plan Limits: FREE = 1, PLUS = 3, PRO = 5
+        Subscription activeSub = entitlementService.getOrReconcileSubscription(user);
+        Plan activePlan = activeSub != null ? activeSub.getPlan() : null;
+        String planSlug = activePlan != null && activePlan.getSlug() != null
+                ? activePlan.getSlug().toUpperCase()
+                : (user.getPlanTier() != null ? user.getPlanTier().toUpperCase() : "FREE");
+
+        int maxAllowed = 1;
+        boolean resolvedFromEntitlements = false;
+        if (activePlan != null && activePlan.getEntitlements() != null) {
+            for (PlanEntitlement ent : activePlan.getEntitlements()) {
+                if ("business.max".equalsIgnoreCase(ent.getFeatureKey())) {
+                    maxAllowed = Integer.parseInt(ent.getValue());
+                    resolvedFromEntitlements = true;
+                    break;
+                }
+            }
+        }
+        if (!resolvedFromEntitlements) {
+            if (planSlug.contains("PRO") || planSlug.contains("ENTERPRISE")) {
+                maxAllowed = 5;
+            } else if (planSlug.contains("PLUS")) {
+                maxAllowed = 3;
+            }
+        }
+
+        List<BusinessMember> existingMembers = businessMemberRepository.findAllActiveByUserIdWithBusiness(user.getId());
+        if (businessAllocationService != null) {
+            businessAllocationService.assertCanCreateEditableBusiness(user, maxAllowed);
         } else {
-            maxAllowed = 1;
+            long activeEditableOwnedCount = existingMembers.stream()
+                    .filter(m -> "OWNER".equalsIgnoreCase(m.getRole())
+                            && m.getBusiness().getArchivedAt() == null
+                            && m.getBusiness().isEditable())
+                    .count();
+
+            if (activeEditableOwnedCount >= maxAllowed) {
+                throw new com.afab.subscription.PlanLimitReachedException(
+                        "business.max",
+                        maxAllowed,
+                        (int) activeEditableOwnedCount,
+                        planSlug.contains("FREE") ? "plus" : "pro"
+                );
+            }
         }
 
-        long activeOwnedCount = businessMemberRepository.findAllActiveByUserIdWithBusiness(user.getId())
-                .stream()
-                .filter(m -> "OWNER".equalsIgnoreCase(m.getRole()) && m.getBusiness().getArchivedAt() == null)
-                .count();
-
-        if (activeOwnedCount >= maxAllowed) {
-            throw new com.afab.subscription.PlanLimitReachedException(
-                    "business.max",
-                    maxAllowed,
-                    (int) activeOwnedCount,
-                    planTier.contains("FREE") ? "plus" : "pro"
-            );
-        }
+        boolean hasAnyExistingBusiness = existingMembers.stream()
+                .anyMatch(m -> "OWNER".equalsIgnoreCase(m.getRole()) && m.getBusiness().getArchivedAt() == null);
 
         Business business = new Business();
         business.setUser(user);
@@ -105,6 +150,8 @@ public class BusinessController {
         business.setBusinessType(request.getBusinessType());
         business.setBusinessEmail(user.getEmail());
         business.setStatus("ACTIVE");
+        business.setAccessMode("EDITABLE");
+        business.setPrimary(!hasAnyExistingBusiness);
 
         business = businessRepository.save(business);
 
@@ -178,6 +225,7 @@ public class BusinessController {
         }
 
         Business business = member.getBusiness();
+        BusinessAccessGuard.assertEditable(business);
 
         if (request.getName() != null) business.setName(request.getName());
         if (request.getCountry() != null) business.setCountry(request.getCountry());
@@ -224,9 +272,22 @@ public class BusinessController {
         }
 
         Business business = member.getBusiness();
+        BusinessAccessGuard.assertEditable(business);
         business.setArchivedAt(Instant.now());
         business.setStatus("ARCHIVED");
+        boolean wasPrimary = business.isPrimary();
+        business.setPrimary(false);
         businessRepository.save(business);
+
+        if (wasPrimary && businessAllocationService != null) {
+            businessRepository.findAllOwnedActiveByUserId(user.getId()).stream()
+                    .filter(Business::isEditable)
+                    .findFirst()
+                    .ifPresent(nextPrimary -> {
+                        nextPrimary.setPrimary(true);
+                        businessRepository.save(nextPrimary);
+                    });
+        }
 
         // If the archived business was the user's active business, clear it
         if (id.equals(user.getActiveBusinessId())) {
@@ -256,6 +317,44 @@ public class BusinessController {
         return ResponseEntity.ok(dto);
     }
 
+    /**
+     * GET /api/v1/business/allocations — inspect editable limit, access modes & pending downgrade selection.
+     */
+    @GetMapping("/allocations")
+    public ResponseEntity<BusinessAllocationDTO> getAllocations(Authentication authentication) {
+        return ResponseEntity.ok(businessAllocationService.getAllocationSummary(authentication.getName()));
+    }
+
+    /**
+     * PUT /api/v1/business/allocations — swap which owned businesses are EDITABLE vs READ_ONLY.
+     */
+    @PutMapping("/allocations")
+    public ResponseEntity<BusinessAllocationDTO> updateAllocations(
+            @Valid @RequestBody UpdateBusinessAllocationRequest request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(businessAllocationService.updateCurrentAllocation(
+                authentication.getName(),
+                request.getSelectedBusinessIds(),
+                request.getPrimaryBusinessId()
+        ));
+    }
+
+    /**
+     * PUT /api/v1/business/allocations/pending — configure future editable selection for scheduled downgrade.
+     */
+    @PutMapping("/allocations/pending")
+    public ResponseEntity<BusinessAllocationDTO> savePendingAllocations(
+            @Valid @RequestBody SavePendingAllocationRequest request,
+            Authentication authentication
+    ) {
+        return ResponseEntity.ok(businessAllocationService.savePendingAllocationForUser(
+                authentication.getName(),
+                request.getTargetPlanSlug(),
+                request.getSelectedBusinessIds()
+        ));
+    }
+
     private BusinessDTO toDTO(Business business) {
         BusinessDTO dto = new BusinessDTO();
         dto.setId(business.getId());
@@ -281,6 +380,9 @@ public class BusinessController {
         dto.setCreatedAt(business.getCreatedAt());
         dto.setDateFormat(business.getDateFormat());
         dto.setNumberFormat(business.getNumberFormat());
+        dto.setAccessMode(business.getAccessMode());
+        dto.setEditable(business.isEditable());
+        dto.setPrimary(business.isPrimary());
         return dto;
     }
 }

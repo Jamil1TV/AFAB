@@ -65,6 +65,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiError> handleIllegalState(
+            IllegalStateException ex, HttpServletRequest request) {
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(
             ResourceNotFoundException ex, HttpServletRequest request) {
@@ -114,6 +126,45 @@ public class GlobalExceptionHandler {
         body.put("upgradeTo", ex.getUpgradeTo());
         body.put("path", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(com.afab.business.BusinessReadOnlyException.class)
+    public ResponseEntity<Map<String, Object>> handleBusinessReadOnly(
+            com.afab.business.BusinessReadOnlyException ex, HttpServletRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("code", ex.getCode());
+        body.put("businessId", ex.getBusinessId());
+        body.put("businessName", ex.getBusinessName());
+        body.put("message", ex.getMessage());
+        body.put("path", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(com.afab.subscription.stripe.BillingNotConfiguredException.class)
+    public ResponseEntity<ApiError> handleBillingNotConfigured(
+            com.afab.subscription.stripe.BillingNotConfiguredException ex, HttpServletRequest request) {
+        ApiError apiError = new ApiError(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                "Service Unavailable",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(apiError);
+    }
+
+    @ExceptionHandler(com.stripe.exception.StripeException.class)
+    public ResponseEntity<ApiError> handleStripeException(
+            com.stripe.exception.StripeException ex, HttpServletRequest request) {
+        log.error("Stripe API error at {}: {}", request.getRequestURI(), ex.getMessage());
+        ApiError apiError = new ApiError(
+                HttpStatus.BAD_GATEWAY.value(),
+                "Bad Gateway",
+                "Payment provider error: " + (ex.getUserMessage() != null ? ex.getUserMessage() : "Unable to communicate with Stripe."),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(apiError);
     }
 
     @ExceptionHandler(Exception.class)

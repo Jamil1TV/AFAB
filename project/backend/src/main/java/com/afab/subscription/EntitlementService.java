@@ -1,9 +1,14 @@
 package com.afab.subscription;
 
+import com.afab.business.Business;
+import com.afab.business.BusinessAllocationService;
+import com.afab.business.BusinessRepository;
 import com.afab.common.exception.ResourceNotFoundException;
 import com.afab.subscription.dto.SubscriptionSnapshotDTO;
+import com.afab.subscription.stripe.StripeProperties;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +27,9 @@ public class EntitlementService {
     private final SubscriptionRepository subscriptionRepository;
     private final UsageCounterRepository usageCounterRepository;
     private final UserRepository userRepository;
+    private final StripeProperties stripeProperties;
+    private final BusinessRepository businessRepository;
+    private final BusinessAllocationService businessAllocationService;
 
     public EntitlementService(
             PlanRepository planRepository,
@@ -29,15 +37,43 @@ public class EntitlementService {
             UsageCounterRepository usageCounterRepository,
             UserRepository userRepository
     ) {
+        this(planRepository, subscriptionRepository, usageCounterRepository, userRepository,
+                new StripeProperties(), null, null);
+    }
+
+    public EntitlementService(
+            PlanRepository planRepository,
+            SubscriptionRepository subscriptionRepository,
+            UsageCounterRepository usageCounterRepository,
+            UserRepository userRepository,
+            StripeProperties stripeProperties
+    ) {
+        this(planRepository, subscriptionRepository, usageCounterRepository, userRepository,
+                stripeProperties, null, null);
+    }
+
+    @Autowired
+    public EntitlementService(
+            PlanRepository planRepository,
+            SubscriptionRepository subscriptionRepository,
+            UsageCounterRepository usageCounterRepository,
+            UserRepository userRepository,
+            StripeProperties stripeProperties,
+            BusinessRepository businessRepository,
+            BusinessAllocationService businessAllocationService
+    ) {
         this.planRepository = planRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.usageCounterRepository = usageCounterRepository;
         this.userRepository = userRepository;
+        this.stripeProperties = stripeProperties != null ? stripeProperties : new StripeProperties();
+        this.businessRepository = businessRepository;
+        this.businessAllocationService = businessAllocationService;
     }
 
     /**
      * Retrieves or auto-creates the active subscription for the given user,
-     * reconciling expired trials if necessary.
+     * reconciling expired non-Stripe trials if necessary.
      */
     @Transactional
     public Subscription getOrReconcileSubscription(User user) {
@@ -49,12 +85,22 @@ public class EntitlementService {
                     return subscriptionRepository.save(newSub);
                 });
 
-        // Reconcile trial expiration
-        if ("TRIALING".equalsIgnoreCase(sub.getStatus()) && sub.getTrialEnd() != null && sub.getTrialEnd().isBefore(Instant.now())) {
+        // Reconcile local trial expiration only when not managed by Stripe webhooks
+        if ((sub.getStripeSubscriptionId() == null || sub.getStripeSubscriptionId().isBlank())
+                && "TRIALING".equalsIgnoreCase(sub.getStatus())
+                && sub.getTrialEnd() != null
+                && sub.getTrialEnd().isBefore(Instant.now())) {
             Plan freePlan = planRepository.findBySlug("free")
                     .orElseThrow(() -> new IllegalStateException("Default 'free' plan not found"));
             sub.setPlan(freePlan);
             sub.setStatus("ACTIVE");
+            sub.setTrialUsed(true);
+            sub.setCancelAtPeriodEnd(false);
+            sub.setCanceledAt(null);
+            sub.setEffectiveCancelAt(null);
+            if (businessAllocationService != null) {
+                businessAllocationService.applyDowngradeAllocation(sub, freePlan);
+            }
             sub = subscriptionRepository.save(sub);
 
             user.setPlanTier("FREE");
@@ -65,7 +111,7 @@ public class EntitlementService {
     }
 
     /**
-     * Returns full snapshot of user's active plan, limits, and current usage.
+     * Returns full snapshot of user's active plan, lifecycle state, business allocation counts, limits, and usage.
      */
     @Transactional(readOnly = true)
     public SubscriptionSnapshotDTO getEntitlementsSnapshot(String userEmail) {
@@ -79,6 +125,8 @@ public class EntitlementService {
                 });
 
         Plan plan = sub.getPlan();
+        Instant now = Instant.now();
+
         SubscriptionSnapshotDTO dto = new SubscriptionSnapshotDTO();
         dto.setPlanId(plan.getId());
         dto.setPlanName(plan.getName());
@@ -89,14 +137,56 @@ public class EntitlementService {
         dto.setStatus(sub.getStatus());
         dto.setPeriodStart(sub.getPeriodStart());
         dto.setPeriodEnd(sub.getPeriodEnd());
+        dto.setTrialStart(sub.getTrialStart());
         dto.setTrialEnd(sub.getTrialEnd());
 
         boolean isTrial = sub.isTrialActive();
         dto.setTrial(isTrial);
         if (isTrial && sub.getTrialEnd() != null) {
-            long remaining = Duration.between(Instant.now(), sub.getTrialEnd()).toDays();
+            long remaining = Duration.between(now, sub.getTrialEnd()).toDays();
             dto.setTrialDaysRemaining(Math.max(0, remaining));
         }
+        dto.setBillingInterval(sub.getBillingInterval());
+        dto.setCancelAtPeriodEnd(Boolean.TRUE.equals(sub.getCancelAtPeriodEnd()));
+        dto.setCanceledAt(sub.getCanceledAt());
+        dto.setEffectiveCancelAt(sub.getEffectiveCancelAt());
+
+        if (sub.getPendingPlan() != null) {
+            dto.setPendingPlanSlug(sub.getPendingPlan().getSlug());
+            dto.setPendingPlanName(sub.getPendingPlan().getName());
+            dto.setPendingBillingInterval(sub.getPendingBillingInterval());
+            dto.setPendingChangeEffectiveAt(
+                    sub.getPendingChangeEffectiveAt() != null ? sub.getPendingChangeEffectiveAt() : sub.getEffectiveCancelAt()
+            );
+        } else if (Boolean.TRUE.equals(sub.getCancelAtPeriodEnd())) {
+            dto.setPendingPlanSlug("free");
+            dto.setPendingPlanName("Free");
+            dto.setPendingChangeEffectiveAt(
+                    sub.getEffectiveCancelAt() != null ? sub.getEffectiveCancelAt() : sub.getPeriodEnd()
+            );
+        }
+
+        dto.setFirstPaymentFailureAt(sub.getFirstPaymentFailureAt());
+        dto.setGracePeriodEndsAt(sub.getGracePeriodEndsAt());
+        if ("PAST_DUE".equalsIgnoreCase(sub.getStatus()) && sub.getGracePeriodEndsAt() != null) {
+            long hoursRemaining = Duration.between(now, sub.getGracePeriodEndsAt()).toHours();
+            dto.setGracePeriodHoursRemaining(Math.max(0L, hoursRemaining));
+        }
+        dto.setLastPaymentFailureReason(sub.getLastPaymentFailureReason());
+
+        boolean trialUsed = Boolean.TRUE.equals(sub.getTrialUsed()) || sub.getTrialEnd() != null;
+        boolean hasActiveStripe = sub.getStripeSubscriptionId() != null
+                && !sub.getStripeSubscriptionId().isBlank()
+                && ("ACTIVE".equalsIgnoreCase(sub.getStatus())
+                || "TRIALING".equalsIgnoreCase(sub.getStatus())
+                || "PAST_DUE".equalsIgnoreCase(sub.getStatus()));
+
+        dto.setTrialUsed(trialUsed);
+        dto.setTrialEligible(!trialUsed && !hasActiveStripe);
+        dto.setAllocationAttentionRequired(Boolean.TRUE.equals(sub.getAllocationAttentionRequired()));
+        dto.setHasStripeCustomer(sub.getStripeCustomerId() != null && !sub.getStripeCustomerId().isBlank());
+        dto.setHasActiveStripeSubscription(hasActiveStripe);
+        dto.setStripeConfigured(stripeProperties != null && stripeProperties.isConfigured());
 
         Map<String, Object> entitlementMap = new HashMap<>();
         for (PlanEntitlement ent : plan.getEntitlements()) {
@@ -113,6 +203,21 @@ public class EntitlementService {
             }
         }
         dto.setEntitlements(entitlementMap);
+
+        int editableLimit = businessAllocationService != null
+                ? businessAllocationService.resolveEditableLimit(sub)
+                : resolveLimitFallback(entitlementMap, plan.getSlug());
+        dto.setEditableBusinessLimit(editableLimit);
+
+        if (businessRepository != null) {
+            List<Business> owned = businessRepository.findAllOwnedActiveByUserId(user.getId());
+            int editableCount = (int) owned.stream().filter(Business::isEditable).count();
+            dto.setEditableBusinessCount(editableCount);
+            dto.setTotalBusinessCount(owned.size());
+        } else {
+            dto.setEditableBusinessCount(0);
+            dto.setTotalBusinessCount(0);
+        }
 
         // Fetch usage counters for the current month period
         Instant periodStart = getCurrentPeriodStart();
@@ -137,7 +242,7 @@ public class EntitlementService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
         Subscription sub = getOrReconcileSubscription(user);
-        Plan plan = sub.getPlan();
+        Plan plan = resolveEffectivePlanForEntitlements(sub);
 
         PlanEntitlement entitlement = findEntitlement(plan, featureKey);
         if (entitlement == null) {
@@ -175,7 +280,7 @@ public class EntitlementService {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
         Subscription sub = getOrReconcileSubscription(user);
-        Plan plan = sub.getPlan();
+        Plan plan = resolveEffectivePlanForEntitlements(sub);
 
         PlanEntitlement entitlement = findEntitlement(plan, featureKey);
         if (entitlement == null) {
@@ -192,7 +297,6 @@ public class EntitlementService {
                 user.getId(), featureKey, periodStart, amount, limit, Instant.now());
 
         if (updated == 0) {
-            // Either counter doesn't exist yet or limit exceeded
             Optional<UsageCounter> counterOpt = usageCounterRepository
                     .findByUserIdAndFeatureKeyAndPeriodStart(user.getId(), featureKey, periodStart);
 
@@ -210,7 +314,7 @@ public class EntitlementService {
     }
 
     /**
-     * Activates a 7-day free trial on Plus or Pro plans.
+     * Activates a strictly one-time 7-day free trial EXCLUSIVELY on the Plus plan.
      */
     @Transactional
     public SubscriptionSnapshotDTO activateTrial(String userEmail, String planSlug) {
@@ -218,21 +322,25 @@ public class EntitlementService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
         Subscription sub = getOrReconcileSubscription(user);
 
-        if (sub.getTrialEnd() != null) {
+        if (Boolean.TRUE.equals(sub.getTrialUsed()) || sub.getTrialEnd() != null) {
             throw new IllegalStateException("7-day trial has already been used for this account.");
         }
 
-        String targetSlug = planSlug.toLowerCase().trim();
-        if (!"plus".equals(targetSlug) && !"pro".equals(targetSlug)) {
-            throw new IllegalArgumentException("Trials are available for 'plus' and 'pro' plans only.");
+        String targetSlug = planSlug != null ? planSlug.toLowerCase().trim() : "";
+        if (!"plus".equals(targetSlug)) {
+            throw new IllegalArgumentException("The 7-day free trial is available exclusively for the Plus plan.");
         }
 
         Plan targetPlan = planRepository.findBySlug(targetSlug)
                 .orElseThrow(() -> new ResourceNotFoundException("Plan not found: " + targetSlug));
 
+        Instant now = Instant.now();
         sub.setPlan(targetPlan);
         sub.setStatus("TRIALING");
-        sub.setTrialEnd(Instant.now().plus(7, ChronoUnit.DAYS));
+        sub.setTrialStart(now);
+        sub.setTrialEnd(now.plus(7, ChronoUnit.DAYS));
+        sub.setTrialUsed(true);
+        sub.setPeriodStart(now);
         sub.setPeriodEnd(sub.getTrialEnd());
         subscriptionRepository.save(sub);
 
@@ -243,7 +351,7 @@ public class EntitlementService {
     }
 
     /**
-     * Developer/testing switch plan endpoint.
+     * Developer/testing switch plan endpoint (disabled when Stripe is configured).
      */
     @Transactional
     public SubscriptionSnapshotDTO switchPlan(String userEmail, String planSlug) {
@@ -264,6 +372,26 @@ public class EntitlementService {
         userRepository.save(user);
 
         return getEntitlementsSnapshot(userEmail);
+    }
+
+    private Plan resolveEffectivePlanForEntitlements(Subscription sub) {
+        if ("CANCELED".equalsIgnoreCase(sub.getStatus()) || "EXPIRED".equalsIgnoreCase(sub.getStatus())) {
+            return planRepository.findBySlug("free").orElse(sub.getPlan());
+        }
+        return sub.getPlan();
+    }
+
+    private int resolveLimitFallback(Map<String, Object> entitlementMap, String planSlug) {
+        Object val = entitlementMap.get("business.max");
+        if (val instanceof Number n) {
+            return n.intValue();
+        }
+        if (planSlug != null) {
+            String lower = planSlug.toLowerCase();
+            if (lower.contains("pro")) return 5;
+            if (lower.contains("plus")) return 3;
+        }
+        return 1;
     }
 
     private PlanEntitlement findEntitlement(Plan plan, String featureKey) {

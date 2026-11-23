@@ -1,6 +1,7 @@
 package com.afab.finance.service;
 
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ForbiddenException;
 import com.afab.common.exception.ResourceNotFoundException;
@@ -127,6 +128,7 @@ public class TransactionService {
     @Transactional
     public TransactionDTO createTransaction(String userEmail, CreateTransactionRequest request) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         String txType = request.getType().toUpperCase().trim();
 
@@ -206,6 +208,7 @@ public class TransactionService {
     @Transactional
     public TransactionDTO updateTransaction(String userEmail, UUID transactionId, UpdateTransactionRequest request) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         Transaction tx = transactionRepository.findActiveById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with ID: " + transactionId));
@@ -269,6 +272,7 @@ public class TransactionService {
     public void deleteTransaction(String userEmail, UUID transactionId) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         Transaction tx = transactionRepository.findActiveById(transactionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with ID: " + transactionId));

@@ -88,6 +88,12 @@ public class Business extends BaseEntity {
     @Column(name = "number_format", length = 50)
     private String numberFormat = "US";
 
+    @Column(name = "is_primary", nullable = false)
+    private boolean primary = false;
+
+    @Column(name = "access_mode", nullable = false, length = 20)
+    private String accessMode = "EDITABLE";
+
     // ── Constructors ────────────────────────────
 
     public Business() {}
@@ -206,6 +212,16 @@ public class Business extends BaseEntity {
 
     public String getNumberFormat() { return numberFormat; }
     public void setNumberFormat(String numberFormat) { this.numberFormat = numberFormat; }
+
+    public boolean isPrimary() { return primary; }
+    public void setPrimary(boolean primary) { this.primary = primary; }
+
+    public String getAccessMode() { return accessMode; }
+    public void setAccessMode(String accessMode) { this.accessMode = accessMode != null ? accessMode : "EDITABLE"; }
+
+    public boolean isEditable() {
+        return accessMode == null || "EDITABLE".equalsIgnoreCase(accessMode);
+    }
 
     /**
      * Onboarding is considered complete when country and timezone are filled.

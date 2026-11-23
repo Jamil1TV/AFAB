@@ -11,6 +11,9 @@ import com.afab.finance.repository.TransactionRepository;
 import com.afab.security.AuditService;
 import com.afab.subscription.Subscription;
 import com.afab.subscription.SubscriptionRepository;
+import com.afab.subscription.stripe.StripeBillingService;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +30,7 @@ public class UserAccountService {
     private final SubscriptionRepository subscriptionRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuditService auditService;
+    private final ObjectProvider<StripeBillingService> stripeBillingServiceProvider;
 
     public UserAccountService(
             UserRepository userRepository,
@@ -37,6 +41,21 @@ public class UserAccountService {
             RefreshTokenRepository refreshTokenRepository,
             AuditService auditService
     ) {
+        this(userRepository, businessRepository, categoryRepository, transactionRepository,
+                subscriptionRepository, refreshTokenRepository, auditService, null);
+    }
+
+    @Autowired
+    public UserAccountService(
+            UserRepository userRepository,
+            BusinessRepository businessRepository,
+            CategoryRepository categoryRepository,
+            TransactionRepository transactionRepository,
+            SubscriptionRepository subscriptionRepository,
+            RefreshTokenRepository refreshTokenRepository,
+            AuditService auditService,
+            ObjectProvider<StripeBillingService> stripeBillingServiceProvider
+    ) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
         this.categoryRepository = categoryRepository;
@@ -44,6 +63,7 @@ public class UserAccountService {
         this.subscriptionRepository = subscriptionRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.auditService = auditService;
+        this.stripeBillingServiceProvider = stripeBillingServiceProvider;
     }
 
     /**
@@ -241,6 +261,14 @@ public class UserAccountService {
                 userAgent,
                 "{\"deletedUserId\":\"" + deletedUserId + "\",\"email\":\"" + deletedEmail + "\"}"
         );
+
+        // Best-effort cancellation of any active Stripe subscription before cascading DB removal
+        StripeBillingService billingService = stripeBillingServiceProvider != null
+                ? stripeBillingServiceProvider.getIfAvailable()
+                : null;
+        if (billingService != null) {
+            billingService.cancelStripeSubscriptionIfPresent(user);
+        }
 
         // Permanently delete user — DB ON DELETE CASCADE removes businesses, transactions, categories,
         // refresh tokens, verification/reset tokens, subscriptions, usage counters, and memberships.

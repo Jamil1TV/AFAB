@@ -38,6 +38,8 @@ export interface BusinessItem {
   currency: string;
   plan: string;
   isActive: boolean;
+  editable: boolean;
+  primary: boolean;
   country?: string;
 }
 
@@ -73,6 +75,8 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
       currency: "USD",
       plan: planTier,
       isActive: true,
+      editable: true,
+      primary: true,
     },
   ]);
 
@@ -87,6 +91,8 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             currency: b.currency,
             plan: b.userRole || planTier,
             isActive: Boolean(b.active),
+            editable: b.editable !== false,
+            primary: Boolean(b.primary),
             country: b.country,
           }))
         );
@@ -100,7 +106,11 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
     fetchBusinesses();
   }, [fetchBusinesses]);
 
-  const isAtLimit = businesses.length >= maxBusinesses;
+  const editableBusinessesCount = useMemo(
+    () => businesses.filter((b) => b.editable).length,
+    [businesses]
+  );
+  const isAtLimit = editableBusinessesCount >= maxBusinesses;
 
   const activeBusiness = useMemo(() => {
     return businesses.find((b) => b.isActive) || businesses[0];
@@ -195,6 +205,12 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 <span className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   {activeBusiness.name}
                 </span>
+                {!activeBusiness.editable && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    {isArabic ? "قراءة" : "RO"}
+                  </span>
+                )}
               </div>
               <span className="truncate text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {activeBusiness.plan}
@@ -272,9 +288,21 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                       <Building2 className="w-3.5 h-3.5" />
                     </div>
                     <div className="truncate min-w-0 flex-1">
-                      <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
-                        {biz.name}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-bold text-gray-900 dark:text-white truncate">
+                          {biz.name}
+                        </p>
+                        {biz.editable ? (
+                          <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+                            {isArabic ? "تعديل" : "Editable"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                            <Lock className="w-2 h-2" />
+                            {isArabic ? "قراءة فقط" : "Read-Only"}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
                         {biz.currency} • {biz.plan}
                       </p>
@@ -326,7 +354,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             </Link>
 
             <Link
-              href="/dashboard/plans"
+              href="/dashboard/settings/subscription"
               onClick={() => setIsOpen(false)}
               className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 rounded-lg transition-colors cursor-pointer font-medium"
             >
@@ -394,7 +422,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
               type="button"
               onClick={() => {
                 setIsUpgradeModalOpen(false);
-                router.push("/dashboard/plans");
+                router.push("/dashboard/settings/subscription");
               }}
               className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-purple-500/25"
             >

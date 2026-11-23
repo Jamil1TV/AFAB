@@ -133,6 +133,8 @@ public class AuthService {
         business.setUser(user);
         business.setName(request.getBusinessName());
         business.setCurrency("USD");
+        business.setPrimary(true);
+        business.setAccessMode("EDITABLE");
         business = businessRepository.save(business);
 
         // Assign OWNER membership

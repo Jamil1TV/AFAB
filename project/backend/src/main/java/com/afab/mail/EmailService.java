@@ -69,4 +69,18 @@ public interface EmailService {
      * @param message   Alert message body
      */
     void sendSecurityAlert(String to, String firstName, String subject, String message);
+
+    /**
+     * Send a subscription / billing lifecycle email notification (trial, payment, grace period, cancellation, downgrade/upgrade).
+     */
+    default void sendBillingNotification(
+            String to,
+            String firstName,
+            String subject,
+            String title,
+            String message,
+            String ctaLabel,
+            String ctaUrl,
+            String accentColor
+    ) {}
 }

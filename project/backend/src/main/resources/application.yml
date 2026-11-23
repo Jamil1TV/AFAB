@@ -91,6 +91,14 @@ afab:
     access-key: ${MINIO_ACCESS_KEY:afab_minio_access}
     secret-key: ${MINIO_SECRET_KEY:afab_minio_secret_2026}
     bucket: ${MINIO_BUCKET:afab-receipts}
+  stripe:
+    secret-key: ${STRIPE_SECRET_KEY:}
+    webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+    portal-configuration-id: ${STRIPE_PORTAL_CONFIGURATION_ID:bpc_1Ueknz38YkKVFSSmHl6ImMe7}
+    price-plus-monthly: ${STRIPE_PRICE_PLUS_MONTHLY:}
+    price-plus-yearly: ${STRIPE_PRICE_PLUS_YEARLY:}
+    price-pro-monthly: ${STRIPE_PRICE_PRO_MONTHLY:}
+    price-pro-yearly: ${STRIPE_PRICE_PRO_YEARLY:}
 
 # ── OpenAPI / Swagger ─────────────────────────────
 springdoc:
