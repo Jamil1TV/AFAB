@@ -96,7 +96,7 @@ class AuthSecurityTest {
         authCookieService = new AuthCookieService();
         ReflectionTestUtils.setField(authCookieService, "cookieSecure", true);
         ReflectionTestUtils.setField(authCookieService, "cookieSameSite", "Lax");
-        ReflectionTestUtils.setField(authCookieService, "refreshPath", "/api/v1");
+        ReflectionTestUtils.setField(authCookieService, "refreshPath", "/api/v1/auth");
         ReflectionTestUtils.setField(authCookieService, "csrfCookieName", "afab_csrf");
         ReflectionTestUtils.setField(authCookieService, "csrfHeaderName", "X-CSRF-Token");
         ReflectionTestUtils.setField(authCookieService, "allowedOriginsRaw", "https://app.example.com");
@@ -136,9 +136,10 @@ class AuthSecurityTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         List<String> cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
-        assertThat(cookies).isNotNull().hasSize(2);
-        assertThat(cookies.get(0)).contains("refreshToken=").contains("HttpOnly").contains("Secure").contains("SameSite=Lax");
-        assertThat(cookies.get(1)).contains("afab_csrf=").contains("Secure");
+        assertThat(cookies).isNotNull().hasSize(3);
+        assertThat(cookies.get(0)).contains("refreshToken=").contains("Path=/api/v1/auth").contains("HttpOnly").contains("Secure").contains("SameSite=Lax");
+        assertThat(cookies.get(1)).contains("refreshToken=").contains("Path=/api/v1;").contains("Max-Age=0");
+        assertThat(cookies.get(2)).contains("afab_csrf=").contains("Secure");
 
         // Verify refresh token is stored HASHED (not plaintext) in DB
         ArgumentCaptor<RefreshToken> rtCaptor = ArgumentCaptor.forClass(RefreshToken.class);
@@ -245,9 +246,10 @@ class AuthSecurityTest {
         assertThat(stored.getRevokedAt()).isNotNull();
         verify(refreshTokenRepository).save(stored);
         List<String> cookies = response.getHeaders().get(HttpHeaders.SET_COOKIE);
-        assertThat(cookies).hasSize(2);
-        assertThat(cookies.get(0)).contains("Max-Age=0");
-        assertThat(cookies.get(1)).contains("Max-Age=0");
+        assertThat(cookies).hasSize(3);
+        assertThat(cookies.get(0)).contains("Path=/api/v1/auth").contains("Max-Age=0");
+        assertThat(cookies.get(1)).contains("Path=/api/v1;").contains("Max-Age=0");
+        assertThat(cookies.get(2)).contains("afab_csrf=").contains("Max-Age=0");
     }
 
     @Test

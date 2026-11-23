@@ -32,7 +32,7 @@ public class AuthCookieService {
     @Value("${afab.auth.cookie.domain:}")
     private String cookieDomain;
 
-    @Value("${afab.auth.cookie.refresh-path:/api/v1}")
+    @Value("${afab.auth.cookie.refresh-path:/api/v1/auth}")
     private String refreshPath;
 
     @Value("${afab.auth.cookie.csrf-cookie-name:afab_csrf}")
@@ -58,11 +58,24 @@ public class AuthCookieService {
     }
 
     public ResponseCookie buildClearRefreshCookie() {
+        return buildClearRefreshCookieForPath(refreshPath);
+    }
+
+    /**
+     * Expires any leftover refreshToken cookie stored under the alternate legacy path
+     * (/api/v1 vs /api/v1/auth) so browsers never send two cookies with the same name.
+     */
+    public ResponseCookie buildClearLegacyRefreshCookie() {
+        String legacyPath = "/api/v1/auth".equals(refreshPath) ? "/api/v1" : "/api/v1/auth";
+        return buildClearRefreshCookieForPath(legacyPath);
+    }
+
+    private ResponseCookie buildClearRefreshCookieForPath(String path) {
         ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from(REFRESH_COOKIE_NAME, "")
                 .httpOnly(true)
                 .secure(cookieSecure)
                 .sameSite(cookieSameSite)
-                .path(refreshPath)
+                .path(path)
                 .maxAge(0);
         if (cookieDomain != null && !cookieDomain.isBlank()) {
             builder.domain(cookieDomain.trim());

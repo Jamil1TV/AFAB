@@ -7,8 +7,11 @@ import com.afab.security.ClientIpResolver;
 import com.afab.security.DistributedRateLimiter;
 import com.afab.security.DistributedRateLimiter.Endpoint;
 import com.afab.security.DistributedRateLimiter.RateLimitResult;
+import com.afab.security.LogSanitizer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,8 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
     private final AuthCookieService authCookieService;
@@ -178,8 +183,10 @@ public class AuthController {
                     : defaultRefreshMaxAgeSeconds();
             return buildAuthenticatedResponse(response, maxAgeSeconds);
         } catch (AuthService.RefreshTokenReuseException e) {
+            log.warn("Refresh rejected due to token reuse detection");
             return clearCookiesUnauthorized("REFRESH_TOKEN_REUSE", "Session invalidated for security. Please sign in again.");
         } catch (Exception e) {
+            log.warn("Refresh rejected: {}", LogSanitizer.sanitizeMessage(e.getMessage()));
             return clearCookiesUnauthorized("INVALID_REFRESH_TOKEN", "Invalid or expired refresh token.");
         }
     }
@@ -206,6 +213,7 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearRefreshCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearLegacyRefreshCookie().toString())
                 .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearCsrfCookie().toString())
                 .body(ErrorResponse.success("Logged out successfully."));
     }
@@ -393,6 +401,7 @@ public class AuthController {
             );
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearRefreshCookie().toString())
+                    .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearLegacyRefreshCookie().toString())
                     .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearCsrfCookie().toString())
                     .body(ErrorResponse.success("Password changed successfully. Please sign in again."));
         } catch (IllegalArgumentException e) {
@@ -408,10 +417,12 @@ public class AuthController {
         response.setCsrfToken(csrfToken);
 
         ResponseCookie refreshCookie = authCookieService.buildRefreshCookie(response.getRefreshToken(), maxAgeSeconds);
+        ResponseCookie clearLegacyCookie = authCookieService.buildClearLegacyRefreshCookie();
         ResponseCookie csrfCookie = authCookieService.buildCsrfCookie(csrfToken, maxAgeSeconds);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, clearLegacyCookie.toString())
                 .header(HttpHeaders.SET_COOKIE, csrfCookie.toString())
                 .body(response);
     }
@@ -419,6 +430,7 @@ public class AuthController {
     private ResponseEntity<ErrorResponse> clearCookiesUnauthorized(String code, String message) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearRefreshCookie().toString())
+                .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearLegacyRefreshCookie().toString())
                 .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearCsrfCookie().toString())
                 .body(ErrorResponse.error(code, message));
     }
