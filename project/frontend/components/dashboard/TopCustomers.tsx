@@ -13,6 +13,11 @@ type TopCustomerDisplay = CustomerItem & {
   ordersCount?: number;
 };
 
+function isAvatarImageUrl(value?: string): boolean {
+  if (!value) return false;
+  return /^(https?:\/\/|\/|data:image\/)/i.test(value.trim());
+}
+
 export function TopCustomers({ customers, currency = "USD" }: { customers: TopCustomerDisplay[]; currency?: string }) {
   const tCust = useTranslations("Dashboard.customers");
   const [storedCustomers, setStoredCustomers] = useState<TopCustomerDisplay[]>([]);
@@ -59,10 +64,14 @@ export function TopCustomers({ customers, currency = "USD" }: { customers: TopCu
             <div key={customer.id} className="flex items-center justify-between group">
               <Link href="/dashboard/customers" className="flex items-center gap-3 min-w-0">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#8b5cf6]/20 bg-[#8b5cf6]/10 text-xs font-bold text-[#7c3aed] dark:text-[#a78bfa]">
-                  {customer.avatar ? (
+                  {customer.avatar && isAvatarImageUrl(customer.avatar) ? (
                     <img src={customer.avatar} alt={customer.name} className="h-full w-full object-cover" />
                   ) : (
-                    <span>{(customer.name || "C").charAt(0).toUpperCase()}</span>
+                    <span>
+                      {customer.avatar && customer.avatar.trim().length <= 3
+                        ? customer.avatar.trim().toUpperCase()
+                        : (customer.name || "C").charAt(0).toUpperCase()}
+                    </span>
                   )}
                 </div>
                 <div className="min-w-0">
