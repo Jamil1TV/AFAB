@@ -1,9 +1,14 @@
 package com.afab.business;
 
 import com.afab.business.dto.BusinessDTO;
+import com.afab.business.dto.BusinessMemberDTO;
 import com.afab.business.dto.CreateBusinessRequest;
+import com.afab.business.dto.TransferOwnershipRequest;
 import com.afab.business.dto.UpdateBusinessRequest;
+import com.afab.common.exception.ConflictException;
 import com.afab.common.exception.ForbiddenException;
+import com.afab.common.exception.ResourceNotFoundException;
+import com.afab.security.AuditService;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import jakarta.validation.Valid;
@@ -26,17 +31,20 @@ public class BusinessController {
     private final BusinessMemberRepository businessMemberRepository;
     private final UserRepository userRepository;
     private final CurrentBusinessService currentBusinessService;
+    private final AuditService auditService;
 
     public BusinessController(
             BusinessRepository businessRepository,
             BusinessMemberRepository businessMemberRepository,
             UserRepository userRepository,
-            CurrentBusinessService currentBusinessService
+            CurrentBusinessService currentBusinessService,
+            AuditService auditService
     ) {
         this.businessRepository = businessRepository;
         this.businessMemberRepository = businessMemberRepository;
         this.userRepository = userRepository;
         this.currentBusinessService = currentBusinessService;
+        this.auditService = auditService;
     }
 
     /**
@@ -142,19 +150,98 @@ public class BusinessController {
     }
 
     /**
-     * GET /api/v1/business/{id} — get a specific business if member.
+     * GET /api/v1/business/{id} — get a specific business if active member.
      */
     @GetMapping("/{id}")
     public ResponseEntity<BusinessDTO> getBusiness(@PathVariable UUID id, Authentication authentication) {
         User user = currentBusinessService.getCurrentUser(authentication.getName());
 
-        BusinessMember member = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new ForbiddenException("Unauthorized: You do not have access to business " + id));
+        BusinessMember member = requireActiveMember(id, user.getId());
 
         BusinessDTO dto = toDTO(member.getBusiness());
         dto.setUserRole(member.getRole());
         dto.setActive(id.equals(user.getActiveBusinessId()));
 
+        return ResponseEntity.ok(dto);
+    }
+
+    /**
+     * GET /api/v1/business/{id}/members — list active members of the business.
+     */
+    @GetMapping("/{id}/members")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<BusinessMemberDTO>> listMembers(@PathVariable UUID id, Authentication authentication) {
+        User user = currentBusinessService.getCurrentUser(authentication.getName());
+        requireActiveMember(id, user.getId());
+
+        List<BusinessMemberDTO> members = businessMemberRepository.findAllActiveMembersWithUserByBusinessId(id)
+                .stream()
+                .map(m -> new BusinessMemberDTO(
+                        m.getId(),
+                        m.getUser().getId(),
+                        m.getUser().getFirstName(),
+                        m.getUser().getLastName(),
+                        m.getUser().getEmail(),
+                        m.getRole(),
+                        m.getStatus(),
+                        m.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(members);
+    }
+
+    /**
+     * POST /api/v1/business/{id}/transfer-ownership — transfer business ownership to another active member (OWNER only).
+     */
+    @PostMapping("/{id}/transfer-ownership")
+    @Transactional
+    public ResponseEntity<BusinessDTO> transferOwnership(
+            @PathVariable UUID id,
+            @Valid @RequestBody TransferOwnershipRequest request,
+            Authentication authentication
+    ) {
+        User currentUser = currentBusinessService.getCurrentUser(authentication.getName());
+        BusinessMember currentMember = requireActiveMember(id, currentUser.getId());
+
+        if (!currentMember.isOwner()) {
+            throw new ForbiddenException("Only the business owner can transfer ownership.");
+        }
+        if (currentUser.getId().equals(request.getTargetUserId())) {
+            throw new ConflictException("You already own this business.");
+        }
+
+        BusinessMember targetMember = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(id, request.getTargetUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("Target user is not a member of this business."));
+
+        if (!"ACTIVE".equalsIgnoreCase(targetMember.getStatus())) {
+            throw new ConflictException("Ownership can only be transferred to an active business member.");
+        }
+
+        User newOwner = targetMember.getUser();
+        if (!"ACTIVE".equalsIgnoreCase(newOwner.getStatus()) || newOwner.getDeletedAt() != null) {
+            throw new ConflictException("Target user account is not active.");
+        }
+
+        Business business = currentMember.getBusiness();
+        targetMember.setRole("OWNER");
+        currentMember.setRole("ADMIN");
+        business.setUser(newOwner);
+
+        businessMemberRepository.save(targetMember);
+        businessMemberRepository.save(currentMember);
+        business = businessRepository.save(business);
+
+        auditService.logBusinessEvent(
+                currentUser,
+                "OWNERSHIP_TRANSFERRED",
+                business.getId(),
+                "{\"previousOwnerId\":\"" + currentUser.getId() + "\",\"newOwnerId\":\"" + newOwner.getId() + "\"}"
+        );
+
+        BusinessDTO dto = toDTO(business);
+        dto.setUserRole(currentMember.getRole());
+        dto.setActive(id.equals(currentUser.getActiveBusinessId()));
         return ResponseEntity.ok(dto);
     }
 
@@ -170,8 +257,7 @@ public class BusinessController {
     ) {
         User user = currentBusinessService.getCurrentUser(authentication.getName());
 
-        BusinessMember member = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new ForbiddenException("Unauthorized: You do not have access to business " + id));
+        BusinessMember member = requireActiveMember(id, user.getId());
 
         if (!member.isAdminOrOwner()) {
             throw new ForbiddenException("Only business owners and admins can update business settings.");
@@ -216,8 +302,7 @@ public class BusinessController {
     public ResponseEntity<Void> archiveBusiness(@PathVariable UUID id, Authentication authentication) {
         User user = currentBusinessService.getCurrentUser(authentication.getName());
 
-        BusinessMember member = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(id, user.getId())
-                .orElseThrow(() -> new ForbiddenException("Unauthorized: You do not have access to business " + id));
+        BusinessMember member = requireActiveMember(id, user.getId());
 
         if (!member.isOwner()) {
             throw new ForbiddenException("Only the business owner can archive a business.");
@@ -228,13 +313,23 @@ public class BusinessController {
         business.setStatus("ARCHIVED");
         businessRepository.save(business);
 
-        // If the archived business was the user's active business, clear it
         if (id.equals(user.getActiveBusinessId())) {
             user.setActiveBusinessId(null);
             userRepository.save(user);
         }
 
+        auditService.logBusinessEvent(user, "BUSINESS_ARCHIVED", business.getId(), null);
+
         return ResponseEntity.noContent().build();
+    }
+
+    private BusinessMember requireActiveMember(UUID businessId, UUID userId) {
+        BusinessMember member = businessMemberRepository.findWithBusinessByBusinessIdAndUserId(businessId, userId)
+                .orElseThrow(() -> new ForbiddenException("Unauthorized: You do not have access to business " + businessId));
+        if (!"ACTIVE".equalsIgnoreCase(member.getStatus()) || member.getBusiness().getArchivedAt() != null) {
+            throw new ForbiddenException("Unauthorized: Membership is inactive or business is archived.");
+        }
+        return member;
     }
 
     /**

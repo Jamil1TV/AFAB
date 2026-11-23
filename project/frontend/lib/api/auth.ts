@@ -116,11 +116,9 @@ export class AuthService {
   }
 
   static async logout(): Promise<void> {
-    const refreshToken = AuthStore.getRefreshToken();
     try {
       await fetchClient("/auth/logout", {
         method: "POST",
-        body: refreshToken ? JSON.stringify({ refreshToken }) : JSON.stringify({}),
         requireAuth: false,
       });
     } catch (err) {

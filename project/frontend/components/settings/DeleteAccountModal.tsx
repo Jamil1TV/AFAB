@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 import { SettingsService } from "@/lib/api/settings";
 import { AuthStore } from "@/lib/auth-store";
@@ -64,6 +64,48 @@ export function DeleteAccountModal({
   const [confirmInput, setConfirmInput] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [preflight, setPreflight] = useState<{
+    canDelete: boolean;
+    blockingBusinesses: Array<{
+      businessId: string;
+      businessName: string;
+      activeMemberCount: number;
+      hasOtherActiveMembers: boolean;
+    }>;
+    guidance: string;
+  } | null>(null);
+  const [archivingBusinessId, setArchivingBusinessId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    SettingsService.getDeletionPreflight()
+      .then((res) => {
+        if (active) setPreflight(res);
+      })
+      .catch(() => {
+        if (active) setPreflight(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [open]);
+
+  const handleArchiveBlockingBusiness = async (businessId: string) => {
+    setArchivingBusinessId(businessId);
+    setDeleteError("");
+    try {
+      await SettingsService.archiveBusiness(businessId);
+      const refreshed = await SettingsService.getDeletionPreflight();
+      setPreflight(refreshed);
+    } catch (err: unknown) {
+      setDeleteError(
+        err instanceof Error ? err.message : "Failed to archive business."
+      );
+    } finally {
+      setArchivingBusinessId(null);
+    }
+  };
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (isDeleting) return;
@@ -335,10 +377,10 @@ export function DeleteAccountModal({
                     </>
                   ) : (
                     <>
-                      This will permanently delete the{" "}
+                      This will deactivate and anonymize the{" "}
                       <strong className="text-gray-900 dark:text-white">{fullName}</strong>{" "}
-                      account (<span className="font-mono">{email}</span>), all owned workspaces,
-                      transactions, categories, financial history, subscriptions, and active sessions.
+                      user account (<span className="font-mono">{email}</span>) and revoke all active sessions.
+                      Archived business financial ledgers and audit trails are preserved safely — owned active businesses must be transferred or archived first.
                     </>
                   )}
                 </p>
@@ -364,6 +406,35 @@ export function DeleteAccountModal({
           {/* ── STEP 3: GitHub-style Type Phrase to Confirm ── */}
           {step === 3 && (
             <form onSubmit={handleConfirmDelete} className="space-y-4 animate-in fade-in duration-200">
+              {preflight && !preflight.canDelete && (
+                <div className="p-3.5 rounded-lg border border-amber-500/40 bg-amber-50 dark:bg-amber-950/35 text-amber-900 dark:text-amber-200 space-y-2.5 text-xs">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                    <p className="font-medium leading-relaxed">{preflight.guidance}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    {preflight.blockingBusinesses.map((b) => (
+                      <div
+                        key={b.businessId}
+                        className="flex items-center justify-between gap-2 rounded-md bg-white/80 dark:bg-[#0d1117]/80 px-2.5 py-2 border border-amber-500/20"
+                      >
+                        <span className="font-semibold truncate">{b.businessName}</span>
+                        <button
+                          type="button"
+                          disabled={archivingBusinessId === b.businessId}
+                          onClick={() => handleArchiveBlockingBusiness(b.businessId)}
+                          className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50 shrink-0 cursor-pointer"
+                        >
+                          {archivingBusinessId === b.businessId
+                            ? isArabic ? "جاري الأرشفة..." : "Archiving..."
+                            : isArabic ? "أرشفة الشركة" : "Archive Business"}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {deleteError && (
                 <div className="p-3 rounded-lg border border-red-500/30 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-start gap-2 text-xs">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -416,9 +487,9 @@ export function DeleteAccountModal({
 
               <button
                 type="submit"
-                disabled={!isPhraseMatch || isDeleting}
+                disabled={!isPhraseMatch || isDeleting || (preflight !== null && !preflight.canDelete)}
                 className={`w-full py-2.5 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-all border ${
-                  isPhraseMatch && !isDeleting
+                  isPhraseMatch && !isDeleting && !(preflight !== null && !preflight.canDelete)
                     ? "bg-red-600 hover:bg-red-700 text-white border-red-600 shadow-lg shadow-red-600/20 cursor-pointer"
                     : "bg-gray-100 dark:bg-[#21262d] text-red-500/60 dark:text-red-400/50 border-gray-200 dark:border-gray-800 cursor-not-allowed"
                 }`}

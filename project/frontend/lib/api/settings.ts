@@ -86,6 +86,27 @@ export class SettingsService {
     };
   }
 
+  static async getDeletionPreflight(): Promise<{
+    canDelete: boolean;
+    blockingBusinesses: Array<{
+      businessId: string;
+      businessName: string;
+      activeMemberCount: number;
+      hasOtherActiveMembers: boolean;
+    }>;
+    guidance: string;
+  }> {
+    return fetchClient("/user/me/deletion-preflight", {
+      method: "GET",
+    });
+  }
+
+  static async archiveBusiness(businessId: string): Promise<void> {
+    return fetchClient(`/business/${businessId}`, {
+      method: "DELETE",
+    });
+  }
+
   static async deleteAccount(confirmation: string) {
     return fetchClient("/user/me", {
       method: "DELETE",

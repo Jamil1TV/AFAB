@@ -1,37 +1,43 @@
 # AFAB Production Deployment Checklist
-## Security & Authentication
 
-Before deploying AFAB to a production environment, complete this checklist to ensure enterprise-grade security and reliability.
+Before deploying AFAB to staging or production, verify every item below.
 
-### 1. Swap Email Provider
-Currently, the system uses `SmtpEmailServiceImpl` which is designed for Gmail/Mailtrap. For production, you MUST swap this out.
-- [ ] Create accounts with a transactional email provider (AWS SES, Resend, or SendGrid).
-- [ ] Implement a new `EmailService` class (e.g. `AwsSesEmailServiceImpl`) using their official SDK (which is faster and more reliable than raw SMTP).
-- [ ] Update `application-prod.yml` to inject the new email service instead of SMTP.
+## 1. Secrets & Credential Rotation (Mandatory)
+- [ ] **Rotate all previously exposed credentials** (SMTP App Password, PostgreSQL password, JWT signing secret, MinIO access/secret keys). Never reuse credentials that appeared in local development archives or historical Git commits.
+- [ ] Inject `JWT_SECRET` (minimum 32 random bytes / 64+ chars), `POSTGRES_PASSWORD`, `REDIS_PASSWORD`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY`, and `MAIL_PASSWORD` exclusively via a secret manager or runtime environment variables.
+- [ ] Run backend with `SPRING_PROFILES_ACTIVE=prod` (`application-prod.yml` enforces `afab.auth.cookie.secure=true`, `afab.auth.allow-dev-otp=false`, `afab.rate-limit.fail-mode=fail_closed`, and disables Swagger UI by default).
+- [ ] Confirm `SecurityConfigurationValidator` startup checks pass cleanly (it fails fast if secrets are weak/placeholder or cookies are insecure).
 
-### 2. Implement Phone / SMS Verification (Optional but Recommended)
-The database already has `phone_verified_at` and the Token architecture is built.
-- [ ] Create a Twilio account.
-- [ ] Create a `SmsService` interface and `TwilioSmsServiceImpl`.
-- [ ] In `AuthService`, add `sendPhoneVerificationOtp(User user)`. Generate an OTP, save it to `verification_tokens` with `TokenType.PHONE_VERIFICATION`.
-- [ ] Add `POST /api/v1/auth/verify-phone` to the controller.
+## 2. Authentication, Cookies, CSRF & CORS (Implemented in P0.2)
+- [x] Refresh tokens stored SHA-256 hashed in `refresh_tokens`, transmitted only via `HttpOnly` cookies (`Path=/api/v1`), rotated on every refresh with token-family reuse revocation.
+- [x] Access tokens held strictly in frontend memory (no `localStorage` token storage).
+- [x] Double-submit CSRF (`afab_csrf` + `X-CSRF-Token`) and `Origin` header validation enforced on cookie-authenticated endpoints.
+- [ ] Configure `CORS_ALLOWED_ORIGINS` strictly to exact production HTTPS frontend origins (e.g., `https://app.afab.com`).
+- [ ] Configure `AFAB_COOKIE_DOMAIN` and `AFAB_COOKIE_SAME_SITE` (`Lax` for same-site subdomains, `None` with `AFAB_COOKIE_SECURE=true` only if strictly cross-site).
+- [ ] Serve frontend and backend exclusively over HTTPS / TLS 1.2+.
 
-### 3. Hash OTP Tokens in the Database
-Currently, the 6-digit OTPs are saved in plain text in the `verification_tokens` table. In a secure production environment, they should be hashed (just like passwords).
-- [ ] Update `AuthService` to hash the OTP using `passwordEncoder.encode(otp)` BEFORE saving it to `verificationTokenRepository`.
-- [ ] Update `verifyEmail` and `resetPassword` to use `passwordEncoder.matches(code, token.getToken())` instead of a direct SQL lookup by the exact token string.
+## 3. Distributed Rate Limiting & Reverse Proxy (Implemented in P0.3)
+- [x] Redis-backed atomic Lua rate limiting (`DistributedRateLimiter`) enabled across login, signup, forgot-password, email verification, OTP, password reset, and refresh endpoints.
+- [x] `ClientIpResolver` ignores untrusted `X-Forwarded-For` headers by default.
+- [ ] Set `AFAB_TRUSTED_PROXIES` to the exact IP/CIDR of your production reverse proxy / load balancer so client IP identification is accurate and non-spoofable.
+- [ ] Provision production Redis with authentication (`REDIS_PASSWORD`), TLS, and high availability (`fail_closed` rejects auth requests with HTTP 503 if Redis is unreachable).
 
-### 4. Enable Two-Factor Authentication (2FA)
-The database has `two_factor_enabled` and `two_factor_secret` columns ready.
-- [ ] Add an endpoint `POST /api/v1/auth/setup-2fa` to generate a TOTP secret and return a QR code URI for Google Authenticator.
-- [ ] Update the `login()` method in `AuthService`. If `user.getTwoFactorEnabled()` is true, return a temporary token instead of the full tokens.
-- [ ] Create `POST /api/v1/auth/verify-2fa` to accept the temporary token + 6-digit authenticator code to issue the real access/refresh tokens.
+## 4. Transactional Email Provider & OTP Hardening
+- [ ] Replace Gmail SMTP (`SmtpEmailServiceImpl`) with a production transactional email provider (AWS SES, Resend, or Postmark) with SPF/DKIM/DMARC configured.
+- [x] Sensitive OTP values, password reset links, and raw emails removed from application logs (`LogSanitizer`).
+- [ ] Follow-up hardening (post-P0/P1): hash 6-digit email verification OTPs at rest in `verification_tokens` using BCrypt/HMAC (password reset tokens are already SHA-256 hashed).
 
-### 5. Rotate Secrets
-- [ ] Generate a completely random, massive `JWT_SECRET` for production and ensure it is injected via environment variables (never hardcoded).
-- [ ] Update all MinIO/S3 and PostgreSQL passwords.
+## 5. Database, Tenant Isolation & Account Deletion (Implemented in P0.4 / P0.5 / P1)
+- [x] Flyway manages all schema evolution (`V1`–`V23`), `ddl-auto: none`, `afab.flyway.repair-on-migrate=false` in production.
+- [x] `businesses.fk_businesses_user` uses `ON DELETE RESTRICT` (`V18`); sole active business owners must transfer ownership or archive businesses before deleting their user account.
+- [x] Historical transaction FX snapshots (`V19`) are immutable; business base currency changes never retroactively rewrite historical values.
+- [ ] Configure automated encrypted PostgreSQL backups and point-in-time recovery (PITR).
 
-### 6. Strict CORS Configuration
-The current `CorsConfig.java` allows `http://localhost:3000` and `http://localhost:3001` for development.
-- [ ] Update `CorsConfig.java` to strictly allow ONLY your production frontend domains (e.g., `https://afab.com`, `https://app.afab.com`).
-- [ ] Maintain `setAllowCredentials(true)` only if absolutely required for cross-origin cookies, although the current Next.js proxy design uses HTTP headers (`Authorization: Bearer <token>`) for backend communication.
+## 6. Private Receipt Object Storage (Implemented in P1.4)
+- [x] MinIO bucket (`afab-receipts`) kept strictly private (no anonymous public read policy); uploads validate MIME + magic bytes + size limits and store under tenant-scoped keys (`businesses/{businessId}/transactions/{transactionId}/{uuid}.{ext}`).
+- [ ] Configure production S3/MinIO server-side encryption (SSE-S3 or KMS) and bucket lifecycle/backup policies.
+- [ ] Set `MINIO_PUBLIC_ENDPOINT` to the external HTTPS object-storage origin if using direct presigned downloads, or keep browser downloads routed through authenticated `GET /api/v1/receipts/{id}/content`.
+
+## 7. Recurring Scheduler Operations (Implemented in P1.4)
+- [x] Multi-instance execution is idempotent via pessimistic row locking and DB `UNIQUE (recurring_transaction_id, scheduled_date)`.
+- [ ] Monitor recurring execution logs and configure alerting on failed scheduled runs.

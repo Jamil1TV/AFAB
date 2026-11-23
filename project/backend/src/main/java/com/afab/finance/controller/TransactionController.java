@@ -57,6 +57,17 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TransactionDTO> getTransactionById(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(transactionService.getTransactionById(authentication.getName(), id));
+    }
+
     @PostMapping
     public ResponseEntity<TransactionDTO> createTransaction(
             @Valid @RequestBody CreateTransactionRequest request,

@@ -1,0 +1,73 @@
+{
+  "title": "Business Budgets",
+  "subtitle": "Track actual spending against monthly, quarterly, yearly, or custom expense limits with real-time alerts.",
+  "newBudget": "New Budget",
+  "retry": "Retry",
+  "loading": "Calculating real-time budget consumption...",
+  "emptyTitle": "No budgets configured yet",
+  "emptyDescription": "Create a monthly overall budget or category-specific spending cap to monitor costs.",
+  "createFirst": "Create First Budget",
+  "summary": {
+    "activeBudgets": "Active Budgets",
+    "totalLimit": "Total Limit",
+    "actualSpending": "Actual Spending",
+    "remaining": "Remaining",
+    "approaching": "Approaching Limit",
+    "approachingHint": "At or above alert threshold",
+    "overBudget": "Over Budget",
+    "overBudgetHint": "Exceeds allocated limit"
+  },
+  "status": {
+    "onTrack": "On Track",
+    "approaching": "Approaching",
+    "overBudget": "Over Budget"
+  },
+  "card": {
+    "of": "of",
+    "overBy": "Over by",
+    "remaining": "Remaining",
+    "alertAt": "Alert at {percent}%",
+    "allExpenses": "All Business Expenses",
+    "editTooltip": "Edit budget",
+    "archiveTooltip": "Archive budget"
+  },
+  "periods": {
+    "MONTHLY": "Monthly",
+    "QUARTERLY": "Quarterly",
+    "YEARLY": "Yearly",
+    "CUSTOM": "Custom"
+  },
+  "modal": {
+    "createTitle": "Create Business Budget",
+    "editTitle": "Edit Budget",
+    "nameLabel": "Budget Name",
+    "namePlaceholder": "e.g. Monthly Marketing Budget",
+    "limitLabel": "Limit ({currency})",
+    "thresholdLabel": "Alert Threshold (%)",
+    "categoryLabel": "Expense Category",
+    "allCategories": "All Business Expenses",
+    "periodLabel": "Period",
+    "periodMonthly": "Monthly (Current Month)",
+    "periodQuarterly": "Quarterly (Current Quarter)",
+    "periodYearly": "Yearly (Current Year)",
+    "periodCustom": "Custom Date Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "optional": "(optional)",
+    "descriptionLabel": "Description",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveChanges": "Save Changes",
+    "createSubmit": "Create Budget"
+  },
+  "toasts": {
+    "loadError": "Failed to load budgets",
+    "validationError": "Provide a budget name and a positive amount.",
+    "customDateError": "Start date and end date are required for custom periods.",
+    "created": "Budget created.",
+    "updated": "Budget updated.",
+    "archived": "Budget archived.",
+    "saveError": "Failed to save budget",
+    "archiveError": "Failed to archive budget"
+  }
+}

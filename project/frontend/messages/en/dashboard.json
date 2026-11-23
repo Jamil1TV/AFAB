@@ -17,6 +17,8 @@
     "revenue": "Revenue",
     "invoices": "Invoices",
     "customers": "Customers",
+    "budgets": "Budgets",
+    "recurring": "Recurring",
     "reports": "Reports",
     "currencies": "Currencies & FX",
     "workspace": "WORKSPACE",
@@ -79,6 +81,16 @@
     "title": "Top Customers",
     "viewAll": "View all",
     "revenue": "in revenue"
+  },
+  "budgets": {
+    "title": "Budget Progress",
+    "subtitleActive": "{active} active • {over} over budget • {approaching} approaching",
+    "subtitleEmpty": "Set monthly or category spending caps to track business costs.",
+    "manageLink": "Manage Budgets",
+    "emptyNotice": "No active budgets for the current period.",
+    "createNow": "Create one now",
+    "overBy": "Over by",
+    "remaining": "Remaining"
   },
   "banner": {
     "pro": "AFAB Pro",

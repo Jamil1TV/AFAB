@@ -2,7 +2,6 @@ package com.afab.finance.currency;
 
 import com.afab.business.Business;
 import com.afab.business.BusinessRepository;
-import com.afab.finance.domain.Transaction;
 import com.afab.finance.repository.TransactionRepository;
 import com.afab.security.AuditService;
 import com.afab.user.User;
@@ -11,10 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
 
 /**
- * Currency Conversion Service — Handles business base-currency migrations and live rate previews.
+ * Currency Conversion Service — Handles business base-currency updates and live rate previews.
+ *
+ * Financial Integrity Policy (P1.1):
+ * Historical transactions are IMMUTABLE. Changing a business's base currency updates the
+ * default currency for FUTURE transactions only and NEVER rewrites historical amounts or
+ * historical FX snapshots using today's exchange rate.
  */
 @Service
 public class CurrencyConversionService {
@@ -60,39 +63,36 @@ public class CurrencyConversionService {
         );
     }
 
+    /**
+     * Updates the business base currency for future transactions while preserving all
+     * historical transactions and FX snapshots unchanged.
+     */
     @Transactional
-    public CurrencyChangeResultDTO changeBusinessCurrency(User user, Business business, String newCurrency, boolean convertExistingTransactions) {
+    public CurrencyChangeResultDTO changeBusinessCurrency(
+            User user,
+            Business business,
+            String newCurrency,
+            boolean convertExistingTransactionsRequested
+    ) {
         String oldCurrency = (business.getCurrency() != null && !business.getCurrency().isBlank())
                 ? business.getCurrency().toUpperCase().trim() : "USD";
         String targetCurrency = (newCurrency != null && !newCurrency.isBlank())
                 ? newCurrency.toUpperCase().trim() : "USD";
 
-        BigDecimal rate = exchangeRateService.getRate(oldCurrency, targetCurrency);
-        int convertedCount = 0;
-
-        if (convertExistingTransactions && !oldCurrency.equalsIgnoreCase(targetCurrency)) {
-            // Find all active transactions for this business
-            List<Transaction> transactions = transactionRepository.findAll().stream()
-                    .filter(t -> t.getBusiness().getId().equals(business.getId()) && t.getDeletedAt() == null)
-                    .toList();
-
-            for (Transaction tx : transactions) {
-                BigDecimal oldAmount = tx.getAmount();
-                BigDecimal newAmount = oldAmount.multiply(rate).setScale(4, RoundingMode.HALF_UP);
-                tx.setAmount(newAmount);
-                tx.setCurrency(targetCurrency);
-                convertedCount++;
-            }
-
-            transactionRepository.saveAll(transactions);
+        if (!targetCurrency.matches("^[A-Z]{3}$")) {
+            throw new IllegalArgumentException("Currency must be a valid 3-letter ISO code.");
         }
 
+        BigDecimal rate = exchangeRateService.getRate(oldCurrency, targetCurrency);
+        long historicalPreservedCount = transactionRepository.countByBusinessIdAndDeletedAtIsNull(business.getId());
+
+        // NEVER mutate historical transactions using today's exchange rate.
         business.setCurrency(targetCurrency);
         businessRepository.save(business);
 
         String auditDetails = String.format(
-                "{\"oldCurrency\":\"%s\",\"newCurrency\":\"%s\",\"exchangeRate\":%s,\"convertedCount\":%d}",
-                oldCurrency, targetCurrency, rate.toPlainString(), convertedCount
+                "{\"oldCurrency\":\"%s\",\"newCurrency\":\"%s\",\"referenceRate\":%s,\"historicalTransactionsPreserved\":%d,\"historicalMutationBlocked\":true}",
+                oldCurrency, targetCurrency, rate.toPlainString(), historicalPreservedCount
         );
         auditService.log(user, "CURRENCY_CHANGE", "Business", business.getId(), auditDetails);
 
@@ -100,8 +100,11 @@ public class CurrencyConversionService {
                 oldCurrency,
                 targetCurrency,
                 rate,
-                convertedCount,
-                true
+                0,
+                historicalPreservedCount,
+                true,
+                "Business base currency updated to " + targetCurrency
+                        + ". All " + historicalPreservedCount + " historical transaction(s) preserve their original currency and locked FX snapshots."
         );
     }
 
@@ -119,6 +122,8 @@ public class CurrencyConversionService {
             String newCurrency,
             BigDecimal exchangeRate,
             int convertedTransactionsCount,
-            boolean success
+            long preservedHistoricalTransactionsCount,
+            boolean success,
+            String message
     ) {}
 }

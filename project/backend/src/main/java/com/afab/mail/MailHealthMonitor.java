@@ -1,5 +1,6 @@
 package com.afab.mail;
 
+import com.afab.security.LogSanitizer;
 import jakarta.mail.AuthenticationFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,7 +85,8 @@ public class MailHealthMonitor {
             boolean wasUnhealthy = !healthy;
             markHealthy();
             if (wasUnhealthy) {
-                log.info("✅ SMTP connection OK ({} as {}) — verification emails will be delivered.", host, username);
+                log.info("SMTP connection OK ({} as {}) — verification emails will be delivered.",
+                        host, LogSanitizer.maskEmail(username));
             }
             return true;
         } catch (Exception e) {
@@ -103,27 +105,13 @@ public class MailHealthMonitor {
         boolean auth = isAuthenticationFailure(e);
         healthy = false;
         lastCheckedAt = Instant.now();
-        lastError = rootMessage(e);
+        lastError = LogSanitizer.sanitizeMessage(rootMessage(e));
         if (auth) {
-            log.error("""
-
-                    ════════════════════════════════════════════════════════════════════
-                    ❌ SMTP AUTHENTICATION FAILED — USERS WILL NOT RECEIVE EMAILS
-                       Server : {}
-                       User   : {}
-                       Error  : {}
-
-                       The Gmail App Password is invalid or was revoked by Google.
-                       FIX:
-                        1. Go to https://myaccount.google.com/apppasswords
-                           (2-Step Verification must be ON for that account)
-                        2. Create a new App Password
-                        3. Put it in project/.env as MAIL_PASSWORD (never commit .env!)
-                        4. Recreate the backend:  docker compose up -d afab-backend
-                    ════════════════════════════════════════════════════════════════════""",
-                    host, username, lastError);
+            log.error("SMTP authentication failed for host={} account={}: {}. Rotate/verify SMTP credentials in environment variables.",
+                    host, LogSanitizer.maskEmail(username), lastError);
         } else {
-            log.error("❌ SMTP delivery problem ({} as {}): {}", host, username, lastError);
+            log.error("SMTP delivery problem for host={} account={}: {}",
+                    host, LogSanitizer.maskEmail(username), lastError);
         }
     }
 
@@ -163,20 +151,17 @@ public class MailHealthMonitor {
 
     private void validateConfiguration() {
         if (username == null || username.isBlank() || password == null || password.isBlank()) {
-            log.error("❌ MAIL_USERNAME / MAIL_PASSWORD are not set — verification emails cannot be sent. "
-                    + "Set them in project/.env and restart the backend.");
+            log.error("MAIL_USERNAME / MAIL_PASSWORD are not configured — verification emails cannot be sent.");
             return;
         }
         String compactPassword = password.replace(" ", "");
-        if (host.contains("gmail") && compactPassword.length() != 16) {
-            log.warn("⚠️ MAIL_PASSWORD does not look like a Gmail App Password (expected 16 letters, got {}). "
-                    + "Gmail rejects normal account passwords for SMTP.", compactPassword.length());
+        if (host != null && host.contains("gmail") && compactPassword.length() != 16) {
+            log.warn("MAIL_PASSWORD format does not match expected Gmail App Password format. Verify SMTP credentials.");
         }
-        if (host.contains("gmail") && fromAddress != null && !fromAddress.isBlank()
+        if (host != null && host.contains("gmail") && fromAddress != null && !fromAddress.isBlank()
                 && !fromAddress.equalsIgnoreCase(username)) {
-            log.warn("⚠️ MAIL_FROM ({}) differs from MAIL_USERNAME ({}). Gmail will rewrite the sender unless "
-                    + "it is a verified 'Send mail as' alias, and messages are more likely to land in spam.",
-                    fromAddress, username);
+            log.warn("MAIL_FROM ({}) differs from MAIL_USERNAME ({}). Gmail may rewrite the sender unless verified.",
+                    LogSanitizer.maskEmail(fromAddress), LogSanitizer.maskEmail(username));
         }
     }
 

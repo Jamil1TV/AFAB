@@ -1,9 +1,15 @@
 package com.afab.user;
 
+import com.afab.auth.domain.PasswordResetTokenRepository;
 import com.afab.auth.domain.RefreshToken;
 import com.afab.auth.domain.RefreshTokenRepository;
+import com.afab.auth.domain.VerificationToken;
+import com.afab.auth.domain.VerificationTokenRepository;
 import com.afab.business.Business;
+import com.afab.business.BusinessMember;
+import com.afab.business.BusinessMemberRepository;
 import com.afab.business.BusinessRepository;
+import com.afab.common.exception.ConflictException;
 import com.afab.finance.domain.Category;
 import com.afab.finance.domain.Transaction;
 import com.afab.finance.repository.CategoryRepository;
@@ -11,6 +17,8 @@ import com.afab.finance.repository.TransactionRepository;
 import com.afab.security.AuditService;
 import com.afab.subscription.Subscription;
 import com.afab.subscription.SubscriptionRepository;
+import com.afab.user.dto.AccountDeletionPreflightDTO;
+import com.afab.user.dto.AccountDeletionPreflightDTO.BlockingBusinessDTO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,28 +30,55 @@ public class UserAccountService {
 
     private final UserRepository userRepository;
     private final BusinessRepository businessRepository;
+    private final BusinessMemberRepository businessMemberRepository;
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final SubscriptionRepository subscriptionRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final VerificationTokenRepository verificationTokenRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final AuditService auditService;
 
     public UserAccountService(
             UserRepository userRepository,
             BusinessRepository businessRepository,
+            BusinessMemberRepository businessMemberRepository,
             CategoryRepository categoryRepository,
             TransactionRepository transactionRepository,
             SubscriptionRepository subscriptionRepository,
             RefreshTokenRepository refreshTokenRepository,
+            VerificationTokenRepository verificationTokenRepository,
+            PasswordResetTokenRepository passwordResetTokenRepository,
             AuditService auditService
     ) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
+        this.businessMemberRepository = businessMemberRepository;
         this.categoryRepository = categoryRepository;
         this.transactionRepository = transactionRepository;
         this.subscriptionRepository = subscriptionRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.verificationTokenRepository = verificationTokenRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.auditService = auditService;
+    }
+
+    /**
+     * Evaluates whether the user can safely delete their account without orphaning
+     * or endangering any active business's financial ledger.
+     */
+    @Transactional(readOnly = true)
+    public AccountDeletionPreflightDTO getDeletionPreflight(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        List<BlockingBusinessDTO> blocking = findBlockingOwnedBusinesses(user);
+        boolean canDelete = blocking.isEmpty();
+        String guidance = canDelete
+                ? "Your account has no active businesses blocking deletion. Existing archived business ledgers and audit trails will be preserved while your personal account is deactivated and anonymized."
+                : "You currently own " + blocking.size() + " active business(es). Transfer ownership to another active team member or explicitly archive each business before deleting your user account.";
+
+        return new AccountDeletionPreflightDTO(canDelete, blocking, guidance);
     }
 
     /**
@@ -95,12 +130,20 @@ public class UserAccountService {
             subscriptionMap.put("cancelAtPeriodEnd", Boolean.TRUE.equals(sub.getCancelAtPeriodEnd()));
         }
 
-        List<Business> businesses = businessRepository.findAllByUserId(user.getId());
+        // Export businesses the user actively belongs to or owns (no unauthorized access)
+        Map<UUID, Business> authorizedBusinesses = new LinkedHashMap<>();
+        for (BusinessMember m : businessMemberRepository.findAllActiveMembershipsByUserId(user.getId())) {
+            authorizedBusinesses.put(m.getBusiness().getId(), m.getBusiness());
+        }
+        for (Business owned : businessRepository.findAllByUserId(user.getId())) {
+            authorizedBusinesses.putIfAbsent(owned.getId(), owned);
+        }
+
         List<Map<String, Object>> businessExports = new ArrayList<>();
         int totalCategories = 0;
         int totalTransactions = 0;
 
-        for (Business b : businesses) {
+        for (Business b : authorizedBusinesses.values()) {
             List<Category> categories = categoryRepository.findAllOwnedByBusiness(b.getId());
             List<Transaction> transactions = transactionRepository.findAllActiveByBusinessIdForExport(b.getId());
             totalCategories += categories.size();
@@ -134,7 +177,6 @@ public class UserAccountService {
                 tm.put("taxRate", tx.getTaxRate());
                 tm.put("isSplit", tx.getIsSplit());
                 tm.put("notes", tx.getNotes());
-                tm.put("receiptUrl", tx.getReceiptUrl());
                 tm.put("createdAt", tx.getCreatedAt());
                 txExports.add(tm);
             }
@@ -181,13 +223,13 @@ public class UserAccountService {
         }
 
         Map<String, Object> summary = new LinkedHashMap<>();
-        summary.put("businessesCount", businesses.size());
+        summary.put("businessesCount", authorizedBusinesses.size());
         summary.put("categoriesCount", totalCategories);
         summary.put("transactionsCount", totalTransactions);
         summary.put("activeSessionsCount", sessionExports.size());
 
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("schemaVersion", "1.0");
+        payload.put("schemaVersion", "1.1");
         payload.put("exportedAt", Instant.now().toString());
         payload.put("summary", summary);
         payload.put("account", account);
@@ -200,15 +242,22 @@ public class UserAccountService {
                 "ACCOUNT_DATA_EXPORTED",
                 ipAddress,
                 userAgent,
-                "{\"businesses\":" + businesses.size() + ",\"transactions\":" + totalTransactions + "}"
+                "{\"businesses\":" + authorizedBusinesses.size() + ",\"transactions\":" + totalTransactions + "}"
         );
 
         return payload;
     }
 
     /**
-     * Permanently deletes the authenticated user's account and cascades removal of all owned data.
-     * Requires exact confirmation phrase: "delete <user-email>".
+     * Safely deactivates and anonymizes the authenticated user's account.
+     *
+     * Financial Data Preservation Rules (P0.4):
+     * 1. Rejects deletion with 409 Conflict if the user owns ANY active (non-archived) Business
+     *    without another active OWNER — requires ownership transfer or explicit Business archival first.
+     * 2. NEVER cascade-deletes Businesses, Transactions, Invoices, Customers, or Audit Logs.
+     * 3. Deactivates the user's BusinessMember memberships to prevent orphaned active records.
+     * 4. Revokes all active sessions & pending verification/reset tokens.
+     * 5. Soft-deletes & anonymizes the User record so financial foreign keys and audit trails remain intact.
      */
     @Transactional
     public void deleteUserAccount(String email, String confirmation, String ipAddress, String userAgent) {
@@ -224,27 +273,98 @@ public class UserAccountService {
             );
         }
 
-        UUID deletedUserId = user.getId();
-        String deletedEmail = user.getEmail().replace("\"", "");
-
-        // Break circular FK (users.active_business_id -> businesses.id) before cascading delete
-        if (user.getActiveBusinessId() != null) {
-            user.setActiveBusinessId(null);
-            userRepository.saveAndFlush(user);
+        // Guard: Block deletion while user owns any active business without another active OWNER
+        List<BlockingBusinessDTO> blockingBusinesses = findBlockingOwnedBusinesses(user);
+        if (!blockingBusinesses.isEmpty()) {
+            String names = blockingBusinesses.stream()
+                    .map(BlockingBusinessDTO::businessName)
+                    .reduce((a, b) -> a + ", " + b)
+                    .orElse("");
+            throw new ConflictException(
+                    "Cannot delete account while you own active business(es): " + names
+                            + ". Transfer ownership to another member or archive the business(es) first."
+            );
         }
 
-        // Record anonymized deletion audit entry (user=null so row persists after user deletion)
+        Instant now = Instant.now();
+        UUID deletedUserId = user.getId();
+
+        // 1. Deactivate all active memberships (prevents orphaned active memberships; preserves team access for other members)
+        List<BusinessMember> activeMemberships = businessMemberRepository.findAllActiveMembershipsByUserId(deletedUserId);
+        for (BusinessMember membership : activeMemberships) {
+            membership.setStatus("REMOVED");
+        }
+        if (!activeMemberships.isEmpty()) {
+            businessMemberRepository.saveAll(activeMemberships);
+        }
+
+        // 2. Revoke all active refresh tokens and pending verification / password reset tokens
+        refreshTokenRepository.revokeAllUserTokens(deletedUserId, now);
+        verificationTokenRepository.invalidateAllUserTokens(deletedUserId, VerificationToken.TokenType.EMAIL_VERIFICATION, now);
+        verificationTokenRepository.invalidateAllUserTokens(deletedUserId, VerificationToken.TokenType.PASSWORD_RESET, now);
+        passwordResetTokenRepository.invalidateAllUserTokens(deletedUserId, now);
+
+        // 3. Record deletion audit event (without raw PII in details)
         auditService.logSecurityEvent(
-                null,
+                user,
                 "ACCOUNT_DELETED",
                 ipAddress,
                 userAgent,
-                "{\"deletedUserId\":\"" + deletedUserId + "\",\"email\":\"" + deletedEmail + "\"}"
+                "{\"deletedUserId\":\"" + deletedUserId + "\",\"anonymized\":true}"
         );
 
-        // Permanently delete user — DB ON DELETE CASCADE removes businesses, transactions, categories,
-        // refresh tokens, verification/reset tokens, subscriptions, usage counters, and memberships.
-        userRepository.delete(user);
-        userRepository.flush();
+        // 4. Soft-delete and anonymize user PII while keeping tombstone row intact for FK & ledger retention
+        user.setStatus("DELETED");
+        user.setDeletedAt(now);
+        user.setActiveBusinessId(null);
+        user.setFirstName("Deleted");
+        user.setLastName("User");
+        user.setEmail("deleted-" + deletedUserId + "@deleted.afab.local");
+        user.setPhoneNumber(null);
+        user.setAvatarUrl(null);
+        user.setTwoFactorEnabled(false);
+        user.setTwoFactorSecret(null);
+        user.setTwoFactorBackupCodes(null);
+        user.setPasswordHash("DELETED:" + UUID.randomUUID());
+        user.setLastLoginIp(null);
+
+        userRepository.saveAndFlush(user);
+    }
+
+    private List<BlockingBusinessDTO> findBlockingOwnedBusinesses(User user) {
+        Map<UUID, Business> ownedActiveBusinesses = new LinkedHashMap<>();
+
+        // Check active OWNER memberships
+        List<BusinessMember> activeMemberships = businessMemberRepository.findAllActiveByUserIdWithBusiness(user.getId());
+        for (BusinessMember m : activeMemberships) {
+            if (m.isOwner() && m.getBusiness().getArchivedAt() == null) {
+                long otherOwners = businessMemberRepository.countOtherActiveOwners(m.getBusiness().getId(), user.getId());
+                if (otherOwners == 0) {
+                    ownedActiveBusinesses.put(m.getBusiness().getId(), m.getBusiness());
+                }
+            }
+        }
+
+        // Also guard legacy businesses.user_id ownership pointer
+        for (Business b : businessRepository.findAllByUserId(user.getId())) {
+            if (b.getArchivedAt() == null && !ownedActiveBusinesses.containsKey(b.getId())) {
+                long otherOwners = businessMemberRepository.countOtherActiveOwners(b.getId(), user.getId());
+                if (otherOwners == 0) {
+                    ownedActiveBusinesses.put(b.getId(), b);
+                }
+            }
+        }
+
+        List<BlockingBusinessDTO> blocking = new ArrayList<>();
+        for (Business b : ownedActiveBusinesses.values()) {
+            long activeMembers = businessMemberRepository.countByBusinessIdAndStatus(b.getId(), "ACTIVE");
+            blocking.add(new BlockingBusinessDTO(
+                    b.getId(),
+                    b.getName(),
+                    activeMembers,
+                    activeMembers > 1
+            ));
+        }
+        return blocking;
     }
 }

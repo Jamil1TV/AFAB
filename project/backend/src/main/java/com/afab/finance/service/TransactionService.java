@@ -4,6 +4,8 @@ import com.afab.business.Business;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ForbiddenException;
 import com.afab.common.exception.ResourceNotFoundException;
+import com.afab.finance.currency.ExchangeRateService;
+import com.afab.finance.currency.ExchangeRateService.FxQuote;
 import com.afab.finance.domain.Category;
 import com.afab.finance.domain.Transaction;
 import com.afab.finance.dto.*;
@@ -17,9 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -32,19 +36,22 @@ public class TransactionService {
     private final CategoryService categoryService;
     private final AuditService auditService;
     private final com.afab.finance.stats.FinanceStatsService financeStatsService;
+    private final ExchangeRateService exchangeRateService;
 
     public TransactionService(TransactionRepository transactionRepository,
                               CategoryRepository categoryRepository,
                               CurrentBusinessService currentBusinessService,
                               CategoryService categoryService,
                               AuditService auditService,
-                              com.afab.finance.stats.FinanceStatsService financeStatsService) {
+                              com.afab.finance.stats.FinanceStatsService financeStatsService,
+                              ExchangeRateService exchangeRateService) {
         this.transactionRepository = transactionRepository;
         this.categoryRepository = categoryRepository;
         this.currentBusinessService = currentBusinessService;
         this.categoryService = categoryService;
         this.auditService = auditService;
         this.financeStatsService = financeStatsService;
+        this.exchangeRateService = exchangeRateService;
     }
 
     @Transactional(readOnly = true)
@@ -124,6 +131,60 @@ public class TransactionService {
         );
     }
 
+    /**
+     * Populates immutable FX snapshot fields on a newly constructed Transaction.
+     * Reusable across manual transactions, invoice payments, and recurring executions.
+     */
+    public void applyFxSnapshot(
+            Transaction tx,
+            Business business,
+            BigDecimal rawOriginalAmount,
+            String requestedOriginalCurrency,
+            BigDecimal manualExchangeRate
+    ) {
+        String baseCurr = (business.getCurrency() != null && !business.getCurrency().isBlank())
+                ? business.getCurrency().toUpperCase(Locale.ROOT).trim()
+                : "USD";
+        String origCurr = (requestedOriginalCurrency != null && !requestedOriginalCurrency.isBlank())
+                ? requestedOriginalCurrency.toUpperCase(Locale.ROOT).trim()
+                : baseCurr;
+
+        BigDecimal origAmt = rawOriginalAmount.setScale(4, RoundingMode.HALF_UP);
+        BigDecimal appliedRate;
+        String source;
+        Instant rateTs;
+
+        if (origCurr.equals(baseCurr)) {
+            appliedRate = BigDecimal.ONE.setScale(6, RoundingMode.HALF_UP);
+            source = "IDENTITY";
+            rateTs = Instant.now();
+        } else if (manualExchangeRate != null && manualExchangeRate.compareTo(BigDecimal.ZERO) > 0) {
+            appliedRate = manualExchangeRate.setScale(6, RoundingMode.HALF_UP);
+            source = "MANUAL_OVERRIDE";
+            rateTs = Instant.now();
+        } else {
+            FxQuote quote = exchangeRateService.getRateQuote(origCurr, baseCurr);
+            appliedRate = quote.rate().setScale(6, RoundingMode.HALF_UP);
+            source = quote.source();
+            rateTs = quote.timestamp();
+        }
+
+        BigDecimal converted = origCurr.equals(baseCurr)
+                ? origAmt
+                : origAmt.multiply(appliedRate).setScale(4, RoundingMode.HALF_UP);
+
+        tx.setOriginalAmount(origAmt);
+        tx.setOriginalCurrency(origCurr);
+        tx.setBaseCurrency(baseCurr);
+        tx.setExchangeRate(appliedRate);
+        tx.setConvertedAmount(converted);
+        tx.setFxRateSource(source);
+        tx.setFxRateTimestamp(rateTs);
+        // Keep canonical reporting columns aligned with convertedAmount in baseCurrency
+        tx.setAmount(converted);
+        tx.setCurrency(baseCurr);
+    }
+
     @Transactional
     public TransactionDTO createTransaction(String userEmail, CreateTransactionRequest request) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
@@ -133,8 +194,7 @@ public class TransactionService {
         Transaction tx = new Transaction();
         tx.setBusiness(business);
         tx.setType(txType);
-        tx.setAmount(request.getAmount());
-        tx.setCurrency((business.getCurrency() != null && !business.getCurrency().isBlank()) ? business.getCurrency() : "USD");
+        applyFxSnapshot(tx, business, request.getAmount(), request.getOriginalCurrency(), request.getExchangeRate());
         tx.setDescription(request.getDescription().trim());
         tx.setTransactionDate(request.getTransactionDate());
         tx.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod().toUpperCase().trim() : "BANK_TRANSFER");
@@ -159,7 +219,7 @@ public class TransactionService {
             tx.setCategory(category);
         }
 
-        // Split items handling
+        // Split items handling (sums validated against originalAmount; each child inherits parent's immutable FX rate)
         if (request.getSplitItems() != null && !request.getSplitItems().isEmpty()) {
             BigDecimal splitSum = request.getSplitItems().stream()
                     .map(SplitRequestItem::getAmount)
@@ -170,7 +230,11 @@ public class TransactionService {
             }
 
             tx.setIsSplit(true);
-            for (SplitRequestItem split : request.getSplitItems()) {
+            BigDecimal rate = tx.getExchangeRate() != null ? tx.getExchangeRate() : BigDecimal.ONE;
+            BigDecimal runningConverted = BigDecimal.ZERO;
+            int splitCount = request.getSplitItems().size();
+            for (int i = 0; i < splitCount; i++) {
+                SplitRequestItem split = request.getSplitItems().get(i);
                 Category splitCat = categoryRepository.findById(split.getCategoryId())
                         .orElseThrow(() -> new ResourceNotFoundException("Split category not found: " + split.getCategoryId()));
 
@@ -182,11 +246,24 @@ public class TransactionService {
                     throw new IllegalArgumentException("Split category type '" + splitCat.getType() + "' does not match transaction type '" + txType + "'.");
                 }
 
+                BigDecimal childOrig = split.getAmount().setScale(4, RoundingMode.HALF_UP);
+                BigDecimal childConverted = (i == splitCount - 1)
+                        ? tx.getConvertedAmount().subtract(runningConverted)
+                        : childOrig.multiply(rate).setScale(4, RoundingMode.HALF_UP);
+                runningConverted = runningConverted.add(childConverted);
+
                 Transaction childTx = new Transaction();
                 childTx.setBusiness(business);
                 childTx.setType(txType);
-                childTx.setAmount(split.getAmount());
-                childTx.setCurrency(tx.getCurrency());
+                childTx.setOriginalAmount(childOrig);
+                childTx.setOriginalCurrency(tx.getOriginalCurrency());
+                childTx.setBaseCurrency(tx.getBaseCurrency());
+                childTx.setExchangeRate(tx.getExchangeRate());
+                childTx.setConvertedAmount(childConverted);
+                childTx.setFxRateSource(tx.getFxRateSource());
+                childTx.setFxRateTimestamp(tx.getFxRateTimestamp());
+                childTx.setAmount(childConverted);
+                childTx.setCurrency(tx.getBaseCurrency());
                 childTx.setDescription(split.getDescription() != null && !split.getDescription().isBlank() ? split.getDescription().trim() : tx.getDescription());
                 childTx.setTransactionDate(tx.getTransactionDate());
                 childTx.setCategory(splitCat);
@@ -214,6 +291,17 @@ public class TransactionService {
             throw new ForbiddenException("Unauthorized: You do not own this transaction.");
         }
 
+        // Historical FX Immutability Guard: never allow changing a transaction's original currency after recording
+        if (request.getOriginalCurrency() != null && !request.getOriginalCurrency().isBlank()) {
+            String reqCurr = request.getOriginalCurrency().toUpperCase(Locale.ROOT).trim();
+            String currentOrig = tx.getOriginalCurrency();
+            if (currentOrig != null && !currentOrig.equalsIgnoreCase(reqCurr)) {
+                throw new IllegalArgumentException(
+                        "Transaction currency cannot be changed after recording (locked FX snapshot: "
+                                + currentOrig + " -> " + tx.getBaseCurrency() + "). Delete and recreate if recorded in the wrong currency.");
+            }
+        }
+
         String targetType = (request.getType() != null && !request.getType().isBlank())
                 ? request.getType().toUpperCase().trim() : tx.getType();
 
@@ -221,7 +309,18 @@ public class TransactionService {
             tx.setType(targetType);
         }
         if (request.getAmount() != null) {
-            tx.setAmount(request.getAmount());
+            BigDecimal updatedOrig = request.getAmount().setScale(4, RoundingMode.HALF_UP);
+            tx.setOriginalAmount(updatedOrig);
+            // Recompute converted amount using ONLY the ORIGINAL historical exchange rate (NEVER today's rate!)
+            if (tx.getExchangeRate() != null) {
+                BigDecimal recomputedConverted = updatedOrig.multiply(tx.getExchangeRate()).setScale(4, RoundingMode.HALF_UP);
+                tx.setConvertedAmount(recomputedConverted);
+                tx.setAmount(recomputedConverted);
+            } else {
+                // Legacy transaction without FX snapshot — keep convertedAmount aligned without fabricating a rate
+                tx.setConvertedAmount(updatedOrig);
+                tx.setAmount(updatedOrig);
+            }
         }
         if (request.getDescription() != null && !request.getDescription().isBlank()) {
             tx.setDescription(request.getDescription().trim());
@@ -265,6 +364,17 @@ public class TransactionService {
         return mapToDTO(tx);
     }
 
+    @Transactional(readOnly = true)
+    public TransactionDTO getTransactionById(String userEmail, UUID transactionId) {
+        Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        Transaction tx = transactionRepository.findActiveById(transactionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found with ID: " + transactionId));
+        if (!tx.getBusiness().getId().equals(business.getId())) {
+            throw new ForbiddenException("Unauthorized: You do not own this transaction.");
+        }
+        return mapToDTO(tx);
+    }
+
     @Transactional
     public void deleteTransaction(String userEmail, UUID transactionId) {
         User user = currentBusinessService.getCurrentUser(userEmail);
@@ -277,8 +387,16 @@ public class TransactionService {
             throw new ForbiddenException("Unauthorized: You do not own this transaction.");
         }
 
-        // Soft-delete transaction (Decision D6)
-        tx.setDeletedAt(Instant.now());
+        // Soft-delete transaction and any child split lines (Decision D6)
+        Instant now = Instant.now();
+        tx.setDeletedAt(now);
+        if (tx.getSplitItems() != null) {
+            for (Transaction child : tx.getSplitItems()) {
+                if (child.getDeletedAt() == null) {
+                    child.setDeletedAt(now);
+                }
+            }
+        }
         transactionRepository.save(tx);
 
         auditService.log(user, "DELETE", "Transaction", tx.getId(), null);
@@ -394,8 +512,16 @@ public class TransactionService {
         TransactionDTO dto = new TransactionDTO();
         dto.setId(tx.getId());
         dto.setType(tx.getType());
-        dto.setAmount(tx.getAmount());
-        dto.setCurrency(curr);
+        dto.setAmount(tx.getConvertedAmount() != null ? tx.getConvertedAmount() : tx.getAmount());
+        dto.setCurrency(tx.getBaseCurrency() != null && !tx.getBaseCurrency().isBlank() ? tx.getBaseCurrency() : curr);
+        dto.setOriginalAmount(tx.getOriginalAmount() != null ? tx.getOriginalAmount() : tx.getAmount());
+        dto.setOriginalCurrency(tx.getOriginalCurrency());
+        dto.setBaseCurrency(dto.getCurrency());
+        dto.setExchangeRate(tx.getExchangeRate());
+        dto.setConvertedAmount(dto.getAmount());
+        dto.setFxRateSource(tx.getFxRateSource() != null ? tx.getFxRateSource() : "LEGACY_UNKNOWN");
+        dto.setFxRateTimestamp(tx.getFxRateTimestamp());
+        dto.setLegacyFx("LEGACY_UNKNOWN".equalsIgnoreCase(dto.getFxRateSource()));
         dto.setDescription(tx.getDescription());
         dto.setTransactionDate(tx.getTransactionDate());
         dto.setPaymentMethod(tx.getPaymentMethod());

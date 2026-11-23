@@ -39,6 +39,9 @@ class BusinessControllerTest {
     private CurrentBusinessService currentBusinessService;
 
     @Mock
+    private com.afab.security.AuditService auditService;
+
+    @Mock
     private Authentication authentication;
 
     @InjectMocks

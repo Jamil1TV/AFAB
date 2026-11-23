@@ -26,7 +26,7 @@ public class AuditService {
         try {
             AuditLog auditLog = new AuditLog(user, action, "USER", user != null ? user.getId() : null, ipAddress, userAgent, details);
             auditLogRepository.save(auditLog);
-            log.info("Security event recorded: {} for user {}", action, user != null ? user.getEmail() : "anonymous");
+            log.info("Security event recorded: {} for user {}", action, user != null ? LogSanitizer.maskEmail(user.getEmail()) : "anonymous");
         } catch (Exception e) {
             log.error("Failed to write audit log for action: {}", action, e);
         }
@@ -45,7 +45,7 @@ public class AuditService {
         try {
             AuditLog auditLog = new AuditLog(user, action, entityType, entityId, null, null, details);
             auditLogRepository.save(auditLog);
-            log.info("Entity audit event recorded: {} on {} (ID: {}) for user {}", action, entityType, entityId, user != null ? user.getEmail() : "anonymous");
+            log.info("Entity audit event recorded: {} on {} (ID: {}) for user {}", action, entityType, entityId, user != null ? LogSanitizer.maskEmail(user.getEmail()) : "anonymous");
         } catch (Exception e) {
             log.error("Failed to write audit log for {} action on {}: {}", action, entityType, e);
         }

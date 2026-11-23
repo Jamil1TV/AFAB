@@ -162,13 +162,13 @@ export function GeneralSettings({
     }
   };
 
-  const handleMigrationSuccess = (newCurr: string, count: number) => {
+  const handleMigrationSuccess = (newCurr: string, _count: number) => {
     setFormData((prev) => ({ ...prev, currency: newCurr }));
     setBaselineFormData((prev) => ({ ...prev, currency: newCurr }));
     setMigrationSuccessMsg(
       locale === "ar"
-        ? `تم تحديث العملة الأساسية بنجاح إلى ${newCurr} وتحويل ${count} معاملة بسعر الصرف المباشر!`
-        : `Successfully updated base currency to ${newCurr} and converted ${count} transactions at live market rate!`
+        ? `تم تحديث العملة الأساسية بنجاح إلى ${newCurr} للمعاملات المستقبلية مع الحفاظ على سجل المعاملات التاريخية.`
+        : `Updated base currency to ${newCurr} for future transactions while preserving all historical FX snapshots.`
     );
     setTimeout(() => setMigrationSuccessMsg(null), 6000);
   };

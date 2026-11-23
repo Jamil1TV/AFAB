@@ -53,6 +53,9 @@ class TransactionServiceTest {
     @Mock
     private com.afab.finance.stats.FinanceStatsService financeStatsService;
 
+    @Mock
+    private com.afab.finance.currency.ExchangeRateService exchangeRateService;
+
     @InjectMocks
     private TransactionService transactionService;
 

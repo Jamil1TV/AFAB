@@ -29,6 +29,27 @@ public class Transaction extends BaseEntity {
     @Column(nullable = false, length = 3)
     private String currency = "USD";
 
+    @Column(name = "original_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal originalAmount;
+
+    @Column(name = "original_currency", length = 3)
+    private String originalCurrency;
+
+    @Column(name = "base_currency", nullable = false, length = 3)
+    private String baseCurrency = "USD";
+
+    @Column(name = "exchange_rate", precision = 19, scale = 6)
+    private BigDecimal exchangeRate;
+
+    @Column(name = "converted_amount", nullable = false, precision = 19, scale = 4)
+    private BigDecimal convertedAmount;
+
+    @Column(name = "fx_rate_source", nullable = false, length = 50)
+    private String fxRateSource = "LEGACY_UNKNOWN";
+
+    @Column(name = "fx_rate_timestamp")
+    private Instant fxRateTimestamp;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
@@ -72,6 +93,28 @@ public class Transaction extends BaseEntity {
 
     public Transaction() {}
 
+    @PrePersist
+    protected void ensureFxDefaults() {
+        if (this.baseCurrency == null || this.baseCurrency.isBlank()) {
+            this.baseCurrency = (this.currency != null && !this.currency.isBlank()) ? this.currency : "USD";
+        }
+        if (this.currency == null || this.currency.isBlank()) {
+            this.currency = this.baseCurrency;
+        }
+        if (this.convertedAmount == null && this.amount != null) {
+            this.convertedAmount = this.amount;
+        }
+        if (this.amount == null && this.convertedAmount != null) {
+            this.amount = this.convertedAmount;
+        }
+        if (this.originalAmount == null && this.amount != null) {
+            this.originalAmount = this.amount;
+        }
+        if (this.fxRateSource == null || this.fxRateSource.isBlank()) {
+            this.fxRateSource = "LEGACY_UNKNOWN";
+        }
+    }
+
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
 
@@ -86,6 +129,27 @@ public class Transaction extends BaseEntity {
 
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
+
+    public BigDecimal getOriginalAmount() { return originalAmount; }
+    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
+
+    public String getOriginalCurrency() { return originalCurrency; }
+    public void setOriginalCurrency(String originalCurrency) { this.originalCurrency = originalCurrency; }
+
+    public String getBaseCurrency() { return baseCurrency; }
+    public void setBaseCurrency(String baseCurrency) { this.baseCurrency = baseCurrency; }
+
+    public BigDecimal getExchangeRate() { return exchangeRate; }
+    public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
+
+    public BigDecimal getConvertedAmount() { return convertedAmount; }
+    public void setConvertedAmount(BigDecimal convertedAmount) { this.convertedAmount = convertedAmount; }
+
+    public String getFxRateSource() { return fxRateSource; }
+    public void setFxRateSource(String fxRateSource) { this.fxRateSource = fxRateSource; }
+
+    public Instant getFxRateTimestamp() { return fxRateTimestamp; }
+    public void setFxRateTimestamp(Instant fxRateTimestamp) { this.fxRateTimestamp = fxRateTimestamp; }
 
     public Category getCategory() { return category; }
     public void setCategory(Category category) { this.category = category; }

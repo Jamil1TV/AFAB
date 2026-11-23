@@ -1,0 +1,50 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:afab_test}
+    username: ${POSTGRES_USER:afab_test}
+    password: ${POSTGRES_PASSWORD:afab_test_pass}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+  mail:
+    host: localhost
+    port: 1025
+    username: test@afab.local
+    password: test-mail-password
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+
+afab:
+  jwt:
+    secret: IntegrationTestSecretKeyWithMoreThanSixtyFourCharactersForHS512Signing1234567890
+    access-expiration-ms: 900000
+    refresh-expiration-ms: 604800000
+  auth:
+    cookie:
+      secure: true
+      same-site: Lax
+    allow-dev-otp: false
+  rate-limit:
+    enabled: true
+    fail-mode: fail_closed
+    login-per-minute: 3
+  flyway:
+    repair-on-migrate: false
+  minio:
+    endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+    access-key: ${MINIO_ACCESS_KEY:afabtestminio}
+    secret-key: ${MINIO_SECRET_KEY:afabtestminiosecret}
+    bucket: ${MINIO_BUCKET:afab-receipts-test}
+  recurring:
+    scheduler-enabled: false

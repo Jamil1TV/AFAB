@@ -1,0 +1,22 @@
+# ═══════════════════════════════════════════════
+# AFAB Backend — Production Profile
+# Strict security defaults — fails fast if misconfigured
+# ═══════════════════════════════════════════════
+
+afab:
+  auth:
+    cookie:
+      secure: true
+      same-site: ${AFAB_COOKIE_SAME_SITE:Lax}
+    allow-dev-otp: false
+  rate-limit:
+    enabled: true
+    fail-mode: fail_closed
+  flyway:
+    repair-on-migrate: false
+
+springdoc:
+  api-docs:
+    enabled: ${AFAB_ENABLE_SWAGGER:false}
+  swagger-ui:
+    enabled: ${AFAB_ENABLE_SWAGGER:false}

@@ -3,39 +3,55 @@
 import { useState, useEffect, useRef } from "react";
 
 /**
- * Wrapper that delays rendering children until the container has positive dimensions.
- * Fixes Recharts "width(-1) height(-1)" warnings caused by flex layouts with w-0.
+ * Wrapper that measures its box via ResizeObserver and delays mounting children
+ * until width > 0 and height > 0, preventing Recharts 3 "width(-1) height(-1)" warnings
+ * across responsive grid/flex layouts, theme switches, and RTL flips.
  */
-export function ChartContainer({ 
-  children, 
-  className = "" 
-}: { 
-  children: React.ReactNode; 
+export function ChartContainer({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
   className?: string;
 }) {
-  const [ready, setReady] = useState(false);
+  const [hasSize, setHasSize] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Use requestAnimationFrame to wait for layout to complete
-    const raf = requestAnimationFrame(() => {
-      if (ref.current) {
-        const { width, height } = ref.current.getBoundingClientRect();
-        if (width > 0 && height > 0) {
-          setReady(true);
-        } else {
-          // Fallback: try again after a short delay
-          const timeout = setTimeout(() => setReady(true), 100);
-          return () => clearTimeout(timeout);
-        }
+    const el = ref.current;
+    if (!el) return;
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setHasSize(true);
       }
-    });
-    return () => cancelAnimationFrame(raf);
+    };
+
+    const raf = requestAnimationFrame(measure);
+    let observer: ResizeObserver | null = null;
+
+    if (typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          const { width, height } = entry.contentRect;
+          if (width > 0 && height > 0) {
+            setHasSize(true);
+          }
+        }
+      });
+      observer.observe(el);
+    }
+
+    return () => {
+      cancelAnimationFrame(raf);
+      observer?.disconnect();
+    };
   }, []);
 
   return (
-    <div ref={ref} className={className}>
-      {ready ? children : null}
+    <div ref={ref} className={`min-w-0 min-h-0 ${className}`}>
+      {hasSize ? children : null}
     </div>
   );
 }

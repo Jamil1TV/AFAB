@@ -1,5 +1,6 @@
 package com.afab.mail;
 
+import com.afab.security.LogSanitizer;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  * SMTP Email Service Implementation — uses Spring's JavaMailSender.
@@ -24,13 +26,13 @@ public class SmtpEmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     private final MailHealthMonitor mailHealthMonitor;
 
-    @Value("${afab.mail.from:afab_support_team@gmail.com}")
+    @Value("${afab.mail.from:no-reply@example.com}")
     private String fromAddress;
 
     @Value("${afab.mail.from-name:AFAB}")
     private String fromName;
 
-    @Value("${afab.app.frontend-url:http://localhost:3000}")
+    @Value("${afab.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
     @Value("${afab.mail.max-attempts:3}")
@@ -56,7 +58,7 @@ public class SmtpEmailServiceImpl implements EmailService {
                 "#6C3AED" // Purple accent
         );
         sendHtmlEmail(to, subject, html);
-        log.info("📧 Verification OTP sent to {} | Code: {}", to, otpCode);
+        log.info("Verification OTP email dispatched to {}", LogSanitizer.maskEmail(to));
     }
 
     @Override
@@ -72,7 +74,7 @@ public class SmtpEmailServiceImpl implements EmailService {
                 "#6C3AED"
         );
         sendHtmlEmail(to, subject, html);
-        log.info("📧 Verification link sent to {}", to);
+        log.info("Verification link email dispatched to {}", LogSanitizer.maskEmail(to));
     }
 
     @Override
@@ -87,7 +89,7 @@ public class SmtpEmailServiceImpl implements EmailService {
                 "#DC2626" // Red accent for urgency
         );
         sendHtmlEmail(to, subject, html);
-        log.info("📧 Password reset OTP sent to {} | Code: {}", to, otpCode);
+        log.info("Password reset OTP email dispatched to {}", LogSanitizer.maskEmail(to));
     }
 
     @Override
@@ -103,7 +105,7 @@ public class SmtpEmailServiceImpl implements EmailService {
                 "#DC2626"
         );
         sendHtmlEmail(to, subject, html);
-        log.info("📧 Password reset link sent to {} | Link: {}", to, link);
+        log.info("Password reset link email dispatched to {}", LogSanitizer.maskEmail(to));
     }
 
     @Override
@@ -118,7 +120,7 @@ public class SmtpEmailServiceImpl implements EmailService {
                 "#F59E0B" // Amber for warning
         );
         sendHtmlEmail(to, "⚠️ " + subject, html);
-        log.info("📧 Security alert sent to {}: {}", to, subject);
+        log.info("Security alert email dispatched to {}", LogSanitizer.maskEmail(to));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -144,12 +146,13 @@ public class SmtpEmailServiceImpl implements EmailService {
                 helper.setText(htmlContent, true);
                 mailSender.send(message);
                 mailHealthMonitor.recordSuccess();
-                log.info("📧 Email successfully sent to {}{}", to, attempt > 1 ? " (attempt " + attempt + ")" : "");
+                log.info("Email successfully dispatched to {}{}", LogSanitizer.maskEmail(to), attempt > 1 ? " (attempt " + attempt + ")" : "");
                 return;
             } catch (Exception e) {
                 lastFailure = e;
                 boolean authFailure = MailHealthMonitor.isAuthenticationFailure(e);
-                log.warn("⚠️ SMTP delivery to {} failed (attempt {}/{}): {}", to, attempt, maxAttempts, e.getMessage());
+                log.warn("SMTP delivery to {} failed (attempt {}/{}): {}",
+                        LogSanitizer.maskEmail(to), attempt, maxAttempts, LogSanitizer.sanitizeMessage(e.getMessage()));
                 if (authFailure || attempt == maxAttempts) {
                     break;
                 }
@@ -224,10 +227,19 @@ public class SmtpEmailServiceImpl implements EmailService {
                     </table>
                 </body>
                 </html>
-                """.formatted(title, accentColor, title, firstName, description, accentColor, otpCode, footer);
+                """.formatted(
+                        HtmlUtils.htmlEscape(title),
+                        accentColor,
+                        HtmlUtils.htmlEscape(title),
+                        HtmlUtils.htmlEscape(firstName != null ? firstName : ""),
+                        HtmlUtils.htmlEscape(description),
+                        accentColor,
+                        HtmlUtils.htmlEscape(otpCode),
+                        HtmlUtils.htmlEscape(footer));
     }
 
     private String buildLinkEmailTemplate(String firstName, String title, String description, String buttonText, String buttonUrl, String footer, String accentColor) {
+        String safeUrl = HtmlUtils.htmlEscape(buttonUrl);
         return """
                 <!DOCTYPE html>
                 <html lang="en">
@@ -280,6 +292,16 @@ public class SmtpEmailServiceImpl implements EmailService {
                     </table>
                 </body>
                 </html>
-                """.formatted(title, accentColor, title, firstName, description, buttonUrl, accentColor, buttonText, footer, buttonUrl);
+                """.formatted(
+                        HtmlUtils.htmlEscape(title),
+                        accentColor,
+                        HtmlUtils.htmlEscape(title),
+                        HtmlUtils.htmlEscape(firstName != null ? firstName : ""),
+                        HtmlUtils.htmlEscape(description),
+                        safeUrl,
+                        accentColor,
+                        HtmlUtils.htmlEscape(buttonText),
+                        HtmlUtils.htmlEscape(footer),
+                        safeUrl);
     }
 }

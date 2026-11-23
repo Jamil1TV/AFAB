@@ -35,6 +35,8 @@ export default function LoginPage() {
   const getErrorMessage = (err: unknown): string => {
     if (err instanceof ApiError) {
       switch (err.code) {
+        case "INVALID_CREDENTIALS":
+          return t("errorInvalidPassword");
         case "EMAIL_NOT_FOUND":
           return t("errorEmailNotFound");
         case "INVALID_PASSWORD":

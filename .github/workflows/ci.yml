@@ -1,0 +1,105 @@
+name: AFAB CI
+
+on:
+  push:
+    branches: [ master, main, "feat/**" ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  backend:
+    name: Backend Build, Migrations & Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: afab_test
+          POSTGRES_USER: afab_test
+          POSTGRES_PASSWORD: afab_test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: afabtestminio
+          MINIO_ROOT_PASSWORD: afabtestminiosecret
+        ports:
+          - 9000:9000
+        options: >-
+          --entrypoint /bin/sh
+          -c "minio server /data"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Run Maven compile, unit tests & end-to-end integration tests
+        working-directory: project/backend
+        env:
+          RUN_INTEGRATION_TESTS: "true"
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: afab_test
+          POSTGRES_USER: afab_test
+          POSTGRES_PASSWORD: afab_test_password
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          MINIO_ENDPOINT: http://localhost:9000
+          MINIO_ACCESS_KEY: afabtestminio
+          MINIO_SECRET_KEY: afabtestminiosecret
+          MINIO_BUCKET: afab-receipts-test
+          JWT_SECRET: dGVzdC1qd3Qtc2VjcmV0LWtleS1mb3ItY2ktcGlwZWxpbmUtMzItYnl0ZXMtbWluLWxlbmd0aA==
+          AFAB_COOKIE_SECURE: "false"
+        run: mvn -B clean test
+
+  frontend:
+    name: Frontend Typecheck, Lint & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: project/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: project/frontend
+        run: npm ci
+
+      - name: TypeScript typecheck
+        working-directory: project/frontend
+        run: npx tsc --noEmit
+
+      - name: Production build
+        working-directory: project/frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080/api/v1
+        run: npm run build

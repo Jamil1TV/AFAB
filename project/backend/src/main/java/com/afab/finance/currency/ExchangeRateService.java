@@ -33,7 +33,8 @@ public class ExchangeRateService {
 
     private final HttpClient httpClient;
     private final Map<String, BigDecimal> cachedRatesFromUSD = new ConcurrentHashMap<>();
-    private Instant lastFetchTime = Instant.EPOCH;
+    private volatile Instant lastFetchTime = Instant.EPOCH;
+    private volatile boolean liveFeedAvailable = false;
 
     // Supported major currency symbols for business & FX tracking
     public static final List<String> POPULAR_CURRENCIES = List.of(
@@ -45,6 +46,31 @@ public class ExchangeRateService {
                 .connectTimeout(Duration.ofSeconds(5))
                 .build();
         loadFallbackRates();
+    }
+
+    /**
+     * Get real-time rate quote with source provenance and snapshot timestamp.
+     */
+    public FxQuote getRateQuote(String fromCurrency, String toCurrency) {
+        String from = (fromCurrency != null && !fromCurrency.isBlank()) ? fromCurrency.toUpperCase().trim() : "USD";
+        String to = (toCurrency != null && !toCurrency.isBlank()) ? toCurrency.toUpperCase().trim() : "USD";
+
+        if (from.equals(to)) {
+            return new FxQuote(from, to, BigDecimal.ONE.setScale(6, RoundingMode.HALF_UP), "IDENTITY", Instant.now());
+        }
+
+        ensureFreshRates();
+
+        BigDecimal fromUsdRate = cachedRatesFromUSD.get(from);
+        BigDecimal toUsdRate = cachedRatesFromUSD.get(to);
+        if (fromUsdRate == null || toUsdRate == null || fromUsdRate.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Unsupported currency pair: " + from + " -> " + to);
+        }
+
+        BigDecimal rate = toUsdRate.divide(fromUsdRate, 6, RoundingMode.HALF_UP);
+        String source = liveFeedAvailable ? "LIVE_FEED" : "FALLBACK_TABLE";
+        Instant ts = liveFeedAvailable && !Instant.EPOCH.equals(lastFetchTime) ? lastFetchTime : Instant.now();
+        return new FxQuote(from, to, rate, source, ts);
     }
 
     /**
@@ -189,6 +215,7 @@ public class ExchangeRateService {
             if (response.statusCode() == 200 && response.body() != null) {
                 parseAndCacheRates(response.body());
                 lastFetchTime = Instant.now();
+                liveFeedAvailable = true;
                 log.info("Successfully refreshed real-time FX rates ({} currencies).", cachedRatesFromUSD.size());
             } else {
                 log.warn("FX rates feed returned HTTP {}. Keeping cached/fallback rates.", response.statusCode());
@@ -244,5 +271,13 @@ public class ExchangeRateService {
     public record HistoricalRatePointDTO(
             String date,
             double rate
+    ) {}
+
+    public record FxQuote(
+            String fromCurrency,
+            String toCurrency,
+            BigDecimal rate,
+            String source,
+            Instant timestamp
     ) {}
 }

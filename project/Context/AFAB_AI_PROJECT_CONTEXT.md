@@ -1,7 +1,7 @@
 # AFAB — AI Project Context
 > **Purpose:** Read this file before changing AFAB. It is the shared source of truth for AI coding agents working across the frontend and backend.
 >
-> **Audit basis:** Static inspection of the supplied `AFAB-master.zip`, including application source, package/build files, database migrations, PRD notes, and design assets. No build, tests, database migration, or live runtime verification was performed. Treat anything marked “needs verification” as unverified.
+> **Last updated:** 23 November 2026 (post P0 Security Hardening & P1 Business Finance Foundation execution; verified with automated backend unit + PostgreSQL 16 / Redis 7 / MinIO integration tests and Next.js production build).
 
 ## 1. Product identity
 **AFAB** means **AI Finance Assistant for Business**. It is a SaaS financial-management platform for small businesses. Its core purpose is to help owners organize income and expenses, monitor financial performance, and make informed decisions from a clear dashboard.
@@ -70,32 +70,25 @@ This is a modular monolith organized mainly by backend feature/package. Keep bus
 
 **Integration caveat:** Project documentation describes a Next.js BFF/proxy design, but the inspected `fetchClient` calls the configured backend URL directly. Do not assume a secure server-side BFF exists; inspect the call path and deployment topology before changing auth/CORS/token handling.
 
-## 5. Current implementation status (static source review)
+## 5. Current implementation status (verified against source & tests)
 
-### Backend modules evident in source
-- Authentication: registration, login, refresh, logout, email verification, resend verification, forgot/reset password, password change.
-- User profile and session management.
-- Business profile and onboarding fields.
-- Dashboard summary endpoint.
-- Transactions and categories; expense/revenue/invoice read endpoints and summaries.
-- Health endpoint.
-- Audit-log infrastructure and SMTP email service.
-- Plans & Entitlements Engine (`/api/v1/subscription`): atomic monthly quota counters, 7-day trial management on Plus/Pro, automatic reconciliation of expired trials to Free, plan tier switching, and HTTP 403 `PLAN_LIMIT_REACHED` enforcement.
-- Reports & Export (`/api/v1/reports`): cash-basis Profit & Loss, Cash Flow Statement, Two-Period Comparisons, RFC 4180 CSV export (with UTF-8 BOM), branded OpenPDF statement generation, and `export.per_month` quota gating.
-- Customers & Orders (Phase 8 Planned: `/api/v1/customers` and Flyway `V16__customers.sql` schema with `customers` and `customer_orders`).
+### Backend modules implemented & tested
+- **Authentication & Security (`P0`):** Registration, login, refresh (HttpOnly cookie + SHA-256 hash + token-family reuse detection + double-submit CSRF & Origin check), logout, email verification, resend verification, forgot/reset password, password change, TOTP 2FA, lockout, fail-fast `SecurityConfigurationValidator`, `LogSanitizer`, and Redis-backed Lua `DistributedRateLimiter` with trusted-proxy `ClientIpResolver`.
+- **Users & Safe Account Deletion (`P0.4`):** Profile, session management, deletion preflight (`GET /api/v1/user/me/deletion-preflight`), sole-owner guard (`409 Conflict`), ownership transfer (`POST /api/v1/business/{id}/transfer-ownership`), `ON DELETE RESTRICT` (`V18`), and anonymized soft-delete tombstones preserving business financial data.
+- **Multi-Business & Tenant Isolation (`P0.5`):** `business_members` (`OWNER`, `ADMIN`, `MEMBER`), `X-Business-Id` server-side verification, active-user enforcement, plan limits (1/3/5).
+- **Transactions, Categories & Immutable FX Snapshots (`P1.1`, `V19`):** Multi-currency transactions storing immutable `original_amount`, `original_currency`, `base_currency`, `exchange_rate`, `converted_amount`, `fx_rate_source`, `fx_rate_timestamp`; splits & tax fields; base currency changes apply to future transactions only.
+- **Customers (`P1.2`, `V20`):** Real multi-tenant `/api/v1/customers` CRUD, search/filters, soft archive, and live invoice/payment revenue metrics (no frontend `localStorage` fallback).
+- **Invoices & Payments (`P1.3`, `V21`):** Real `/api/v1/invoices` lifecycle (`DRAFT`, `UNPAID`, `PARTIALLY_PAID`, `PAID`, `OVERDUE`, `CANCELLED`), atomic concurrent invoice numbering (`invoice_sequences`), cash-basis payment recording (`POST /api/v1/invoices/{id}/payments`) with `Idempotency-Key` deduplication and 1:1 linked Income Transactions.
+- **Recurring Transactions & Private Receipt Storage (`P1.4`, `V22`):** Timezone-aware idempotent recurring engine (`/api/v1/recurring-transactions`) and private MinIO receipt storage (`/api/v1/receipts`) with MIME + magic-byte validation, SHA-256 checksums, tenant-prefixed object keys, authenticated streaming, and short-lived presigned URLs.
+- **Business Budgets & Dashboard Integration (`P1.5`, `V23`):** Overall and category-scoped expense budgets (`/api/v1/budgets`) with split-safe real spending calculations, `OK`/`APPROACHING`/`OVER_BUDGET` alerts, and live Dashboard summary integration (`/api/v1/dashboard/summary`).
+- **Plans & Entitlements (`/api/v1/subscription`) & Reports (`/api/v1/reports`):** Atomic monthly quotas, P&L, Cash Flow, Two-Period Comparisons, CSV & OpenPDF exports.
 
-### Frontend areas evident in source
-- Public landing page and dashboard UI.
-- Signup/login, forgot/reset password, email verification, onboarding.
-- Dashboard, transactions, expenses, revenue, invoices, reports (`/dashboard/reports`), AI screen, plans/upgrade, settings.
-- English/Arabic localized routing.
-- Theme provider/toggle and design-system CSS.
-- API service wrappers under `frontend/lib/api/` (including `subscription.ts`, `reports.ts`, and `customers.ts`).
-- Customers module with Customer ID (`customerCode`) tracking, Add Order modal with line items/invoices, order history & details drawer, 5 KPI cards with custom SVG sparklines, Recharts overview donut, live activity feed, and RFC 4180 CSV export.
-- Sample data in `frontend/lib/mock-data.ts`; audit individual screens to determine whether they use API data, placeholders, or local sample data.
+### Frontend areas implemented & built
+- Public landing page, auth flows (memory-only access tokens, HttpOnly cookie refresh with single-flight deduplication, zero `localStorage` tokens), onboarding, English/Arabic RTL support.
+- Dashboard (with live KPIs, Budget Progress widget, deterministic budget & overdue invoice reminders, real top customers), Transactions (with FX snapshot preview/lock & private receipt attach/download/delete drawer), Expenses, Revenue, Invoices (real lifecycle & payment recording UI), Customers (backend-only with explicit error states), Budgets (`/dashboard/budgets`), Recurring Transactions (`/dashboard/recurring`), Reports, Currencies, Settings (including account deletion preflight modal).
 
-### Not proven complete
-The PRD and mockups mention budgets, savings goals, investments, recurring transactions, notifications, integrations, receipts, team management, and AI recommendations/forecasting. The current backend controller inventory does not show complete API modules for many of these. Verify source, persistence, endpoints, and tests before describing them as implemented.
+### Deferred to P2 / P3 (not yet implemented)
+- Self-hosted AI features (**Gemma 4 E4B via Ollama, EmbeddingGemma 2, pgvector**), Savings Goals, Investments, Calendar/Notifications, Team Invitations, Billing/Payment Gateway, and external bank/accounting integrations.
 
 ## 6. Product decisions and inconsistencies
 
@@ -138,42 +131,35 @@ PRD/schema documents include aspirational features. A requirement document is no
 - Update frontend wrappers and OpenAPI documentation when contracts change.
 
 Controllers found in source:
-- `/api/v1/auth/**` (register, login, refresh, logout, email verify, password reset, 2FA challenge & verify)
-- `/api/v1/business/**` (list, create, update, archive, switch active context)
-- `/api/v1/dashboard/summary` (real-time stats via FinanceStatsService)
-- `/api/v1/transactions/**` (list, create, update, soft-delete, splits, tax, category management)
-- `/api/v1/expenses/**` (period-aware list and summary via FinanceStatsService)
-- `/api/v1/revenue/**` (period-aware list and summary via FinanceStatsService)
-- `/api/v1/invoices/**` (period-aware read of income transactions; full model in Phase 9)
-- `/api/v1/currencies/**` (live FX rate refresh, rate alert thresholds, conversions)
-- `/api/v1/user/**` (profile, active business resolution, session revocation)
+- `/api/v1/auth/**` (register, login, cookie refresh, logout, email verify, password reset, change-password, 2FA challenge & verify)
+- `/api/v1/business/**` (list, create, update, archive, switch active context, list members, transfer ownership)
+- `/api/v1/dashboard/summary` (real-time stats, active budget summary, deterministic reminders, top customers)
+- `/api/v1/transactions/**` (list, get by id, create, update, soft-delete, splits, tax, immutable FX snapshots)
+- `/api/v1/categories/**` (per-business & global category management)
+- `/api/v1/expenses/**` and `/api/v1/revenue/**` (period-aware list and summary via `FinanceStatsService`)
+- `/api/v1/customers/**` (real multi-tenant customer CRUD, search, soft archive, financial summary)
+- `/api/v1/invoices/**` (real invoice lifecycle, draft editing, issue, cancel, idempotent payment recording, summary)
+- `/api/v1/recurring-transactions/**` (CRUD, pause/resume, idempotent manual/scheduled execution)
+- `/api/v1/receipts/**` (private MinIO upload with magic-byte validation, list, presigned download URL, streaming download, delete)
+- `/api/v1/budgets/**` (overall & category expense budgets, live spending & alerts summary)
+- `/api/v1/reports/**` (P&L, Cash Flow, comparisons, CSV & OpenPDF exports)
+- `/api/v1/subscription/**` (plans, trials, entitlements, atomic usage quotas)
+- `/api/v1/currencies/**` (live FX quotes, rate alerts, non-destructive base currency updates)
+- `/api/v1/user/**` (profile, sessions, deletion preflight, safe account deletion)
 - `/api/v1/health`
 
 See `AFAB_BACKEND_CONTEXT.md` for endpoint details.
 
 ## 8. Database and tenant isolation
-- Flyway migrations are in `backend/src/main/resources/db/migration/`; migrations **V1 through V14** are active and applied.
+- Flyway migrations are in `backend/src/main/resources/db/migration/`; migrations **V1 through V23** are active and verified on PostgreSQL 16.
 - `business_members` table provides many-to-many user-to-business mappings with roles (`OWNER`, `ADMIN`, `MEMBER`).
-- Every financial record (`Transaction`, `Category`, `Invoice`) is strictly scoped by `business_id`.
-- Tenant isolation is strictly enforced server-side: foreign `X-Business-Id` returns `403 Forbidden`.
+- Every financial record (`Transaction`, `Category`, `Customer`, `Invoice`, `Payment`, `RecurringTransaction`, `Receipt`, `Budget`) is strictly scoped by `business_id`.
+- Tenant isolation is strictly enforced server-side: foreign `X-Business-Id` or direct cross-tenant entity IDs return `403 Forbidden`.
 - Forward-only migrations rule: Never edit an already-applied Flyway migration; always add a new versioned migration.
 
-## 9. Security and operational warnings
-**The supplied archive contains credential-like values in environment/config files.** They are intentionally not reproduced here.
-
-Before sharing or production deployment:
-1. Revoke/rotate any real SMTP app password or credential included in the archive or committed to Git.
-2. Rotate JWT signing secrets and database/MinIO credentials; use environment variables or a secret manager.
-3. Remove unsafe production secret defaults; fail fast when required production secrets are missing.
-4. Verify access/refresh token storage, XSS exposure, refresh rotation/revocation, cookie attributes, logout, and expiry.
-5. Hash one-time verification/reset tokens; the production checklist says they are currently stored as plain tokens.
-6. Restrict CORS to exact production origins and review whether credentials are needed.
-7. Never log passwords, tokens, personal data, or financial data.
-8. Verify rate limiting across users, IPs, and instances; an in-memory bucket is not a distributed global limiter.
-9. Verify authorization for every ID-addressed resource and session-revocation operation.
-10. Add automated security and integration tests before production.
-
-The frontend stores access and refresh tokens in `localStorage` and mirrors the access token into a JavaScript-written cookie used by route middleware. This has security trade-offs; evaluate a server-managed `HttpOnly; Secure; SameSite` cookie/BFF design before production. A route redirect is UX only, not backend authorization.
+## 9. Security posture & operational status (updated post-P0)
+- **Completed in P0:** Safe placeholders in `.env.example`, zero hardcoded secrets in `application.yml`, fail-fast `SecurityConfigurationValidator`, sanitized logging (`LogSanitizer`), HttpOnly/Secure/SameSite cookie refresh tokens with SHA-256 DB hashing + rotation + family reuse revocation, memory-only frontend access tokens (zero `localStorage` tokens), double-submit CSRF + Origin checks, Redis Lua `DistributedRateLimiter` + trusted-proxy `ClientIpResolver`, `ON DELETE RESTRICT` + safe account deletion & ownership transfer, and automated security/tenant-isolation/integration tests.
+- **Manual external action still required before production:** Rotate/revoke all credentials that previously existed in local `.env` or early Git history (SMTP App Password, PostgreSQL password, JWT secret, MinIO keys). See `project/backend/PRODUCTION_CHECKLIST.md`.
 
 ## 10. AI coding-agent protocol
 Before changing code:

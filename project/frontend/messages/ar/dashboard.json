@@ -17,6 +17,8 @@
     "revenue": "الإيرادات",
     "invoices": "الفواتير",
     "customers": "العملاء",
+    "budgets": "الميزانيات",
+    "recurring": "المعاملات المتكررة",
     "reports": "التقارير",
     "currencies": "العملات والصرف",
     "workspace": "مساحة العمل",
@@ -79,6 +81,16 @@
     "title": "أفضل العملاء",
     "viewAll": "عرض الكل",
     "revenue": "من الإيرادات"
+  },
+  "budgets": {
+    "title": "تقدم الميزانيات",
+    "subtitleActive": "{active} نشطة • {over} متجاوزة • {approaching} قريبة من الحد",
+    "subtitleEmpty": "ضع حدود إنفاق شهرية أو حسب الفئة لمتابعة تكاليف عملك.",
+    "manageLink": "إدارة الميزانيات",
+    "emptyNotice": "لا توجد ميزانيات نشطة للفترة الحالية.",
+    "createNow": "أنشئ ميزانية الآن",
+    "overBy": "تجاوز بمقدار",
+    "remaining": "المتبقي"
   },
   "banner": {
     "pro": "AFAB برو",

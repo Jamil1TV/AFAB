@@ -41,9 +41,27 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource))
+            .headers(headers -> headers
+                .contentTypeOptions(c -> {})
+                .frameOptions(f -> f.deny())
+                .referrerPolicy(r -> r.policy(
+                    org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN
+                ))
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                    "/api/v1/auth/**",
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/2fa/verify-login",
+                    "/api/v1/auth/refresh",
+                    "/api/v1/auth/logout",
+                    "/api/v1/auth/verify-email",
+                    "/api/v1/auth/resend-verification",
+                    "/api/v1/auth/forgot-password",
+                    "/api/v1/auth/reset-password",
+                    "/api/v1/auth/forgot-password-link",
+                    "/api/v1/auth/validate-reset-token",
+                    "/api/v1/auth/reset-password-token",
                     "/api/v1/health",
                     "/api/v1/currencies/rates",
                     "/api/v1/currencies/history",

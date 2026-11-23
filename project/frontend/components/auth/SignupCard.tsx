@@ -52,10 +52,8 @@ export function SignupCard() {
         businessName,
       });
 
-      // Save token
       if (response.accessToken) {
-        localStorage.setItem("afab_token", response.accessToken);
-        router.push("/dashboard"); // We'll build the dashboard in step 3
+        router.push("/dashboard");
       }
     } catch (err: any) {
       setError(err.message || "Something went wrong during registration.");

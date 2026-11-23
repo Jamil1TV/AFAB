@@ -29,4 +29,19 @@ public interface BusinessMemberRepository extends JpaRepository<BusinessMember, 
     boolean existsByBusinessIdAndUserIdAndStatus(UUID businessId, UUID userId, String status);
 
     long countByBusinessIdAndStatus(UUID businessId, String status);
+
+    @Query("SELECT bm FROM BusinessMember bm " +
+           "JOIN FETCH bm.user u " +
+           "WHERE bm.business.id = :businessId AND bm.status = 'ACTIVE' " +
+           "ORDER BY bm.createdAt ASC")
+    List<BusinessMember> findAllActiveMembersWithUserByBusinessId(@Param("businessId") UUID businessId);
+
+    @Query("SELECT bm FROM BusinessMember bm " +
+           "JOIN FETCH bm.business b " +
+           "WHERE bm.user.id = :userId AND bm.status = 'ACTIVE'")
+    List<BusinessMember> findAllActiveMembershipsByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT COUNT(bm) FROM BusinessMember bm " +
+           "WHERE bm.business.id = :businessId AND bm.role = 'OWNER' AND bm.status = 'ACTIVE' AND bm.user.id <> :excludeUserId")
+    long countOtherActiveOwners(@Param("businessId") UUID businessId, @Param("excludeUserId") UUID excludeUserId);
 }

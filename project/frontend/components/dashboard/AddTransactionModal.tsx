@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { X, Calendar, Tag, CreditCard, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Calendar, Tag, CreditCard, ArrowUpRight, ArrowDownLeft, Lock } from "lucide-react";
 import { CategoryItem, TransactionItem, TransactionService } from "@/lib/api/transactions";
+import { CurrencyService } from "@/lib/api/currencies";
 import { useTranslations } from "next-intl";
+
+const TRANSACTION_CURRENCIES = ["USD", "EUR", "TND", "GBP", "AED", "SAR", "CAD", "CHF", "QAR", "KWD", "JPY"];
 
 interface AddTransactionModalProps {
   isOpen: boolean;
@@ -27,7 +30,15 @@ function TransactionFormModal({
 
   const [type, setType] = useState<"INCOME" | "EXPENSE">(transactionToEdit?.type || "EXPENSE");
   const [description, setDescription] = useState(transactionToEdit?.description || "");
-  const [amount, setAmount] = useState(transactionToEdit ? transactionToEdit.amount.toString() : "");
+  const [amount, setAmount] = useState(
+    transactionToEdit
+      ? (transactionToEdit.originalAmount ?? transactionToEdit.amount).toString()
+      : ""
+  );
+  const [originalCurrency, setOriginalCurrency] = useState(
+    transactionToEdit?.originalCurrency || transactionToEdit?.baseCurrency || currency
+  );
+  const [fxPreview, setFxPreview] = useState<{ rate: number; convertedAmount: number } | null>(null);
   const [categoryId, setCategoryId] = useState(transactionToEdit?.categoryId || "");
   const [transactionDate, setTransactionDate] = useState(
     transactionToEdit?.transactionDate || new Date().toISOString().split("T")[0]
@@ -38,6 +49,29 @@ function TransactionFormModal({
   const [taxRate, setTaxRate] = useState(transactionToEdit?.taxRate ? transactionToEdit.taxRate.toString() : "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditing = Boolean(transactionToEdit);
+  const parsedAmount = parseFloat(amount);
+
+  useEffect(() => {
+    if (isEditing || !originalCurrency || originalCurrency === currency || isNaN(parsedAmount) || parsedAmount <= 0) {
+      setFxPreview(null);
+      return;
+    }
+    let active = true;
+    CurrencyService.convert(originalCurrency, currency, parsedAmount)
+      .then((res) => {
+        if (active) {
+          setFxPreview({ rate: res.exchangeRate, convertedAmount: res.convertedAmount });
+        }
+      })
+      .catch(() => {
+        if (active) setFxPreview(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isEditing, originalCurrency, currency, parsedAmount]);
 
   const filteredCategories = categories.filter(
     (c) => c.type.toUpperCase() === type.toUpperCase()
@@ -54,7 +88,7 @@ function TransactionFormModal({
     setError(null);
 
     try {
-      const payload = {
+      const basePayload = {
         type,
         amount: parseFloat(amount),
         description: description.trim(),
@@ -67,9 +101,12 @@ function TransactionFormModal({
       };
 
       if (transactionToEdit) {
-        await TransactionService.updateTransaction(transactionToEdit.id, payload);
+        await TransactionService.updateTransaction(transactionToEdit.id, basePayload);
       } else {
-        await TransactionService.createTransaction(payload);
+        await TransactionService.createTransaction({
+          ...basePayload,
+          originalCurrency,
+        });
       }
 
       onSuccess();
@@ -164,27 +201,41 @@ function TransactionFormModal({
             />
           </div>
 
-          {/* Amount & Date Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Amount, Currency & Date Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 {tModal("amountLabel")} *
               </label>
-              <div className="relative">
-                <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3.5 text-xs font-bold text-gray-500 dark:text-gray-400">
-                  {currency === "QAR" ? "QAR" : currency === "AED" ? "AED" : currency === "SAR" ? "SAR" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : "$"}
-                </div>
-                <input
-                  type="number"
-                  step="any"
-                  min="0.0001"
-                  required
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder={tModal("amountPlaceholder")}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-12 pe-4 py-2.5 text-sm font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
-                />
-              </div>
+              <input
+                type="number"
+                step="any"
+                min="0.0001"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder={tModal("amountPlaceholder")}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-1 text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Currency
+                {isEditing && <Lock className="h-3 w-3 text-gray-400" />}
+              </label>
+              <select
+                value={originalCurrency}
+                disabled={isEditing}
+                onChange={(e) => setOriginalCurrency(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2.5 text-sm font-semibold text-gray-900 dark:text-white disabled:opacity-60 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+              >
+                {Array.from(new Set([currency, originalCurrency, ...TRANSACTION_CURRENCIES])).map((c) => (
+                  <option key={c} value={c}>
+                    {c}{c === currency ? " (Base)" : ""}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>
@@ -200,11 +251,36 @@ function TransactionFormModal({
                   required
                   value={transactionDate}
                   onChange={(e) => setTransactionDate(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-3 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
                 />
               </div>
             </div>
           </div>
+
+          {/* Live FX Preview / Locked Historical FX Snapshot Banner */}
+          {!isEditing && fxPreview && originalCurrency !== currency && (
+            <div className="rounded-xl border border-[#8b5cf6]/25 bg-[#8b5cf6]/5 px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-300 flex flex-wrap items-center justify-between gap-2">
+              <span>
+                FX Snapshot: <strong>1 {originalCurrency} = {fxPreview.rate.toFixed(6)} {currency}</strong>
+              </span>
+              <span className="font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+                ≈ {fxPreview.convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} {currency}
+              </span>
+            </div>
+          )}
+          {isEditing && transactionToEdit && (
+            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-white/[0.02] px-3.5 py-2.5 text-xs text-gray-600 dark:text-gray-400 flex flex-wrap items-center justify-between gap-2">
+              <span className="flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5 text-gray-400" />
+                {transactionToEdit.legacyFx
+                  ? `Legacy FX provenance (${transactionToEdit.baseCurrency || currency})`
+                  : `Locked FX rate: ${transactionToEdit.exchangeRate ?? 1} (${transactionToEdit.originalCurrency || currency} → ${transactionToEdit.baseCurrency || currency})`}
+              </span>
+              <span className="font-semibold text-gray-800 dark:text-gray-200">
+                Base: {(transactionToEdit.convertedAmount ?? transactionToEdit.amount).toLocaleString()} {transactionToEdit.baseCurrency || currency}
+              </span>
+            </div>
+          )}
 
           {/* Category & Payment Method Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

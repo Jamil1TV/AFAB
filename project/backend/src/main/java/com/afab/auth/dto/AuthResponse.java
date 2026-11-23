@@ -1,14 +1,27 @@
 package com.afab.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.util.UUID;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthResponse {
     private String accessToken;
+
+    /**
+     * Never serialized to JSON — transported exclusively via HttpOnly cookie.
+     */
+    @JsonIgnore
     private String refreshToken;
+
+    @JsonIgnore
+    private boolean rememberMe = false;
+
+    private String csrfToken;
     private UserDto user;
     private boolean requiresTwoFactor = false;
     private String twoFactorToken;
-
     private String devOtp;
 
     /** False when the account was created but the verification email could not be delivered. */
@@ -30,7 +43,17 @@ public class AuthResponse {
     }
 
     public String getAccessToken() { return accessToken; }
+
+    @JsonIgnore
     public String getRefreshToken() { return refreshToken; }
+
+    @JsonIgnore
+    public boolean isRememberMe() { return rememberMe; }
+    public void setRememberMe(boolean rememberMe) { this.rememberMe = rememberMe; }
+
+    public String getCsrfToken() { return csrfToken; }
+    public void setCsrfToken(String csrfToken) { this.csrfToken = csrfToken; }
+
     public UserDto getUser() { return user; }
     public boolean isRequiresTwoFactor() { return requiresTwoFactor; }
     public String getTwoFactorToken() { return twoFactorToken; }

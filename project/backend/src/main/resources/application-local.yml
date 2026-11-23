@@ -1,0 +1,15 @@
+# ═══════════════════════════════════════════════
+# AFAB Backend — Local Development Profile
+# Activated ONLY via SPRING_PROFILES_ACTIVE=local
+# ═══════════════════════════════════════════════
+
+afab:
+  auth:
+    cookie:
+      secure: ${AFAB_COOKIE_SECURE:false}
+      same-site: ${AFAB_COOKIE_SAME_SITE:Lax}
+    allow-dev-otp: ${AFAB_ALLOW_DEV_OTP:false}
+  rate-limit:
+    fail-mode: ${AFAB_RATE_LIMIT_FAIL_MODE:fail_open}
+  flyway:
+    repair-on-migrate: ${AFAB_FLYWAY_REPAIR:true}

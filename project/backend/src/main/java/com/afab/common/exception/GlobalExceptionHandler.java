@@ -10,6 +10,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -114,6 +115,18 @@ public class GlobalExceptionHandler {
         body.put("upgradeTo", ex.getUpgradeTo());
         body.put("path", request.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleMaxUploadSize(
+            MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        ApiError apiError = new ApiError(
+                HttpStatus.CONTENT_TOO_LARGE.value(),
+                "Content Too Large",
+                "Uploaded file exceeds the maximum allowed size.",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE).body(apiError);
     }
 
     @ExceptionHandler(Exception.class)

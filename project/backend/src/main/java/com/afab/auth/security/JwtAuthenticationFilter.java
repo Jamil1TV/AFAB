@@ -59,15 +59,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
-            logger.warn("JWT is expired: " + e.getMessage());
+            logger.warn("Expired JWT rejected for path " + request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"JWT token is expired. Please login again.\"}");
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Unauthorized\", \"code\": \"TOKEN_EXPIRED\", \"message\": \"JWT token is expired. Please refresh or login again.\"}");
             return;
         } catch (Exception e) {
-            // Token is invalid, expired, or tampered with. Log if necessary, but don't crash.
-            logger.error("Could not set user authentication in security context", e);
+            logger.warn("Invalid JWT rejected for path " + request.getRequestURI());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Invalid JWT token.\"}");
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Unauthorized\", \"code\": \"INVALID_TOKEN\", \"message\": \"Invalid JWT token.\"}");
             return;
         }
 

@@ -12,6 +12,14 @@ public class TransactionDTO {
     private String type;
     private BigDecimal amount;
     private String currency;
+    private BigDecimal originalAmount;
+    private String originalCurrency;
+    private String baseCurrency;
+    private BigDecimal exchangeRate;
+    private BigDecimal convertedAmount;
+    private String fxRateSource;
+    private Instant fxRateTimestamp;
+    private boolean legacyFx;
     private String description;
     private LocalDate transactionDate;
     private String paymentMethod;
@@ -44,6 +52,30 @@ public class TransactionDTO {
 
     public String getCurrency() { return currency; }
     public void setCurrency(String currency) { this.currency = currency; }
+
+    public BigDecimal getOriginalAmount() { return originalAmount; }
+    public void setOriginalAmount(BigDecimal originalAmount) { this.originalAmount = originalAmount; }
+
+    public String getOriginalCurrency() { return originalCurrency; }
+    public void setOriginalCurrency(String originalCurrency) { this.originalCurrency = originalCurrency; }
+
+    public String getBaseCurrency() { return baseCurrency; }
+    public void setBaseCurrency(String baseCurrency) { this.baseCurrency = baseCurrency; }
+
+    public BigDecimal getExchangeRate() { return exchangeRate; }
+    public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
+
+    public BigDecimal getConvertedAmount() { return convertedAmount; }
+    public void setConvertedAmount(BigDecimal convertedAmount) { this.convertedAmount = convertedAmount; }
+
+    public String getFxRateSource() { return fxRateSource; }
+    public void setFxRateSource(String fxRateSource) { this.fxRateSource = fxRateSource; }
+
+    public Instant getFxRateTimestamp() { return fxRateTimestamp; }
+    public void setFxRateTimestamp(Instant fxRateTimestamp) { this.fxRateTimestamp = fxRateTimestamp; }
+
+    public boolean isLegacyFx() { return legacyFx; }
+    public void setLegacyFx(boolean legacyFx) { this.legacyFx = legacyFx; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

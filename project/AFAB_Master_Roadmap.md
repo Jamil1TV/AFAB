@@ -1,4 +1,4 @@
-﻿# AFAB — Master Roadmap
+# AFAB — Master Roadmap
 
 > **One file to use.** It merges my two earlier files (`AFAB_Next_Steps_Roadmap.md`, `AFAB_Roadmap_Part2_Advanced.md`) and the ChatGPT audit (`AFAB_Project_Audit_and_Development_Roadmap.md`). Where they disagreed, I re-checked the code and chose one answer (§9).
 > **Basis:** static review of `AFAB-master.zip`. I did **not** build, run, or test anything, so "exists" means "the code is there", not "it works". Phase 0 turns that into facts.
@@ -10,24 +10,26 @@
 
 | Area | Backend | Frontend | Verdict |
 |---|---|---|---|
-| Auth (register, login, refresh, logout, verify email, forgot/reset password, sessions, 2FA) | ✅ | ✅ | **Built, Hardened & Verified** (TOTP 2FA, lockout, sessions, async logout) |
-| Onboarding, Business profile, User profile, Sessions | ✅ | ✅ | **Built & Connected** |
+| Auth (register, login, cookie refresh + CSRF, logout, verify email, forgot/reset password, sessions, 2FA, Redis rate limiting) | ✅ | ✅ | **Built, Hardened & Verified (P0.1–P0.3)** (HttpOnly refresh cookies, memory-only access tokens, SHA-256 refresh hashing + reuse family revocation, Redis Lua rate limiter) |
+| Onboarding, Business profile, Ownership transfer, Safe account deletion | ✅ | ✅ | **Built, Hardened & Verified (P0.4–P0.5)** (`V18` `ON DELETE RESTRICT`, deletion preflight, ownership transfer, soft-delete anonymization) |
 | Settings: General, Business Profile, Security (2FA, Sessions, Lockout) | ✅ | ✅ | **Built & Connected** |
-| Transactions (list, create, edit, delete, categories, splits, tax, NLP, CSV export) | ✅ | ✅ | **Built & Verified** (V10, V11 migrations, 409 delete lock, unit tests) |
-| Multi-Currency & Live FX Rates (Phase 20 P1) | ✅ | ✅ | **Built & Connected** (Live rate engine, converter, base currency migration) |
-| Dashboard (KPIs, trailing 6mo chart, category breakdown, real-time stats) | ✅ | ✅ | **Built on FinanceStatsService (Cash basis)** |
+| Transactions (list, create, edit, delete, categories, splits, tax, NLP, CSV export, immutable FX snapshots) | ✅ | ✅ | **Built & Verified (P1.1)** (`V19` FX snapshot immutability, non-destructive currency migration) |
+| Multi-Currency & Live FX Rates (Phase 20 P1) | ✅ | ✅ | **Built & Verified (P1.1)** (Live rate quotes with provenance, immutable transaction snapshots) |
+| Dashboard (KPIs, trailing 6mo chart, category breakdown, Budgets widget, deterministic reminders, top customers) | ✅ | ✅ | **Built on FinanceStatsService + BudgetService + real Invoices/Customers** |
 | Expenses / Revenue pages | ✅ | ✅ | **Built & Connected to FinanceStatsService (Cash basis, period-aware, real summaries)** |
-| Invoices page | 🟡 | ✅ | Period-aware summary; reads income transactions; real invoice model planned in Phase 9 |
-| Multi-Business & Workspace Switching (Phase 4) | ✅ | ✅ | **Built & Verified** (V13/V14 migrations, X-Business-Id resolver, plan limits 1/3/5, 0 mock fallbacks) |
+| Invoices & Payments (Phase 9 / P1.3) | ✅ | ✅ | **Built & Verified (`V21`)** (Real lifecycle DRAFT/UNPAID/PARTIALLY_PAID/PAID/OVERDUE/CANCELLED, atomic numbering, idempotent cash-basis Payments) |
+| Multi-Business & Workspace Switching (Phase 4) | ✅ | ✅ | **Built & Verified** (`V13`/`V14` migrations, `X-Business-Id` resolver, plan limits 1/3/5, cross-tenant tests) |
 | KPI Numbers & Display Precision | ✅ | ✅ | **Verified** (All budget and financial digits fully rendered without truncation or `&...`) |
-| Plans & Entitlements Engine (Phase 5) | ✅ | ✅ | **Built & Verified** (V15 migration, plans/entitlements/subscriptions/usage tables, atomic quota engine, 7-day trials, live UI activation & countdown) |
-| Reports & Export (Phase 6) | ✅ | ✅ | **Built & Verified** (Cash-basis P&L, Cash Flow, Two-period comparisons, RFC 4180 CSV + OpenPDF exports, `export.per_month` quota gating) |
-| Automated tests | ✅ | 🟡 | **43 unit tests passing** (`ReportServiceTest`, `EntitlementServiceTest`, `CategoryServiceTest`, `FinanceStatsServiceTest`, `CurrentBusinessServiceTest`, `BusinessControllerTest`, `ExchangeRateServiceTest`) |
-| Customers | 🟡 Backend pending (Phase 8) | ✅ | **Frontend Completed & Connected** (Directory table, 5 KPI cards, Donut chart, Top Customers, CRUD modals, Detail Drawer, CSV export, EN/AR RTL) |
-| Calendar | ❌ | ❌ | Planned in Phase 14 |
-| AI Assistant route | ❌ | placeholder | `/dashboard/ai` renders plans; planned in Phases 15–16 |
+| Plans & Entitlements Engine (Phase 5) | ✅ | ✅ | **Built & Verified** (`V15` migration, atomic quota engine, 7-day trials) |
+| Reports & Export (Phase 6) | ✅ | ✅ | **Built & Verified** (Cash-basis P&L, Cash Flow, Two-period comparisons, CSV + OpenPDF exports) |
+| Automated tests & CI | ✅ | ✅ | **Unit + PostgreSQL 16/Redis 7/MinIO Integration Tests + GitHub Actions CI + Next.js Production Build** |
+| Customers (Phase 8 / P1.2) | ✅ | ✅ | **Built & Verified (`V20`)** (Full `/api/v1/customers` backend, zero `localStorage` fallback, explicit error handling) |
+| Budgets (Phase 10 / P1.5) | ✅ | ✅ | **Built & Verified (`V23`)** (Overall & category budgets, split-safe spending math, deterministic alerts, Dashboard widget) |
+| Recurring Transactions & Private Receipts (Phase 13 / P1.4) | ✅ | ✅ | **Built & Verified (`V22`)** (Idempotent timezone-aware scheduler + private MinIO receipt storage with magic-byte validation) |
+| Calendar | ❌ | ❌ | Planned in Phase 14 (P2/P3) |
+| AI Assistant route | ❌ | placeholder | Deferred to P2/P3 (Gemma 4 E4B via Ollama, EmbeddingGemma 2, pgvector) |
 | Settings: Users & Permissions, Notifications, Integrations, Data & Export | ❌ | "Coming soon" | Planned in Phases 7, 14, 17, 21 |
-| Budgets, Savings Goals, Investments, Recurring, Receipts | ❌ | ❌ | In the PRD, planned in Phases 10–13 |
+| Savings Goals, Investments | ❌ | ❌ | Deferred to P2/P3 (Phases 11–12) |
 
 ---
 
@@ -92,12 +94,12 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 | **5** | Plans & entitlements engine | M | 4 | ✅ **DONE** | M2 |
 | **6** | Reports & Export | M | 2, 5 | ✅ **DONE** | M2 |
 | **7** | Settings quick wins | S | 6 | 🟡 Partial (Security, General, 2FA built) | M2 |
-| **8** | Customers | M | 4 | 🟢 In Progress (Frontend Complete) | **M3 — SME toolkit** |
-| **9** | Invoices (real) | M–L | 5, 8 | ❌ Missing | M3 |
-| **10** | Budgets | M | 2 | ❌ Missing | M3 |
-| **11** | Savings goals | S–M | 2 | ❌ Missing | M3 |
-| **12** | Investments (manual) | S–M | 4 | ❌ Missing | M3 |
-| **13** | Recurring transactions + Receipts | M–L | 1 | ❌ Missing | M3 |
+| **8** | Customers | M | 4 | ✅ **DONE (P1.2 / V20)** | **M3 — SME toolkit** |
+| **9** | Invoices & Payments (real) | M–L | 5, 8 | ✅ **DONE (P1.3 / V21)** | M3 |
+| **10** | Budgets | M | 2 | ✅ **DONE (P1.5 / V23)** | M3 |
+| **11** | Savings goals | S–M | 2 | ❌ Deferred (P2/P3) | M3 |
+| **12** | Investments (manual) | S–M | 4 | ❌ Deferred (P2/P3) | M3 |
+| **13** | Recurring transactions + Private Receipts | M–L | 1 | ✅ **DONE (P1.4 / V22)** | M3 |
 | **14** | Notifications + Calendar | M–L | 9, 10, 13 | ❌ Missing | M3 |
 | **15** | AI-A: insights, recommendations, forecast | M–L | 2, 5, 13 | ❌ Missing | **M4 — Intelligence** |
 | **16** | AI-B: assistant (LLM + tools) | L | 15 | ❌ Missing | M4 |

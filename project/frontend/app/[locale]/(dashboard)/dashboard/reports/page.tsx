@@ -48,6 +48,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { AfabLoader } from "@/components/ui/afab-loader";
+import { ChartContainer } from "@/components/ui/chart-container";
 import { CHART_PALETTE, chartSemantic, chartTooltipStyle } from "@/lib/design-tokens";
 import { formatCurrency } from "@/lib/currency";
 
@@ -503,29 +504,31 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="h-72 w-full pt-4">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={cashFlowReport.monthlyTrend || []}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-gray-200 dark:text-gray-800/50" />
-                      <XAxis
-                        dataKey="month"
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 12 }}
-                        stroke="currentColor"
-                        className="text-gray-400 dark:text-gray-500"
-                      />
-                      <YAxis
-                        axisLine={false}
-                        tickLine={false}
-                        tick={{ fontSize: 12 }}
-                        stroke="currentColor"
-                        className="text-gray-400 dark:text-gray-500"
-                      />
-                      <Tooltip {...chartTooltipStyle} />
-                      <Bar dataKey="inflow" name={isAr ? "الداخل" : "Inflow"} fill={chartSemantic.positive} radius={[6, 6, 0, 0]} />
-                      <Bar dataKey="outflow" name={isAr ? "الخارج" : "Outflow"} fill={chartSemantic.negative} radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  <ChartContainer className="h-full w-full">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 600, height: 272 }}>
+                      <BarChart data={cashFlowReport.monthlyTrend || []}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-gray-200 dark:text-gray-800/50" />
+                        <XAxis
+                          dataKey="month"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 12 }}
+                          stroke="currentColor"
+                          className="text-gray-400 dark:text-gray-500"
+                        />
+                        <YAxis
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{ fontSize: 12 }}
+                          stroke="currentColor"
+                          className="text-gray-400 dark:text-gray-500"
+                        />
+                        <Tooltip {...chartTooltipStyle} />
+                        <Bar dataKey="inflow" name={isAr ? "الداخل" : "Inflow"} fill={chartSemantic.positive} radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="outflow" name={isAr ? "الخارج" : "Outflow"} fill={chartSemantic.negative} radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
                 </div>
               </div>
             </div>

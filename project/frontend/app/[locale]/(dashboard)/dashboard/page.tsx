@@ -7,6 +7,7 @@ import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { ExpenseCategories } from "@/components/dashboard/ExpenseCategories";
 import { ReminderCard } from "@/components/dashboard/ReminderCard";
 import { TopCustomers } from "@/components/dashboard/TopCustomers";
+import { BudgetOverviewCard } from "@/components/dashboard/BudgetOverviewCard";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { useState, useEffect, useCallback } from "react";
@@ -44,8 +45,27 @@ export default function DashboardPage() {
   }, [period]);
 
   useEffect(() => {
-    fetchSummary();
-  }, [fetchSummary]);
+    let active = true;
+    const periodParam = period === "MONTHLY" ? "month" : period === "WEEKLY" ? "weekly" : "year";
+    DashboardService.getSummary(periodParam)
+      .then((res) => {
+        if (!active) return;
+        setData(res);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (!active) return;
+        console.error("Dashboard fetch error:", err);
+        const message = err instanceof Error ? err.message : "Failed to load dashboard data";
+        setError(message);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [period]);
 
   useEffect(() => {
     UserService.getProfile()
@@ -181,6 +201,9 @@ export default function DashboardPage() {
           <ExpenseCategories categories={data.expenseCategories || []} currency={currency} />
         </div>
       </div>
+
+      {/* ── Budgets Overview Row ── */}
+      <BudgetOverviewCard budgets={data.budgets} currency={currency} />
 
       {/* ── Tertiary Data Row ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

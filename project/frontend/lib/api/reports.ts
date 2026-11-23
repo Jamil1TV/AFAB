@@ -1,5 +1,4 @@
-import { fetchClient } from "./client";
-import { AuthStore } from "@/lib/auth-store";
+import { fetchClient, fetchRawClient } from "./client";
 
 export interface CategoryShare {
   categoryName: string;
@@ -57,8 +56,6 @@ export interface ComparisonReport {
   netIncomeDifference: number;
   netIncomeDifferencePct: number;
 }
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
 function triggerFileDownload(blob: Blob, fallbackFilename: string, res?: Response) {
   let filename = fallbackFilename;
@@ -122,21 +119,16 @@ export class ReportService {
   }
 
   /**
-   * Triggers browser download for CSV statement, with bearer auth & active business header.
+   * Triggers browser download for CSV statement, using in-memory bearer auth, auto-refresh & active business header.
    */
   static async downloadCsv(period: string = "this_month", startDate?: string, endDate?: string): Promise<void> {
-    const token = AuthStore.getAccessToken();
-    const activeBusinessId = AuthStore.getActiveBusinessId();
     const params = new URLSearchParams({ period });
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
 
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    if (activeBusinessId) headers["X-Business-Id"] = activeBusinessId;
-
-    const res = await fetch(`${API_BASE_URL}/reports/export/csv?${params.toString()}`, {
-      headers,
+    const res = await fetchRawClient(`/reports/export/csv?${params.toString()}`, {
+      method: "GET",
+      requireAuth: true,
     });
 
     if (!res.ok) {
@@ -160,21 +152,16 @@ export class ReportService {
   }
 
   /**
-   * Triggers browser download for PDF statement, with bearer auth & active business header.
+   * Triggers browser download for PDF statement, using in-memory bearer auth, auto-refresh & active business header.
    */
   static async downloadPdf(period: string = "this_month", startDate?: string, endDate?: string): Promise<void> {
-    const token = AuthStore.getAccessToken();
-    const activeBusinessId = AuthStore.getActiveBusinessId();
     const params = new URLSearchParams({ period });
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
 
-    const headers: Record<string, string> = {};
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-    if (activeBusinessId) headers["X-Business-Id"] = activeBusinessId;
-
-    const res = await fetch(`${API_BASE_URL}/reports/export/pdf?${params.toString()}`, {
-      headers,
+    const res = await fetchRawClient(`/reports/export/pdf?${params.toString()}`, {
+      method: "GET",
+      requireAuth: true,
     });
 
     if (!res.ok) {

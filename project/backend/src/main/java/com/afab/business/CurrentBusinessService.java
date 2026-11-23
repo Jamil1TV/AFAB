@@ -84,8 +84,34 @@ public class CurrentBusinessService {
 
     @Transactional(readOnly = true)
     public User getCurrentUser(String userEmail) {
-        return userRepository.findByEmail(userEmail)
+        User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+        if (!"ACTIVE".equalsIgnoreCase(user.getStatus()) || user.getDeletedAt() != null) {
+            throw new ForbiddenException("Account is not active.");
+        }
+        return user;
+    }
+
+    @Transactional(readOnly = true)
+    public BusinessMember getCurrentMembership(String userEmail) {
+        User user = getCurrentUser(userEmail);
+        Business business = getCurrentBusiness(userEmail);
+        BusinessMember member = businessMemberRepository
+                .findWithBusinessByBusinessIdAndUserId(business.getId(), user.getId())
+                .orElseThrow(() -> new ForbiddenException("Unauthorized: You are not a member of this business."));
+        if (!"ACTIVE".equalsIgnoreCase(member.getStatus()) || member.getBusiness().getArchivedAt() != null) {
+            throw new ForbiddenException("Unauthorized: Membership is inactive or business is archived.");
+        }
+        return member;
+    }
+
+    @Transactional(readOnly = true)
+    public Business requireAdminOrOwnerBusiness(String userEmail) {
+        BusinessMember member = getCurrentMembership(userEmail);
+        if (!member.isAdminOrOwner()) {
+            throw new ForbiddenException("Only business owners and admins can perform this action.");
+        }
+        return member.getBusiness();
     }
 
     @Transactional(readOnly = true)

@@ -1,5 +1,7 @@
 package com.afab.dashboard.dto;
 
+import com.afab.budgets.dto.BudgetSummaryDTO;
+
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -17,6 +19,7 @@ public class DashboardSummaryDTO {
     private List<CustomerItem> customers;
     private String currency;
     private String businessName;
+    private BudgetSummaryDTO budgets;
 
     public DashboardSummaryDTO() {}
 
@@ -57,6 +60,9 @@ public class DashboardSummaryDTO {
 
     public String getBusinessName() { return businessName; }
     public void setBusinessName(String businessName) { this.businessName = businessName; }
+
+    public BudgetSummaryDTO getBudgets() { return budgets; }
+    public void setBudgets(BudgetSummaryDTO budgets) { this.budgets = budgets; }
 
     // ── Nested DTOs ─────────────────────────────
 

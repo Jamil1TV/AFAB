@@ -23,6 +23,12 @@ public class CreateTransactionRequest {
     @DecimalMin(value = "0.0001", message = "Amount must be greater than zero")
     private BigDecimal amount;
 
+    @Pattern(regexp = "^[A-Za-z]{3}$", message = "Original currency must be a 3-letter ISO code")
+    private String originalCurrency;
+
+    @DecimalMin(value = "0.000001", message = "Exchange rate must be positive")
+    private BigDecimal exchangeRate;
+
     @NotBlank(message = "Description is required")
     @Size(max = 255, message = "Description cannot exceed 255 characters")
     private String description;
@@ -55,6 +61,12 @@ public class CreateTransactionRequest {
 
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal amount) { this.amount = amount; }
+
+    public String getOriginalCurrency() { return originalCurrency; }
+    public void setOriginalCurrency(String originalCurrency) { this.originalCurrency = originalCurrency; }
+
+    public BigDecimal getExchangeRate() { return exchangeRate; }
+    public void setExchangeRate(BigDecimal exchangeRate) { this.exchangeRate = exchangeRate; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }

@@ -28,8 +28,22 @@ public class CorsConfig {
                 .toList();
         configuration.setAllowedOrigins(origins);
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Content-Disposition", "Content-Type", "X-Business-Id"));
+        configuration.setAllowedHeaders(List.of(
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "X-Business-Id",
+                "X-CSRF-Token",
+                "Idempotency-Key",
+                "X-Requested-With"
+        ));
+        configuration.setExposedHeaders(List.of(
+                "Content-Disposition",
+                "Content-Type",
+                "X-Business-Id",
+                "Retry-After",
+                "X-RateLimit-Remaining"
+        ));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

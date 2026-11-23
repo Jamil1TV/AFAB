@@ -37,12 +37,21 @@ public class RefreshToken {
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
+    @Column(name = "token_family_id", nullable = false)
+    private UUID tokenFamilyId;
+
+    @Column(name = "remember_me", nullable = false)
+    private boolean rememberMe = false;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
+        if (this.tokenFamilyId == null) {
+            this.tokenFamilyId = UUID.randomUUID();
+        }
     }
 
     // ── Constructors ────────────────────────────
@@ -50,11 +59,18 @@ public class RefreshToken {
     public RefreshToken() {}
 
     public RefreshToken(User user, String tokenHash, Instant expiresAt, String deviceInfo, String ipAddress) {
+        this(user, tokenHash, expiresAt, deviceInfo, ipAddress, UUID.randomUUID(), false);
+    }
+
+    public RefreshToken(User user, String tokenHash, Instant expiresAt, String deviceInfo, String ipAddress,
+                        UUID tokenFamilyId, boolean rememberMe) {
         this.user = user;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
         this.deviceInfo = deviceInfo;
         this.ipAddress = ipAddress;
+        this.tokenFamilyId = tokenFamilyId != null ? tokenFamilyId : UUID.randomUUID();
+        this.rememberMe = rememberMe;
     }
 
     // ── Getters & Setters ───────────────────────
@@ -79,6 +95,12 @@ public class RefreshToken {
 
     public String getIpAddress() { return ipAddress; }
     public void setIpAddress(String ipAddress) { this.ipAddress = ipAddress; }
+
+    public UUID getTokenFamilyId() { return tokenFamilyId; }
+    public void setTokenFamilyId(UUID tokenFamilyId) { this.tokenFamilyId = tokenFamilyId; }
+
+    public boolean isRememberMe() { return rememberMe; }
+    public void setRememberMe(boolean rememberMe) { this.rememberMe = rememberMe; }
 
     public Instant getCreatedAt() { return createdAt; }
 }

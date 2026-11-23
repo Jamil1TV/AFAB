@@ -1,40 +1,42 @@
 import { fetchClient, ApiError } from "./client";
-import { AuthStore } from "@/lib/auth-store";
-import { TransactionService } from "./transactions";
 
 export type CustomerGroup = "Standard" | "Business" | "Premium" | "Enterprise";
-export type CustomerStatus = "Active" | "Inactive" | "New" | "Lead";
-export type OrderStatus = "COMPLETED" | "PENDING" | "PROCESSING" | "CANCELLED";
+export type CustomerStatus = "Active" | "Inactive" | "New" | "Lead" | "Archived";
+export type OrderStatus = "COMPLETED" | "PENDING" | "PROCESSING" | "CANCELLED" | "PAID" | "PARTIALLY_PAID" | "UNPAID" | "OVERDUE" | "DRAFT" | "SENT";
 
 export interface CustomerOrder {
   id: string;
-  orderNumber: string; // e.g. "ORD-2026-001"
+  orderNumber: string;
   customerId: string;
   amount: number;
   status: OrderStatus;
-  orderDate: string; // YYYY-MM-DD
+  orderDate: string;
   description: string;
-  paymentMethod?: string; // "BANK_TRANSFER" | "CREDIT_CARD" | "CASH" | "STRIPE"
-  invoiceNumber?: string; // e.g. "INV-2026-001"
+  paymentMethod?: string;
+  invoiceNumber?: string;
   createdAt: string;
 }
 
 export interface Customer {
   id: string;
-  customerCode: string; // e.g. "CST-1001"
+  customerCode: string;
   businessId: string;
   name: string;
+  companyName?: string;
   email: string;
   phone?: string;
   group: CustomerGroup;
   status: CustomerStatus;
   totalRevenue: number;
+  invoicedAmount?: number;
+  outstandingBalance?: number;
   ordersCount: number;
   orders?: CustomerOrder[];
   lastActivityDate: string;
   address?: string;
   notes?: string;
   createdAt: string;
+  updatedAt?: string;
   avatarColor?: string;
 }
 
@@ -100,6 +102,7 @@ export interface CustomerFilterParams {
 
 export interface CreateCustomerRequest {
   name: string;
+  companyName?: string;
   email: string;
   customerCode?: string;
   phone?: string;
@@ -111,6 +114,7 @@ export interface CreateCustomerRequest {
 
 export interface UpdateCustomerRequest {
   name?: string;
+  companyName?: string;
   email?: string;
   customerCode?: string;
   phone?: string;
@@ -118,8 +122,6 @@ export interface UpdateCustomerRequest {
   status?: CustomerStatus;
   address?: string;
   notes?: string;
-  totalRevenue?: number;
-  ordersCount?: number;
 }
 
 export interface CreateOrderRequest {
@@ -148,111 +150,26 @@ function getAvatarColor(name: string): string {
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const index = Math.abs(hash) % AVATAR_COLORS.length;
-  return AVATAR_COLORS[index];
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
 
-// Known mock seed emails from earlier prototype builds — automatically purged so only real user-created records remain.
-const LEGACY_SEED_EMAILS = new Set([
-  "info@afab.com",
-  "billing@aiassist.com",
-  "finance@reports.com",
-  "contact@consult.com",
-  "hello@designhub.com",
-  "web@devstudio.com",
-  "hello@marketing.com",
-  "contact@softsol.com",
-  "ops@globallogistics.com",
-  "accounts@apexretail.com",
-]);
-
-function getStorageKey(): string {
-  const activeBusinessId = AuthStore.getActiveBusinessId() || "default";
-  return `afab_customers_${activeBusinessId}`;
-}
-
-/**
- * Recomputes a customer's `ordersCount` and `totalRevenue` strictly from their stored orders
- * so financial totals are always traceable to actual order records.
- */
-function normalizeCustomerRecord(c: Customer, index: number): Customer {
-  const orders = Array.isArray(c.orders) ? c.orders : [];
-  const completedRevenue = orders
-    .filter((o) => o.status === "COMPLETED")
-    .reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
-
+function hydrateCustomer(c: Customer): Customer {
   return {
     ...c,
-    customerCode: c.customerCode || `CST-${1001 + index}`,
-    orders,
-    ordersCount: orders.length,
-    totalRevenue: orders.length > 0 ? completedRevenue : Number(c.totalRevenue) || 0,
+    totalRevenue: Number(c.totalRevenue) || 0,
+    invoicedAmount: Number(c.invoicedAmount) || 0,
+    outstandingBalance: Number(c.outstandingBalance) || 0,
+    ordersCount: Number(c.ordersCount) || 0,
+    orders: Array.isArray(c.orders) ? c.orders : [],
     avatarColor: c.avatarColor || getAvatarColor(c.name || "C"),
   };
 }
 
-function loadLocalCustomers(): Customer[] {
-  if (typeof window === "undefined") return [];
-  const key = getStorageKey();
-  const raw = localStorage.getItem(key);
-  if (!raw) {
-    return [];
-  }
-  try {
-    const parsed: Customer[] = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-
-    // Strip any legacy prototype seed records that were never created by the user
-    const realOnly = parsed.filter(
-      (c) => !(c.id?.startsWith("cust-") && LEGACY_SEED_EMAILS.has(c.email))
-    );
-    const normalized = realOnly.map((c, idx) => normalizeCustomerRecord(c, idx));
-
-    if (realOnly.length !== parsed.length) {
-      localStorage.setItem(key, JSON.stringify(normalized));
-    }
-    return normalized;
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalCustomers(customers: Customer[]): void {
-  if (typeof window === "undefined") return;
-  const key = getStorageKey();
-  localStorage.setItem(key, JSON.stringify(customers));
-}
-
-function getPeriodWindowDays(period: string): number {
-  switch (period.toLowerCase()) {
-    case "week":
-    case "weekly":
-      return 7;
-    case "quarter":
-      return 90;
-    case "year":
-    case "yearly":
-      return 365;
-    case "month":
-    case "monthly":
-    default:
-      return 30;
-  }
-}
-
-function computePctDelta(current: number, previous: number): number {
-  if (previous === 0) {
-    return current > 0 ? 100 : 0;
-  }
-  return Math.round(((current - previous) / Math.abs(previous)) * 1000) / 10;
-}
-
+/**
+ * Customer API Client — backed strictly by `/api/v1/customers`.
+ * Never falls back to localStorage or synthetic data on backend failure.
+ */
 export const CustomerService = {
-  /**
-   * Retrieves paginated, filtered customers.
-   * Queries backend `/customers` if implemented; otherwise uses the business-scoped customer store
-   * containing only user-created customer records (never fabricated seed data).
-   */
   async getCustomers(params: CustomerFilterParams = {}): Promise<CustomerPageResponse> {
     const {
       search = "",
@@ -260,7 +177,7 @@ export const CustomerService = {
       group = "",
       page = 0,
       size = 10,
-      sortBy = "lastActivityDate",
+      sortBy = "createdAt",
       sortOrder = "desc",
     } = params;
 
@@ -273,385 +190,126 @@ export const CustomerService = {
     if (sortBy) query.append("sortBy", sortBy);
     if (sortOrder) query.append("sortOrder", sortOrder);
 
-    try {
-      return await fetchClient(`/customers?${query.toString()}`);
-    } catch {
-      let list = loadLocalCustomers();
-
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        list = list.filter(
-          (c) =>
-            c.name.toLowerCase().includes(q) ||
-            c.email.toLowerCase().includes(q) ||
-            (c.customerCode && c.customerCode.toLowerCase().includes(q)) ||
-            (c.phone && c.phone.includes(q))
-        );
-      }
-
-      if (status && status !== "ALL") {
-        list = list.filter((c) => c.status.toLowerCase() === status.toLowerCase());
-      }
-
-      if (group && group !== "ALL") {
-        list = list.filter((c) => c.group.toLowerCase() === group.toLowerCase());
-      }
-
-      list.sort((a, b) => {
-        const valA = (a as unknown as Record<string, unknown>)[sortBy] ?? "";
-        const valB = (b as unknown as Record<string, unknown>)[sortBy] ?? "";
-        if (typeof valA === "number" && typeof valB === "number") {
-          return sortOrder === "asc" ? valA - valB : valB - valA;
-        }
-        return sortOrder === "asc"
-          ? String(valA).localeCompare(String(valB))
-          : String(valB).localeCompare(String(valA));
-      });
-
-      const totalElements = list.length;
-      const totalPages = Math.max(1, Math.ceil(totalElements / size));
-      const startIndex = page * size;
-      const paginatedContent = list.slice(startIndex, startIndex + size);
-
-      return {
-        content: paginatedContent,
-        totalElements,
-        totalPages,
-        pageNumber: page,
-        pageSize: size,
-      };
-    }
+    const res: CustomerPageResponse = await fetchClient(`/customers?${query.toString()}`);
+    return {
+      ...res,
+      content: (res.content || []).map(hydrateCustomer),
+    };
   },
 
-  /**
-   * Retrieves summary metrics (KPIs, donut breakdown, top customers, recent activity).
-   * All metrics and percentage changes are computed directly from actual stored customer & order records.
-   */
-  async getSummary(period: string = "week", currency: string = "USD"): Promise<CustomerSummaryDTO> {
-    try {
-      return await fetchClient(`/customers/summary?period=${encodeURIComponent(period)}`);
-    } catch {
-      const customers = loadLocalCustomers();
-      const totalCustomers = customers.length;
-      const activeCount = customers.filter((c) => c.status === "Active").length;
-      const inactiveCount = customers.filter((c) => c.status === "Inactive").length;
-      const newStatusCount = customers.filter((c) => c.status === "New" || c.status === "Lead").length;
-
-      // Period window calculations based on real createdAt / orderDate timestamps
-      const windowDays = getPeriodWindowDays(period);
-      const now = new Date();
-      const currentStart = new Date(now.getTime() - windowDays * 86400000);
-      const prevStart = new Date(now.getTime() - windowDays * 2 * 86400000);
-
-      const currentNewCustomers = customers.filter((c) => {
-        const d = new Date(c.createdAt);
-        return !isNaN(d.getTime()) && d >= currentStart;
-      }).length;
-
-      const prevNewCustomers = customers.filter((c) => {
-        const d = new Date(c.createdAt);
-        return !isNaN(d.getTime()) && d >= prevStart && d < currentStart;
-      }).length;
-
-      const totalRevenue = customers.reduce((acc, curr) => acc + (curr.totalRevenue || 0), 0);
-      const avgRevenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
-      const repeatCustomersCount = customers.filter((c) => c.ordersCount > 1).length;
-      const repeatCustomersPct = totalCustomers > 0 ? Math.round((repeatCustomersCount / totalCustomers) * 100) : 0;
-
-      // Period revenue comparison from actual completed orders
-      let currentPeriodRevenue = 0;
-      let prevPeriodRevenue = 0;
-      for (const c of customers) {
-        for (const o of c.orders || []) {
-          if (o.status !== "COMPLETED") continue;
-          const od = new Date(o.orderDate);
-          if (isNaN(od.getTime())) continue;
-          if (od >= currentStart) {
-            currentPeriodRevenue += Number(o.amount) || 0;
-          } else if (od >= prevStart && od < currentStart) {
-            prevPeriodRevenue += Number(o.amount) || 0;
-          }
-        }
-      }
-
-      const activePct = totalCustomers > 0 ? Math.round((activeCount / totalCustomers) * 100) : 0;
-      const inactivePct = totalCustomers > 0 ? Math.round((inactiveCount / totalCustomers) * 100) : 0;
-      const newPct = totalCustomers > 0 ? Math.max(0, 100 - activePct - inactivePct) : 0;
-
-      // Top customers ordered by actual revenue
-      const topCustomers = [...customers]
-        .sort((a, b) => b.totalRevenue - a.totalRevenue)
-        .slice(0, 5)
-        .map((c) => ({
-          id: c.id,
-          customerCode: c.customerCode || "CST-0000",
-          name: c.name,
-          email: c.email,
-          revenue: c.totalRevenue,
-          ordersCount: c.ordersCount,
-          avatarColor: c.avatarColor || getAvatarColor(c.name),
-        }));
-
-      // Derive recent activity strictly from real customer registrations and orders
-      const recentActivity: CustomerActivityItem[] = [];
-      for (const c of customers) {
-        if (c.createdAt) {
-          recentActivity.push({
-            id: `act-cust-${c.id}`,
-            customerId: c.id,
-            customerName: c.name,
-            type: "NEW_CUSTOMER",
-            description: `Customer ${c.customerCode} registered`,
-            timestamp: c.createdAt.includes("T") ? c.createdAt : `${c.createdAt}T09:00:00Z`,
-          });
-        }
-        for (const o of c.orders || []) {
-          recentActivity.push({
-            id: `act-ord-${o.id}`,
-            customerId: c.id,
-            customerName: c.name,
-            type: o.status === "COMPLETED" ? "INVOICE_PAID" : "NEW_ORDER",
-            description: `${o.orderNumber} — ${o.description}`,
-            amount: o.amount,
-            timestamp: o.createdAt || `${o.orderDate}T12:00:00Z`,
-          });
-        }
-      }
-      recentActivity.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-      return {
-        totalCustomers,
-        totalCustomersChangePct: computePctDelta(currentNewCustomers, prevNewCustomers),
-        newCustomers: currentNewCustomers || newStatusCount,
-        newCustomersChangePct: computePctDelta(currentNewCustomers, prevNewCustomers),
-        totalRevenue,
-        totalRevenueChangePct: computePctDelta(currentPeriodRevenue, prevPeriodRevenue),
-        avgRevenuePerCustomer: Math.round(avgRevenuePerCustomer * 100) / 100,
-        avgRevenueChangePct: 0,
-        repeatCustomersPct,
-        repeatCustomersChangePct: 0,
-        currency,
-        overviewDonut: {
-          activeCount,
-          activePct,
-          inactiveCount,
-          inactivePct,
-          newCount: newStatusCount,
-          newPct,
-        },
-        topCustomers,
-        recentActivity: recentActivity.slice(0, 6),
-      };
-    }
+  async getSummary(period: string = "month", _currency?: string): Promise<CustomerSummaryDTO> {
+    return await fetchClient(`/customers/summary?period=${encodeURIComponent(period)}`);
   },
 
-  /**
-   * Retrieves a single customer by ID with their complete orders.
-   */
   async getCustomerById(id: string): Promise<Customer> {
-    try {
-      return await fetchClient(`/customers/${id}`);
-    } catch {
-      const customers = loadLocalCustomers();
-      const customer = customers.find((c) => c.id === id);
-      if (!customer) {
-        throw new ApiError("Customer not found", "NOT_FOUND", 404);
-      }
-      return customer;
-    }
+    const res: Customer = await fetchClient(`/customers/${id}`);
+    return hydrateCustomer(res);
   },
 
-  /**
-   * Creates a new customer with an ID number.
-   */
   async createCustomer(req: CreateCustomerRequest): Promise<Customer> {
-    try {
-      return await fetchClient("/customers", {
-        method: "POST",
-        body: JSON.stringify(req),
-      });
-    } catch {
-      const customers = loadLocalCustomers();
-      const activeBusinessId = AuthStore.getActiveBusinessId() || "default";
-      const nextCodeNumber = 1000 + customers.length + 1;
-      const customerCode = req.customerCode?.trim() || `CST-${nextCodeNumber}`;
-
-      const newCustomer: Customer = {
-        id: `cust-${Date.now()}`,
-        customerCode,
-        businessId: activeBusinessId,
-        name: req.name.trim(),
-        email: req.email.trim(),
-        phone: req.phone?.trim() || "",
-        group: req.group,
-        status: req.status,
-        totalRevenue: 0,
-        ordersCount: 0,
-        orders: [],
-        lastActivityDate: new Date().toISOString().split("T")[0],
-        address: req.address?.trim() || "",
-        notes: req.notes?.trim() || "",
-        createdAt: new Date().toISOString().split("T")[0],
-        avatarColor: getAvatarColor(req.name),
-      };
-
-      customers.unshift(newCustomer);
-      saveLocalCustomers(customers);
-      return newCustomer;
-    }
+    const res: Customer = await fetchClient("/customers", {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+    return hydrateCustomer(res);
   },
 
-  /**
-   * Updates an existing customer.
-   */
   async updateCustomer(id: string, req: UpdateCustomerRequest): Promise<Customer> {
-    try {
-      return await fetchClient(`/customers/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(req),
-      });
-    } catch {
-      const customers = loadLocalCustomers();
-      const index = customers.findIndex((c) => c.id === id);
-      if (index === -1) {
-        throw new ApiError("Customer not found", "NOT_FOUND", 404);
-      }
-
-      const existing = customers[index];
-      const updated: Customer = normalizeCustomerRecord(
-        {
-          ...existing,
-          ...req,
-          name: req.name !== undefined ? req.name.trim() : existing.name,
-          email: req.email !== undefined ? req.email.trim() : existing.email,
-          customerCode: req.customerCode !== undefined ? req.customerCode.trim() : existing.customerCode,
-          phone: req.phone !== undefined ? req.phone.trim() : existing.phone,
-          avatarColor: req.name ? getAvatarColor(req.name) : existing.avatarColor,
-        },
-        index
-      );
-
-      customers[index] = updated;
-      saveLocalCustomers(customers);
-      return updated;
-    }
+    const res: Customer = await fetchClient(`/customers/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(req),
+    });
+    return hydrateCustomer(res);
   },
 
   /**
-   * Adds an order to a customer and records a corresponding INCOME transaction
-   * in the backend ledger so customer revenue, invoices, and dashboard stats stay synchronized.
+   * Creates a real Invoice linked to the customer instead of a synthetic localStorage order.
    */
   async addOrder(req: CreateOrderRequest): Promise<CustomerOrder> {
-    try {
-      return await fetchClient(`/customers/${req.customerId}/orders`, {
+    const today = req.orderDate || new Date().toISOString().split("T")[0];
+    const invoice = await fetchClient("/invoices", {
+      method: "POST",
+      body: JSON.stringify({
+        customerId: req.customerId,
+        issueDate: today,
+        dueDate: today,
+        notes: req.description,
+        items: [
+          {
+            description: req.description || "Customer Invoice Item",
+            quantity: 1,
+            unitPrice: Number(req.amount) || 0,
+            taxRate: 0,
+          },
+        ],
+      }),
+    });
+
+    // If caller requested immediate completion, issue and record a real payment
+    if (req.status === "COMPLETED" || req.status === "PAID") {
+      await fetchClient(`/invoices/${invoice.id}/issue`, { method: "POST" });
+      await fetchClient(`/invoices/${invoice.id}/payments`, {
         method: "POST",
-        body: JSON.stringify(req),
+        headers: {
+          "Idempotency-Key": `cust-order-${invoice.id}`,
+        },
+        body: JSON.stringify({
+          amount: Number(req.amount) || 0,
+          paymentDate: today,
+          paymentMethod: req.paymentMethod === "CREDIT_CARD" || req.paymentMethod === "STRIPE"
+            ? "CARD"
+            : (req.paymentMethod || "BANK_TRANSFER"),
+          reference: req.orderNumber || invoice.invoiceNumber,
+        }),
       });
-    } catch {
-      const customers = loadLocalCustomers();
-      const index = customers.findIndex((c) => c.id === req.customerId);
-      if (index === -1) {
-        throw new ApiError("Customer not found", "NOT_FOUND", 404);
-      }
-
-      const cust = customers[index];
-      const existingOrders = cust.orders || [];
-      const orderYear = new Date().getFullYear();
-      const orderSeq = String(existingOrders.length + 1).padStart(3, "0");
-      const orderNumber = req.orderNumber?.trim() || `ORD-${orderYear}-${orderSeq}`;
-      const orderDate = req.orderDate || new Date().toISOString().split("T")[0];
-      const invoiceNumber = req.invoiceNumber?.trim() || `INV-${orderYear}-${orderSeq}`;
-
-      const newOrder: CustomerOrder = {
-        id: `ord-${Date.now()}`,
-        orderNumber,
-        customerId: cust.id,
-        amount: Number(req.amount) || 0,
-        status: req.status,
-        orderDate,
-        description: req.description.trim() || `Order ${orderNumber}`,
-        paymentMethod: req.paymentMethod || "BANK_TRANSFER",
-        invoiceNumber,
-        createdAt: new Date().toISOString(),
-      };
-
-      existingOrders.unshift(newOrder);
-      cust.orders = existingOrders;
-      cust.lastActivityDate = orderDate;
-
-      customers[index] = normalizeCustomerRecord(cust, index);
-      saveLocalCustomers(customers);
-
-      // Synchronize with backend transaction ledger when online so Dashboard/Revenue/Invoices reflect the order
-      try {
-        const txStatus =
-          req.status === "COMPLETED"
-            ? "COMPLETED"
-            : req.status === "CANCELLED"
-            ? "CANCELLED"
-            : "PENDING";
-        await TransactionService.createTransaction({
-          type: "INCOME",
-          amount: newOrder.amount,
-          description: `${cust.name} — ${newOrder.description} (${invoiceNumber})`,
-          transactionDate: orderDate,
-          paymentMethod:
-            req.paymentMethod === "CREDIT_CARD" || req.paymentMethod === "STRIPE"
-              ? "CARD"
-              : req.paymentMethod || "BANK_TRANSFER",
-          status: txStatus,
-          notes: `Customer: ${cust.name} (${cust.customerCode}) | Order: ${orderNumber} | Invoice: ${invoiceNumber}`,
-        });
-      } catch {
-        // Non-blocking if backend is offline
-      }
-
-      return newOrder;
     }
+
+    return {
+      id: invoice.id,
+      orderNumber: invoice.invoiceNumber,
+      customerId: req.customerId,
+      amount: Number(invoice.totalAmount ?? req.amount) || 0,
+      status: req.status === "COMPLETED" ? "PAID" : (invoice.status || "DRAFT"),
+      orderDate: invoice.issueDate || today,
+      description: req.description,
+      paymentMethod: req.paymentMethod || "BANK_TRANSFER",
+      invoiceNumber: invoice.invoiceNumber,
+      createdAt: invoice.createdAt || new Date().toISOString(),
+    };
   },
 
-  /**
-   * Deletes a customer.
-   */
   async deleteCustomer(id: string): Promise<void> {
-    try {
-      await fetchClient(`/customers/${id}`, {
-        method: "DELETE",
-      });
-    } catch {
-      const customers = loadLocalCustomers();
-      const filtered = customers.filter((c) => c.id !== id);
-      saveLocalCustomers(filtered);
-    }
+    await fetchClient(`/customers/${id}`, {
+      method: "DELETE",
+    });
   },
 
-  /**
-   * Exports all customer records to CSV with UTF-8 BOM.
-   */
   exportCsv(customers: Customer[], filename: string = "AFAB-Customers.csv"): void {
     const headers = [
       "Customer ID",
       "Customer Name",
+      "Company",
       "Email",
       "Phone",
       "Group",
       "Status",
-      "Total Revenue",
-      "Orders Count",
+      "Total Paid Revenue",
+      "Invoices Count",
       "Last Activity",
       "Created At",
     ];
     const rows = customers.map((c) => [
       c.customerCode || c.id,
-      `"${c.name.replace(/"/g, '""')}"`,
-      c.email,
+      `"${(c.name || "").replace(/"/g, '""')}"`,
+      `"${(c.companyName || "").replace(/"/g, '""')}"`,
+      c.email || "",
       c.phone || "",
       c.group,
       c.status,
-      c.totalRevenue.toFixed(2),
+      (Number(c.totalRevenue) || 0).toFixed(2),
       c.ordersCount,
-      c.lastActivityDate,
-      c.createdAt,
+      c.lastActivityDate || "",
+      c.createdAt || "",
     ]);
 
     const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
@@ -666,3 +324,5 @@ export const CustomerService = {
     URL.revokeObjectURL(url);
   },
 };
+
+export { ApiError };

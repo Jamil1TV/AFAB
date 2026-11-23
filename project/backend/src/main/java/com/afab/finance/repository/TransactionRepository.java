@@ -85,6 +85,22 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
             @Param("endDate") LocalDate endDate
     );
 
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t " +
+           "WHERE t.business.id = :businessId " +
+           "AND t.type = 'EXPENSE' " +
+           "AND t.status = 'COMPLETED' " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.category.id = :categoryId " +
+           "AND t.transactionDate BETWEEN :startDate AND :endDate " +
+           "AND ((t.parentTransaction IS NULL AND (t.isSplit IS NULL OR t.isSplit = FALSE)) " +
+           "     OR (t.parentTransaction IS NOT NULL AND t.parentTransaction.deletedAt IS NULL AND t.parentTransaction.status = 'COMPLETED'))")
+    BigDecimal sumCompletedExpenseByBusinessAndCategoryAndDateRange(
+            @Param("businessId") UUID businessId,
+            @Param("categoryId") UUID categoryId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
     @Query("SELECT COALESCE(c.name, 'Uncategorized'), COALESCE(c.color, '#8b5cf6'), COALESCE(SUM(t.amount), 0) " +
            "FROM Transaction t LEFT JOIN t.category c " +
            "WHERE t.business.id = :businessId " +

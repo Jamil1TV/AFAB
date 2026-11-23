@@ -23,6 +23,14 @@ export interface TransactionItem {
   type: "INCOME" | "EXPENSE";
   amount: number;
   currency: string;
+  originalAmount?: number;
+  originalCurrency?: string | null;
+  baseCurrency?: string;
+  exchangeRate?: number | null;
+  convertedAmount?: number;
+  fxRateSource?: string;
+  fxRateTimestamp?: string | null;
+  legacyFx?: boolean;
   description: string;
   transactionDate: string;
   paymentMethod: string;
@@ -58,6 +66,8 @@ export interface TransactionResponse {
 export interface CreateTransactionPayload {
   type: "INCOME" | "EXPENSE";
   amount: number;
+  originalCurrency?: string;
+  exchangeRate?: number;
   description: string;
   transactionDate: string;
   categoryId?: string;

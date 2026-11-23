@@ -10,26 +10,22 @@ import javax.sql.DataSource;
 @Configuration
 public class FlywayConfig {
 
-    @Value("${spring.flyway.url}")
-    private String url;
-
-    @Value("${spring.flyway.user}")
-    private String user;
-
-    @Value("${spring.flyway.password}")
-    private String password;
-
-    @Value("${spring.flyway.locations}")
+    @Value("${spring.flyway.locations:classpath:db/migration}")
     private String locations;
+
+    @Value("${afab.flyway.repair-on-migrate:false}")
+    private boolean repairOnMigrate;
 
     @Bean(initMethod = "migrate")
     public Flyway flyway(DataSource dataSource) {
         Flyway flyway = Flyway.configure()
-                .dataSource(url, user, password)
+                .dataSource(dataSource)
                 .locations(locations)
                 .baselineOnMigrate(true)
                 .load();
-        flyway.repair();
+        if (repairOnMigrate) {
+            flyway.repair();
+        }
         return flyway;
     }
 }

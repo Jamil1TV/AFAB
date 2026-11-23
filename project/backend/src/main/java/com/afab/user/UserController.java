@@ -4,8 +4,10 @@ import com.afab.auth.AuthService;
 import com.afab.auth.domain.RefreshToken;
 import com.afab.auth.domain.RefreshTokenRepository;
 import com.afab.auth.dto.*;
+import com.afab.auth.security.AuthCookieService;
 import com.afab.business.Business;
 import com.afab.business.BusinessRepository;
+import com.afab.security.ClientIpResolver;
 import com.afab.user.dto.DeleteAccountRequest;
 import com.afab.user.dto.SessionDTO;
 import com.afab.user.dto.UpdateUserRequest;
@@ -15,7 +17,6 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
@@ -38,17 +39,23 @@ public class UserController {
     private final AuthService authService;
     private final com.afab.business.CurrentBusinessService currentBusinessService;
     private final UserAccountService userAccountService;
+    private final AuthCookieService authCookieService;
+    private final ClientIpResolver clientIpResolver;
 
     public UserController(UserRepository userRepository, BusinessRepository businessRepository,
                           RefreshTokenRepository refreshTokenRepository, AuthService authService,
                           com.afab.business.CurrentBusinessService currentBusinessService,
-                          UserAccountService userAccountService) {
+                          UserAccountService userAccountService,
+                          AuthCookieService authCookieService,
+                          ClientIpResolver clientIpResolver) {
         this.userRepository = userRepository;
         this.businessRepository = businessRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.authService = authService;
         this.currentBusinessService = currentBusinessService;
         this.userAccountService = userAccountService;
+        this.authCookieService = authCookieService;
+        this.clientIpResolver = clientIpResolver;
     }
 
     @GetMapping("/me")
@@ -136,6 +143,14 @@ public class UserController {
                 .body(exportData);
     }
 
+    @GetMapping("/me/deletion-preflight")
+    public ResponseEntity<?> getDeletionPreflight(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+        return ResponseEntity.ok(userAccountService.getDeletionPreflight(authentication.getName()));
+    }
+
     @DeleteMapping("/me")
     public ResponseEntity<?> deleteMyAccount(
             @Valid @RequestBody DeleteAccountRequest request,
@@ -154,17 +169,10 @@ public class UserController {
                     httpRequest.getHeader("User-Agent")
             );
 
-            ResponseCookie clearCookie = ResponseCookie.from("refreshToken", "")
-                    .httpOnly(true)
-                    .secure(false)
-                    .sameSite("Lax")
-                    .path("/api/v1/auth")
-                    .maxAge(0)
-                    .build();
-
             return ResponseEntity.ok()
-                    .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
-                    .body(ErrorResponse.success("Your account and all associated data have been permanently deleted."));
+                    .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearRefreshCookie().toString())
+                    .header(HttpHeaders.SET_COOKIE, authCookieService.buildClearCsrfCookie().toString())
+                    .body(ErrorResponse.success("Your account has been safely deactivated and anonymized."));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                     .body(ErrorResponse.error("DELETE_CONFIRMATION_INVALID", e.getMessage()));
@@ -283,10 +291,8 @@ public class UserController {
 
     @GetMapping("/me/sessions")
     public ResponseEntity<?> getActiveSessions(
-            @CookieValue(name = "refreshToken", required = false) String cookieRefreshToken,
-            @RequestHeader(value = "X-Refresh-Token", required = false) String headerRefreshToken,
-            Authentication authentication,
-            HttpServletRequest httpRequest
+            @CookieValue(name = AuthCookieService.REFRESH_COOKIE_NAME, required = false) String cookieRefreshToken,
+            Authentication authentication
     ) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
@@ -295,20 +301,15 @@ public class UserController {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        String currentToken = cookieRefreshToken != null ? cookieRefreshToken : headerRefreshToken;
-        String clientIp = getClientIp(httpRequest);
+        String currentTokenHash = (cookieRefreshToken != null && !cookieRefreshToken.isBlank())
+                ? AuthService.hashToken(cookieRefreshToken) : null;
 
         List<RefreshToken> tokens = refreshTokenRepository
                 .findByUserIdAndRevokedAtIsNullAndExpiresAtAfter(user.getId(), Instant.now());
 
         List<SessionDTO> sessions = tokens.stream()
                 .map(t -> {
-                    boolean isCurrent = false;
-                    if (currentToken != null && currentToken.equals(t.getTokenHash())) {
-                        isCurrent = true;
-                    } else if (currentToken == null && clientIp != null && clientIp.equals(t.getIpAddress())) {
-                        isCurrent = true;
-                    }
+                    boolean isCurrent = currentTokenHash != null && currentTokenHash.equals(t.getTokenHash());
                     return new SessionDTO(
                             t.getId(),
                             t.getDeviceInfo(),
@@ -347,8 +348,7 @@ public class UserController {
 
     @DeleteMapping("/me/sessions")
     public ResponseEntity<?> revokeAllOtherSessions(
-            @CookieValue(name = "refreshToken", required = false) String cookieRefreshToken,
-            @RequestHeader(value = "X-Refresh-Token", required = false) String headerRefreshToken,
+            @CookieValue(name = AuthCookieService.REFRESH_COOKIE_NAME, required = false) String cookieRefreshToken,
             Authentication authentication
     ) {
         if (authentication == null || !authentication.isAuthenticated()) {
@@ -358,14 +358,15 @@ public class UserController {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        String currentToken = cookieRefreshToken != null ? cookieRefreshToken : headerRefreshToken;
+        String currentTokenHash = (cookieRefreshToken != null && !cookieRefreshToken.isBlank())
+                ? AuthService.hashToken(cookieRefreshToken) : null;
 
         List<RefreshToken> tokens = refreshTokenRepository
                 .findByUserIdAndRevokedAtIsNullAndExpiresAtAfter(user.getId(), Instant.now());
 
         Instant now = Instant.now();
         for (RefreshToken t : tokens) {
-            if (currentToken == null || !currentToken.equals(t.getTokenHash())) {
+            if (currentTokenHash == null || !currentTokenHash.equals(t.getTokenHash())) {
                 t.setRevokedAt(now);
                 refreshTokenRepository.save(t);
             }
@@ -375,10 +376,6 @@ public class UserController {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String xfHeader = request.getHeader("X-Forwarded-For");
-        if (xfHeader == null || xfHeader.isEmpty() || "unknown".equalsIgnoreCase(xfHeader)) {
-            return request.getRemoteAddr();
-        }
-        return xfHeader.split(",")[0].trim();
+        return clientIpResolver.resolve(request);
     }
 }

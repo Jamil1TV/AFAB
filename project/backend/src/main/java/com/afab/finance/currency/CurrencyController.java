@@ -2,6 +2,7 @@ package com.afab.finance.currency;
 
 import com.afab.business.Business;
 import com.afab.business.CurrentBusinessService;
+import com.afab.common.exception.ResourceNotFoundException;
 import com.afab.finance.currency.CurrencyConversionService.CurrencyChangePreviewDTO;
 import com.afab.finance.currency.CurrencyConversionService.CurrencyChangeResultDTO;
 import com.afab.finance.currency.ExchangeRateService.CurrencyPairDTO;
@@ -48,7 +49,7 @@ public class CurrencyController {
                 try {
                     Business business = currentBusinessService.getCurrentBusiness(authentication.getName());
                     baseCurrency = business.getCurrency();
-                } catch (Exception ignored) {}
+                } catch (ResourceNotFoundException ignored) {}
             }
         }
         if (baseCurrency == null || baseCurrency.isBlank()) {
@@ -115,7 +116,7 @@ public class CurrencyController {
             @RequestBody ChangeCurrencyRequest request
     ) {
         User user = currentBusinessService.getCurrentUser(authentication.getName());
-        Business business = currentBusinessService.getCurrentBusiness(authentication.getName());
+        Business business = currentBusinessService.requireAdminOrOwnerBusiness(authentication.getName());
 
         CurrencyChangeResultDTO result = currencyConversionService.changeBusinessCurrency(
                 user,

@@ -31,6 +31,7 @@ import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { toast } from "sonner";
 
 import { AfabLoader } from "@/components/ui/afab-loader";
+import { ChartContainer } from "@/components/ui/chart-container";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
@@ -67,6 +68,7 @@ export default function CustomersPage() {
 
   // State
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [summary, setSummary] = useState<CustomerSummaryDTO | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [totalElements, setTotalElements] = useState(0);
@@ -166,9 +168,12 @@ export default function CustomersPage() {
       setCustomers(pageRes.content);
       setTotalElements(pageRes.totalElements);
       setTotalPages(pageRes.totalPages);
+      setLoadError(null);
     } catch (err) {
       console.error("Failed to load customers data:", err);
-      toast.error(tToasts("error"));
+      const msg = err instanceof Error ? err.message : tToasts("error");
+      setLoadError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -193,12 +198,15 @@ export default function CustomersPage() {
           setCustomers(pageRes.content);
           setTotalElements(pageRes.totalElements);
           setTotalPages(pageRes.totalPages);
+          setLoadError(null);
           setLoading(false);
         }
       } catch (err) {
         if (!ignore) {
           console.error("Failed to load customers data:", err);
-          toast.error(tToasts("error"));
+          const msg = err instanceof Error ? err.message : tToasts("error");
+          setLoadError(msg);
+          toast.error(msg);
           setLoading(false);
         }
       }
@@ -520,8 +528,22 @@ export default function CustomersPage() {
         }
       />
 
-      {/* ── 5 Top KPI Cards (identical KpiCard component as Dashboard, Expenses, Revenue, Invoices) ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      {/* ── Explicit Error Banner when backend request fails ── */}
+      {loadError && (
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 flex items-center justify-between gap-3 text-sm text-rose-600 dark:text-rose-400">
+          <span>Unable to load customers from backend: {loadError}</span>
+          <button
+            type="button"
+            onClick={loadData}
+            className="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* ── 5 Top KPI Cards (responsive 1/2/3/5 grid to prevent squeezing on narrow screens) ── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
         <KpiCard
           title={tKpi("totalCustomers")}
           value={(summary?.totalCustomers ?? 0).toString()}
@@ -924,30 +946,32 @@ export default function CustomersPage() {
               {tWidgets("overviewTitle")}
             </h3>
 
-            <div className="flex items-center gap-4 mt-4">
+            <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
               {/* Donut with Total in Center */}
               <div className="relative w-36 h-36 shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Tooltip
-                      formatter={(val) => [`${val} customers`, ""]}
-                      {...chartTooltipStyle}
-                    />
-                    <Pie
-                      data={donutData}
-                      dataKey="value"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={62}
-                      paddingAngle={3}
-                    >
-                      {donutData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+                <ChartContainer className="h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 144, height: 144 }}>
+                    <PieChart>
+                      <Tooltip
+                        formatter={(val) => [`${val} customers`, ""]}
+                        {...chartTooltipStyle}
+                      />
+                      <Pie
+                        data={donutData}
+                        dataKey="value"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={45}
+                        outerRadius={62}
+                        paddingAngle={3}
+                      >
+                        {donutData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
                 
                 {/* Center metric */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">

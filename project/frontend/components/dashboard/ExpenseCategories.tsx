@@ -15,7 +15,7 @@ export function ExpenseCategories({ categories, currency = "USD" }: { categories
       <div className="flex-1 flex flex-col sm:flex-row items-center gap-6">
         <div className="relative h-40 w-40 shrink-0">
           <ChartContainer className="h-full w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 160, height: 160 }}>
             <PieChart>
               <Pie
                 data={categories && categories.length > 0 ? categories : [{ name: "None", value: 1, color: "#374151" }]}

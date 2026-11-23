@@ -11,6 +11,7 @@ import com.afab.business.BusinessRepository;
 import com.afab.mail.EmailDeliveryException;
 import com.afab.mail.EmailService;
 import com.afab.security.AuditService;
+import com.afab.security.LogSanitizer;
 import com.afab.user.User;
 import com.afab.user.UserRepository;
 import org.slf4j.Logger;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 public class AuthService {
 
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final BusinessRepository businessRepository;
@@ -54,14 +57,20 @@ public class AuthService {
     private final AuditService auditService;
     private final EmailService emailService;
 
-    @Value("${afab.jwt.refresh-expiration-ms}")
+    @Value("${afab.jwt.refresh-expiration-ms:604800000}")
     private long refreshTokenExpirationMs;
 
-    @Value("${afab.frontend-url}")
+    @Value("${afab.frontend-url:http://localhost:3000}")
     private String frontendUrl;
 
-    @Value("${afab.password-reset.expiration-minutes}")
+    @Value("${afab.password-reset.expiration-minutes:15}")
     private int passwordResetExpirationMinutes;
+
+    @Value("${spring.profiles.active:prod}")
+    private String activeProfile;
+
+    @Value("${afab.auth.allow-dev-otp:false}")
+    private boolean allowDevOtp;
 
     public AuthService(UserRepository userRepository, BusinessRepository businessRepository,
                        BusinessMemberRepository businessMemberRepository,
@@ -88,17 +97,17 @@ public class AuthService {
         this.emailService = emailService;
     }
 
-    @Value("${spring.profiles.active:local}")
-    private String activeProfile;
-
     /**
      * Resolves the user's active business cleanly without assuming 1:1 user-to-business constraint.
      */
     public Business resolveUserActiveBusiness(User user) {
         if (user.getActiveBusinessId() != null) {
-            Optional<Business> b = businessRepository.findById(user.getActiveBusinessId());
-            if (b.isPresent() && b.get().getArchivedAt() == null) {
-                return b.get();
+            Optional<BusinessMember> memberOpt = businessMemberRepository
+                    .findWithBusinessByBusinessIdAndUserId(user.getActiveBusinessId(), user.getId());
+            if (memberOpt.isPresent()
+                    && "ACTIVE".equalsIgnoreCase(memberOpt.get().getStatus())
+                    && memberOpt.get().getBusiness().getArchivedAt() == null) {
+                return memberOpt.get().getBusiness();
             }
         }
         List<BusinessMember> members = businessMemberRepository.findAllActiveByUserIdWithBusiness(user.getId());
@@ -109,7 +118,7 @@ public class AuthService {
             return b;
         }
         Business b = businessRepository.findFirstByUserIdAndArchivedAtIsNull(user.getId())
-                .orElseThrow(() -> new IllegalStateException("No active business found for user: " + user.getEmail()));
+                .orElseThrow(() -> new IllegalStateException("No active business found for authenticated user"));
         user.setActiveBusinessId(b.getId());
         userRepository.save(user);
         return b;
@@ -117,90 +126,77 @@ public class AuthService {
 
     @Transactional
     public AuthResponse register(RegisterRequest request, String ipAddress, String userAgent) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already in use");
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        if (userRepository.existsByEmail(normalizedEmail)) {
+            throw new IllegalArgumentException("Unable to complete registration. If you already have an account, please sign in.");
         }
 
         User user = new User();
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-        user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName().trim());
+        user.setLastName(request.getLastName().trim());
+        user.setEmail(normalizedEmail);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setAvatarUrl("https://api.dicebear.com/7.x/avataaars/svg?seed=" + request.getEmail());
+        user.setAvatarUrl("https://api.dicebear.com/7.x/avataaars/svg?seed=" + sha256(normalizedEmail).substring(0, 12));
         user = userRepository.save(user);
 
         Business business = new Business();
         business.setUser(user);
-        business.setName(request.getBusinessName());
+        business.setName(request.getBusinessName().trim());
         business.setCurrency("USD");
         business = businessRepository.save(business);
 
-        // Assign OWNER membership
         BusinessMember ownerMember = new BusinessMember(business, user, "OWNER", "ACTIVE");
         businessMemberRepository.save(ownerMember);
 
-        // Set as active business
         user.setActiveBusinessId(business.getId());
         user = userRepository.save(user);
 
-        auditService.logSecurityEvent(user, "REGISTER_SUCCESS", ipAddress, userAgent, "{\"businessName\":\"" + request.getBusinessName() + "\"}");
+        auditService.logSecurityEvent(user, "REGISTER_SUCCESS", ipAddress, userAgent, null);
 
-        // Send Email Verification OTP.
-        // If delivery fails we still keep the account (the user can hit "Resend" once SMTP is back),
-        // but we tell the client honestly that the code was not sent.
         String otp = createVerificationOtp(user);
         boolean emailSent = true;
         try {
             emailService.sendVerificationOtp(user.getEmail(), user.getFirstName(), otp);
         } catch (EmailDeliveryException e) {
-            log.error("Registration of {} succeeded but the verification email could not be sent: {}",
-                    user.getEmail(), e.getMessage());
+            log.error("Registration succeeded for {} but verification email could not be sent: {}",
+                    LogSanitizer.maskEmail(user.getEmail()), LogSanitizer.sanitizeMessage(e.getMessage()));
             emailSent = false;
         }
 
-        AuthResponse response = buildAuthResponse(user, business.getId(), ipAddress, userAgent, false);
+        AuthResponse response = buildAuthResponse(user, business.getId(), ipAddress, userAgent, false, UUID.randomUUID());
         response.setVerificationEmailSent(emailSent);
-        if ("local".equalsIgnoreCase(activeProfile) || "dev".equalsIgnoreCase(activeProfile)) {
+        if (isDevOtpExposed()) {
             response.setDevOtp(otp);
         }
         return response;
     }
 
     /**
-     * Login with structured error handling.
-     * Throws typed Spring Security exceptions that the controller maps to specific error codes.
-     *
-     * Exception mapping:
-     * - UsernameNotFoundException → EMAIL_NOT_FOUND
-     * - BadCredentialsException  → INVALID_PASSWORD
-     * - DisabledException        → ACCOUNT_DISABLED
+     * Login with enumeration-resistant error handling and brute-force lockout protection.
      */
     @Transactional(noRollbackFor = {BadCredentialsException.class, LockedException.class})
     public AuthResponse login(LoginRequest request, String ipAddress, String userAgent) {
-        // 1) Check if user exists first — distinguish "no account" from "wrong password"
-        User user = userRepository.findByEmail(request.getEmail()).orElse(null);
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        User user = userRepository.findByEmail(normalizedEmail).orElse(null);
         if (user == null) {
-            throw new UsernameNotFoundException("No account exists with this email.");
+            throw new BadCredentialsException("Invalid email or password.");
         }
 
-        // 2) Check account status
-        if (!"ACTIVE".equals(user.getStatus())) {
-            throw new DisabledException("Your account has been disabled.");
+        if (!"ACTIVE".equals(user.getStatus()) || user.getDeletedAt() != null) {
+            throw new DisabledException("Your account is not active.");
         }
 
-        // 3) Check account lockout
         if (user.getLockoutUntil() != null && user.getLockoutUntil().isAfter(Instant.now())) {
             long remainingMinutes = java.time.Duration.between(Instant.now(), user.getLockoutUntil()).toMinutes() + 1;
             throw new LockedException("Account is temporarily locked due to multiple failed login attempts. Please try again in " + remainingMinutes + " minute(s).");
         }
 
-        // 4) Authenticate
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                    new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword())
             );
         } catch (DisabledException e) {
-            throw new DisabledException("Your account has been disabled.");
+            throw new DisabledException("Your account is not active.");
         } catch (BadCredentialsException e) {
             int failed = user.getFailedLoginAttempts() + 1;
             user.setFailedLoginAttempts(failed);
@@ -208,22 +204,20 @@ public class AuthService {
                 user.setLockoutUntil(Instant.now().plus(15, ChronoUnit.MINUTES));
                 userRepository.save(user);
                 auditService.logSecurityEvent(user, "ACCOUNT_LOCKED", ipAddress, userAgent, "{\"reason\":\"max_failed_attempts\"}");
-                throw new LockedException("Account locked due to 5 consecutive failed login attempts. Try again in 15 minutes.");
+                throw new LockedException("Account temporarily locked due to too many failed attempts. Please try again in 15 minutes.");
             } else {
                 userRepository.save(user);
                 auditService.logSecurityEvent(user, "LOGIN_FAILED_BAD_PASSWORD", ipAddress, userAgent, "{\"failedAttempts\":" + failed + "}");
-                throw new BadCredentialsException("Incorrect password. " + (5 - failed) + " attempt(s) remaining before temporary lockout.");
+                throw new BadCredentialsException("Invalid email or password.");
             }
         }
 
-        // 5) Success — reset failed attempts & update login metadata
         user.setFailedLoginAttempts(0);
         user.setLockoutUntil(null);
         user.setLastLoginAt(Instant.now());
         user.setLastLoginIp(ipAddress);
         userRepository.save(user);
 
-        // 6) 2FA verification challenge if enabled
         if (user.isTwoFactorEnabled()) {
             String challengeToken = jwtService.generateTwoFactorChallengeToken(user.getEmail());
             auditService.logSecurityEvent(user, "LOGIN_2FA_CHALLENGE", ipAddress, userAgent, null);
@@ -234,7 +228,7 @@ public class AuthService {
         auditService.logSecurityEvent(user, "LOGIN_SUCCESS", ipAddress, userAgent, null);
 
         boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
-        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, rememberMe);
+        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, rememberMe, UUID.randomUUID());
     }
 
     @Transactional
@@ -244,8 +238,12 @@ public class AuthService {
             throw new IllegalArgumentException("Two-factor authentication session expired or invalid. Please login again.");
         }
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = userRepository.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new BadCredentialsException("Invalid authentication session."));
+
+        if (!"ACTIVE".equals(user.getStatus()) || user.getDeletedAt() != null) {
+            throw new DisabledException("Your account is not active.");
+        }
 
         if (!user.isTwoFactorEnabled()) {
             throw new IllegalArgumentException("Two-factor authentication is not enabled for this account.");
@@ -267,7 +265,7 @@ public class AuthService {
         auditService.logSecurityEvent(user, "LOGIN_2FA_SUCCESS", ipAddress, userAgent, null);
 
         boolean rememberMe = Boolean.TRUE.equals(request.getRememberMe());
-        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, rememberMe);
+        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, rememberMe, UUID.randomUUID());
     }
 
     private boolean verifyAndConsumeBackupCode(User user, String code, String ipAddress, String userAgent) {
@@ -275,7 +273,7 @@ public class AuthService {
             return false;
         }
 
-        String cleanCode = code.replace(" ", "").toUpperCase();
+        String cleanCode = code.replace(" ", "").toUpperCase(Locale.ROOT);
         String codeHash = sha256(cleanCode);
 
         List<String> storedHashes = new ArrayList<>(Arrays.asList(user.getTwoFactorBackupCodes().split(",")));
@@ -314,7 +312,7 @@ public class AuthService {
 
         if (request.getBackupCodes() != null && !request.getBackupCodes().isEmpty()) {
             List<String> hashedCodes = request.getBackupCodes().stream()
-                    .map(c -> sha256(c.replace(" ", "").toUpperCase()))
+                    .map(c -> sha256(c.replace(" ", "").toUpperCase(Locale.ROOT)))
                     .collect(Collectors.toList());
             user.setTwoFactorBackupCodes(String.join(",", hashedCodes));
         }
@@ -356,7 +354,7 @@ public class AuthService {
 
         List<String> plainCodes = totpService.generateBackupCodes();
         List<String> hashedCodes = plainCodes.stream()
-                .map(c -> sha256(c.replace(" ", "").toUpperCase()))
+                .map(c -> sha256(c.replace(" ", "").toUpperCase(Locale.ROOT)))
                 .collect(Collectors.toList());
 
         user.setTwoFactorBackupCodes(String.join(",", hashedCodes));
@@ -366,16 +364,41 @@ public class AuthService {
         return plainCodes;
     }
 
-    @Transactional
-    public AuthResponse refreshToken(String tokenHash, String ipAddress, String userAgent) {
-        RefreshToken savedToken = refreshTokenRepository.findByTokenHash(tokenHash)
+    /**
+     * Rotates a refresh token stored as SHA-256 hash.
+     * Detects reuse of an already-revoked token and immediately revokes the entire token family.
+     */
+    @Transactional(noRollbackFor = RefreshTokenReuseException.class)
+    public AuthResponse refreshToken(String rawRefreshToken, String ipAddress, String userAgent) {
+        String hashed = hashToken(rawRefreshToken);
+        RefreshToken savedToken = refreshTokenRepository.findByTokenHash(hashed)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
 
-        if (savedToken.getRevokedAt() != null || savedToken.getExpiresAt().isBefore(Instant.now())) {
-            throw new IllegalArgumentException("Refresh token is expired or revoked");
+        if (savedToken.getRevokedAt() != null) {
+            // Reuse of a previously rotated or logged-out refresh token indicates potential theft.
+            Instant now = Instant.now();
+            refreshTokenRepository.revokeTokenFamily(savedToken.getTokenFamilyId(), now);
+            auditService.logSecurityEvent(
+                    savedToken.getUser(),
+                    "REFRESH_TOKEN_REUSE_DETECTED",
+                    ipAddress,
+                    userAgent,
+                    "{\"familyId\":\"" + savedToken.getTokenFamilyId() + "\"}"
+            );
+            throw new RefreshTokenReuseException("Refresh token reuse detected. Session has been invalidated.");
+        }
+
+        if (savedToken.getExpiresAt().isBefore(Instant.now())) {
+            throw new IllegalArgumentException("Refresh token is expired");
         }
 
         User user = savedToken.getUser();
+        if (!"ACTIVE".equals(user.getStatus()) || user.getDeletedAt() != null) {
+            savedToken.setRevokedAt(Instant.now());
+            refreshTokenRepository.save(savedToken);
+            throw new IllegalArgumentException("Account is not active");
+        }
+
         Business business = resolveUserActiveBusiness(user);
 
         savedToken.setRevokedAt(Instant.now());
@@ -383,42 +406,56 @@ public class AuthService {
 
         auditService.logSecurityEvent(user, "TOKEN_REFRESH", ipAddress, userAgent, null);
 
-        // Retain 30-day expiration if previous token had a 30-day lifetime
-        boolean wasRememberMe = java.time.Duration.between(savedToken.getCreatedAt(), savedToken.getExpiresAt()).toDays() > 2;
+        boolean wasRememberMe = savedToken.isRememberMe()
+                || (savedToken.getCreatedAt() != null
+                    && java.time.Duration.between(savedToken.getCreatedAt(), savedToken.getExpiresAt()).toDays() > 2);
 
-        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, wasRememberMe);
+        return buildAuthResponse(user, business.getId(), ipAddress, userAgent, wasRememberMe, savedToken.getTokenFamilyId());
     }
 
     @Transactional
-    public void logout(String tokenHash, String ipAddress, String userAgent) {
-        refreshTokenRepository.findByTokenHash(tokenHash).ifPresent(token -> {
-            token.setRevokedAt(Instant.now());
-            refreshTokenRepository.save(token);
+    public void logout(String rawRefreshToken, String ipAddress, String userAgent) {
+        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+            return;
+        }
+        String hashed = hashToken(rawRefreshToken);
+        refreshTokenRepository.findByTokenHash(hashed).ifPresent(token -> {
+            if (token.getRevokedAt() == null) {
+                token.setRevokedAt(Instant.now());
+                refreshTokenRepository.save(token);
+            }
             auditService.logSecurityEvent(token.getUser(), "LOGOUT_SUCCESS", ipAddress, userAgent, null);
         });
     }
 
     // ── Email Verification Flow ────────────────────────
 
+    /**
+     * Enumeration-safe resend: does not disclose whether the email exists or is already verified.
+     * Returns an optional dev OTP ONLY when explicitly enabled in local/dev profiles.
+     */
     @Transactional
-    public String resendVerificationEmail(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        if (user.getEmailVerifiedAt() != null) {
-            throw new IllegalArgumentException("Email is already verified");
+    public Optional<String> resendVerificationEmail(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(normalizeEmail(email));
+        if (userOpt.isEmpty()) {
+            return Optional.empty();
+        }
+        User user = userOpt.get();
+        if (user.getEmailVerifiedAt() != null || !"ACTIVE".equals(user.getStatus())) {
+            return Optional.empty();
         }
 
-        return sendVerificationOtp(user);
+        String otp = sendVerificationOtp(user);
+        return isDevOtpExposed() ? Optional.of(otp) : Optional.empty();
     }
 
     @Transactional
     public void verifyEmail(String email, String code, String ipAddress, String userAgent) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired verification code"));
 
         if (user.getEmailVerifiedAt() != null) {
-            throw new IllegalArgumentException("Email is already verified");
+            throw new IllegalArgumentException("Invalid or expired verification code");
         }
 
         VerificationToken token = verificationTokenRepository.findLatestValidToken(user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION, Instant.now())
@@ -437,20 +474,13 @@ public class AuthService {
         auditService.logSecurityEvent(user, "EMAIL_VERIFIED", ipAddress, userAgent, null);
     }
 
-    /**
-     * Creates a fresh OTP and emails it.
-     *
-     * @throws EmailDeliveryException if the email could not be delivered.
-     */
     private String sendVerificationOtp(User user) {
         String otp = createVerificationOtp(user);
         emailService.sendVerificationOtp(user.getEmail(), user.getFirstName(), otp);
         return otp;
     }
 
-    /** Invalidates previous verification codes and stores a new hashed one. Returns the raw code. */
     private String createVerificationOtp(User user) {
-        // Invalidate old tokens
         verificationTokenRepository.invalidateAllUserTokens(user.getId(), VerificationToken.TokenType.EMAIL_VERIFICATION, Instant.now());
 
         String otp = generateNumericOtp(6);
@@ -465,11 +495,12 @@ public class AuthService {
         return otp;
     }
 
-    // ── Password Reset Flow (OTP-based — existing) ────────────────────────────
+    // ── Password Reset Flow (OTP-based) ────────────────────────────
 
     @Transactional
     public void forgotPassword(String email, String ipAddress, String userAgent) {
-        userRepository.findByEmail(email).ifPresent(user -> {
+        userRepository.findByEmail(normalizeEmail(email)).ifPresent(user -> {
+            if (!"ACTIVE".equals(user.getStatus())) return;
             verificationTokenRepository.invalidateAllUserTokens(user.getId(), VerificationToken.TokenType.PASSWORD_RESET, Instant.now());
 
             String otp = generateNumericOtp(6);
@@ -485,18 +516,17 @@ public class AuthService {
             try {
                 emailService.sendPasswordResetOtp(user.getEmail(), user.getFirstName(), otp);
             } catch (EmailDeliveryException e) {
-                // Stay silent towards the client (prevents email enumeration), but log loudly.
-                log.error("Password reset OTP for {} could not be delivered: {}", user.getEmail(), e.getMessage());
+                log.error("Password reset OTP for {} could not be delivered: {}",
+                        LogSanitizer.maskEmail(user.getEmail()), LogSanitizer.sanitizeMessage(e.getMessage()));
             }
             auditService.logSecurityEvent(user, "PASSWORD_RESET_REQUESTED", ipAddress, userAgent, null);
         });
-        // We don't throw an error if the user isn't found to prevent email enumeration attacks
     }
 
     @Transactional
     public void resetPassword(String email, String code, String newPassword, String ipAddress, String userAgent) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid request"));
+        User user = userRepository.findByEmail(normalizeEmail(email))
+                .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset code"));
 
         VerificationToken token = verificationTokenRepository.findLatestValidToken(user.getId(), VerificationToken.TokenType.PASSWORD_RESET, Instant.now())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid or expired reset code"));
@@ -509,29 +539,23 @@ public class AuthService {
         verificationTokenRepository.save(token);
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
-        
-        // Also revoke all refresh tokens so they are logged out of everywhere else
+        user.setPasswordChangedAt(Instant.now());
+
         refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
         userRepository.save(user);
 
         auditService.logSecurityEvent(user, "PASSWORD_RESET_COMPLETED", ipAddress, userAgent, null);
     }
 
-    // ── Password Reset Flow (Link/Token-based — new) ────────────────────────
+    // ── Password Reset Flow (Link/Token-based) ────────────────────────
 
-    /**
-     * Generates a cryptographically random URL token, stores its SHA-256 hash,
-     * and sends a password reset link to the user's email.
-     * Always returns silently to prevent email enumeration.
-     */
     @Transactional
     public void forgotPasswordLink(String email, String ipAddress, String userAgent) {
-        userRepository.findByEmail(email).ifPresent(user -> {
-            // Invalidate all existing tokens for this user
+        userRepository.findByEmail(normalizeEmail(email)).ifPresent(user -> {
+            if (!"ACTIVE".equals(user.getStatus())) return;
             passwordResetTokenRepository.invalidateAllUserTokens(user.getId(), Instant.now());
 
-            // Generate a cryptographically random token
-            String rawToken = UUID.randomUUID().toString();
+            String rawToken = generateSecureToken();
             String tokenHash = sha256(rawToken);
 
             PasswordResetToken resetToken = new PasswordResetToken(
@@ -541,52 +565,33 @@ public class AuthService {
             );
             passwordResetTokenRepository.save(resetToken);
 
-            // Build reset link
             String resetLink = frontendUrl + "/en/reset-password?token=" + rawToken;
 
             try {
                 emailService.sendPasswordResetLink(user.getEmail(), user.getFirstName(), resetLink);
             } catch (EmailDeliveryException e) {
-                // Stay silent towards the client (prevents email enumeration), but log loudly.
-                log.error("Password reset link for {} could not be delivered: {}", user.getEmail(), e.getMessage());
+                log.error("Password reset link for {} could not be delivered: {}",
+                        LogSanitizer.maskEmail(user.getEmail()), LogSanitizer.sanitizeMessage(e.getMessage()));
             }
             auditService.logSecurityEvent(user, "PASSWORD_RESET_LINK_REQUESTED", ipAddress, userAgent, null);
         });
-        // Silent return to prevent email enumeration
     }
 
-    /**
-     * Validates a password reset token without consuming it.
-     * Returns the validation status.
-     *
-     * @return "VALID", "EXPIRED", or "INVALID"
-     */
     @Transactional(readOnly = true)
     public String validateResetToken(String rawToken) {
         String tokenHash = sha256(rawToken);
         PasswordResetToken resetToken = passwordResetTokenRepository.findByTokenHash(tokenHash)
                 .orElse(null);
 
-        if (resetToken == null) {
+        if (resetToken == null || resetToken.isUsed()) {
             return "INVALID";
         }
-
-        if (resetToken.isUsed()) {
-            return "INVALID";
-        }
-
         if (resetToken.isExpired()) {
             return "EXPIRED";
         }
-
         return "VALID";
     }
 
-    /**
-     * Resets the user's password using a URL token.
-     * Validates the token, updates the password, invalidates the token,
-     * and revokes all refresh tokens.
-     */
     @Transactional
     public void resetPasswordByToken(String rawToken, String newPassword, String ipAddress, String userAgent) {
         String tokenHash = sha256(rawToken);
@@ -596,22 +601,18 @@ public class AuthService {
         if (resetToken.isUsed()) {
             throw new IllegalArgumentException("INVALID_TOKEN");
         }
-
         if (resetToken.isExpired()) {
             throw new IllegalArgumentException("TOKEN_EXPIRED");
         }
 
-        // Mark token as used
         resetToken.setUsedAt(Instant.now());
         passwordResetTokenRepository.save(resetToken);
 
-        // Update password
         User user = resetToken.getUser();
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         user.setPasswordChangedAt(Instant.now());
         userRepository.save(user);
 
-        // Revoke all refresh tokens for security
         refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
 
         auditService.logSecurityEvent(user, "PASSWORD_RESET_BY_TOKEN_COMPLETED", ipAddress, userAgent, null);
@@ -621,10 +622,9 @@ public class AuthService {
 
     @Transactional
     public void changePassword(String email, String currentPassword, String newPassword, String ipAddress, String userAgent) {
-        User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(normalizeEmail(email))
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Verify current password
         if (!passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
             auditService.logSecurityEvent(user, "PASSWORD_CHANGE_FAILED", ipAddress, userAgent, "{\"reason\":\"invalid_current_password\"}");
             throw new IllegalArgumentException("Current password is incorrect");
@@ -634,7 +634,6 @@ public class AuthService {
         user.setPasswordChangedAt(Instant.now());
         userRepository.save(user);
 
-        // Revoke all other refresh tokens so other sessions are logged out
         refreshTokenRepository.revokeAllUserTokens(user.getId(), Instant.now());
 
         auditService.logSecurityEvent(user, "PASSWORD_CHANGED", ipAddress, userAgent, null);
@@ -642,29 +641,37 @@ public class AuthService {
 
     // ── Utility Methods ────────────────────────────────
 
-    private AuthResponse buildAuthResponse(User user, UUID businessId, String ipAddress, String userAgent, boolean rememberMe) {
+    public static String hashToken(String rawToken) {
+        return sha256(rawToken);
+    }
+
+    private AuthResponse buildAuthResponse(User user, UUID businessId, String ipAddress, String userAgent,
+                                           boolean rememberMe, UUID tokenFamilyId) {
         var userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String accessToken = jwtService.generateToken(userDetails);
 
-        // 30 days = 30 * 24 * 60 * 60 * 1000 = 2,592,000,000 ms
         long expirationDuration = rememberMe ? (30L * 24L * 60L * 60L * 1000L) : refreshTokenExpirationMs;
 
-        String refreshTokenString = UUID.randomUUID().toString();
+        String rawRefreshToken = generateSecureToken();
+        String refreshTokenHash = hashToken(rawRefreshToken);
+
         RefreshToken refreshToken = new RefreshToken(
                 user,
-                refreshTokenString,
+                refreshTokenHash,
                 Instant.now().plusMillis(expirationDuration),
                 userAgent != null && userAgent.length() > 255 ? userAgent.substring(0, 255) : userAgent,
-                ipAddress
+                ipAddress,
+                tokenFamilyId,
+                rememberMe
         );
         refreshTokenRepository.save(refreshToken);
 
         Business business = businessRepository.findById(businessId).orElse(null);
         boolean onboardingComplete = business != null && business.isOnboardingComplete();
 
-        return new AuthResponse(
+        AuthResponse response = new AuthResponse(
                 accessToken,
-                refreshTokenString,
+                rawRefreshToken,
                 new AuthResponse.UserDto(
                         user.getId(),
                         user.getFirstName(),
@@ -677,27 +684,45 @@ public class AuthService {
                         user.isTwoFactorEnabled()
                 )
         );
+        response.setRememberMe(rememberMe);
+        return response;
+    }
+
+    private boolean isDevOtpExposed() {
+        return allowDevOtp && ("local".equalsIgnoreCase(activeProfile) || "dev".equalsIgnoreCase(activeProfile));
+    }
+
+    private String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
     private String generateNumericOtp(int length) {
-        Random random = new Random();
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
-            sb.append(random.nextInt(10));
+            sb.append(SECURE_RANDOM.nextInt(10));
         }
         return sb.toString();
     }
 
-    /**
-     * Computes SHA-256 hash of the input string and returns it as a hex string.
-     */
-    private String sha256(String input) {
+    private String generateSecureToken() {
+        byte[] bytes = new byte[32];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private static String sha256(String input) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 algorithm not available", e);
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
+        }
+    }
+
+    public static class RefreshTokenReuseException extends IllegalArgumentException {
+        public RefreshTokenReuseException(String message) {
+            super(message);
         }
     }
 }

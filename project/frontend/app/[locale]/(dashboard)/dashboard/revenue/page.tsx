@@ -268,7 +268,7 @@ export default function RevenuePage() {
 
           <div className="h-64 w-full">
             <ChartContainer className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 520, height: 256 }}>
                 <AreaChart data={overviewChartData}>
                   <defs>
                     <linearGradient id="revenueChartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -310,7 +310,7 @@ export default function RevenuePage() {
 
           <div className="relative h-44 w-full flex items-center justify-center my-2">
             <ChartContainer className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 520, height: 256 }}>
                 <PieChart>
                   <Pie
                     data={revenuePieData}

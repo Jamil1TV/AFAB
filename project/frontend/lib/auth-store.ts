@@ -13,106 +13,156 @@ export interface UserDto {
 
 export interface AuthResponseData {
   accessToken: string;
-  refreshToken: string;
+  csrfToken?: string;
   user: UserDto;
   requiresTwoFactor?: boolean;
   twoFactorToken?: string;
   devOtp?: string;
+  verificationEmailSent?: boolean;
 }
 
-const ACCESS_TOKEN_KEY = "accessToken";
-const REFRESH_TOKEN_KEY = "refreshToken";
-const USER_KEY = "user";
-const REMEMBER_ME_KEY = "rememberMe";
+const USER_SESSION_KEY = "afab_user";
+const ACTIVE_BUSINESS_KEY = "afab_active_business_id";
+const CSRF_COOKIE_NAME = "afab_csrf";
+
+// Short-lived access token & CSRF token live ONLY in JS memory — NEVER in localStorage.
+// The long-lived refresh token lives EXCLUSIVELY in an HttpOnly cookie set by the backend.
+let inMemoryAccessToken: string | null = null;
+let inMemoryCsrfToken: string | null = null;
+let legacyPurged = false;
+
+function purgeLegacyLocalStorageTokens() {
+  if (typeof window === "undefined" || legacyPurged) return;
+  legacyPurged = true;
+  try {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("afab_token");
+    localStorage.removeItem("rememberMe");
+    localStorage.removeItem("user");
+    // Expire any legacy JS-accessible accessToken cookie from earlier builds
+    document.cookie =
+      "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax";
+  } catch {
+    // ignore storage access errors
+  }
+}
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const cookies = document.cookie ? document.cookie.split(";") : [];
+  const prefix = `${name}=`;
+  for (const raw of cookies) {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith(prefix)) {
+      return decodeURIComponent(trimmed.substring(prefix.length));
+    }
+  }
+  return null;
+}
 
 export class AuthStore {
-  static setAuth(data: AuthResponseData, rememberMe: boolean = false) {
+  static setAuth(data: AuthResponseData, _rememberMe: boolean = false) {
     if (typeof window === "undefined") return;
+    purgeLegacyLocalStorageTokens();
 
     if (data.accessToken) {
-      localStorage.setItem(ACCESS_TOKEN_KEY, data.accessToken);
+      inMemoryAccessToken = data.accessToken;
     }
-    if (data.refreshToken) {
-      localStorage.setItem(REFRESH_TOKEN_KEY, data.refreshToken);
+    if (data.csrfToken) {
+      inMemoryCsrfToken = data.csrfToken;
     }
     if (data.user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-      if (data.user.businessId) {
-        localStorage.setItem("afab_active_business_id", data.user.businessId);
+      try {
+        sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(data.user));
+        if (data.user.businessId) {
+          sessionStorage.setItem(ACTIVE_BUSINESS_KEY, data.user.businessId);
+        }
+      } catch {
+        // ignore quota/private mode errors
       }
-    }
-
-    const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
-    if (rememberMe) {
-      localStorage.setItem(REMEMBER_ME_KEY, "true");
-    } else {
-      localStorage.removeItem(REMEMBER_ME_KEY);
-    }
-
-    // Set accessToken cookie for middleware / server routing
-    if (data.accessToken) {
-      document.cookie = `accessToken=${data.accessToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      window.dispatchEvent(new CustomEvent("afab_profile_updated", { detail: data.user }));
     }
   }
 
-  static setAccessToken(newToken: string) {
+  static setAccessToken(newToken: string, csrfToken?: string) {
     if (typeof window === "undefined") return;
-    localStorage.setItem(ACCESS_TOKEN_KEY, newToken);
-    const isRemembered = localStorage.getItem(REMEMBER_ME_KEY) === "true";
-    const maxAge = isRemembered ? 30 * 24 * 60 * 60 : 1800;
-    document.cookie = `accessToken=${newToken}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  }
-
-  static setRefreshToken(newRefreshToken: string) {
-    if (typeof window === "undefined") return;
-    localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+    purgeLegacyLocalStorageTokens();
+    inMemoryAccessToken = newToken;
+    if (csrfToken) {
+      inMemoryCsrfToken = csrfToken;
+    }
   }
 
   static clearAuth() {
     if (typeof window === "undefined") return;
+    inMemoryAccessToken = null;
+    inMemoryCsrfToken = null;
 
-    localStorage.removeItem(ACCESS_TOKEN_KEY);
-    localStorage.removeItem(REFRESH_TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(REMEMBER_ME_KEY);
-    localStorage.removeItem("afab_token");
-    localStorage.removeItem("afab_active_business_id");
+    try {
+      sessionStorage.removeItem(USER_SESSION_KEY);
+      sessionStorage.removeItem(ACTIVE_BUSINESS_KEY);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+      localStorage.removeItem("rememberMe");
+      localStorage.removeItem("afab_token");
+      localStorage.removeItem("afab_active_business_id");
+    } catch {
+      // ignore storage errors
+    }
 
-    // Clear accessToken cookie for all paths and domains
-    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax";
-    document.cookie = "accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax";
+    document.cookie =
+      "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax";
+    document.cookie =
+      `${CSRF_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax`;
   }
 
   static getActiveBusinessId(): string | null {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem("afab_active_business_id");
+    try {
+      return sessionStorage.getItem(ACTIVE_BUSINESS_KEY);
+    } catch {
+      return null;
+    }
   }
 
   static setActiveBusinessId(id: string | null) {
     if (typeof window === "undefined") return;
-    if (id) {
-      localStorage.setItem("afab_active_business_id", id);
-    } else {
-      localStorage.removeItem("afab_active_business_id");
+    try {
+      if (id) {
+        sessionStorage.setItem(ACTIVE_BUSINESS_KEY, id);
+      } else {
+        sessionStorage.removeItem(ACTIVE_BUSINESS_KEY);
+      }
+    } catch {
+      // ignore storage errors
     }
   }
 
   static getAccessToken(): string | null {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem(ACCESS_TOKEN_KEY);
+    purgeLegacyLocalStorageTokens();
+    return inMemoryAccessToken;
   }
 
-  static getRefreshToken(): string | null {
+  static getCsrfToken(): string | null {
     if (typeof window === "undefined") return null;
-    return localStorage.getItem(REFRESH_TOKEN_KEY);
+    return readCookie(CSRF_COOKIE_NAME) || inMemoryCsrfToken;
+  }
+
+  static hasSessionHint(): boolean {
+    if (typeof window === "undefined") return false;
+    return Boolean(inMemoryAccessToken || readCookie(CSRF_COOKIE_NAME));
   }
 
   static getUser(): UserDto | null {
     if (typeof window === "undefined") return null;
-    const raw = localStorage.getItem(USER_KEY);
-    if (!raw) return null;
+    purgeLegacyLocalStorageTokens();
     try {
-      return JSON.parse(raw);
+      const raw = sessionStorage.getItem(USER_SESSION_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw) as UserDto;
     } catch {
       return null;
     }
@@ -123,11 +173,15 @@ export class AuthStore {
     const user = this.getUser();
     if (!user) return;
     const updated = { ...user, ...updates };
-    localStorage.setItem(USER_KEY, JSON.stringify(updated));
+    try {
+      sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
     window.dispatchEvent(new CustomEvent("afab_profile_updated", { detail: updated }));
   }
 
   static isAuthenticated(): boolean {
-    return !!this.getAccessToken();
+    return Boolean(this.getAccessToken() || this.hasSessionHint());
   }
 }

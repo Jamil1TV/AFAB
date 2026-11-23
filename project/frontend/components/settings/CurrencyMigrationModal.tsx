@@ -8,9 +8,7 @@ import {
   CheckCircle2, 
   AlertCircle, 
   RefreshCw, 
-  ArrowRight, 
   ShieldCheck, 
-  TrendingUp,
   X 
 } from "lucide-react";
 import { CurrencyService, CurrencyChangePreview } from "@/lib/api/currencies";
@@ -35,19 +33,18 @@ export function CurrencyMigrationModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<CurrencyChangePreview | null>(null);
-  const [convertExisting, setConvertExisting] = useState<boolean>(true);
+  // Historical transactions are immutable — never overwritten with today's rate.
+  const convertExisting = false;
 
   useEffect(() => {
     if (!isOpen || !newCurrency || oldCurrency === newCurrency) return;
 
     let isMounted = true;
-    setLoading(true);
-    setError(null);
-
     CurrencyService.previewChange(newCurrency)
       .then((data) => {
         if (isMounted) {
           setPreview(data);
+          setError(null);
           setLoading(false);
         }
       })
@@ -74,9 +71,10 @@ export function CurrencyMigrationModal({
       setSubmitting(false);
       onSuccess(newCurrency, res.convertedTransactionsCount);
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to update base currency:", err);
-      setError(err?.message || "Failed to update business currency. Please try again.");
+      const msg = err instanceof Error ? err.message : "Failed to update business currency. Please try again.";
+      setError(msg);
       setSubmitting(false);
     }
   };
@@ -188,76 +186,18 @@ export function CurrencyMigrationModal({
                 </span>
               </div>
 
-              {/* Options selection */}
-              <div className="space-y-3 pt-1">
-                <label className="afab-label">
-                  {t("optionsTitle")}
-                </label>
-
-                {/* Option 1: Convert all transactions (Recommended) */}
-                <div
-                  onClick={() => setConvertExisting(true)}
-                  className={`cursor-pointer rounded-2xl border p-4 transition-all duration-200 ${
-                    convertExisting
-                      ? "border-[#8b5cf6] bg-[#8b5cf6]/5 dark:border-[#8b5cf6] dark:bg-[#8b5cf6]/10"
-                      : "border-gray-200 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#080c18] hover:border-gray-300 dark:hover:border-gray-700"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="radio"
-                      checked={convertExisting}
-                      onChange={() => setConvertExisting(true)}
-                      className="mt-1 h-4 w-4 accent-[#8b5cf6]"
-                    />
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900 dark:text-white">
-                          {t("optionConvert", { rate: rate.toFixed(4) })}
-                        </span>
-                        <span className="afab-badge afab-badge-success">
-                          Recommended
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                        {t("optionConvertDesc")}
-                      </p>
-                    </div>
-                  </div>
+              {/* Historical Immutability Policy Notice */}
+              <div className="rounded-2xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 dark:bg-[#8b5cf6]/10 p-4 space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
+                    Historical Financial Immutability Enforced
+                  </span>
                 </div>
-
-                {/* Option 2: Keep numbers as-is */}
-                <div
-                  onClick={() => setConvertExisting(false)}
-                  className={`cursor-pointer rounded-2xl border p-4 transition-all duration-200 ${
-                    !convertExisting
-                      ? "border-[#8b5cf6] bg-[#8b5cf6]/5 dark:border-[#8b5cf6] dark:bg-[#8b5cf6]/10"
-                      : "border-gray-200 dark:border-gray-800/60 bg-gray-50/50 dark:bg-[#080c18] hover:border-gray-300 dark:hover:border-gray-700"
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <input
-                      type="radio"
-                      checked={!convertExisting}
-                      onChange={() => setConvertExisting(false)}
-                      className="mt-1 h-4 w-4 accent-[#8b5cf6]"
-                    />
-                    <div className="space-y-1">
-                      <span className="text-sm font-bold text-gray-900 dark:text-white">
-                        {t("optionKeep")}
-                      </span>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-                        {t("optionKeepDesc")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Safety notice */}
-              <div className="flex items-center gap-2 pt-1 text-[11px] text-gray-500 dark:text-gray-400">
-                <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>Multi-tenant isolated, verified with live market rates, recorded in business audit log.</span>
+                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Updating your business base currency to <strong>{newCurrency}</strong> applies to all future transactions.
+                  All <strong>{count}</strong> existing historical transaction(s) will preserve their original amounts and locked historical exchange rates — past ledgers are never overwritten with today&apos;s rate.
+                </p>
               </div>
             </>
           )}
