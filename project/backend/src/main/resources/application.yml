@@ -133,6 +133,19 @@ afab:
     price-plus-yearly: ${STRIPE_PRICE_PLUS_YEARLY:}
     price-pro-monthly: ${STRIPE_PRICE_PRO_MONTHLY:}
     price-pro-yearly: ${STRIPE_PRICE_PRO_YEARLY:}
+  ai:
+    enabled: ${AFAB_AI_ENABLED:true}
+    ollama-base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+    chat-model: ${AFAB_AI_CHAT_MODEL:gemma4:e4b}
+    embed-model: ${AFAB_AI_EMBED_MODEL:embeddinggemma-2:270m}
+    embedding-dimension: 768
+    num-ctx: ${AFAB_AI_NUM_CTX:4096}
+    max-output-tokens: ${AFAB_AI_MAX_OUTPUT_TOKENS:1024}
+    max-tool-calls-per-turn: ${AFAB_AI_MAX_TOOL_CALLS:4}
+    max-concurrent-requests: ${AFAB_AI_MAX_CONCURRENT:1}
+    timeout-seconds: ${AFAB_AI_TIMEOUT_SECONDS:90}
+    thinking-enabled: ${AFAB_AI_THINKING_ENABLED:false}
+    prompt-version: copilot-v1.0
 
 # ── OpenAPI / Swagger ─────────────────────────────
 springdoc:

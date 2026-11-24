@@ -167,6 +167,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(apiError);
     }
 
+    @ExceptionHandler(com.afab.ai.exception.AiServiceUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleAiUnavailable(
+            com.afab.ai.exception.AiServiceUnavailableException ex, HttpServletRequest request) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.SERVICE_UNAVAILABLE.value());
+        body.put("error", "Service Unavailable");
+        body.put("code", "AI_SERVICE_UNAVAILABLE");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getRequestURI());
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+    }
+
     @ExceptionHandler(com.stripe.exception.StripeException.class)
     public ResponseEntity<ApiError> handleStripeException(
             com.stripe.exception.StripeException ex, HttpServletRequest request) {

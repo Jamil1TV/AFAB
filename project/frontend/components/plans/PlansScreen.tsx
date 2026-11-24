@@ -232,8 +232,8 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
       features: [
         {
           name: isAr
-            ? "محادثة ورؤى الذكاء الاصطناعي (10 استفسارات/شهر)"
-            : "AI Chat & Insights (10 queries/month)",
+            ? "محادثة ورؤى الذكاء الاصطناعي (15,000 رمز • 10 استفسارات/شهر)"
+            : "AI Copilot & RAG (15,000 tokens • 10 queries/month)",
           included: true,
         },
         {
@@ -301,8 +301,8 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
       features: [
         {
           name: isAr
-            ? "محادثة ورؤى الذكاء الاصطناعي (100 استفسار/شهر)"
-            : "AI Chat & Insights (100 queries/month)",
+            ? "محادثة ورؤى الذكاء الاصطناعي (150,000 رمز • 100 استفسار/شهر)"
+            : "AI Copilot & RAG (150,000 tokens • 100 queries/month)",
           included: true,
         },
         {
@@ -365,8 +365,8 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
       features: [
         {
           name: isAr
-            ? "محادثة ورؤى الذكاء الاصطناعي (300 استفسار/شهر)"
-            : "AI Chat & Insights (300 queries/month)",
+            ? "محادثة ورؤى الذكاء الاصطناعي (500,000 رمز • 300 استفسار/شهر)"
+            : "AI Copilot & RAG (500,000 tokens • 300 queries/month)",
           included: true,
         },
         {
@@ -418,10 +418,10 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
 
   const comparisonRows = [
     {
-      name: isAr ? "محادثة ورؤى الذكاء الاصطناعي" : "AI Chat & Insights",
-      free: isAr ? "10 استفسارات / شهر" : "10 queries / month",
-      plus: isAr ? "100 استفسار / شهر" : "100 queries / month",
-      pro: isAr ? "300 استفسار / شهر" : "300 queries / month",
+      name: isAr ? "رموز واستفسارات الذكاء الاصطناعي" : "AI Copilot Tokens & Queries",
+      free: isAr ? "15 ألف رمز / 10 استفسارات" : "15K tokens / 10 queries",
+      plus: isAr ? "150 ألف رمز / 100 استفسار" : "150K tokens / 100 queries",
+      pro: isAr ? "500 ألف رمز / 300 استفسار" : "500K tokens / 300 queries",
       highlight: false,
     },
     {
@@ -917,6 +917,40 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
               )}
             </div>
           </div>
+
+          {/* AI Monthly Token & Query Usage Meter */}
+          {(() => {
+            const tokenLimit = Number(subscription.entitlements?.["ai.chat.tokens_per_month"] ?? 15000);
+            const tokenUsed = Number(subscription.usage?.["ai.chat.tokens_per_month"] ?? 0);
+            const queryLimit = Number(subscription.entitlements?.["ai.chat.queries_per_month"] ?? 10);
+            const queryUsed = Number(subscription.usage?.["ai.chat.queries_per_month"] ?? 0);
+            const pct = tokenLimit > 0 ? Math.min(100, Math.round((tokenUsed / tokenLimit) * 100)) : 0;
+            return (
+              <div className="rounded-2xl bg-gray-50/80 dark:bg-[#080c18] border border-gray-200/80 dark:border-gray-800 p-4 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <span className="font-bold text-gray-900 dark:text-white inline-flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                    <span>
+                      {isAr ? "استهلاك رموز AFAB Copilot هذا الشهر" : "Monthly AFAB Copilot Token Allowance"}
+                    </span>
+                  </span>
+                  <span className="text-gray-600 dark:text-gray-300 font-semibold">
+                    {tokenUsed.toLocaleString()} / {tokenLimit < 0 ? "∞" : tokenLimit.toLocaleString()}{" "}
+                    {isAr ? "رمز" : "tokens"} ({queryUsed}/{queryLimit < 0 ? "∞" : queryLimit}{" "}
+                    {isAr ? "استفسار" : "queries"})
+                  </span>
+                </div>
+                <div className="h-2 w-full rounded-full bg-gray-200/80 dark:bg-gray-800 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      pct >= 90 ? "bg-red-500" : pct >= 75 ? "bg-amber-500" : "bg-[#8b5cf6]"
+                    }`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Pending Downgrade / Cancellation Details Box */}
           {hasPendingChange && (

@@ -200,6 +200,32 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.category WHERE t.business.id = :businessId " +
            "AND t.deletedAt IS NULL " +
            "AND t.parentTransaction IS NULL " +
+           "ORDER BY t.transactionDate DESC, t.createdAt DESC")
+    List<Transaction> findTopActiveRootTransactionsWithCategory(
+            @Param("businessId") UUID businessId,
+            Pageable pageable
+    );
+
+    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.category WHERE t.business.id = :businessId " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.parentTransaction IS NULL " +
+           "AND (:type IS NULL OR t.type = :type) " +
+           "AND (CAST(:startDate AS date) IS NULL OR t.transactionDate >= :startDate) " +
+           "AND (CAST(:endDate AS date) IS NULL OR t.transactionDate <= :endDate) " +
+           "AND (:search IS NULL OR LOWER(t.description) LIKE LOWER(CONCAT('%', CAST(:search AS string), '%'))) " +
+           "ORDER BY t.transactionDate DESC, t.createdAt DESC")
+    List<Transaction> searchTransactionsWithCategory(
+            @Param("businessId") UUID businessId,
+            @Param("type") String type,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("search") String search,
+            Pageable pageable
+    );
+
+    @Query("SELECT t FROM Transaction t LEFT JOIN FETCH t.category WHERE t.business.id = :businessId " +
+           "AND t.deletedAt IS NULL " +
+           "AND t.parentTransaction IS NULL " +
            "AND t.status = 'COMPLETED' " +
            "AND t.transactionDate BETWEEN :startDate AND :endDate " +
            "ORDER BY t.transactionDate ASC, t.createdAt ASC")

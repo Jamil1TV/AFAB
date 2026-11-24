@@ -64,6 +64,7 @@ class EntitlementServiceTest {
         freePlan.setId(UUID.randomUUID());
         freePlan.setEntitlements(List.of(
                 new PlanEntitlement(freePlan, "ai.chat.queries_per_month", "QUOTA", "10"),
+                new PlanEntitlement(freePlan, "ai.chat.tokens_per_month", "QUOTA", "15000"),
                 new PlanEntitlement(freePlan, "invoices.per_month", "QUOTA", "5"),
                 new PlanEntitlement(freePlan, "business.max", "LIMIT", "1"),
                 new PlanEntitlement(freePlan, "forecast.cashflow", "BOOLEAN", "false")
@@ -73,6 +74,7 @@ class EntitlementServiceTest {
         plusPlan.setId(UUID.randomUUID());
         plusPlan.setEntitlements(List.of(
                 new PlanEntitlement(plusPlan, "ai.chat.queries_per_month", "QUOTA", "100"),
+                new PlanEntitlement(plusPlan, "ai.chat.tokens_per_month", "QUOTA", "150000"),
                 new PlanEntitlement(plusPlan, "invoices.per_month", "QUOTA", "50"),
                 new PlanEntitlement(plusPlan, "business.max", "LIMIT", "3"),
                 new PlanEntitlement(plusPlan, "forecast.cashflow", "BOOLEAN", "true")
@@ -82,6 +84,7 @@ class EntitlementServiceTest {
         proPlan.setId(UUID.randomUUID());
         proPlan.setEntitlements(List.of(
                 new PlanEntitlement(proPlan, "ai.chat.queries_per_month", "QUOTA", "300"),
+                new PlanEntitlement(proPlan, "ai.chat.tokens_per_month", "QUOTA", "500000"),
                 new PlanEntitlement(proPlan, "invoices.per_month", "QUOTA", "-1"), // unlimited
                 new PlanEntitlement(proPlan, "business.max", "LIMIT", "5"),
                 new PlanEntitlement(proPlan, "forecast.cashflow", "BOOLEAN", "true")
@@ -222,5 +225,30 @@ class EntitlementServiceTest {
         assertThat(testUser.getPlanTier()).isEqualTo("FREE");
         verify(subscriptionRepository).save(activeSubscription);
         verify(userRepository).save(testUser);
+    }
+
+    @Test
+    @DisplayName("getQuotaStatus & recordUsage: tracks monthly AI token quotas per plan cleanly")
+    void testAiTokenQuotaStatusAndRecordUsage() {
+        activeSubscription.setPlan(plusPlan);
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+        when(subscriptionRepository.findWithPlanAndEntitlementsByUserId(testUser.getId()))
+                .thenReturn(Optional.of(activeSubscription));
+
+        UsageCounter tokenCounter = new UsageCounter(testUser, "ai.chat.tokens_per_month", Instant.now(), 2500);
+        when(usageCounterRepository.findByUserIdAndFeatureKeyAndPeriodStart(
+                eq(testUser.getId()), eq("ai.chat.tokens_per_month"), any()
+        )).thenReturn(Optional.of(tokenCounter));
+
+        var status = entitlementService.getQuotaStatus(userEmail, "ai.chat.tokens_per_month");
+        assertThat(status.planSlug()).isEqualTo("plus");
+        assertThat(status.limit()).isEqualTo(150000);
+        assertThat(status.used()).isEqualTo(2500);
+        assertThat(status.remaining()).isEqualTo(147500);
+
+        entitlementService.recordUsage(userEmail, "ai.chat.tokens_per_month", 850);
+        verify(usageCounterRepository).recordUsage(
+                any(UUID.class), eq(testUser.getId()), eq("ai.chat.tokens_per_month"), any(Instant.class), eq(850), any(Instant.class)
+        );
     }
 }

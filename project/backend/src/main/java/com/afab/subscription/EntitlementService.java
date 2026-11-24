@@ -222,7 +222,12 @@ public class EntitlementService {
         // Fetch usage counters for the current month period
         Instant periodStart = getCurrentPeriodStart();
         Map<String, Integer> usageMap = new HashMap<>();
-        for (String quotaKey : List.of("ai.chat.queries_per_month", "invoices.per_month", "export.per_month")) {
+        for (String quotaKey : List.of(
+                "ai.chat.queries_per_month",
+                "ai.chat.tokens_per_month",
+                "invoices.per_month",
+                "export.per_month"
+        )) {
             usageCounterRepository.findByUserIdAndFeatureKeyAndPeriodStart(user.getId(), quotaKey, periodStart)
                     .ifPresentOrElse(
                             c -> usageMap.put(quotaKey, c.getUsed()),
@@ -232,6 +237,62 @@ public class EntitlementService {
         dto.setUsage(usageMap);
 
         return dto;
+    }
+
+    public record QuotaStatus(String planSlug, String planName, int limit, int used, int remaining) {}
+
+    /**
+     * Returns current plan limit, used count, and remaining count for any monthly quota feature.
+     */
+    @Transactional(readOnly = true)
+    public QuotaStatus getQuotaStatus(String userEmail, String featureKey) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+        Subscription sub = subscriptionRepository.findWithPlanAndEntitlementsByUserId(user.getId())
+                .orElseGet(() -> {
+                    Plan freePlan = planRepository.findBySlug("free").orElseThrow();
+                    return new Subscription(user, freePlan, "ACTIVE", Instant.now());
+                });
+        Plan plan = resolveEffectivePlanForEntitlements(sub);
+        PlanEntitlement entitlement = findEntitlement(plan, featureKey);
+
+        int limit = -1;
+        if (entitlement != null) {
+            try {
+                limit = Integer.parseInt(entitlement.getValue());
+            } catch (NumberFormatException ignored) {
+                limit = -1;
+            }
+        }
+
+        Instant periodStart = getCurrentPeriodStart();
+        int used = usageCounterRepository.findByUserIdAndFeatureKeyAndPeriodStart(user.getId(), featureKey, periodStart)
+                .map(UsageCounter::getUsed)
+                .orElse(0);
+
+        int remaining = limit < 0 ? -1 : Math.max(0, limit - used);
+        return new QuotaStatus(plan.getSlug(), plan.getName(), limit, used, remaining);
+    }
+
+    /**
+     * Records post-execution usage (such as actual LLM prompt + completion tokens) without failing
+     * when a turn slightly overshoots the nominal limit.
+     */
+    @Transactional
+    public void recordUsage(String userEmail, String featureKey, int amount) {
+        if (amount <= 0) {
+            return;
+        }
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userEmail));
+        usageCounterRepository.recordUsage(
+                UUID.randomUUID(),
+                user.getId(),
+                featureKey,
+                getCurrentPeriodStart(),
+                amount,
+                Instant.now()
+        );
     }
 
     /**

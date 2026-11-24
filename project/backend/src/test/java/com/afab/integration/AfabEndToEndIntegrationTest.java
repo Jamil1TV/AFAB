@@ -1,5 +1,11 @@
 package com.afab.integration;
 
+import com.afab.ai.dto.BusinessMemoryDTO;
+import com.afab.ai.dto.BusinessMemoryRequest;
+import com.afab.ai.rag.AiRagIndexService;
+import com.afab.ai.rag.AiVectorRepository;
+import com.afab.ai.service.BusinessMemoryService;
+import com.afab.ai.tools.AiFinanceToolRegistry;
 import com.afab.auth.AuthService;
 import com.afab.auth.dto.AuthResponse;
 import com.afab.auth.dto.LoginRequest;
@@ -18,8 +24,10 @@ import com.afab.customers.dto.CreateCustomerRequest;
 import com.afab.customers.dto.CustomerDTO;
 import com.afab.customers.service.CustomerService;
 import com.afab.finance.currency.CurrencyConversionService;
+import com.afab.finance.domain.Category;
 import com.afab.finance.dto.CreateTransactionRequest;
 import com.afab.finance.dto.TransactionDTO;
+import com.afab.finance.repository.CategoryRepository;
 import com.afab.finance.repository.TransactionRepository;
 import com.afab.finance.service.TransactionService;
 import com.afab.invoices.dto.CreateInvoiceRequest;
@@ -50,10 +58,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -62,6 +76,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -71,6 +86,10 @@ import java.util.concurrent.Future;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Full-stack integration verification against real PostgreSQL 16 (Flyway V1..V23),
@@ -103,6 +122,13 @@ class AfabEndToEndIntegrationTest {
     @Autowired private ReceiptService receiptService;
     @Autowired private StringRedisTemplate stringRedisTemplate;
     @Autowired private RateLimitProperties rateLimitProperties;
+    @Autowired private BusinessMemoryService businessMemoryService;
+    @Autowired private AiVectorRepository aiVectorRepository;
+    @Autowired private AiRagIndexService aiRagIndexService;
+    @Autowired private AiFinanceToolRegistry aiFinanceToolRegistry;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private WebApplicationContext webApplicationContext;
+    @Autowired private com.afab.subscription.EntitlementService entitlementService;
 
     private User createVerifiedUserWithBusiness(String email, String bizName, String currency) {
         User u = new User("Test", "Owner", email, passwordEncoder.encode("StrongPass!2026"));
@@ -125,15 +151,15 @@ class AfabEndToEndIntegrationTest {
 
     @Test
     @Order(1)
-    void flywayMigrationsV1ThroughV26AppliedCleanly() {
+    void flywayMigrationsV1ThroughV27AppliedCleanly() {
         Integer appliedCount = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM flyway_schema_history WHERE success = true", Integer.class);
-        assertThat(appliedCount).isNotNull().isGreaterThanOrEqualTo(26);
+        assertThat(appliedCount).isNotNull().isGreaterThanOrEqualTo(27);
 
         String latestVersion = jdbcTemplate.queryForObject(
                 "SELECT version FROM flyway_schema_history WHERE success = true ORDER BY installed_rank DESC LIMIT 1",
                 String.class);
-        assertThat(latestVersion).isEqualTo("26");
+        assertThat(latestVersion).isEqualTo("27");
     }
 
     @Test
@@ -420,5 +446,100 @@ class AfabEndToEndIntegrationTest {
         // Tenant A deletes receipt cleanly from MinIO + soft-deletes DB row
         receiptService.delete(emailA, receipt.id());
         assertThat(receiptService.listForTransaction(emailA, generatedTxId)).isEmpty();
+    }
+
+    @Test
+    @Order(7)
+    void pgvectorHybridRagTenantIsolationAndAiTokenQuotasWorkOnRealPostgres() throws Exception {
+        String emailA = "raga-" + UUID.randomUUID() + "@afab.test";
+        String emailB = "ragb-" + UUID.randomUUID() + "@afab.test";
+        User userA = createVerifiedUserWithBusiness(emailA, "RAG Alpha", "TND");
+        createVerifiedUserWithBusiness(emailB, "RAG Beta", "TND");
+
+        // 1. Verify V27 per-plan AI token quotas on real Postgres
+        var freeQuota = entitlementService.getQuotaStatus(emailA, "ai.chat.tokens_per_month");
+        assertThat(freeQuota.limit()).isEqualTo(15000);
+        assertThat(freeQuota.used()).isZero();
+        entitlementService.recordUsage(emailA, "ai.chat.tokens_per_month", 420);
+        assertThat(entitlementService.getQuotaStatus(emailA, "ai.chat.tokens_per_month").used()).isEqualTo(420);
+
+        // 2. Verify pgvector extension & 768-dim cosine similarity + tenant filter
+        BusinessMemoryRequest memReq = new BusinessMemoryRequest();
+        memReq.setMemoryType("SUPPLIER_PATTERN");
+        memReq.setTitle("STEG Electricity Pattern");
+        memReq.setContent("STEG bills electricity every two months under Utilities.");
+        BusinessMemoryDTO memA = businessMemoryService.create(emailA, memReq);
+
+        float[] unitVec = new float[768];
+        unitVec[0] = 1.0f;
+        aiVectorRepository.upsertMemoryVector(memA.id(), userA.getActiveBusinessId(), unitVec, "embeddinggemma-2:270m", 768);
+
+        var hitsA = aiVectorRepository.searchApprovedMemoriesHybrid(
+                userA.getActiveBusinessId(), unitVec, "electricity", 5, 768
+        );
+        assertThat(hitsA).hasSize(1);
+        assertThat(hitsA.get(0).title()).isEqualTo("STEG Electricity Pattern");
+
+        // Cross-tenant vector query from Business B with identical vector returns ZERO hits from Business A
+        UUID bizBId = userRepository.findByEmail(emailB).orElseThrow().getActiveBusinessId();
+        var hitsB = aiVectorRepository.searchApprovedMemoriesHybrid(bizBId, unitVec, "electricity", 5, 768);
+        assertThat(hitsB).isEmpty();
+
+        // Cross-tenant delete/update on Business Memory is blocked with ForbiddenException
+        assertThatThrownBy(() -> businessMemoryService.delete(emailB, memA.id()))
+                .isInstanceOf(ForbiddenException.class);
+
+        // 3. Categorized transactions index & tool search run cleanly outside OpenSessionInView without LazyInitializationException
+        Business bizA = businessRepository.findById(userA.getActiveBusinessId()).orElseThrow();
+        Category catA = new Category("Utilities", "EXPENSE", "zap", "#8b5cf6");
+        catA.setBusiness(bizA);
+        catA = categoryRepository.save(catA);
+
+        CreateTransactionRequest txReq = new CreateTransactionRequest();
+        txReq.setType("EXPENSE");
+        txReq.setAmount(new BigDecimal("195.00"));
+        txReq.setDescription("Topnet Fiber Internet");
+        txReq.setTransactionDate(LocalDate.now());
+        txReq.setCategoryId(catA.getId());
+        txReq.setPaymentMethod("BANK_TRANSFER");
+        txReq.setStatus("COMPLETED");
+        transactionService.createTransaction(emailA, txReq);
+
+        var syncStats = aiRagIndexService.syncBusinessIndex(bizA);
+        assertThat(syncStats.indexedCount()).isGreaterThanOrEqualTo(1);
+
+        var searchToolRes = aiFinanceToolRegistry.executeTool(
+                userA, bizA, null, "search_transactions", Map.of("type", "EXPENSE", "search", "Fiber")
+        );
+        assertThat(searchToolRes.jsonResult()).contains("Utilities").contains("Topnet Fiber Internet");
+
+        // 4. Verify SecurityConfig rejects unauthenticated requests but permits SSE DispatcherType.ASYNC completion with valid JWT
+        MockMvc mvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
+                .apply(SecurityMockMvcConfigurers.springSecurity())
+                .build();
+
+        mvc.perform(post("/api/v1/ai/chat/stream")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"hello\",\"locale\":\"en\"}"))
+                .andExpect(status().isUnauthorized())
+                .andReturn();
+
+        LoginRequest loginReq = new LoginRequest();
+        loginReq.setEmail(emailA);
+        loginReq.setPassword("StrongPass!2026");
+        String accessToken = authService.login(loginReq, "127.0.0.1", "JUnit-IT").getAccessToken();
+
+        MvcResult streamInit = mvc.perform(post("/api/v1/ai/chat/stream")
+                        .header("Authorization", "Bearer " + accessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"Hello Copilot\",\"locale\":\"en\"}"))
+                .andExpect(request().asyncStarted())
+                .andReturn();
+
+        MvcResult streamDone = mvc.perform(asyncDispatch(streamInit))
+                .andExpect(status().isOk())
+                .andReturn();
+        String sseBody = streamDone.getResponse().getContentAsString();
+        assertThat(sseBody).containsAnyOf("event:done", "event: done", "event:error", "event: error");
     }
 }

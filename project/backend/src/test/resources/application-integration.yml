@@ -48,3 +48,16 @@ afab:
     bucket: ${MINIO_BUCKET:afab-receipts-test}
   recurring:
     scheduler-enabled: false
+  ai:
+    enabled: true
+    ollama-base-url: http://localhost:11434
+    chat-model: gemma4:e4b
+    embed-model: embeddinggemma-2:270m
+    embedding-dimension: 768
+    num-ctx: 4096
+    max-output-tokens: 1024
+    max-tool-calls-per-turn: 4
+    max-concurrent-requests: 1
+    timeout-seconds: 30
+    thinking-enabled: false
+    prompt-version: copilot-v1.0

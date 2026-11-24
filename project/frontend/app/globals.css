@@ -622,3 +622,138 @@
     @apply flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-40 dark:border-gray-800 dark:hover:bg-white/5;
   }
 }
+
+/* ══════════════════════════════════════════════════════
+   AFAB COPILOT ANIMATIONS
+   ══════════════════════════════════════════════════════ */
+
+@keyframes ai-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes ai-orb-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ai-orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes ai-cursor-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes ai-wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+    opacity: 0.55;
+  }
+  50% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  .ai-shimmer-text {
+    background: linear-gradient(
+      90deg,
+      #4c1d95 0%,
+      #8b5cf6 45%,
+      #4c1d95 90%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: ai-shimmer 2.1s linear infinite;
+  }
+
+  .dark .ai-shimmer-text {
+    background: linear-gradient(
+      90deg,
+      #9ca3af 0%,
+      #f5f3ff 45%,
+      #9ca3af 90%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .ai-streaming-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.05em;
+    margin-inline-start: 3px;
+    vertical-align: text-bottom;
+    border-radius: 9999px;
+    background-color: #8b5cf6;
+    animation: ai-cursor-blink 0.9s ease-in-out infinite;
+  }
+
+  .dark .ai-streaming-cursor {
+    background-color: #a78bfa;
+  }
+
+  .ai-wave-bar-1 {
+    animation: ai-wave 0.9s ease-in-out infinite;
+  }
+
+  .ai-wave-bar-2 {
+    animation: ai-wave 0.9s ease-in-out 0.18s infinite;
+  }
+
+  .ai-wave-bar-3 {
+    animation: ai-wave 0.9s ease-in-out 0.36s infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ai-shimmer-text,
+  .ai-streaming-cursor,
+  .ai-wave-bar-1,
+  .ai-wave-bar-2,
+  .ai-wave-bar-3 {
+    animation: none !important;
+  }
+
+  .ai-shimmer-text {
+    color: #6d28d9;
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+  }
+
+  .dark .ai-shimmer-text {
+    color: #ede9fe;
+    background: none;
+  }
+}

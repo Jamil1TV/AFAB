@@ -23,6 +23,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const customers = (await import(`../messages/${locale}/customers.json`)).default;
   const budgets = (await import(`../messages/${locale}/budgets.json`)).default;
   const recurring = (await import(`../messages/${locale}/recurring.json`)).default;
+  const ai = (await import(`../messages/${locale}/ai.json`)).default;
 
   return {
     locale,
@@ -51,6 +52,8 @@ export default getRequestConfig(async ({ requestLocale }) => {
       budgets: budgets,
       Recurring: recurring,
       recurring: recurring,
+      AI: ai,
+      ai: ai,
     }
   };
 });
