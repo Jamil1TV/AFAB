@@ -14,12 +14,11 @@ export function getApiBaseUrl(): string {
   }
   if (typeof window !== "undefined") {
     const { protocol, hostname } = window.location;
-    if (hostname && hostname !== "localhost" && hostname !== "127.0.0.1" && hostname !== "::1") {
+    if (hostname) {
       return `${protocol}//${hostname}:8080/api/v1`;
     }
-    return "http://127.0.0.1:8080/api/v1";
   }
-  return "http://127.0.0.1:8080/api/v1";
+  return "http://localhost:8080/api/v1";
 }
 
 const API_BASE_URL = getApiBaseUrl();

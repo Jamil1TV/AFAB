@@ -72,6 +72,12 @@ export class AuthStore {
     if (data.csrfToken) {
       inMemoryCsrfToken = data.csrfToken;
     }
+
+    // Set non-sensitive session presence cookie for Next.js proxy / middleware
+    const csrfVal = data.csrfToken || inMemoryCsrfToken || "session_active";
+    const maxAge = _rememberMe ? "; max-age=2592000" : "";
+    document.cookie = `${CSRF_COOKIE_NAME}=${encodeURIComponent(csrfVal)}; path=/; SameSite=Lax${maxAge}`;
+
     if (data.user) {
       try {
         sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(data.user));
@@ -91,6 +97,9 @@ export class AuthStore {
     inMemoryAccessToken = newToken;
     if (csrfToken) {
       inMemoryCsrfToken = csrfToken;
+      document.cookie = `${CSRF_COOKIE_NAME}=${encodeURIComponent(csrfToken)}; path=/; SameSite=Lax`;
+    } else if (!readCookie(CSRF_COOKIE_NAME)) {
+      document.cookie = `${CSRF_COOKIE_NAME}=session_active; path=/; SameSite=Lax`;
     }
   }
 

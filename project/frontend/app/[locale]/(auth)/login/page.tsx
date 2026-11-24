@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -61,6 +62,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setLoading(true);
 
     try {
@@ -76,14 +78,15 @@ export default function LoginPage() {
       }
 
       if (!res.user.emailVerified) {
-        window.location.href = `/${locale}/verify-email`;
+        router.push("/verify-email");
       } else if (res.user.onboardingComplete) {
-        window.location.href = `/${locale}/dashboard`;
+        router.push("/dashboard");
       } else {
-        window.location.href = `/${locale}/onboarding`;
+        router.push("/onboarding");
       }
     } catch (err: unknown) {
       const message = getErrorMessage(err);
+      setError(message);
       toast.error(message, { duration: 5000 });
     } finally {
       setLoading(false);
@@ -94,6 +97,7 @@ export default function LoginPage() {
     e.preventDefault();
     if (!twoFactorCode.trim()) return;
 
+    setError(null);
     setLoading(true);
     try {
       const res = await AuthService.verifyTwoFactorLogin({
@@ -103,14 +107,15 @@ export default function LoginPage() {
       });
 
       if (!res.user.emailVerified) {
-        window.location.href = `/${locale}/verify-email`;
+        router.push("/verify-email");
       } else if (res.user.onboardingComplete) {
-        window.location.href = `/${locale}/dashboard`;
+        router.push("/dashboard");
       } else {
-        window.location.href = `/${locale}/onboarding`;
+        router.push("/onboarding");
       }
     } catch (err: unknown) {
       const message = getErrorMessage(err);
+      setError(message);
       toast.error(message, { duration: 5000 });
     } finally {
       setLoading(false);
@@ -173,6 +178,12 @@ export default function LoginPage() {
 
             {/* 2FA Form */}
             <form onSubmit={handleTwoFactorVerify} className="space-y-5">
+              {error && (
+                <div className="flex items-center gap-2.5 rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400">
+                  <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                  <span>{error}</span>
+                </div>
+              )}
               {!useBackupCode ? (
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <label className="afab-label mb-0">
@@ -300,6 +311,18 @@ export default function LoginPage() {
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">{t("loginTitle")}</h2>
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t("loginSubtitle")}</p>
             </motion.div>
+
+            {/* Error Alert */}
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-5 flex items-center gap-2.5 rounded-xl bg-red-50 p-3.5 text-xs font-medium text-red-700 border border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400"
+              >
+                <span className="h-2 w-2 rounded-full bg-red-500 shrink-0" />
+                <span>{error}</span>
+              </motion.div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
