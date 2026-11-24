@@ -54,7 +54,7 @@ export default function AuthLayout({
             {/* Reduced text size slightly so it fits perfectly on smaller screens without forced breaks */}
             <h1 className="text-[2.5rem] font-bold leading-[1.15] tracking-[-0.02em] text-gray-900 dark:text-white relative z-20 xl:text-[3rem] flex flex-col gap-0.5">
               <span>{t("heroTitlePart1")}</span>
-              <span className="text-[#7c3aed] dark:text-[#8b5cf6]">{t("heroTitlePart2")}</span>
+              <span className="text-[var(--primary)]">{t("heroTitlePart2")}</span>
             </h1>
             <p className="mt-3 text-[14px] leading-relaxed text-gray-600 dark:text-gray-400 relative z-20 max-w-[480px]">
               {t("heroSubtitle")}
@@ -70,7 +70,7 @@ export default function AuthLayout({
 
           {/* Bottom Testimonial */}
           <div className="relative z-20 ps-2 shrink-0">
-            <span className="block font-serif text-[50px] leading-none text-[#8b5cf6] opacity-60 mb-[-15px]">&ldquo;</span>
+            <span className="block font-serif text-[50px] leading-none text-[var(--primary)] opacity-60 mb-[-15px]">&ldquo;</span>
             <p className="text-[13px] italic leading-relaxed text-gray-700 dark:text-gray-300 max-w-[260px] font-medium">
               {t("testimonialPart1")}<br/>{t("testimonialPart2")}
             </p>

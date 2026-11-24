@@ -1,6 +1,27 @@
 import { AuthStore } from "@/lib/auth-store";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+/**
+ * Dynamically resolves the backend API base URL:
+ * 1. Honors explicit NEXT_PUBLIC_API_URL environment variable if set.
+ * 2. In browser environments:
+ *    - If accessed over LAN/Wi-Fi (e.g. 192.168.x.x, 10.x.x.x), targets port 8080 on that same host IP.
+ *    - On local machine, prioritizes 127.0.0.1 over localhost to prevent Windows WSL2 / wslrelay IPv6 [::1] connection drops.
+ * 3. In server environments (SSR), defaults to 127.0.0.1:8080.
+ */
+export function getApiBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  if (typeof window !== "undefined") {
+    const { protocol, hostname } = window.location;
+    if (hostname) {
+      return `${protocol}//${hostname}:8080/api/v1`;
+    }
+  }
+  return "http://localhost:8080/api/v1";
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
@@ -42,7 +63,8 @@ export async function tryRefreshToken(): Promise<boolean> {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+      const baseUrl = getApiBaseUrl();
+      const res = await fetch(`${baseUrl}/auth/refresh`, {
         method: "POST",
         credentials: "include",
         headers,
@@ -166,25 +188,41 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
   const method = (customConfig.method || "GET").toUpperCase();
 
   let response: Response;
+  const primaryBase = getApiBaseUrl();
+  const secondaryBase = primaryBase.includes("127.0.0.1")
+    ? primaryBase.replace("127.0.0.1", "localhost")
+    : primaryBase.includes("localhost")
+    ? primaryBase.replace("localhost", "127.0.0.1")
+    : primaryBase;
+
   try {
-    response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
+    response = await fetch(`${primaryBase}${endpoint}`, buildConfig());
   } catch (err: unknown) {
     if (customConfig.signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
       throw err;
     }
-    // Retry once after a brief pause to gracefully handle transient socket resets/connection pool recycling
-    await new Promise((resolve) => setTimeout(resolve, 250));
+    // Attempt 2: quick retry after 200ms using secondary host resolution
+    await new Promise((resolve) => setTimeout(resolve, 200));
     try {
-      response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
-    } catch (retryErr: unknown) {
-      if (customConfig.signal?.aborted || (retryErr instanceof Error && retryErr.name === "AbortError")) {
-        throw retryErr;
+      response = await fetch(`${secondaryBase}${endpoint}`, buildConfig());
+    } catch (secondErr: unknown) {
+      if (customConfig.signal?.aborted || (secondErr instanceof Error && secondErr.name === "AbortError")) {
+        throw secondErr;
       }
-      throw new ApiError(
-        "Unable to connect to the server. Please try again.",
-        "NETWORK_ERROR",
-        0
-      );
+      // Attempt 3: retry after 500ms using primary host resolution
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      try {
+        response = await fetch(`${primaryBase}${endpoint}`, buildConfig());
+      } catch (retryErr: unknown) {
+        if (customConfig.signal?.aborted || (retryErr instanceof Error && retryErr.name === "AbortError")) {
+          throw retryErr;
+        }
+        throw new ApiError(
+          "Unable to connect to the server. Please try again.",
+          "NETWORK_ERROR",
+          0
+        );
+      }
     }
   }
 
@@ -192,7 +230,8 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
     const refreshed = await tryRefreshToken();
     if (refreshed) {
       try {
-        response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
+        const refreshedBase = getApiBaseUrl();
+        response = await fetch(`${refreshedBase}${endpoint}`, buildConfig());
       } catch {
         throw new ApiError(
           "Unable to connect to the server. Please try again.",

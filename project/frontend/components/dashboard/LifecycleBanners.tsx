@@ -203,9 +203,9 @@ export function LifecycleBanners() {
 
       {/* 3. Business Allocation Attention Required Banner */}
       {needsAllocationAttention && !isReadOnlyBusiness && (
-        <div className="rounded-2xl border border-purple-500/30 bg-purple-50/80 dark:bg-purple-500/10 p-3 sm:px-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 p-3 sm:px-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3 text-xs">
-            <div className="h-8 w-8 rounded-xl bg-[#8b5cf6]/15 text-[#7c3aed] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-[var(--primary)]/15 text-[var(--primary)] flex items-center justify-center shrink-0">
               <Building2 className="w-4 h-4" />
             </div>
             <div>

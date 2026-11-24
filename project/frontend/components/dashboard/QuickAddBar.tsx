@@ -78,8 +78,8 @@ export function QuickAddBar({ categories, currency = "USD", onSuccess }: QuickAd
   const hasContent = input.trim().length > 0;
 
   return (
-    <div className="relative group w-full rounded-2xl p-[1px] bg-gradient-to-r from-purple-500/20 via-indigo-500/10 to-purple-500/20 hover:from-purple-500/40 hover:to-indigo-500/30 transition-all duration-300">
-      <div className="relative rounded-[15px] bg-white/95 dark:bg-[#0c101c]/95 backdrop-blur-xl border border-purple-500/15 dark:border-[var(--primary)]/20 p-3 sm:p-4 shadow-xl shadow-purple-500/5">
+    <div className="relative group w-full rounded-2xl p-[1px] bg-gradient-to-r from-[var(--primary)]/20 via-[var(--accent)]/10 to-[var(--primary)]/20 hover:from-[var(--primary)]/40 hover:to-[var(--accent)]/30 transition-all duration-300">
+      <div className="relative rounded-[15px] bg-white/95 dark:bg-[#0c101c]/95 backdrop-blur-xl border border-[var(--primary)]/15 dark:border-[var(--primary)]/20 p-3 sm:p-4 shadow-xl shadow-[var(--primary)]/5">
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Magic Icon & Input */}
           <div className="relative flex-1 flex items-center gap-3">

@@ -19,14 +19,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const refreshSettings = async () => {
     try {
-      const [profileData, businessData] = await Promise.all([
+      const [profileResult, businessResult] = await Promise.allSettled([
         SettingsService.getProfile(),
         SettingsService.getMyBusiness()
       ]);
-      setProfile(profileData);
-      setBusiness(businessData);
+
+      if (profileResult.status === "fulfilled") {
+        setProfile(profileResult.value);
+      }
+      if (businessResult.status === "fulfilled") {
+        setBusiness(businessResult.value);
+      }
     } catch (err) {
-      console.error("Failed to load settings data", err);
+      console.warn("Non-fatal: Settings data fetch deferred", err);
     }
   };
 

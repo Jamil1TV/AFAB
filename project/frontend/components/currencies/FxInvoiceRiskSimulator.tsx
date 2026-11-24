@@ -55,7 +55,7 @@ export function FxInvoiceRiskSimulator({
       {/* Header */}
       <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
             <Calculator className="h-5 w-5" />
           </div>
           <div>
@@ -136,7 +136,7 @@ export function FxInvoiceRiskSimulator({
           </span>
         </div>
         <div className="text-end">
-          <span className="text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] block">
+          <span className="text-[11px] font-semibold text-[var(--primary)] block">
             Spot Rate Applied
           </span>
           <span className="text-xs font-mono font-bold text-gray-700 dark:text-gray-300">
@@ -163,7 +163,7 @@ export function FxInvoiceRiskSimulator({
                 key={idx}
                 className={`p-3 rounded-xl border transition-all ${
                   isZero
-                    ? "border-[#8b5cf6]/40 bg-[#8b5cf6]/5 dark:border-[#8b5cf6]/40 dark:bg-[#8b5cf6]/10"
+                    ? "border-[var(--primary)]/40 bg-[var(--primary)]/5 dark:border-[var(--primary)]/40 dark:bg-[var(--primary)]/10"
                     : s.isPositive
                     ? "border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/40 dark:bg-emerald-500/5"
                     : "border-red-200 dark:border-red-500/20 bg-red-50/40 dark:bg-red-500/5"

@@ -518,7 +518,7 @@ export default function AfabCopilotPage() {
                     tabIndex={0}
                     className={`group relative flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-xs cursor-pointer transition-colors ${
                       isActive
-                        ? "bg-[#8b5cf6]/12 text-[#7c3aed] dark:text-[#c4b5fd] font-semibold"
+                        ? "bg-[var(--primary)]/10 text-[var(--primary)] font-semibold"
                         : "text-gray-700 dark:text-gray-300 hover:bg-gray-100/90 dark:hover:bg-white/[0.04]"
                     }`}
                   >
@@ -526,7 +526,7 @@ export default function AfabCopilotPage() {
                       {!isMobile && isActive ? (
                         <motion.span
                           layoutId="copilot-active-conv"
-                          className="h-4 w-1 rounded-full bg-[#8b5cf6] shrink-0"
+                          className="h-4 w-1 rounded-full bg-[var(--primary)] shrink-0"
                         />
                       ) : (
                         <MessageSquare className="h-3.5 w-3.5 shrink-0 opacity-65" />
@@ -655,10 +655,10 @@ export default function AfabCopilotPage() {
               <div className="mt-3 rounded-2xl border border-gray-200/80 dark:border-gray-800/80 bg-gray-50/75 dark:bg-[#080c18] p-3 space-y-2.5">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
-                    <Zap className="h-3.5 w-3.5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                    <Zap className="h-3.5 w-3.5 text-[var(--primary)]" />
                     <span>{t("tokensLabel")}</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#8b5cf6]/12 text-[#7c3aed] dark:text-[#c4b5fd]">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[var(--primary)]/10 text-[var(--primary)]">
                     {quota.planName}
                   </span>
                 </div>
@@ -673,7 +673,7 @@ export default function AfabCopilotPage() {
                         ? "bg-red-500"
                         : tokenPct >= 75
                         ? "bg-amber-500"
-                        : "bg-gradient-to-r from-[#8b5cf6] to-[#6366f1]"
+                        : "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)]"
                     }`}
                   />
                 </div>
@@ -730,7 +730,7 @@ export default function AfabCopilotPage() {
                 )}
               </button>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#8b5cf6]/15 to-[#10b981]/10 border border-[#8b5cf6]/25 text-[#7c3aed] dark:text-[#c4b5fd]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary)]/15 to-[#10b981]/10 border border-[var(--primary)]/25 text-[var(--primary)]">
                 <Sparkles className="h-4 w-4" />
               </div>
 
@@ -739,7 +739,7 @@ export default function AfabCopilotPage() {
                   <h1 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate max-w-[280px]">
                     {activeConversation ? activeConversation.title : t("title")}
                   </h1>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#c4b5fd] border border-[#8b5cf6]/20 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 shrink-0">
                     {t("badge")}
                   </span>
                   <AiModelStatusBadge
@@ -759,7 +759,7 @@ export default function AfabCopilotPage() {
             <div className="flex items-center gap-2 shrink-0">
               {quota && (
                 <span className="lg:hidden inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-gray-800 px-2.5 py-1.5 text-[11px] font-semibold tabular-nums text-gray-700 dark:text-gray-300">
-                  <Zap className="h-3 w-3 text-[#7c3aed]" />
+                  <Zap className="h-3 w-3 text-[var(--primary)]" />
                   {formatNumber(Math.max(0, quota.monthlyTokensRemaining), locale)} {t("remaining")}
                 </span>
               )}
@@ -787,9 +787,9 @@ export default function AfabCopilotPage() {
                 onClick={() => setMemoryDrawerOpen(true)}
                 className="afab-btn-secondary px-3 py-1.5 text-xs"
               >
-                <Brain className="h-3.5 w-3.5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                <Brain className="h-3.5 w-3.5 text-[var(--primary)]" />
                 <span className="hidden sm:inline">{t("memoryButton")}</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-[#8b5cf6]/12 text-[#7c3aed] dark:text-[#c4b5fd] text-[10px] font-bold tabular-nums">
+                <span className="px-1.5 py-0.2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold tabular-nums">
                   {memories.length}
                 </span>
               </button>
@@ -912,7 +912,7 @@ export default function AfabCopilotPage() {
                           whileTap={{ scale: 0.98 }}
                           type="button"
                           onClick={() => handleSend(q)}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-[#8b5cf6]/25 bg-[#8b5cf6]/[0.06] hover:bg-[#8b5cf6]/15 hover:border-[#8b5cf6]/45 px-3.5 py-1.5 text-xs font-medium text-[#7c3aed] dark:text-[#c4b5fd] transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/25 bg-[var(--primary)]/[0.06] hover:bg-[var(--primary)]/15 hover:border-[var(--primary)]/45 px-3.5 py-1.5 text-xs font-medium text-[var(--primary)] transition-colors cursor-pointer"
                         >
                           <Sparkles className="h-3 w-3 opacity-80 shrink-0" />
                           <span>{q}</span>
@@ -938,7 +938,7 @@ export default function AfabCopilotPage() {
                 onClick={scrollToBottom}
                 title={t("scrollToBottom")}
                 aria-label={t("scrollToBottom")}
-                className="absolute bottom-28 end-6 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-[#11172a]/95 text-gray-700 dark:text-gray-200 shadow-lg hover:border-[#8b5cf6]/50 hover:text-[#7c3aed] dark:hover:text-[#c4b5fd] backdrop-blur-md transition-colors"
+                className="absolute bottom-28 end-6 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-[#11172a]/95 text-gray-700 dark:text-gray-200 shadow-lg hover:border-[var(--primary)]/50 hover:text-[var(--primary)] backdrop-blur-md transition-colors"
               >
                 <ArrowDown className="h-4 w-4" />
               </motion.button>
@@ -952,7 +952,7 @@ export default function AfabCopilotPage() {
                 e.preventDefault();
                 handleSend();
               }}
-              className="max-w-3xl mx-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-[#080c18]/90 shadow-sm focus-within:border-[#8b5cf6] focus-within:ring-2 focus-within:ring-[#8b5cf6]/15 transition-all p-2.5 sm:p-3"
+              className="max-w-3xl mx-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-[#080c18]/90 shadow-sm focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--primary)]/15 transition-all p-2.5 sm:p-3"
             >
               <div className="flex items-end gap-2.5">
                 <textarea

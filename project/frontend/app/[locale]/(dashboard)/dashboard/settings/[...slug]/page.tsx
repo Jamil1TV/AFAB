@@ -34,7 +34,7 @@ export default function SettingsCatchAllPage() {
 
   return (
     <div className="afab-card p-12 text-center">
-      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+      <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--primary)]/10 text-[var(--primary)]">
         {currentTab?.icon || <Settings className="w-6 h-6" />}
       </div>
       <h3 className="afab-card-title mb-2">

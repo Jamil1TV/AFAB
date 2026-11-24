@@ -75,9 +75,9 @@ export function CopilotThinkingCard({
       <div className="relative flex h-9 w-9 shrink-0 items-center justify-center mt-0.5">
         <span
           aria-hidden="true"
-          className="absolute inset-0 rounded-xl bg-[#8b5cf6]/20 blur-sm animate-pulse"
+          className="absolute inset-0 rounded-xl bg-[var(--primary)]/20 blur-sm animate-pulse"
         />
-        <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-xl border border-[#8b5cf6]/30 bg-gradient-to-br from-[#8b5cf6]/20 to-[#6d28d9]/10 text-[#7c3aed] dark:text-[#c4b5fd] shadow-sm">
+        <span className="relative z-10 flex h-8 w-8 items-center justify-center rounded-xl border border-[var(--primary)]/30 bg-gradient-to-br from-[var(--primary)]/20 to-[var(--primary-hover)]/10 text-[var(--primary)] shadow-sm">
           <Sparkles className="h-4 w-4" />
         </span>
       </div>
@@ -85,11 +85,11 @@ export function CopilotThinkingCard({
       {/* Elevated Thinking / Live Stream Card */}
       <div className="flex-1 min-w-0">
         {!streamingText ? (
-          <div className="relative overflow-hidden rounded-2xl rounded-ss-md border border-[#8b5cf6]/30 bg-white/95 dark:bg-[#0b1020]/95 p-4 shadow-lg shadow-[#8b5cf6]/[0.06] backdrop-blur-md space-y-3.5">
+          <div className="relative overflow-hidden rounded-2xl rounded-ss-md border border-[var(--primary)]/30 bg-white/95 dark:bg-[#0b1020]/95 p-4 shadow-lg shadow-[var(--glow-color)] backdrop-blur-md space-y-3.5">
             {/* Subtle top animated shimmer line */}
             <div
               aria-hidden="true"
-              className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#8b5cf6] to-transparent opacity-80"
+              className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--primary)] to-transparent opacity-80"
             />
 
             {/* Phase Shimmer Header + Live Elapsed Timer */}
@@ -109,7 +109,7 @@ export function CopilotThinkingCard({
                 </AnimatePresence>
               </div>
               <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium tabular-nums text-gray-500 dark:text-gray-400 shrink-0">
-                <Clock className="h-3 w-3 text-[#8b5cf6]" />
+                <Clock className="h-3 w-3 text-[var(--primary)]" />
                 {t("elapsedSeconds", { seconds: elapsedSeconds })}
               </span>
             </div>
@@ -139,12 +139,12 @@ export function CopilotThinkingCard({
                     key={`active-${tool}`}
                     initial={{ opacity: 0, scale: 0.92 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="inline-flex items-center gap-2 rounded-full border border-[#8b5cf6]/35 bg-[#8b5cf6]/10 px-2.5 py-1 text-[11px] font-semibold text-[#7c3aed] dark:text-[#c4b5fd]"
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--primary)]/35 bg-[var(--primary)]/10 px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)]"
                   >
                     <span className="inline-flex items-end gap-0.5 h-3" aria-hidden="true">
-                      <span className="ai-wave-bar-1 w-0.5 h-full rounded-full bg-[#8b5cf6] dark:bg-[#a78bfa]" />
-                      <span className="ai-wave-bar-2 w-0.5 h-full rounded-full bg-[#8b5cf6] dark:bg-[#a78bfa]" />
-                      <span className="ai-wave-bar-3 w-0.5 h-full rounded-full bg-[#8b5cf6] dark:bg-[#a78bfa]" />
+                      <span className="ai-wave-bar-1 w-0.5 h-full rounded-full bg-[var(--primary)]" />
+                      <span className="ai-wave-bar-2 w-0.5 h-full rounded-full bg-[var(--primary)]" />
+                      <span className="ai-wave-bar-3 w-0.5 h-full rounded-full bg-[var(--primary)]" />
                     </span>
                     <span>{getToolLabel(tool)}</span>
                   </motion.span>
@@ -163,16 +163,16 @@ export function CopilotThinkingCard({
           <motion.div
             initial={{ opacity: 0.92 }}
             animate={{ opacity: 1 }}
-            className="rounded-2xl rounded-ss-md border border-[#8b5cf6]/30 bg-white dark:bg-[#0b1020] p-4 sm:p-5 shadow-md shadow-[#8b5cf6]/[0.05] space-y-3"
+            className="rounded-2xl rounded-ss-md border border-[var(--primary)]/30 bg-white dark:bg-[#0b1020] p-4 sm:p-5 shadow-md shadow-[var(--glow-color)] space-y-3"
           >
             {/* Compact Streaming Meta Header */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100 dark:border-gray-800/80">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#8b5cf6] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#8b5cf6]" />
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--primary)] opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--primary)]" />
                 </span>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#7c3aed] dark:text-[#a78bfa]">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">
                   {t("streamingLabel")}
                 </span>
               </div>

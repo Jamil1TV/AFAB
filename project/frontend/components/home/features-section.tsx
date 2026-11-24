@@ -20,12 +20,12 @@ const featureKeys = [
 ];
 
 const iconColors = [
-  "text-[#8b5cf6] bg-[#8b5cf6]/10", // Purple
-  "text-[#60a5fa] bg-[#60a5fa]/10", // Blue
-  "text-[#fb923c] bg-[#fb923c]/10", // Orange
-  "text-[#60a5fa] bg-[#60a5fa]/10", // Blue
-  "text-[#34d399] bg-[#34d399]/10", // Green
-  "text-[#8b5cf6] bg-[#8b5cf6]/10", // Purple
+  "text-[var(--primary)] bg-[var(--primary)]/10 dark:bg-[var(--primary)]/15", // Primary Accent
+  "text-[#60a5fa] bg-[#60a5fa]/10 dark:bg-[#60a5fa]/15", // Blue
+  "text-[#fb923c] bg-[#fb923c]/10 dark:bg-[#fb923c]/15", // Orange
+  "text-[#60a5fa] bg-[#60a5fa]/10 dark:bg-[#60a5fa]/15", // Blue
+  "text-[#34d399] bg-[#34d399]/10 dark:bg-[#34d399]/15", // Green
+  "text-[var(--primary)] bg-[var(--primary)]/10 dark:bg-[var(--primary)]/15", // Primary Accent
 ];
 
 export function FeaturesSection() {
@@ -38,9 +38,9 @@ export function FeaturesSection() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-12">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             {t("title")}{" "}
-            <span className="text-[#8b5cf6]">{t("titleHighlight")}</span>
+            <span className="text-[var(--primary)]">{t("titleHighlight")}</span>
           </h2>
-          <button className="rounded-full border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-muted">
+          <button className="rounded-full border border-border px-5 py-2.5 text-sm font-medium transition-colors hover:bg-muted hover:border-[var(--primary)]/40 hover:text-[var(--primary)]">
             {t("viewAll")}
           </button>
         </div>
@@ -52,7 +52,7 @@ export function FeaturesSection() {
             return (
               <div
                 key={feature.title}
-                className="group rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-8 shadow-sm transition-all hover:shadow-xl dark:hover:shadow-[#8b5cf6]/5 hover:-translate-y-1"
+                className="group rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-8 shadow-sm transition-all hover:border-[var(--primary)]/40 hover:shadow-xl dark:hover:shadow-[var(--glow-color)]/10 hover:-translate-y-1"
               >
                 <div
                   className={`mb-6 inline-flex h-12 w-12 items-center justify-center rounded-xl ${iconColors[i]}`}

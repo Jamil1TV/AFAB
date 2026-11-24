@@ -19,7 +19,7 @@ export function HowItWorksSection() {
         {/* ── Section Title ── */}
         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl mb-14">
           {t("title")}{" "}
-          <span className="italic text-[#8b5cf6]">{t("titleHighlight")}</span>
+          <span className="italic text-[var(--primary)]">{t("titleHighlight")}</span>
         </h2>
 
         {/* ── Steps Row ── 
@@ -32,11 +32,11 @@ export function HowItWorksSection() {
             <Fragment key={step.title}>
 
               {/* ── Card ── */}
-              <div className="relative flex flex-col h-full rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-7 sm:p-8 shadow-sm transition-all hover:shadow-xl dark:hover:shadow-[#8b5cf6]/5">
+              <div className="relative flex flex-col h-full rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-7 sm:p-8 shadow-sm transition-all hover:border-[var(--primary)]/40 hover:shadow-xl dark:hover:shadow-[var(--glow-color)]/10">
 
                 {/* Step Number Badge */}
                 <div className="mb-10">
-                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#8b5cf6]/10 dark:bg-[#8b5cf6]/15 text-[#8b5cf6] text-base font-bold">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20 text-[var(--primary)] border border-[var(--primary)]/20 text-base font-bold">
                     {i + 1}
                   </div>
                 </div>
@@ -44,7 +44,7 @@ export function HowItWorksSection() {
                 {/* Content pushed to bottom */}
                 <div className="mt-auto">
                   {/* Icon */}
-                  <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[#8b5cf6]/10 dark:bg-[#8b5cf6]/15 text-[#8b5cf6]">
+                  <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20 text-[var(--primary)]">
                     <step.Icon className="h-5 w-5" />
                   </div>
 
@@ -64,8 +64,8 @@ export function HowItWorksSection() {
               {i < stepKeys.length - 1 && (
                 <div className="hidden lg:flex items-center justify-center self-center">
                   <div className="flex items-center w-full px-1">
-                    <div className="flex-1 h-0 border-t-[2px] border-dashed border-[#8b5cf6]/40" />
-                    <svg width="7" height="10" viewBox="0 0 7 10" className="text-[#8b5cf6]/60 flex-shrink-0 -ml-px">
+                    <div className="flex-1 h-0 border-t-[2px] border-dashed border-[var(--primary)]/40" />
+                    <svg width="7" height="10" viewBox="0 0 7 10" className="text-[var(--primary)]/60 flex-shrink-0 -ml-px">
                       <path d="M0 0L7 5L0 10Z" fill="currentColor" />
                     </svg>
                   </div>

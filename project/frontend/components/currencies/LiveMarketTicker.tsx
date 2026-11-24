@@ -116,8 +116,8 @@ export function LiveMarketTicker({
               onClick={() => onSelectPair && onSelectPair(p)}
               className={`flex items-center gap-2.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all duration-150 shrink-0 ${
                 isActive
-                  ? "bg-[#8b5cf6] text-white border-[#8b5cf6] shadow-sm shadow-[#8b5cf6]/25"
-                  : "bg-gray-50/50 dark:bg-[#080c18] border-gray-200 dark:border-gray-800/60 text-gray-700 dark:text-gray-300 hover:border-[#8b5cf6]/50 hover:bg-gray-100/60 dark:hover:bg-white/[0.04]"
+                  ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm shadow-[var(--primary)]/25"
+                  : "bg-gray-50/50 dark:bg-[#080c18] border-gray-200 dark:border-gray-800/60 text-gray-700 dark:text-gray-300 hover:border-[var(--primary)]/50 hover:bg-gray-100/60 dark:hover:bg-white/[0.04]"
               }`}
             >
               <span className={`font-bold ${isActive ? "text-white" : "text-gray-900 dark:text-white"}`}>

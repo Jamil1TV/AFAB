@@ -23,12 +23,12 @@ export function HeroSection() {
       {/* ── Background Ambient Glows ── */}
       {/* Light mode */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden dark:hidden">
-        <div className="absolute -top-20 left-1/3 h-[500px] w-[500px] rounded-full bg-[#8b5cf6]/[0.03] blur-[120px]" />
+        <div className="absolute -top-20 left-1/3 h-[500px] w-[500px] rounded-full bg-[var(--primary)]/[0.04] blur-[120px]" />
       </div>
       {/* Dark mode */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden hidden dark:block">
-        <div className="absolute -top-40 left-1/4 h-[600px] w-[600px] rounded-full bg-[#7c3aed]/[0.08] blur-[150px]" />
-        <div className="absolute top-32 -left-20 h-[400px] w-[400px] rounded-full bg-[#6d28d9]/[0.06] blur-[120px]" />
+        <div className="absolute -top-40 left-1/4 h-[600px] w-[600px] rounded-full bg-[var(--primary)]/[0.08] blur-[150px]" />
+        <div className="absolute top-32 -left-20 h-[400px] w-[400px] rounded-full bg-[var(--accent)]/[0.06] blur-[120px]" />
         <div className="absolute bottom-0 right-0 h-[500px] w-[500px] rounded-full bg-blue-600/[0.03] blur-[150px]" />
       </div>
 
@@ -78,7 +78,7 @@ export function HeroSection() {
             <div className="mb-8 inline-flex self-start items-center gap-2 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] px-4 py-2 text-[13px] font-medium text-gray-600 dark:text-gray-300 shadow-sm dark:shadow-none">
               <span className="text-gray-400 dark:text-gray-500">•</span>
               <span>{t("badge")}</span>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[#8b5cf6]">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-[var(--primary)]">
                 <path d="M8 0L9.5 6.5L16 8L9.5 9.5L8 16L6.5 9.5L0 8L6.5 6.5L8 0Z" fill="currentColor" />
               </svg>
             </div>
@@ -87,7 +87,7 @@ export function HeroSection() {
             <h2 className="text-[2.25rem] xl:text-[2.75rem] font-bold tracking-tight text-gray-900 dark:text-white leading-[1.08]">
               {t("title_line1")}
               <br />
-              <span className="text-[#7c3aed] dark:text-[#8b5cf6] italic">
+              <span className="text-[var(--primary)] italic">
                 {t("title_line2")}
               </span>
             </h2>
@@ -126,9 +126,9 @@ export function HeroSection() {
 
           {/* ── RIGHT: Dashboard Mockup ── */}
           <div className="relative flex-1 min-w-0">
-            {/* Purple ambient glow behind dashboard (dark mode) */}
+            {/* Ambient glow behind dashboard (dark mode) */}
             <div className="absolute inset-0 hidden dark:flex items-center justify-center pointer-events-none">
-              <div className="h-[80%] w-[80%] rounded-full bg-[#7c3aed]/[0.12] blur-[80px]" />
+              <div className="h-[80%] w-[80%] rounded-full bg-[var(--primary)]/[0.12] blur-[80px]" />
             </div>
 
             <div className="relative mx-auto w-full max-w-[560px] xl:max-w-[620px]">
@@ -140,17 +140,17 @@ export function HeroSection() {
                   transformOrigin: "center center",
                 }}
               >
-                <div className="rounded-[20px] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12)] dark:shadow-[0_0_60px_-5px_rgba(124,58,237,0.3),0_0_120px_-15px_rgba(124,58,237,0.12),0_25px_50px_-12px_rgba(0,0,0,0.5)]">
+                <div className="rounded-[20px] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.12)] dark:shadow-[0_0_60px_-5px_var(--glow-color,rgba(124,58,237,0.3)),0_25px_50px_-12px_rgba(0,0,0,0.5)]">
                   <DashboardMockup />
                 </div>
               </div>
 
               {/* ── Floating Element 1: Bar Chart (Top-Left) ── */}
               <div
-                className="absolute z-20 flex -left-6 xl:-left-8 top-[10%] h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_rgba(124,58,237,0.18),0_8px_25px_rgba(0,0,0,0.3)]"
+                className="absolute z-20 flex -left-6 xl:-left-8 top-[10%] h-[52px] w-[52px] items-center justify-center rounded-[14px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_var(--glow-color,rgba(124,58,237,0.18)),0_8px_25px_rgba(0,0,0,0.3)]"
                 style={{ transform: "perspective(800px) rotateY(-8deg) translateZ(40px)" }}
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-[#7c3aed] dark:text-[#a78bfa]">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-[var(--primary)]">
                   <rect x="4" y="13" width="3.5" height="8" rx="1.2" fill="currentColor" opacity="0.35" />
                   <rect x="10.25" y="8" width="3.5" height="13" rx="1.2" fill="currentColor" opacity="0.6" />
                   <rect x="16.5" y="3" width="3.5" height="18" rx="1.2" fill="currentColor" />
@@ -159,10 +159,10 @@ export function HeroSection() {
 
               {/* ── Floating Element 2: Settings/Gear (Middle-Left) ── */}
               <div
-                className="absolute z-20 flex left-4 xl:left-2 top-[44%] -translate-y-1/2 h-[62px] w-[62px] items-center justify-center rounded-[16px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_12px_35px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_rgba(124,58,237,0.2),0_12px_35px_rgba(0,0,0,0.4)]"
+                className="absolute z-20 flex left-4 xl:left-2 top-[44%] -translate-y-1/2 h-[62px] w-[62px] items-center justify-center rounded-[16px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_12px_35px_rgba(0,0,0,0.1)] dark:shadow-[0_0_30px_var(--glow-color,rgba(124,58,237,0.2)),0_12px_35px_rgba(0,0,0,0.4)]"
                 style={{ transform: "perspective(800px) rotateY(-12deg) translateZ(80px)" }}
               >
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[#7c3aed] dark:text-[#a78bfa]">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-[var(--primary)]">
                   <circle cx="12" cy="12" r="3" />
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
@@ -170,10 +170,10 @@ export function HeroSection() {
 
               {/* ── Floating Element 3: 4-Point Star (Bottom-Left) ── */}
               <div
-                className="absolute z-20 flex -left-1 xl:-left-3 bottom-[14%] h-[48px] w-[48px] items-center justify-center rounded-[12px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_rgba(124,58,237,0.18),0_8px_25px_rgba(0,0,0,0.3)]"
+                className="absolute z-20 flex -left-1 xl:-left-3 bottom-[14%] h-[48px] w-[48px] items-center justify-center rounded-[12px] bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 shadow-[0_8px_25px_rgba(0,0,0,0.08)] dark:shadow-[0_0_25px_var(--glow-color,rgba(124,58,237,0.18)),0_8px_25px_rgba(0,0,0,0.3)]"
                 style={{ transform: "perspective(800px) rotateY(-5deg) translateZ(60px)" }}
               >
-                <svg width="18" height="18" viewBox="0 0 16 16" fill="none" className="text-[#7c3aed] dark:text-[#a78bfa]">
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none" className="text-[var(--primary)]">
                   <path d="M8 0L9.5 6.5L16 8L9.5 9.5L8 16L6.5 9.5L0 8L6.5 6.5L8 0Z" fill="currentColor" />
                 </svg>
               </div>

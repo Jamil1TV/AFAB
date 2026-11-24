@@ -84,10 +84,10 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
   }, [data, isPositive, isZero]);
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[#8b5cf6]/5 min-w-0">
+    <div className="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[var(--primary)]/10 min-w-0">
       <div className="flex items-start justify-between gap-2 min-w-0">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100/80 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
+          <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100/80 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary)] transition-colors">
             <Icon className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
           </div>
           <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 leading-snug break-words min-w-0">

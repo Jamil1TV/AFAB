@@ -36,7 +36,7 @@ export function RevenueChart({ data, currency = "USD" }: { data: any[]; currency
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">{tCharts("revenueTitle")}</h3>
             {isAllZero && (
-              <span className="rounded-full bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 text-[10px] font-semibold text-purple-600 dark:text-purple-400">
+              <span className="rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)]">
                 {locale === "ar" ? "في انتظار المعاملات" : "Awaiting data"}
               </span>
             )}

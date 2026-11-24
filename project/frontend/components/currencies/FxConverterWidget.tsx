@@ -149,7 +149,7 @@ export function FxConverterWidget({
       <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
         <div>
           <h3 className="afab-card-title flex items-center gap-2">
-            <ArrowRightLeft className="h-5 w-5 text-[#8b5cf6]" />
+            <ArrowRightLeft className="h-5 w-5 text-[var(--primary)]" />
             <span>{isArabic ? "محول العملات الفوري المتطور" : "Live Two-Way Converter"}</span>
           </h3>
           <p className="afab-card-subtitle text-xs mt-0.5">
@@ -166,10 +166,10 @@ export function FxConverterWidget({
       {/* Converter Body */}
       <div className="py-4 space-y-3 relative">
         {/* FROM (You Send) Input Box */}
-        <div className="afab-inset p-4 transition-all focus-within:border-[#8b5cf6] focus-within:ring-1 focus-within:ring-[#8b5cf6]">
+        <div className="afab-inset p-4 transition-all focus-within:border-[var(--primary)] focus-within:ring-1 focus-within:ring-[var(--primary)]">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">
             <span>{isArabic ? "المبلغ المرسل / الأساسي" : "You Send"}</span>
-            <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-bold">
+            <span className="font-mono text-[11px] text-[var(--primary)] font-bold">
               {from}
             </span>
           </div>
@@ -210,7 +210,7 @@ export function FxConverterWidget({
             type="button"
             onClick={handleSwap}
             title={isArabic ? "تبديل العملتين" : "Swap currencies"}
-            className="flex h-10 w-10 mx-3 items-center justify-center rounded-full bg-[#8b5cf6] hover:bg-[#7c3aed] text-white shadow-lg shadow-[#8b5cf6]/25 hover:scale-105 active:scale-95 transition-all duration-200 shrink-0"
+            className="flex h-10 w-10 mx-3 items-center justify-center rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-lg shadow-[var(--primary)]/25 hover:scale-105 active:scale-95 transition-all duration-200 shrink-0"
           >
             <ArrowUpDown
               className={`h-4 w-4 transition-transform duration-300 ${
@@ -223,18 +223,18 @@ export function FxConverterWidget({
         </div>
 
         {/* TO (You Receive) Input Box — Two-Way Editable */}
-        <div className="afab-inset p-4 transition-all focus-within:border-[#8b5cf6] focus-within:ring-1 focus-within:ring-[#8b5cf6]">
+        <div className="afab-inset p-4 transition-all focus-within:border-[var(--primary)] focus-within:ring-1 focus-within:ring-[var(--primary)]">
           <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 font-semibold mb-1">
             <span>{isArabic ? "المبلغ المستلم (تقديري)" : "You Receive (Editable)"}</span>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-bold">
+              <span className="font-mono text-[11px] text-[var(--primary)] font-bold">
                 {to}
               </span>
               <button
                 type="button"
                 onClick={handleCopy}
                 title={isArabic ? "نسخ النتيجة" : "Copy converted amount"}
-                className="text-gray-400 hover:text-[#7c3aed] dark:hover:text-[#a78bfa] transition-colors"
+                className="text-gray-400 hover:text-[var(--primary)] transition-colors"
               >
                 {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
               </button>
@@ -249,7 +249,7 @@ export function FxConverterWidget({
               value={receiveAmount}
               onChange={(e) => handleReceiveChange(e.target.value)}
               placeholder="0.00"
-              className="w-full bg-transparent text-2xl font-bold text-[#7c3aed] dark:text-[#a78bfa] outline-none font-mono placeholder:text-gray-400"
+              className="w-full bg-transparent text-2xl font-bold text-[var(--primary)] outline-none font-mono placeholder:text-gray-400"
             />
 
             <select
@@ -283,7 +283,7 @@ export function FxConverterWidget({
                 onClick={() => handleSendChange(val.toString())}
                 className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-colors ${
                   parseFloat(sendAmount) === val
-                    ? "bg-[#8b5cf6] text-white shadow-sm"
+                    ? "bg-[var(--primary)] text-white shadow-sm"
                     : "bg-gray-100 dark:bg-[#080c18] border border-gray-200/60 dark:border-gray-800/60 text-gray-600 dark:text-gray-300 hover:bg-gray-200/70 dark:hover:bg-white/[0.05]"
                 }`}
               >
@@ -295,7 +295,7 @@ export function FxConverterWidget({
           {/* Business Portfolio Percentage Presets */}
           {businessBalance > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-              <span className="text-[10px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] uppercase">
+              <span className="text-[10px] font-semibold text-[var(--primary)] uppercase">
                 {isArabic ? "من رصيدك:" : "Portfolio:"}
               </span>
               {balancePresets.map((bp) => {
@@ -305,7 +305,7 @@ export function FxConverterWidget({
                     key={bp.label}
                     type="button"
                     onClick={() => handleSendChange(calculated.toString())}
-                    className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-500/10 hover:bg-purple-500/20 text-[#7c3aed] dark:text-[#a78bfa] border border-purple-500/20 transition-colors"
+                    className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-[var(--primary)]/10 hover:bg-[var(--primary)]/20 text-[var(--primary)] border border-[var(--primary)]/20 transition-colors"
                   >
                     {bp.label} ({calculated.toLocaleString()})
                   </button>

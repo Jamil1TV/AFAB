@@ -25,7 +25,7 @@ function renderInline(text: string): React.ReactNode[] {
       parts.push(
         <code
           key={key++}
-          className="px-1.5 py-0.5 rounded-md bg-purple-50 dark:bg-[#8b5cf6]/15 border border-purple-200/70 dark:border-[#8b5cf6]/25 font-mono text-[12px] text-[#6d28d9] dark:text-[#c4b5fd]"
+          className="px-1.5 py-0.5 rounded-md bg-[var(--primary)]/10 border border-[var(--primary)]/20 font-mono text-[12px] text-[var(--primary)]"
         >
           {token.slice(1, -1)}
         </code>
@@ -272,7 +272,7 @@ export function CopilotMarkdown({
             return (
               <blockquote
                 key={block.key}
-                className="border-s-2 border-[#8b5cf6] bg-[#8b5cf6]/[0.05] dark:bg-[#8b5cf6]/10 rounded-e-xl px-3.5 py-2.5 my-2.5 text-[13.5px] text-gray-700 dark:text-gray-200 leading-relaxed"
+                className="border-s-2 border-[var(--primary)] bg-[var(--primary)]/[0.05] dark:bg-[var(--primary)]/10 rounded-e-xl px-3.5 py-2.5 my-2.5 text-[13.5px] text-gray-700 dark:text-gray-200 leading-relaxed"
               >
                 {block.lines.map((qLine, qIdx) => (
                   <p key={qIdx} className={qIdx > 0 ? "mt-1" : ""}>
@@ -303,7 +303,7 @@ export function CopilotMarkdown({
                     {block.rows.map((row, rIdx) => (
                       <tr
                         key={rIdx}
-                        className="hover:bg-purple-50/40 dark:hover:bg-white/[0.02] transition-colors"
+                        className="hover:bg-[var(--primary)]/5 dark:hover:bg-white/[0.02] transition-colors"
                       >
                         {block.headers.map((_, cIdx) => (
                           <td
@@ -323,7 +323,7 @@ export function CopilotMarkdown({
 
           case "ul":
             return (
-              <ul key={block.key} className="my-2 space-y-1.5 ps-5 list-disc marker:text-[#8b5cf6]">
+              <ul key={block.key} className="my-2 space-y-1.5 ps-5 list-disc marker:text-[var(--primary)]">
                 {block.items.map((item, idxItem) => (
                   <li key={idxItem} className="leading-[1.7] ps-1">
                     {renderInline(item)}
@@ -335,7 +335,7 @@ export function CopilotMarkdown({
 
           case "ol":
             return (
-              <ol key={block.key} className="my-2 space-y-1.5 ps-5 list-decimal marker:text-[#8b5cf6] marker:font-semibold">
+              <ol key={block.key} className="my-2 space-y-1.5 ps-5 list-decimal marker:text-[var(--primary)] marker:font-semibold">
                 {block.items.map((item, idxItem) => (
                   <li key={idxItem} className="leading-[1.7] ps-1">
                     {renderInline(item)}

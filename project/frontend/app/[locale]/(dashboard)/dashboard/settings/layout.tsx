@@ -20,6 +20,7 @@ export default function SettingsLayout({
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const devSafePrefetch = process.env.NODE_ENV === "production" ? undefined : false;
   
   const tabs = [
     { id: "general", path: "/dashboard/settings/general", label: t("tabs.general"), icon: <Settings className="w-4 h-4" /> },
@@ -73,6 +74,7 @@ export default function SettingsLayout({
                 <Link
                   key={tab.id}
                   href={tab.path}
+                  prefetch={devSafePrefetch}
                   title={collapsed ? tab.label : undefined}
                   className={`group flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative
                     ${isActive 
@@ -84,7 +86,7 @@ export default function SettingsLayout({
                   {isActive && (
                     <div className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[var(--primary)] rounded-full" />
                   )}
-                  <span className={`shrink-0 ${isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
+                  <span className={`shrink-0 ${isActive ? "text-[var(--primary)]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
                     {tab.icon}
                   </span>
                   {!collapsed && <span className="truncate">{tab.label}</span>}
@@ -161,6 +163,7 @@ export default function SettingsLayout({
                       <Link
                         key={tab.id}
                         href={tab.path}
+                        prefetch={devSafePrefetch}
                         onClick={() => setMobileNavOpen(false)}
                         className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors
                           ${isActive 

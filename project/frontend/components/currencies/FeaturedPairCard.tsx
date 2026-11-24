@@ -68,14 +68,14 @@ export function FeaturedPairCard({
       onClick={() => onSelect && onSelect(pair)}
       className={`afab-card afab-card-hover group cursor-pointer p-5 relative overflow-hidden ${
         isSelected
-          ? "border-[#8b5cf6] dark:border-[#8b5cf6] ring-2 ring-[#8b5cf6]/20"
+          ? "border-[var(--primary)] dark:border-[var(--primary)] ring-2 ring-[var(--primary)]/20"
           : ""
       }`}
     >
       {/* Top Header: Pair symbol & 24h change badge */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-base text-gray-900 dark:text-white group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
+          <span className="font-bold text-base text-gray-900 dark:text-white group-hover:text-[var(--primary)] transition-colors">
             {pair.symbol}
           </span>
           <span className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase">
@@ -145,7 +145,7 @@ export function FeaturedPairCard({
 
         {/* Quick action footer */}
         <div className="flex items-center justify-between pt-2">
-          <span className="text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] group-hover:underline">
+          <span className="text-[11px] font-semibold text-[var(--primary)] group-hover:underline">
             {isArabic ? "تحليل الرسم البياني ←" : "Analyze Chart →"}
           </span>
           <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">

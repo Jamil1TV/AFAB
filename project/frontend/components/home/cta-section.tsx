@@ -7,7 +7,7 @@ export function CTASection() {
   return (
     <section className="py-8 lg:py-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] px-6 py-8 shadow-sm sm:px-10 lg:px-12">
+        <div className="relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 hover:border-[var(--primary)]/30 bg-white dark:bg-[#0c101c] px-6 py-8 shadow-sm sm:px-10 lg:px-12 transition-colors">
 
           <div className="relative z-10 flex flex-col items-center justify-between gap-8 lg:flex-row lg:gap-12">
 
@@ -31,10 +31,10 @@ export function CTASection() {
 
             {/* Right — Action Buttons */}
             <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-4 lg:justify-end">
-              <button className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[var(--primary)]/25 transition-all hover:shadow-xl hover:-translate-y-0.5">
+              <button className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[var(--glow-color)] transition-all hover:shadow-xl hover:-translate-y-0.5">
                 {t("getStartedFree")}
               </button>
-              <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent px-8 py-3.5 text-sm font-semibold text-gray-900 dark:text-white transition-colors hover:bg-gray-50 dark:hover:bg-white/5">
+              <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent px-8 py-3.5 text-sm font-semibold text-gray-900 dark:text-white transition-colors hover:bg-gray-50 dark:hover:bg-white/5 hover:border-[var(--primary)]/40 hover:text-[var(--primary)]">
                 <Play className="h-4 w-4 fill-current" />
                 {t("watchDemo")}
               </button>

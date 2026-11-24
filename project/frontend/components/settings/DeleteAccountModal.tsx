@@ -236,7 +236,7 @@ export function DeleteAccountModal({
                   (isArabic ? "مساحة عملي" : "My Workspace")}
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
                 {(profile?.planTier || "FREE").toUpperCase()}
               </span>
             </div>

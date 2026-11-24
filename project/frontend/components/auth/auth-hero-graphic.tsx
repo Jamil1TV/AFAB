@@ -13,7 +13,7 @@ export function AuthHeroGraphic() {
       
       {/* ── Background Ambient Glows ── */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[20%] left-[10%] w-[300px] h-[300px] rounded-full bg-[#7c3aed]/15 blur-[90px]" />
+        <div className="absolute top-[20%] left-[10%] w-[300px] h-[300px] rounded-full bg-[var(--primary)]/15 blur-[90px]" />
         <div className="absolute bottom-[10%] right-[20%] w-[250px] h-[250px] rounded-full bg-[#3b82f6]/10 blur-[80px]" />
       </div>
 
@@ -33,7 +33,7 @@ export function AuthHeroGraphic() {
           
           {/* ── Floating Icons Background ── */}
           <div className={`absolute top-[10%] ${isArabic ? 'right-[-10%]' : 'left-[-10%]'}`} style={{ transform: 'translateZ(-20px)' }}>
-            <div className="w-10 h-10 rounded-[12px] bg-gradient-to-tr from-[#6d28d9] to-[#8b5cf6] shadow-lg flex items-center justify-center animate-float-slow">
+            <div className="w-10 h-10 rounded-[12px] bg-gradient-to-tr from-[var(--accent)] to-[var(--primary)] shadow-lg flex items-center justify-center animate-float-slow">
               <Star className="text-white fill-white w-5 h-5" />
             </div>
           </div>
@@ -58,17 +58,17 @@ export function AuthHeroGraphic() {
             <div className="w-[180px] h-[180px] rounded-[24px] bg-white/10 dark:bg-white/5 border border-white/20 backdrop-blur-xl shadow-[0_20px_40px_rgba(0,0,0,0.3)] flex items-center justify-center animate-float-delayed">
               <div className="relative w-[100px] h-[100px]">
                 {/* CSS Pie Chart */}
-                <div className="absolute inset-0 rounded-full border-[16px] border-[#8b5cf6] border-r-transparent border-t-transparent transform rotate-45 shadow-lg" />
+                <div className="absolute inset-0 rounded-full border-[16px] border-[var(--primary)] border-r-transparent border-t-transparent transform rotate-45 shadow-lg" />
                 <div className="absolute inset-0 rounded-full border-[16px] border-[#f59e0b] border-l-transparent border-b-transparent transform -rotate-45 shadow-lg" />
                 <div className="absolute inset-0 rounded-full border-[16px] border-[#3b82f6] border-b-transparent border-r-transparent border-l-transparent transform rotate-45 shadow-lg" />
-                <div className="absolute inset-0 rounded-full border-[16px] border-[#6d28d9] border-t-transparent border-r-transparent border-l-transparent transform rotate-45 shadow-lg" />
+                <div className="absolute inset-0 rounded-full border-[16px] border-[var(--accent)] border-t-transparent border-r-transparent border-l-transparent transform rotate-45 shadow-lg" />
               </div>
             </div>
           </div>
 
           {/* ── Revenue Purple Card (Top Left) ── */}
           <div className={`absolute top-[0%] ${isArabic ? 'right-[-5%]' : 'left-[-5%]'}`} style={{ transform: 'translateZ(60px)' }}>
-            <div className="w-[280px] h-[180px] rounded-[24px] bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] border border-white/20 shadow-[0_30px_60px_-15px_rgba(109,40,217,0.5)] p-5 animate-float">
+            <div className="w-[280px] h-[180px] rounded-[24px] bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] border border-white/20 shadow-[0_30px_60px_-15px_var(--glow-color,rgba(109,40,217,0.5))] p-5 animate-float">
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-white/70 text-[13px] font-medium">{isArabic ? 'الإيرادات' : 'Revenue'}</p>

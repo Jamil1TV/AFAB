@@ -1,7 +1,7 @@
-import { fetchClient, fetchRawClient, ApiError } from "./client";
+import { fetchClient, fetchRawClient, ApiError, getApiBaseUrl } from "./client";
 import { AuthStore } from "@/lib/auth-store";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+export const AI_API_BASE_URL = getApiBaseUrl();
 
 export interface AiEvidenceItem {
   type: "TRANSACTION" | "INVOICE" | "CUSTOMER" | "BUDGET" | "RECURRING" | "MEMORY" | "SUMMARY" | "REPORT" | string;
@@ -183,7 +183,7 @@ export class AiService {
       pollTimer = setTimeout(async () => {
         await check(false);
         scheduleNext();
-      }, 5000);
+      }, 8000);
     };
 
     const handleVisibility = () => {
@@ -418,5 +418,3 @@ export class AiService {
     return fetchClient(`/ai/memory/${id}`, { method: "DELETE" });
   }
 }
-
-export const AI_API_BASE_URL = API_BASE_URL;

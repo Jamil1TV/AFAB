@@ -876,7 +876,7 @@ export function AppearanceSettings({ profile, onRefresh }: AppearanceSettingsPro
             </div>
 
             {/* Quick Tips */}
-            <div className="mt-3.5 sm:mt-4 p-3 rounded-xl bg-purple-500/5 dark:bg-purple-500/10 border border-purple-500/20 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 flex items-start gap-2">
+            <div className="mt-3.5 sm:mt-4 p-3 rounded-xl bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 flex items-start gap-2">
               <HelpCircle className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
               <span className="leading-relaxed">
                 {isArabic

@@ -56,7 +56,7 @@ export function AfabLoader({ className, size = "md", text }: AfabLoaderProps) {
               repeat: Infinity,
               ease: "easeInOut",
             }}
-            className="absolute inset-0 m-auto w-3/4 h-3/4 rounded-full bg-gradient-to-tr from-[#8b5cf6]/35 via-[#06b6d4]/30 to-[#10b981]/25 blur-xl pointer-events-none"
+            className="absolute inset-0 m-auto w-3/4 h-3/4 rounded-full bg-gradient-to-tr from-[var(--primary)]/35 via-[#06b6d4]/30 to-[#10b981]/25 blur-xl pointer-events-none"
           />
         )}
 
@@ -76,7 +76,7 @@ export function AfabLoader({ className, size = "md", text }: AfabLoaderProps) {
             {/* 2. Fluid Wave Energy Gradient */}
             <linearGradient id={`fluidGrad_${uid}`} x1="0" y1="1" x2="0" y2="0">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.85" />
-              <stop offset="45%" stopColor="#8b5cf6" stopOpacity="0.95" />
+              <stop offset="45%" stopColor="var(--primary)" stopOpacity="0.95" />
               <stop offset="85%" stopColor="#06b6d4" stopOpacity="1" />
               <stop offset="100%" stopColor="#10b981" stopOpacity="0.9" />
             </linearGradient>
@@ -92,7 +92,7 @@ export function AfabLoader({ className, size = "md", text }: AfabLoaderProps) {
 
             {/* 4. Fine Border Contour Gradient */}
             <linearGradient id={`borderGrad_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#8b5cf6" />
+              <stop offset="0%" stopColor="var(--primary)" />
               <stop offset="50%" stopColor="#06b6d4" />
               <stop offset="100%" stopColor="#10b981" />
             </linearGradient>
@@ -101,12 +101,12 @@ export function AfabLoader({ className, size = "md", text }: AfabLoaderProps) {
             <linearGradient id={`laserGrad_${uid}`} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
               <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.9" />
-              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+              <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
             </linearGradient>
 
             {/* 6. Orbital Ring Gradient */}
             <linearGradient id={`orbitGrad_${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8" />
+              <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.8" />
               <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.3" />
               <stop offset="100%" stopColor="#10b981" stopOpacity="0.8" />
             </linearGradient>
@@ -176,7 +176,7 @@ export function AfabLoader({ className, size = "md", text }: AfabLoaderProps) {
               y="0"
               width="100"
               height="100"
-              fill="#8b5cf6"
+              fill="var(--primary)"
               className="opacity-15 dark:opacity-25"
             />
 
