@@ -960,8 +960,9 @@ export default function InvoicesPage() {
               </div>
             ) : (
               <>
-                <div className="flex items-start justify-between gap-3 pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div className="flex items-start gap-3.5">
+                <div className="flex items-start justify-between gap-4 pb-4 border-b border-gray-100 dark:border-gray-800">
+                  {/* LEFT: Business Brand, Name & Matricule Fiscale */}
+                  <div className="flex items-start gap-3">
                     <div className="h-12 w-12 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/30 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
                       <img
                         src={
@@ -974,44 +975,62 @@ export default function InvoicesPage() {
                       />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-bold font-mono text-gray-900 dark:text-white">
-                          {selectedInvoice.invoiceNumber}
-                        </h2>
-                        <span
-                          className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusBadgeStyle(selectedInvoice.status)}`}
-                        >
-                          {selectedInvoice.status.replace("_", " ")}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {selectedInvoice.customerName || "Walk-in / General"} · Issued {selectedInvoice.issueDate} · Due {selectedInvoice.dueDate}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                          {isAr ? "المعرف الجبائي (MF):" : "Fiscal Matricule (MF):"}
+                      <span className="text-[10px] font-bold text-[var(--primary)] uppercase tracking-wider block">
+                        {isAr ? "الشركة المُصدرة" : "Issuer"}
+                      </span>
+                      <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                        {currentBusiness?.name || "AFAB Enterprise"}
+                      </h3>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-[10px] font-semibold text-gray-500 dark:text-gray-400">
+                          {isAr ? "المعرف الجبائي (MF):" : "MF:"}
                         </span>
                         {currentBusiness?.taxId ? (
-                          <span className="text-[11px] font-mono font-bold text-[var(--primary)] bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
+                          <span className="text-[10px] font-mono font-bold text-[var(--primary)] bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20">
                             {currentBusiness.taxId}
                           </span>
                         ) : (
                           <Link
                             href="/dashboard/settings/business-profile"
-                            className="text-[11px] font-semibold text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+                            className="text-[10px] font-semibold text-[var(--primary)] hover:underline inline-flex items-center gap-0.5"
                           >
-                            {isAr ? "إضافة المعرف الجبائي من الإعدادات +" : "Set in Business Settings +"}
+                            {isAr ? "إضافة +" : "Set +"}
                           </Link>
                         )}
                       </div>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setSelectedInvoice(null)}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-white"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+
+                  {/* RIGHT: Client Name, Invoice Number & Close */}
+                  <div className="flex items-start gap-3 text-end">
+                    <div>
+                      <span className="text-[10px] font-bold text-[var(--primary)] uppercase tracking-wider block">
+                        {isAr ? "العميل" : "Client / Billed To"}
+                      </span>
+                      <h2 className="text-sm font-extrabold text-gray-900 dark:text-white leading-tight">
+                        {selectedInvoice.customerName || (isAr ? "عميل عام" : "General Client")}
+                      </h2>
+                      <div className="flex items-center justify-end gap-1.5 mt-1">
+                        <span className="text-xs font-mono font-bold text-gray-600 dark:text-gray-300">
+                          {selectedInvoice.invoiceNumber}
+                        </span>
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[9px] font-bold ${statusBadgeStyle(selectedInvoice.status)}`}
+                        >
+                          {selectedInvoice.status.replace("_", " ")}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-0.5">
+                        {selectedInvoice.issueDate}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedInvoice(null)}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-white -mr-1"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Lifecycle Actions */}

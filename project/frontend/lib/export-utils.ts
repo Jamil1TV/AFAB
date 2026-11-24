@@ -1064,45 +1064,73 @@ export function openPrintableInvoiceWindow(options: {
         </button>
       </div>
 
-      <div class="header">
-        <div style="display:flex; align-items:center; gap:16px;">
-          <div style="height:54px; width:54px; border-radius:12px; border:1px solid #e2e8f0; padding:4px; display:flex; align-items:center; justify-content:center; background:#ffffff; overflow:hidden;">
+      <div class="header" style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:2px solid #7c3aed; padding-bottom:22px; margin-bottom:26px; direction:ltr;">
+        <!-- LEFT: Business Name, Logo, Matricule Fiscale & Address -->
+        <div style="display:flex; align-items:flex-start; gap:16px; max-width:56%; text-align:left; direction:ltr;">
+          <div style="height:64px; width:64px; border-radius:14px; border:1px solid #e2e8f0; padding:4px; display:flex; align-items:center; justify-content:center; background:#ffffff; overflow:hidden; flex-shrink:0; box-shadow:0 1px 3px rgba(0,0,0,0.06);">
             <img src="${logo}" alt="${business?.name || 'Business'} Logo" style="max-height:100%; max-width:100%; object-fit:contain;" />
           </div>
           <div>
-            <h1 style="font-size:22px; font-weight:800; color:#7c3aed; margin:0;">${business?.name || "AFAB Enterprise"}</h1>
-            <p style="font-size:12px; color:#64748b; margin:4px 0 0 0;">${business?.businessEmail || "finance@afab.com"}</p>
-            ${addr ? `<p style="font-size:11px; color:#475569; margin:3px 0 0 0;">${addr}</p>` : ""}
+            <div style="font-size:10px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.5px;">
+              ${isAr ? "جهة الإصدار (الشركة)" : "Issuer / Enterprise"}
+            </div>
+            <h1 style="font-size:22px; font-weight:800; color:#0f172a; margin:2px 0 4px 0; line-height:1.2;">
+              ${business?.name || "AFAB Enterprise"}
+            </h1>
             ${mf ? `
-            <div style="display:inline-block; margin-top:6px; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">
-              ${isAr ? "المعرف الجبائي (MF):" : "Matricule Fiscale (MF):"} ${mf}
+            <div style="display:inline-flex; align-items:center; gap:5px; margin-bottom:5px; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:700; background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">
+              <span>${isAr ? "المعرف الجبائي (MF):" : "Matricule Fiscale (MF):"}</span>
+              <span style="font-family:monospace; font-weight:800;">${mf}</span>
             </div>` : ""}
+            ${addr ? `<p style="font-size:11px; color:#475569; margin:2px 0 0 0; line-height:1.4;">${addr}</p>` : ""}
+            ${business?.businessEmail ? `<p style="font-size:11px; color:#64748b; margin:2px 0 0 0;">${business.businessEmail}</p>` : ""}
+            ${business?.phoneNumber ? `<p style="font-size:11px; color:#64748b; margin:2px 0 0 0;">${business.phoneNumber}</p>` : ""}
           </div>
         </div>
-        <div style="text-align:${isAr ? "left" : "right"};">
-          <div style="font-size:24px; font-weight:900; color:#0f172a; text-transform:uppercase;">${isAr ? "فاتورة رسمية" : "INVOICE"}</div>
-          <div style="font-size:13px; font-weight:700; color:#7c3aed; margin-top:2px;"># ${invoice.invoiceNumber || invoice.id}</div>
-          <div style="display:inline-block; margin-top:6px; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; background:#f1f5f9; color:#334155;">
-            STATUS: ${invoice.status}
+
+        <!-- RIGHT: Client / Billed To & Invoice Metadata -->
+        <div style="text-align:right; max-width:42%; direction:ltr;">
+          <div style="font-size:10px; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.5px;">
+            ${isAr ? "فاتورة إلى (العميل):" : "Billed To (Client):"}
+          </div>
+          <div style="font-size:22px; font-weight:800; color:#0f172a; margin:2px 0 4px 0; line-height:1.2;">
+            ${invoice.customerName || (isAr ? "عميل عام" : "General Client")}
+          </div>
+          ${invoice.customerEmail ? `<div style="font-size:12px; color:#64748b; margin-bottom:6px;">${invoice.customerEmail}</div>` : ""}
+          
+          <div style="margin-top:8px; display:inline-flex; flex-direction:column; align-items:flex-end; gap:3px; border-top:1px solid #e2e8f0; padding-top:8px;">
+            <div style="font-size:13px; font-weight:800; color:#0f172a;">
+              <span style="color:#64748b; font-weight:600;">${isAr ? "فاتورة رقم:" : "Invoice #:"}</span>
+              <span style="color:#7c3aed; font-family:monospace; margin-left:4px;">${invoice.invoiceNumber || invoice.id}</span>
+            </div>
+            <div style="font-size:11px; color:#64748b;">
+              <span>${isAr ? "تاريخ الإصدار:" : "Issue Date:"} <strong>${invoice.issueDate}</strong></span>
+              ${invoice.dueDate ? ` · <span>${isAr ? "الاستحقاق:" : "Due Date:"} <strong>${invoice.dueDate}</strong></span>` : ""}
+            </div>
+            <div style="margin-top:4px;">
+              <span style="display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:800; text-transform:uppercase; background:${invoice.status === 'PAID' ? '#ecfdf5' : invoice.status === 'OVERDUE' ? '#fef2f2' : '#f8fafc'}; color:${invoice.status === 'PAID' ? '#059669' : invoice.status === 'OVERDUE' ? '#dc2626' : '#334155'}; border:1px solid ${invoice.status === 'PAID' ? '#a7f3d0' : invoice.status === 'OVERDUE' ? '#fecaca' : '#cbd5e1'};">
+                ${invoice.status}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:28px;">
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px;">
-          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px;">
-            ${isAr ? "فاتورة إلى (العميل):" : "Billed To (Client):"}
-          </div>
-          <div style="font-size:14px; font-weight:700; color:#0f172a;">${invoice.customerName || "General Client"}</div>
-          ${invoice.customerEmail ? `<div style="font-size:11px; color:#64748b; margin-top:2px;">${invoice.customerEmail}</div>` : ""}
+      <!-- ── KPI Financial Summary Bar ── -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px 18px; margin-bottom:24px;">
+        <div>
+          <span style="font-size:11px; color:#64748b; font-weight:600;">${isAr ? "المبلغ الإجمالي للفاتورة:" : "Total Invoice Amount:"}</span>
+          <span style="font-size:15px; font-weight:800; color:#0f172a; margin-left:6px;">${Number(invoice.totalAmount).toFixed(2)} ${currency}</span>
         </div>
-
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:16px; text-align:${isAr ? "left" : "right"};">
-          <div style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; margin-bottom:6px;">
-            ${isAr ? "تفاصيل الإصدار:" : "Invoice Dates:"}
-          </div>
-          <div style="font-size:12px; color:#334155;"><strong>${isAr ? "تاريخ الإصدار:" : "Issue Date:"}</strong> ${invoice.issueDate}</div>
-          <div style="font-size:12px; color:#334155; margin-top:4px;"><strong>${isAr ? "تاريخ الاستحقاق:" : "Due Date:"}</strong> ${invoice.dueDate || "-"}</div>
+        <div>
+          <span style="font-size:11px; color:#64748b; font-weight:600;">${isAr ? "المدفوع:" : "Paid:"}</span>
+          <span style="font-size:13px; font-weight:700; color:#059669; margin-left:6px;">${Number(invoice.paidAmount || 0).toFixed(2)} ${currency}</span>
+        </div>
+        <div>
+          <span style="font-size:11px; color:#64748b; font-weight:600;">${isAr ? "المتبقي للاستحقاق:" : "Balance Due:"}</span>
+          <span style="font-size:15px; font-weight:800; color:${(invoice.outstandingBalance ?? (invoice.totalAmount - (invoice.paidAmount || 0))) > 0 ? '#7c3aed' : '#059669'}; margin-left:6px;">
+            ${Number(invoice.outstandingBalance ?? (invoice.totalAmount - (invoice.paidAmount || 0))).toFixed(2)} ${currency}
+          </span>
         </div>
       </div>
 
