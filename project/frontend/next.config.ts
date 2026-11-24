@@ -15,6 +15,19 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  experimental: {
+    // Disable Turbopack's persistent dev disk cache on Windows/NTFS:
+    // stale cache entries across git pulls, builds, and concurrent route compilations
+    // can trigger ChunkLoadError and RSC fetch failures during local development.
+    turbopackFileSystemCacheForDev: false,
+    // Optimize heavy barrel packages so dev chunks compile cleanly and stay stable across routes.
+    optimizePackageImports: [
+      "lucide-react",
+      "recharts",
+      "framer-motion",
+      "date-fns",
+    ],
+  },
   images: {
     remotePatterns: [
       {

@@ -46,6 +46,8 @@
     "rowsPerPage": "Rows per page",
     "noResults": "No customers found matching your criteria",
     "noCustomersYet": "No customers added yet. Click 'Add Customer' to get started.",
+    "emptyTitle": "No customers yet",
+    "emptyDesc": "Add your first customer to start tracking orders, invoices, and revenue.",
     "selected": "{count} selected",
     "customerId": "ID"
   },

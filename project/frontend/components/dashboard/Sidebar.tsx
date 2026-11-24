@@ -222,6 +222,8 @@ export function Sidebar() {
     { name: tSidebar("settings"), href: "/dashboard/settings", icon: Settings },
   ];
 
+  const devSafePrefetch = process.env.NODE_ENV === "production" ? undefined : false;
+
   const renderNavItems = (items: NavItem[]) => {
     return items.map((item) => {
       const isActive = 
@@ -232,6 +234,7 @@ export function Sidebar() {
         <Link
           key={item.name}
           href={item.href}
+          prefetch={devSafePrefetch}
           onClick={() => setMobileOpen(false)}
           title={collapsed ? item.name : undefined}
           className={`group flex items-center ${collapsed ? "justify-center" : "justify-between"} rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
@@ -310,6 +313,7 @@ export function Sidebar() {
 
             <Link 
               href="/dashboard/settings/subscription"
+              prefetch={devSafePrefetch}
               className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 dark:shadow-purple-900/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>{locale === "ar" ? "الترقية الآن" : (tSidebar("upgradeBtn") || "Upgrade Now")}</span>
@@ -390,6 +394,7 @@ export function Sidebar() {
             <div className="py-1 space-y-0.5">
               <Link
                 href="/dashboard/settings/general"
+                prefetch={devSafePrefetch}
                 onClick={() => setUserMenuOpen(false)}
                 className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] rounded-xl transition-colors text-start cursor-pointer"
               >
@@ -398,6 +403,7 @@ export function Sidebar() {
               </Link>
               <Link
                 href="/dashboard/settings/business-profile"
+                prefetch={devSafePrefetch}
                 onClick={() => setUserMenuOpen(false)}
                 className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] rounded-xl transition-colors text-start cursor-pointer"
               >
@@ -470,22 +476,22 @@ export function Sidebar() {
         />
       )}
 
-      {/* Mobile Sidebar Drawer */}
-      <aside
-        className={`fixed inset-y-0 start-0 z-50 flex w-72 flex-col border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-gray-50 dark:bg-[#080c18] transition-transform duration-300 ease-in-out lg:hidden ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full pointer-events-none"
-        }`}
-      >
-        {/* Close button */}
-        <button
-          onClick={() => setMobileOpen(false)}
-          aria-label="Close sidebar"
-          className="absolute top-4 end-4 z-20 flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+      {/* Mobile Sidebar Drawer — only mount children when open to avoid duplicate BusinessSwitcher/Link prefetches */}
+      {mobileOpen && (
+        <aside
+          className="fixed inset-y-0 start-0 z-50 flex w-72 flex-col border-r rtl:border-r-0 rtl:border-l border-gray-200 dark:border-gray-800/60 bg-gray-50 dark:bg-[#080c18] transition-transform duration-300 ease-in-out lg:hidden translate-x-0"
         >
-          <X className="h-5 w-5" />
-        </button>
-        {sidebarContent}
-      </aside>
+          {/* Close button */}
+          <button
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close sidebar"
+            className="absolute top-4 end-4 z-20 flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-white/[0.05] transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          {sidebarContent}
+        </aside>
+      )}
     </>
   );
 }

@@ -27,8 +27,23 @@ public class AiController {
     }
 
     @GetMapping("/status")
-    public ResponseEntity<AiStatusDTO> getStatus(Authentication authentication) {
-        return ResponseEntity.ok(copilotService.getStatus(authentication.getName()));
+    public ResponseEntity<AiStatusDTO> getStatus(
+            Authentication authentication,
+            @RequestParam(defaultValue = "false") boolean fresh
+    ) {
+        return ResponseEntity.ok(copilotService.getStatus(authentication.getName(), fresh));
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<AiHealthDTO> getHealth(
+            @RequestParam(defaultValue = "true") boolean fresh
+    ) {
+        return ResponseEntity.ok(copilotService.getHealth(fresh));
+    }
+
+    @GetMapping(value = "/health/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamHealth() {
+        return copilotService.streamHealth();
     }
 
     @PostMapping("/chat")

@@ -28,13 +28,20 @@ export interface AiTokenUsage {
   planName: string;
 }
 
-export interface AiStatusResponse {
+export interface AiHealthResponse {
   enabled: boolean;
   ollamaReachable: boolean;
   chatModel: string;
   chatModelReady: boolean;
+  chatModelLoaded: boolean;
   embedModel: string;
   embedModelReady: boolean;
+  busy: boolean;
+  latencyMs: number;
+  checkedAt: string;
+}
+
+export interface AiStatusResponse extends AiHealthResponse {
   indexedChunks: number;
   approvedMemories: number;
   quota: AiTokenUsage;
@@ -119,6 +126,7 @@ export interface AiIndexSyncResponse {
 }
 
 export interface StreamHandlers {
+  onStatus?: (phase: string) => void;
   onDelta?: (text: string) => void;
   onToolStart?: (tool: string) => void;
   onToolDone?: (tool: string, evidenceCount: number) => void;
@@ -126,9 +134,80 @@ export interface StreamHandlers {
   signal?: AbortSignal;
 }
 
+export interface HealthStreamHandlers {
+  onHealth: (health: AiHealthResponse) => void;
+  onConnectionChange?: (connected: boolean) => void;
+}
+
 export class AiService {
-  static async getStatus(): Promise<AiStatusResponse> {
-    return fetchClient("/ai/status");
+  static async getStatus(fresh: boolean = false): Promise<AiStatusResponse> {
+    return fetchClient(`/ai/status${fresh ? "?fresh=true" : ""}`);
+  }
+
+  static async getHealth(fresh: boolean = true): Promise<AiHealthResponse> {
+    return fetchClient(`/ai/health?fresh=${fresh ? "true" : "false"}`);
+  }
+
+  /**
+   * Real-time AI model availability monitor with visibility awareness.
+   * Periodically fetches lightweight health snapshots (15ms) without exhausting
+   * the browser's HTTP/1.1 6-connection limit on localhost.
+   */
+  static subscribeHealth(handlers: HealthStreamHandlers): () => void {
+    let active = true;
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    let inFlight = false;
+
+    const check = async (fresh: boolean = false) => {
+      if (!active || inFlight) return;
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") {
+        return;
+      }
+
+      inFlight = true;
+      try {
+        const data = await AiService.getHealth(fresh);
+        if (!active) return;
+        handlers.onHealth(data);
+        handlers.onConnectionChange?.(true);
+      } catch {
+        if (!active) return;
+        handlers.onConnectionChange?.(false);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const scheduleNext = () => {
+      if (!active) return;
+      pollTimer = setTimeout(async () => {
+        await check(false);
+        scheduleNext();
+      }, 5000);
+    };
+
+    const handleVisibility = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        check(true);
+      }
+    };
+
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibility);
+    }
+
+    // Initial check immediately
+    check(true).then(() => {
+      scheduleNext();
+    });
+
+    return () => {
+      active = false;
+      if (pollTimer) clearTimeout(pollTimer);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("visibilitychange", handleVisibility);
+      }
+    };
   }
 
   static async syncIndex(): Promise<AiIndexSyncResponse> {
@@ -242,7 +321,13 @@ export class AiService {
       const rawJson = dataLines.join("\n");
       const parsed = JSON.parse(rawJson);
 
-      if (eventName === "delta") {
+      if (eventName === "ping") {
+        return;
+      } else if (eventName === "status") {
+        if (typeof parsed?.phase === "string") {
+          handlers.onStatus?.(parsed.phase);
+        }
+      } else if (eventName === "delta") {
         if (typeof parsed?.text === "string") {
           handlers.onDelta?.(parsed.text);
         }

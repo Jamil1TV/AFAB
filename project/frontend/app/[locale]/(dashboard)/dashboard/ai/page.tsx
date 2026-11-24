@@ -27,6 +27,7 @@ import {
 import {
   AiService,
   AiStatusResponse,
+  AiHealthResponse,
   AiConversationSummary,
   AiMessageItem,
   BusinessMemoryItem,
@@ -39,6 +40,8 @@ import {
 } from "@/components/ai/CopilotThinkingCard";
 import { CopilotMessageBubble } from "@/components/ai/CopilotMessageBubble";
 import { BusinessMemoryDrawer } from "@/components/ai/BusinessMemoryDrawer";
+import { AiModelStatusBadge } from "@/components/ai/AiModelStatusBadge";
+import { AfabLoader } from "@/components/ui/afab-loader";
 import { toast } from "sonner";
 
 function formatNumber(n: number, locale: string): string {
@@ -91,6 +94,10 @@ export default function AfabCopilotPage() {
   const isAr = locale === "ar";
 
   const [status, setStatus] = useState<AiStatusResponse | null>(null);
+  const [health, setHealth] = useState<AiHealthResponse | null>(null);
+  const [backendConnected, setBackendConnected] = useState(true);
+  const [checkingHealth, setCheckingHealth] = useState(false);
+  const [streamPhase, setStreamPhase] = useState<string | null>(null);
   const [conversations, setConversations] = useState<AiConversationSummary[]>([]);
   const [memories, setMemories] = useState<BusinessMemoryItem[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -146,6 +153,77 @@ export default function AfabCopilotPage() {
       active = false;
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    AiService.getHealth()
+      .then((h) => {
+        if (!active) return;
+        setHealth(h);
+        setBackendConnected(true);
+      })
+      .catch(() => {
+        if (!active) return;
+        setBackendConnected(false);
+      });
+
+    const unsub = AiService.subscribeHealth({
+      onHealth: (liveHealth) => {
+        setHealth(liveHealth);
+        setBackendConnected(true);
+        setStatus((prev) =>
+          prev
+            ? {
+                ...prev,
+                ollamaReachable: liveHealth.ollamaReachable,
+                chatModelReady: liveHealth.chatModelReady,
+                embedModelReady: liveHealth.embedModelReady,
+                chatModelLoaded: liveHealth.chatModelLoaded,
+                busy: liveHealth.busy,
+                latencyMs: liveHealth.latencyMs,
+              }
+            : prev
+        );
+      },
+      onConnectionChange: (connected) => {
+        setBackendConnected(connected);
+      },
+    });
+
+    return () => {
+      active = false;
+      unsub();
+    };
+  }, []);
+
+  const handleManualHealthCheck = useCallback(async () => {
+    if (checkingHealth) return;
+    setCheckingHealth(true);
+    try {
+      const freshHealth = await AiService.getHealth(true);
+      setHealth(freshHealth);
+      setBackendConnected(true);
+      setStatus((prev) =>
+        prev
+          ? {
+              ...prev,
+              ollamaReachable: freshHealth.ollamaReachable,
+              chatModelReady: freshHealth.chatModelReady,
+              embedModelReady: freshHealth.embedModelReady,
+              chatModelLoaded: freshHealth.chatModelLoaded,
+              busy: freshHealth.busy,
+              latencyMs: freshHealth.latencyMs,
+            }
+          : prev
+      );
+      toast.success(t("liveStatus.badgeTitle"));
+    } catch (err: unknown) {
+      setBackendConnected(false);
+      toast.error(err instanceof Error ? err.message : t("liveStatus.backendOffline"));
+    } finally {
+      setCheckingHealth(false);
+    }
+  }, [checkingHealth, t]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -236,6 +314,7 @@ export default function AfabCopilotPage() {
     abortRef.current?.abort();
     abortRef.current = null;
     setSending(false);
+    setStreamPhase(null);
     setActiveTools([]);
     setCompletedTools([]);
   };
@@ -248,6 +327,7 @@ export default function AfabCopilotPage() {
     setChatError(null);
     setInput("");
     setSending(true);
+    setStreamPhase("retrieving");
     setStreamingText("");
     setActiveTools([]);
     setCompletedTools([]);
@@ -279,6 +359,9 @@ export default function AfabCopilotPage() {
         },
         {
           signal: controller.signal,
+          onStatus: (phase) => {
+            setStreamPhase(phase);
+          },
           onToolStart: (tool) => {
             setActiveTools((prev) => (prev.includes(tool) ? prev : [...prev, tool]));
           },
@@ -349,6 +432,7 @@ export default function AfabCopilotPage() {
     } finally {
       abortRef.current = null;
       setSending(false);
+      setStreamPhase(null);
       setActiveTools([]);
       setCompletedTools([]);
     }
@@ -658,33 +742,13 @@ export default function AfabCopilotPage() {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#c4b5fd] border border-[#8b5cf6]/20 shrink-0">
                     {t("badge")}
                   </span>
-                  {status && (
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold border ${
-                        status.ollamaReachable && status.chatModelReady
-                          ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                          : "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                      }`}
-                    >
-                      <span className="relative flex h-1.5 w-1.5">
-                        {status.ollamaReachable && status.chatModelReady && (
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-                        )}
-                        <span
-                          className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
-                            status.ollamaReachable && status.chatModelReady
-                              ? "bg-emerald-500"
-                              : "bg-amber-500"
-                          }`}
-                        />
-                      </span>
-                      {status.ollamaReachable
-                        ? status.chatModelReady
-                          ? `${status.chatModel} • ${t("modelReady")}`
-                          : t("modelMissing")
-                        : t("modelOffline")}
-                    </span>
-                  )}
+                  <AiModelStatusBadge
+                    health={health}
+                    backendConnected={backendConnected}
+                    checking={checkingHealth}
+                    onManualCheck={handleManualHealthCheck}
+                    locale={locale}
+                  />
                 </div>
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 hidden sm:block whitespace-normal">
                   {t("subtitle")}
@@ -733,7 +797,8 @@ export default function AfabCopilotPage() {
           </header>
 
           {/* Local Ollama Offline Notice (honest status, never fakes AI) */}
-          {status && (!status.ollamaReachable || !status.chatModelReady) && (
+          {((health && (!health.ollamaReachable || !health.chatModelReady)) ||
+            (status && (!status.ollamaReachable || !status.chatModelReady))) && (
             <div className="mx-4 sm:mx-6 mt-3 rounded-2xl border border-amber-500/30 bg-amber-50/80 dark:bg-amber-500/10 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shrink-0">
               <div className="flex items-start gap-2.5">
                 <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
@@ -746,7 +811,7 @@ export default function AfabCopilotPage() {
                     dir="ltr"
                     className="inline-block mt-1.5 px-2 py-1 rounded-lg bg-black/5 dark:bg-black/30 font-mono text-[11px]"
                   >
-                    ollama pull {status.chatModel} && ollama pull {status.embedModel}
+                    ollama pull {health?.chatModel || status?.chatModel || "gemma4:e4b"} && ollama pull {health?.embedModel || status?.embedModel || "embeddinggemma-2:270m"}
                   </code>
                 </div>
               </div>
@@ -801,7 +866,7 @@ export default function AfabCopilotPage() {
           >
             {loadingPage ? (
               <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-[#7c3aed]" />
+                <AfabLoader size="md" text={t("loading") || "Loading AFAB Copilot..."} />
               </div>
             ) : messages.length === 0 && !sending ? (
               <CopilotWelcome onSelectPrompt={(text) => handleSend(text)} disabled={sending} />
@@ -824,6 +889,7 @@ export default function AfabCopilotPage() {
                     activeTools={activeTools}
                     completedTools={completedTools}
                     streamingText={streamingText}
+                    streamPhase={streamPhase}
                   />
                 )}
 

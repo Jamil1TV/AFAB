@@ -58,7 +58,32 @@
   "thinkingPhases": {
     "memory": "استرجاع ذاكرة العمل والسياق الدلالي...",
     "ledger": "فحص الدفاتر واختيار الأدوات المالية الموثقة...",
-    "synthesis": "صياغة التحليل المالي التنفيذي..."
+    "synthesis": "صياغة التحليل المالي التنفيذي...",
+    "warmingModel": "جاري تحميل نموذج Gemma 4 المحلي على بطاقة الرسوميات (أول رسالة تستغرق ~10-15 ثانية)..."
+  },
+  "liveStatus": {
+    "title": "حالة توفر نموذج الذكاء الاصطناعي المباشرة",
+    "realtimeBadge": "مباشر",
+    "backendLabel": "خادم AFAB الخلفي",
+    "ollamaLabel": "خادم Ollama المحلي",
+    "chatModelLabel": "نموذج المحادثة",
+    "embedModelLabel": "نموذج المتجهات",
+    "connected": "متصل",
+    "reconnecting": "جاري إعادة الاتصال...",
+    "online": "متصل",
+    "offline": "غير متصل",
+    "hotInGpu": "جاهز في الذاكرة",
+    "hotShort": "نشط GPU",
+    "coldShort": "جاهز",
+    "readyShort": "جاهز",
+    "busy": "جاري التوليد...",
+    "missing": "غير مثبت",
+    "backendOffline": "الخادم غير متصل",
+    "backendOfflineTitle": "تعذر الاتصال بخادم AFAB الخلفي",
+    "backendOfflineDesc": "انقطع الاتصال المباشر مع الخادم الخلفي. جاري إعادة الاتصال تلقائياً — تأكد من تشغيل حاوية الخادم.",
+    "checkNow": "فحص الآن",
+    "checking": "جاري الفحص...",
+    "lastChecked": "آخر فحص"
   },
   "tools": {
     "get_business_summary": "تدقيق ملخص الأرباح والخسائر",

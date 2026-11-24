@@ -36,6 +36,9 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -53,6 +56,11 @@ public class AiCopilotService {
     public static final String FEATURE_AI_QUERIES = "ai.chat.queries_per_month";
 
     private static final Executor STREAM_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
+    private static final ScheduledExecutorService HEARTBEAT_SCHEDULER = Executors.newScheduledThreadPool(2, r -> {
+        Thread t = new Thread(r, "afab-ai-sse-heartbeat");
+        t.setDaemon(true);
+        return t;
+    });
 
     private final AiProperties properties;
     private final AiModelGateway modelGateway;
@@ -94,8 +102,12 @@ public class AiCopilotService {
     }
 
     public AiStatusDTO getStatus(String userEmail) {
+        return getStatus(userEmail, false);
+    }
+
+    public AiStatusDTO getStatus(String userEmail, boolean fresh) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
-        GatewayHealth health = modelGateway.checkHealth();
+        GatewayHealth health = modelGateway.checkHealth(fresh);
         long chunks = vectorRepository.countChunks(business.getId());
         long memories = memoryRepository.countApprovedByBusinessId(business.getId());
         AiTokenUsageDTO quota = buildTokenUsageDTO(userEmail, 0, 0, 0);
@@ -105,11 +117,72 @@ public class AiCopilotService {
                 health.reachable(),
                 properties.getChatModel(),
                 health.chatModelReady(),
+                health.chatModelLoaded(),
                 properties.getEmbedModel(),
                 health.embedModelReady(),
+                health.busy(),
+                health.latencyMs(),
+                health.checkedAt(),
                 chunks,
                 memories,
                 quota
+        );
+    }
+
+    public AiHealthDTO getHealth(boolean fresh) {
+        GatewayHealth health = modelGateway.checkHealth(fresh);
+        return toHealthDTO(health);
+    }
+
+    /**
+     * Real-time AI model availability SSE stream (pushes immediately on connect and every 4 seconds).
+     * Holds zero DB connections and cancels cleanly when the client disconnects.
+     */
+    public SseEmitter streamHealth() {
+        SseEmitter emitter = new SseEmitter(5 * 60_000L);
+        AtomicBoolean closed = new AtomicBoolean(false);
+
+        Runnable emitSnapshot = () -> {
+            if (closed.get()) return;
+            try {
+                AiHealthDTO snapshot = toHealthDTO(modelGateway.checkHealth(true));
+                if (!sendSse(emitter, "health", snapshot)) {
+                    closed.set(true);
+                }
+            } catch (Exception e) {
+                closed.set(true);
+            }
+        };
+
+        ScheduledFuture<?> task = HEARTBEAT_SCHEDULER.scheduleWithFixedDelay(
+                emitSnapshot, 0L, 4L, TimeUnit.SECONDS
+        );
+
+        Runnable cleanup = () -> {
+            closed.set(true);
+            task.cancel(false);
+        };
+        emitter.onCompletion(cleanup);
+        emitter.onTimeout(() -> {
+            cleanup.run();
+        });
+        emitter.onError(ex -> cleanup.run());
+
+        return emitter;
+    }
+
+    private AiHealthDTO toHealthDTO(GatewayHealth health) {
+        return new AiHealthDTO(
+                properties.isEnabled(),
+                health.reachable(),
+                properties.getChatModel(),
+                health.chatModelReady(),
+                health.chatModelLoaded(),
+                properties.getEmbedModel(),
+                health.embedModelReady(),
+                health.busy(),
+                health.latencyMs(),
+                health.checkedAt() != null ? health.checkedAt() : Instant.now()
         );
     }
 
@@ -184,23 +257,71 @@ public class AiCopilotService {
      * SSE streaming chat turn. Validates tenant ownership & plan quotas synchronously before starting stream.
      */
     public SseEmitter streamChat(String userEmail, AiChatRequest request) {
-        PreparedTurn prepared = prepareTurn(userEmail, request);
-        SseEmitter emitter = new SseEmitter(Math.max(30_000L, properties.getTimeoutSeconds() * 1000L + 15_000L));
-        emitter.onTimeout(emitter::complete);
+        SseEmitter emitter = new SseEmitter(Math.max(45_000L, properties.getTimeoutSeconds() * 1000L + 30_000L));
+        AtomicBoolean closed = new AtomicBoolean(false);
+        emitter.onCompletion(() -> closed.set(true));
+        emitter.onTimeout(() -> {
+            closed.set(true);
+        });
+        emitter.onError(ex -> closed.set(true));
 
         CompletableFuture.runAsync(() -> {
+            // Immediately flush HTTP 200 SSE headers so the browser connection is committed without delay
+            sendSse(emitter, "status", Map.of("phase", "warming_model"));
+
+            ScheduledFuture<?> pingTask = HEARTBEAT_SCHEDULER.scheduleAtFixedRate(() -> {
+                if (!closed.get()) {
+                    sendSse(emitter, "ping", Map.of("ts", Instant.now().toEpochMilli()));
+                }
+            }, 6L, 6L, TimeUnit.SECONDS);
+
             try {
+                PreparedTurn prepared = prepareTurn(userEmail, request);
+                sendSse(emitter, "status", Map.of(
+                        "phase", "retrieving",
+                        "conversationId", prepared.conversation().getId().toString()
+                ));
                 AiChatResponseDTO result = executeTurn(prepared, emitter);
                 sendSse(emitter, "done", result);
-                emitter.complete();
+                if (!closed.get()) {
+                    try { emitter.complete(); } catch (Exception ignored) {}
+                }
+            } catch (com.afab.subscription.PlanLimitReachedException e) {
+                log.info("Plan limit reached during Copilot stream: {}", e.getMessage());
+                sendSse(emitter, "error", Map.of(
+                        "code", e.getCode() != null ? e.getCode() : "PLAN_LIMIT_REACHED",
+                        "message", e.getMessage()
+                ));
+                if (!closed.get()) {
+                    try { emitter.complete(); } catch (Exception ignored) {}
+                }
+            } catch (com.afab.business.BusinessReadOnlyException e) {
+                log.info("Business read-only during Copilot stream: {}", e.getMessage());
+                sendSse(emitter, "error", Map.of(
+                        "code", e.getCode() != null ? e.getCode() : "BUSINESS_READ_ONLY",
+                        "message", e.getMessage()
+                ));
+                if (!closed.get()) {
+                    try { emitter.complete(); } catch (Exception ignored) {}
+                }
             } catch (AiServiceUnavailableException e) {
                 log.warn("AFAB Copilot unavailable: {}", e.getMessage());
                 sendSse(emitter, "error", Map.of("code", "AI_SERVICE_UNAVAILABLE", "message", e.getMessage()));
-                emitter.complete();
+                if (!closed.get()) {
+                    try { emitter.complete(); } catch (Exception ignored) {}
+                }
             } catch (Exception e) {
                 log.error("AFAB Copilot stream failed unexpectedly", e);
-                sendSse(emitter, "error", Map.of("code", "AI_ERROR", "message", "Unable to complete Copilot response."));
-                emitter.complete();
+                sendSse(emitter, "error", Map.of(
+                        "code", "AI_ERROR",
+                        "message", e.getMessage() != null ? e.getMessage() : "Unable to complete Copilot response."
+                ));
+                if (!closed.get()) {
+                    try { emitter.complete(); } catch (Exception ignored) {}
+                }
+            } finally {
+                closed.set(true);
+                pingTask.cancel(false);
             }
         }, STREAM_EXECUTOR);
 
@@ -308,6 +429,13 @@ public class AiCopilotService {
         String usedModel = properties.getChatModel();
 
         // 4. Bounded tool-calling loop
+        if (emitterOrNull != null) {
+            GatewayHealth preHealth = modelGateway.checkHealth(false);
+            boolean loaded = preHealth != null && preHealth.chatModelLoaded();
+            sendSse(emitterOrNull, "status", Map.of(
+                    "phase", loaded ? "generating" : "warming_model"
+            ));
+        }
         int maxRounds = Math.max(1, properties.getMaxToolCallsPerTurn());
         boolean finishedWithTools = false;
         AtomicBoolean streamedAnyDelta = new AtomicBoolean(false);
@@ -574,11 +702,13 @@ public class AiCopilotService {
         }
     }
 
-    private void sendSse(SseEmitter emitter, String eventName, Object data) {
+    private boolean sendSse(SseEmitter emitter, String eventName, Object data) {
         try {
             emitter.send(SseEmitter.event().name(eventName).data(data, MediaType.APPLICATION_JSON));
+            return true;
         } catch (Exception e) {
-            log.warn("Failed to emit SSE event '{}': {}", eventName, e.getMessage());
+            log.debug("Failed to emit SSE event '{}': {}", eventName, e.getMessage());
+            return false;
         }
     }
 

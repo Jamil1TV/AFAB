@@ -168,20 +168,18 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
-  } catch {
-    // Retry once after a short delay on idempotent GET requests (handles transient HMR/navigation blips)
-    if (method === "GET" && !customConfig.signal?.aborted) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-      try {
-        response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
-      } catch {
-        throw new ApiError(
-          "Unable to connect to the server. Please try again.",
-          "NETWORK_ERROR",
-          0
-        );
+  } catch (err: unknown) {
+    if (customConfig.signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
+      throw err;
+    }
+    // Retry once after a brief pause to gracefully handle transient socket resets/connection pool recycling
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    try {
+      response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
+    } catch (retryErr: unknown) {
+      if (customConfig.signal?.aborted || (retryErr instanceof Error && retryErr.name === "AbortError")) {
+        throw retryErr;
       }
-    } else {
       throw new ApiError(
         "Unable to connect to the server. Please try again.",
         "NETWORK_ERROR",

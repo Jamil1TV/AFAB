@@ -58,7 +58,32 @@
   "thinkingPhases": {
     "memory": "Recalling Business Memory & semantic context...",
     "ledger": "Inspecting ledger & selecting verified finance tools...",
-    "synthesis": "Synthesizing executive financial insight..."
+    "synthesis": "Synthesizing executive financial insight...",
+    "warmingModel": "Warming up local Gemma 4 model on GPU (first turn takes ~10–15s)..."
+  },
+  "liveStatus": {
+    "title": "Live AI Model Availability",
+    "realtimeBadge": "Live",
+    "backendLabel": "AFAB Backend API",
+    "ollamaLabel": "Local Ollama Runtime",
+    "chatModelLabel": "Chat Model",
+    "embedModelLabel": "Embedding Model",
+    "connected": "Connected",
+    "reconnecting": "Reconnecting...",
+    "online": "Online",
+    "offline": "Offline",
+    "hotInGpu": "Hot in GPU",
+    "hotShort": "Hot GPU",
+    "coldShort": "Cold",
+    "readyShort": "Ready",
+    "busy": "Generating...",
+    "missing": "Not Pulled",
+    "backendOffline": "Backend Offline",
+    "backendOfflineTitle": "Cannot Reach AFAB Backend Server",
+    "backendOfflineDesc": "The live connection to the AFAB backend dropped. Reconnecting automatically — make sure the backend container is running.",
+    "checkNow": "Check Now",
+    "checking": "Checking...",
+    "lastChecked": "Checked"
   },
   "tools": {
     "get_business_summary": "Auditing P&L summary",

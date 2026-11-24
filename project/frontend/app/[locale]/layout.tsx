@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ScrollToTop } from "@/components/scroll-to-top";
+import { ChunkErrorRecovery } from "@/components/ChunkErrorRecovery";
 import "../globals.css";
 
 /* ──────────────────────────────────────────────────────
@@ -182,6 +183,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             <TooltipProvider>
+              <ChunkErrorRecovery />
               {children}
               <ScrollToTop />
               <Toaster />

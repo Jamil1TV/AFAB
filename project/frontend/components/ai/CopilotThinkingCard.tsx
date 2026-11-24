@@ -15,6 +15,7 @@ interface CopilotThinkingCardProps {
   activeTools: string[];
   completedTools: CompletedToolInfo[];
   streamingText: string;
+  streamPhase?: string | null;
 }
 
 const KNOWN_TOOLS = new Set([
@@ -35,6 +36,7 @@ export function CopilotThinkingCard({
   activeTools,
   completedTools,
   streamingText,
+  streamPhase = null,
 }: CopilotThinkingCardProps) {
   const t = useTranslations("AI");
   const [elapsedMs, setElapsedMs] = useState(0);
@@ -56,6 +58,8 @@ export function CopilotThinkingCard({
   const activeHeadline =
     activeTools.length > 0
       ? getToolLabel(activeTools[activeTools.length - 1])
+      : streamPhase === "warming_model"
+      ? t("thinkingPhases.warmingModel")
       : t(`thinkingPhases.${PHASE_KEYS[phaseIdx]}`);
 
   const elapsedSeconds = (elapsedMs / 1000).toFixed(1);

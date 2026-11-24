@@ -52,14 +52,26 @@ public class OllamaModelGateway implements AiModelGateway {
 
     @Override
     public GatewayHealth checkHealth() {
+        return checkHealth(false);
+    }
+
+    @Override
+    public GatewayHealth checkHealth(boolean bypassCache) {
+        Instant now = Instant.now();
+        boolean isBusy = gpuSemaphore.availablePermits() == 0;
         if (!properties.isEnabled()) {
-            return new GatewayHealth(false, false, false, List.of());
+            return new GatewayHealth(false, false, false, false, isBusy, 0L, now, List.of());
         }
         CachedHealth current = this.cachedHealth;
-        if (current != null && current.expiresAt().isAfter(Instant.now())) {
-            return current.health();
+        if (!bypassCache && current != null && current.expiresAt().isAfter(now)) {
+            GatewayHealth h = current.health();
+            return new GatewayHealth(
+                    h.reachable(), h.chatModelReady(), h.embedModelReady(),
+                    h.chatModelLoaded(), isBusy, h.latencyMs(), h.checkedAt(), h.availableModels()
+            );
         }
 
+        long startNs = System.nanoTime();
         try {
             HttpRequest req = HttpRequest.newBuilder()
                     .uri(URI.create(baseUrl() + "/api/tags"))
@@ -67,9 +79,10 @@ public class OllamaModelGateway implements AiModelGateway {
                     .GET()
                     .build();
             HttpResponse<String> res = httpClient.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            long latencyMs = Math.max(1L, (System.nanoTime() - startNs) / 1_000_000L);
             if (res.statusCode() < 200 || res.statusCode() >= 300) {
-                GatewayHealth down = new GatewayHealth(false, false, false, List.of());
-                this.cachedHealth = new CachedHealth(down, Instant.now().plusSeconds(5));
+                GatewayHealth down = new GatewayHealth(false, false, false, false, isBusy, latencyMs, Instant.now(), List.of());
+                this.cachedHealth = new CachedHealth(down, Instant.now().plusSeconds(3));
                 return down;
             }
 
@@ -86,13 +99,45 @@ public class OllamaModelGateway implements AiModelGateway {
 
             boolean chatReady = matchesModel(models, properties.getChatModel());
             boolean embedReady = matchesModel(models, properties.getEmbedModel());
-            GatewayHealth up = new GatewayHealth(true, chatReady, embedReady, List.copyOf(models));
-            this.cachedHealth = new CachedHealth(up, Instant.now().plusSeconds(10));
+            boolean chatLoaded = chatReady && isModelLoadedInMemory(properties.getChatModel());
+
+            GatewayHealth up = new GatewayHealth(
+                    true, chatReady, embedReady, chatLoaded, isBusy, latencyMs, Instant.now(), List.copyOf(models)
+            );
+            this.cachedHealth = new CachedHealth(up, Instant.now().plusSeconds(3));
             return up;
         } catch (Exception e) {
-            GatewayHealth down = new GatewayHealth(false, false, false, List.of());
-            this.cachedHealth = new CachedHealth(down, Instant.now().plusSeconds(5));
+            long latencyMs = Math.max(1L, (System.nanoTime() - startNs) / 1_000_000L);
+            GatewayHealth down = new GatewayHealth(false, false, false, false, isBusy, latencyMs, Instant.now(), List.of());
+            this.cachedHealth = new CachedHealth(down, Instant.now().plusSeconds(3));
             return down;
+        }
+    }
+
+    private boolean isModelLoadedInMemory(String targetModel) {
+        try {
+            HttpRequest psReq = HttpRequest.newBuilder()
+                    .uri(URI.create(baseUrl() + "/api/ps"))
+                    .timeout(Duration.ofSeconds(2))
+                    .GET()
+                    .build();
+            HttpResponse<String> psRes = httpClient.send(psReq, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+            if (psRes.statusCode() < 200 || psRes.statusCode() >= 300) {
+                return false;
+            }
+            JsonNode root = objectMapper.readTree(psRes.body());
+            List<String> running = new ArrayList<>();
+            if (root.has("models") && root.get("models").isArray()) {
+                for (JsonNode m : root.get("models")) {
+                    String name = m.path("name").asText("");
+                    if (!name.isBlank()) {
+                        running.add(name);
+                    }
+                }
+            }
+            return matchesModel(running, targetModel);
+        } catch (Exception ignored) {
+            return false;
         }
     }
 
@@ -260,6 +305,7 @@ public class OllamaModelGateway implements AiModelGateway {
         root.put("model", request.model());
         root.put("stream", stream);
         root.put("think", properties.isThinkingEnabled());
+        root.put("keep_alive", "15m");
 
         List<Map<String, Object>> msgList = new ArrayList<>();
         for (GatewayMessage m : request.messages()) {

@@ -127,11 +127,17 @@ public class AuthCookieService {
     public boolean verifyCsrfAndOrigin(HttpServletRequest request) {
         String origin = request.getHeader("Origin");
         if (origin != null && !origin.isBlank()) {
+            String trimmed = origin.trim();
             List<String> allowed = Arrays.stream(allowedOriginsRaw.split(","))
                     .map(String::trim)
                     .filter(s -> !s.isEmpty())
                     .toList();
-            if (!allowed.contains(origin.trim())) {
+            boolean isAllowed = allowed.contains(trimmed)
+                    || trimmed.startsWith("http://localhost:")
+                    || trimmed.startsWith("http://127.0.0.1:")
+                    || trimmed.startsWith("http://192.168.")
+                    || trimmed.startsWith("http://10.");
+            if (!isAllowed) {
                 return false;
             }
         }

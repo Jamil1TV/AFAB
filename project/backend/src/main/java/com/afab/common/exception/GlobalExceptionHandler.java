@@ -192,8 +192,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(apiError);
     }
 
+    @ExceptionHandler({
+            org.springframework.web.context.request.async.AsyncRequestNotUsableException.class,
+            org.springframework.web.context.request.async.AsyncRequestTimeoutException.class,
+            org.apache.catalina.connector.ClientAbortException.class
+    })
+    public void handleAsyncDisconnect(Exception ex, HttpServletRequest request) {
+        log.debug("Async/SSE client disconnected from {}: {}", request.getRequestURI(), ex.getMessage());
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleAll(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<?> handleAll(Exception ex, HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) {
+        if (response.isCommitted()) {
+            log.debug("Response already committed for {}, skipping exception response body: {}", request.getRequestURI(), ex.getMessage());
+            return null;
+        }
+
         log.error("Unhandled exception at {}: {}", request.getRequestURI(), ex.getMessage(), ex);
 
         ApiError error = new ApiError(
@@ -202,6 +216,8 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred. Please try again later.",
                 request.getRequestURI()
         );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .body(error);
     }
 }

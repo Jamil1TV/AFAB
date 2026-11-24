@@ -68,6 +68,8 @@ public class SecurityConfig {
                     "/api/v1/auth/reset-password-token",
                     "/api/v1/billing/webhook",
                     "/api/v1/health",
+                    "/api/v1/ai/health",
+                    "/api/v1/ai/health/stream",
                     "/api/v1/currencies/rates",
                     "/api/v1/currencies/history",
                     "/api/v1/currencies/convert",

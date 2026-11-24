@@ -1,5 +1,6 @@
 package com.afab.ai.gateway;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -63,10 +64,27 @@ public interface AiModelGateway {
             boolean reachable,
             boolean chatModelReady,
             boolean embedModelReady,
+            boolean chatModelLoaded,
+            boolean busy,
+            long latencyMs,
+            Instant checkedAt,
             List<String> availableModels
-    ) {}
+    ) {
+        public GatewayHealth(
+                boolean reachable,
+                boolean chatModelReady,
+                boolean embedModelReady,
+                List<String> availableModels
+        ) {
+            this(reachable, chatModelReady, embedModelReady, false, false, 0L, Instant.now(), availableModels);
+        }
+    }
 
     GatewayHealth checkHealth();
+
+    default GatewayHealth checkHealth(boolean bypassCache) {
+        return checkHealth();
+    }
 
     float[] embed(String text);
 
