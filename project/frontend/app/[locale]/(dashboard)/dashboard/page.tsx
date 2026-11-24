@@ -97,7 +97,7 @@ export default function DashboardPage() {
           </p>
           <button
             onClick={() => fetchSummary()}
-            className="mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-[#8b5cf6] text-white hover:bg-[#7c3aed] transition-colors"
+            className="mt-4 px-4 py-2 text-sm font-medium rounded-lg bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] transition-colors"
           >
             Retry
           </button>

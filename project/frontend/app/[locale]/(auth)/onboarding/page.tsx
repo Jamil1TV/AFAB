@@ -142,7 +142,7 @@ export default function OnboardingPage() {
     <div className="afab-card w-full max-w-[540px] p-5 sm:p-8">
       {/* Step Indicator Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#7c3aed] dark:text-[#a78bfa] mb-3">
+        <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[var(--primary-hover)] dark:text-[var(--primary)] mb-3">
           <span>{t("onboardingStep", { step }) || `Step ${step} of 3`}</span>
           <span>{stepTabText}</span>
         </div>
@@ -150,7 +150,7 @@ export default function OnboardingPage() {
         {/* Progress Bar */}
         <div className="h-1.5 w-full rounded-full bg-gray-100 dark:bg-[#080c18] overflow-hidden">
           <motion.div
-            className="h-full bg-[#8b5cf6]"
+            className="h-full bg-[var(--primary)]"
             initial={{ width: "33%" }}
             animate={{ width: step === 1 ? "33%" : step === 2 ? "66%" : "100%" }}
             transition={{ duration: 0.3 }}
@@ -186,7 +186,7 @@ export default function OnboardingPage() {
             >
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white flex items-center gap-2">
-                  <Building2 className="h-6 w-6 text-[#7c3aed] dark:text-[#a78bfa]" />
+                  <Building2 className="h-6 w-6 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
                   <span>{t("onboardingStep1Title") || "Tell us about your business"}</span>
                 </h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -266,7 +266,7 @@ export default function OnboardingPage() {
             >
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white flex items-center gap-2">
-                  <Coins className="h-6 w-6 text-[#7c3aed] dark:text-[#a78bfa]" />
+                  <Coins className="h-6 w-6 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
                   <span>{t("onboardingStep2Title") || "Configure your financial preferences"}</span>
                 </h2>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -345,7 +345,7 @@ export default function OnboardingPage() {
               className="space-y-6 text-center"
             >
               <div>
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/25">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/25">
                   <Sparkles className="h-7 w-7" />
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">

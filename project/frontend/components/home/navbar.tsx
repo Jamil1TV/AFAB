@@ -90,7 +90,7 @@ export function Navbar() {
               </Button>
             </Link>
             <Link href="/signup">
-              <Button size="sm" className="rounded-full bg-[#8b5cf6] hover:bg-[#7c3aed] px-6 text-white font-medium border-0">
+              <Button size="sm" className="rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-6 text-white font-medium border-0">
                 {t("getStarted")}
               </Button>
             </Link>
@@ -162,7 +162,7 @@ export function Navbar() {
                 </Link>
                 <Link href="/signup" className="w-full" onClick={() => setMobileOpen(false)}>
                   <Button 
-                    className="w-full h-11 rounded-xl text-[15px] font-semibold bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                    className="w-full h-11 rounded-xl text-[15px] font-semibold bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white"
                   >
                     {t("getStarted")}
                   </Button>

@@ -131,7 +131,7 @@
   --radius: 0.75rem;
 
   /* ── Chart palette (matches reference charts) ── */
-  --chart-1: #8b5cf6;
+  --chart-1: var(--primary);
   --chart-2: #10b981;
   --chart-3: #f59e0b;
   --chart-4: #0ea5e9;
@@ -204,7 +204,7 @@
   --ring: #8b5cf6;
 
   /* ── Chart palette ── */
-  --chart-1: #8b5cf6;
+  --chart-1: var(--primary);
   --chart-2: #34d399;
   --chart-3: #fbbf24;
   --chart-4: #38bdf8;
@@ -439,7 +439,7 @@
 
   /* Sidebar active state glow */
   .sidebar-active-glow {
-    box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 0 12px var(--glow-color, rgba(139, 92, 246, 0.3));
   }
 
   /* Thin themed scrollbar (used by the dashboard shell) */
@@ -492,7 +492,7 @@
     @apply rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800/60 dark:bg-[#0c101c];
   }
   .afab-card-hover {
-    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[#8b5cf6]/5;
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[var(--primary)]/5;
   }
   .afab-card-title {
     @apply text-lg font-bold text-gray-900 dark:text-white;
@@ -518,10 +518,10 @@
     @apply mb-1.5 block text-xs font-medium text-gray-700 dark:text-gray-300;
   }
   .afab-input {
-    @apply w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-800 dark:bg-[#080c18] dark:text-white dark:placeholder:text-gray-500;
+    @apply w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 transition-all focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-800 dark:bg-[#080c18] dark:text-white dark:placeholder:text-gray-500;
   }
   .afab-select {
-    @apply rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-xs font-medium text-gray-700 focus:border-[#8b5cf6] focus:ring-1 focus:ring-[#8b5cf6] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-800 dark:bg-[#080c18] dark:text-gray-300;
+    @apply rounded-xl border border-gray-200 bg-gray-50/50 px-3 py-2 text-xs font-medium text-gray-700 focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] focus:outline-none disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-800 dark:bg-[#080c18] dark:text-gray-300;
   }
   .afab-select option {
     @apply bg-white text-gray-900 dark:bg-[#0c101c] dark:text-gray-200;
@@ -529,13 +529,13 @@
 
   /* ── Buttons ── */
   .afab-btn-primary {
-    @apply inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[#8b5cf6] px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-[#8b5cf6]/25 transition-all hover:bg-[#7c3aed] disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-[var(--primary)] px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-[var(--primary)]/25 transition-all hover:bg-[var(--primary-hover)] disabled:cursor-not-allowed disabled:opacity-50;
   }
   .afab-btn-secondary {
     @apply inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-800 dark:bg-[#0c101c] dark:text-gray-300 dark:hover:bg-white/[0.05];
   }
   .afab-btn-soft {
-    @apply inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs font-semibold text-[#7c3aed] shadow-sm transition-all hover:bg-purple-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-[#a78bfa];
+    @apply inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/10 px-3 py-2 text-xs font-semibold text-[var(--primary)] shadow-sm transition-all hover:bg-[var(--primary)]/20 disabled:cursor-not-allowed disabled:opacity-50 dark:text-[var(--primary)];
   }
   .afab-btn-danger {
     @apply inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-red-600 px-3.5 py-2 text-xs font-bold text-white shadow-lg shadow-red-600/20 transition-all hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50;
@@ -622,3 +622,215 @@
     @apply flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:bg-gray-100 disabled:opacity-40 dark:border-gray-800 dark:hover:bg-white/5;
   }
 }
+
+/* ── Dynamic Appearance Modifiers ── */
+html[data-density="compact"] {
+  font-size: 14px;
+}
+html[data-density="compact"] .afab-page {
+  gap: 1rem;
+}
+html[data-density="compact"] .afab-card {
+  padding: 1rem;
+}
+html[data-density="compact"] .afab-td,
+html[data-density="compact"] .afab-th {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+html[data-glow="true"] .afab-btn-primary,
+html[data-glow="true"] .sidebar-active-glow {
+  box-shadow: 0 0 16px var(--glow-color, rgba(139, 92, 246, 0.45));
+}
+html[data-transitions="false"] *,
+html[data-transitions="false"] *::before,
+html[data-transitions="false"] *::after {
+  transition-duration: 0.001ms !important;
+}
+
+
+/* ── Dynamic Font & Typography Scaling ── */
+html[data-font-size="sm"] {
+  font-size: 14px;
+}
+html[data-font-size="md"] {
+  font-size: 16px;
+}
+html[data-font-size="lg"] {
+  font-size: 18px;
+}
+html[data-font-size="xl"] {
+  font-size: 20px;
+}
+
+/* ── Typography Family Overrides ── */
+html[data-font="inter"] body,
+html[data-font="inter"] p,
+html[data-font="inter"] span,
+html[data-font="inter"] a,
+html[data-font="inter"] button,
+html[data-font="inter"] input,
+html[data-font="inter"] select,
+html[data-font="inter"] textarea,
+html[data-font="inter"] label,
+html[data-font="inter"] td,
+html[data-font="inter"] th,
+html[data-font="inter"] li {
+  font-family: var(--font-sans), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+html[data-font="inter"] h1,
+html[data-font="inter"] h2,
+html[data-font="inter"] h3,
+html[data-font="inter"] h4,
+html[data-font="inter"] h5,
+html[data-font="inter"] h6,
+html[data-font="inter"] .afab-page-title,
+html[data-font="inter"] .afab-card-title,
+html[data-font="inter"] .text-headline-lg,
+html[data-font="inter"] .text-headline-md,
+html[data-font="inter"] .text-display-lg {
+  font-family: var(--font-heading), 'Poppins', sans-serif !important;
+}
+
+html[data-font="serif"] body,
+html[data-font="serif"] p,
+html[data-font="serif"] span,
+html[data-font="serif"] a,
+html[data-font="serif"] button,
+html[data-font="serif"] input,
+html[data-font="serif"] select,
+html[data-font="serif"] textarea,
+html[data-font="serif"] label,
+html[data-font="serif"] td,
+html[data-font="serif"] th,
+html[data-font="serif"] li {
+  font-family: 'Playfair Display', 'Amiri', Georgia, 'Times New Roman', serif !important;
+}
+html[data-font="serif"] h1,
+html[data-font="serif"] h2,
+html[data-font="serif"] h3,
+html[data-font="serif"] h4,
+html[data-font="serif"] h5,
+html[data-font="serif"] h6,
+html[data-font="serif"] .afab-page-title,
+html[data-font="serif"] .afab-card-title,
+html[data-font="serif"] .text-headline-lg,
+html[data-font="serif"] .text-headline-md,
+html[data-font="serif"] .text-display-lg {
+  font-family: 'Playfair Display', 'Amiri', Georgia, serif !important;
+}
+
+html[data-font="mono"] body,
+html[data-font="mono"] p,
+html[data-font="mono"] span,
+html[data-font="mono"] a,
+html[data-font="mono"] button,
+html[data-font="mono"] input,
+html[data-font="mono"] select,
+html[data-font="mono"] textarea,
+html[data-font="mono"] label,
+html[data-font="mono"] td,
+html[data-font="mono"] th,
+html[data-font="mono"] li {
+  font-family: 'JetBrains Mono', 'Courier New', 'Consolas', monospace !important;
+  letter-spacing: -0.01em;
+}
+html[data-font="mono"] h1,
+html[data-font="mono"] h2,
+html[data-font="mono"] h3,
+html[data-font="mono"] h4,
+html[data-font="mono"] h5,
+html[data-font="mono"] h6,
+html[data-font="mono"] .afab-page-title,
+html[data-font="mono"] .afab-card-title,
+html[data-font="mono"] .text-headline-lg,
+html[data-font="mono"] .text-headline-md,
+html[data-font="mono"] .text-display-lg {
+  font-family: 'JetBrains Mono', 'Courier New', monospace !important;
+}
+
+html[data-font="geometric"] body,
+html[data-font="geometric"] p,
+html[data-font="geometric"] span,
+html[data-font="geometric"] a,
+html[data-font="geometric"] button,
+html[data-font="geometric"] input,
+html[data-font="geometric"] select,
+html[data-font="geometric"] textarea,
+html[data-font="geometric"] label,
+html[data-font="geometric"] td,
+html[data-font="geometric"] th,
+html[data-font="geometric"] li {
+  font-family: 'Cairo', 'Montserrat', sans-serif !important;
+}
+html[data-font="geometric"] h1,
+html[data-font="geometric"] h2,
+html[data-font="geometric"] h3,
+html[data-font="geometric"] h4,
+html[data-font="geometric"] h5,
+html[data-font="geometric"] h6,
+html[data-font="geometric"] .afab-page-title,
+html[data-font="geometric"] .afab-card-title,
+html[data-font="geometric"] .text-headline-lg,
+html[data-font="geometric"] .text-headline-md,
+html[data-font="geometric"] .text-display-lg {
+  font-family: 'Cairo', 'Montserrat', sans-serif !important;
+  font-weight: 700;
+}
+
+html[data-font="kufi"] body,
+html[data-font="kufi"] p,
+html[data-font="kufi"] span,
+html[data-font="kufi"] a,
+html[data-font="kufi"] button,
+html[data-font="kufi"] input,
+html[data-font="kufi"] select,
+html[data-font="kufi"] textarea,
+html[data-font="kufi"] label,
+html[data-font="kufi"] td,
+html[data-font="kufi"] th,
+html[data-font="kufi"] li {
+  font-family: 'Reem Kufi', 'Cinzel', serif !important;
+}
+html[data-font="kufi"] h1,
+html[data-font="kufi"] h2,
+html[data-font="kufi"] h3,
+html[data-font="kufi"] h4,
+html[data-font="kufi"] h5,
+html[data-font="kufi"] h6,
+html[data-font="kufi"] .afab-page-title,
+html[data-font="kufi"] .afab-card-title,
+html[data-font="kufi"] .text-headline-lg,
+html[data-font="kufi"] .text-headline-md,
+html[data-font="kufi"] .text-display-lg {
+  font-family: 'Cinzel', 'Reem Kufi', serif !important;
+  letter-spacing: 0.04em;
+}
+
+html[data-font="system"] body,
+html[data-font="system"] p,
+html[data-font="system"] span,
+html[data-font="system"] a,
+html[data-font="system"] button,
+html[data-font="system"] input,
+html[data-font="system"] select,
+html[data-font="system"] textarea,
+html[data-font="system"] label,
+html[data-font="system"] td,
+html[data-font="system"] th,
+html[data-font="system"] li,
+html[data-font="system"] h1,
+html[data-font="system"] h2,
+html[data-font="system"] h3,
+html[data-font="system"] h4,
+html[data-font="system"] h5,
+html[data-font="system"] h6,
+html[data-font="system"] .afab-page-title,
+html[data-font="system"] .afab-card-title,
+html[data-font="system"] .text-headline-lg,
+html[data-font="system"] .text-headline-md,
+html[data-font="system"] .text-display-lg {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+}
+

@@ -183,5 +183,108 @@
     "needHelp": "Need Help?",
     "needHelpDesc": "If you notice any suspicious activity or need help securing your account, our support team is here for you.",
     "contactSupport": "Contact Support"
+  },
+  "appearance": {
+    "title": "Appearance & Theme",
+    "subtitle": "Customize your interface theme, colors, and visual preferences while maintaining AFAB's signature fintech design.",
+    "resetDefaults": "Reset Defaults",
+    "savePreferences": "Save Preferences",
+    "saveSuccess": "Appearance preferences saved successfully!",
+    "resetSuccess": "Appearance reset to default settings.",
+    "themeMode": {
+      "title": "Theme Mode",
+      "subtitle": "Choose your preferred system appearance",
+      "light": "Light Mode",
+      "lightDesc": "Clean white surfaces with high contrast",
+      "dark": "Dark Mode",
+      "darkDesc": "Ultra-deep fintech navy & OLED black",
+      "system": "System Default",
+      "systemDesc": "Synchronize automatically with your OS"
+    },
+    "accentColor": {
+      "title": "Brand Accent Color",
+      "subtitle": "Select a curated fintech color or define your custom brand hex code",
+      "custom": "Custom Hex",
+      "customPlaceholder": "#8B5CF6",
+      "customColorLabel": "Pick Color"
+    },
+    "darkSurface": {
+      "title": "Dark Surface Mood",
+      "subtitle": "Tailor the background depth and contrast when dark mode is active",
+      "midnight": "Midnight Navy",
+      "midnightDesc": "AFAB signature ultra-deep navy tone",
+      "oled": "OLED Pure Black",
+      "oledDesc": "Zero-emission pitch black for extreme contrast",
+      "slate": "Deep Slate",
+      "slateDesc": "Balanced dark graphite with cool undertones",
+      "charcoal": "Charcoal Eclipse",
+      "charcoalDesc": "Muted matte charcoal for reduced eye strain"
+    },
+    "borderRadius": {
+      "title": "Corner Rounding",
+      "subtitle": "Control the curvature of cards, buttons, and inputs",
+      "sm": "Sharp (8px)",
+      "md": "Balanced (12px)",
+      "lg": "Modern (16px)"
+    },
+    "density": {
+      "title": "Interface Density",
+      "subtitle": "Adjust content spacing and information density",
+      "comfortable": "Comfortable",
+      "comfortableDesc": "Spacious layout with generous padding and optimal breathing room",
+      "compact": "Compact Mode",
+      "compactDesc": "High-density data view with tight rows and compact cards"
+    },
+    "visualEffects": {
+      "title": "Visual Enhancements",
+      "subtitle": "Toggle ambient lighting and micro-animations",
+      "ambientGlow": "Ambient Neon Glow",
+      "ambientGlowDesc": "Subtle neon bloom around active buttons and navigation items",
+      "smoothTransitions": "Smooth Theme Transitions",
+      "smoothTransitionsDesc": "Smooth color and surface morphing when switching themes"
+    },
+    "livePreview": {
+      "title": "Real-time Live Preview",
+      "subtitle": "Interactive sandbox showing your theme changes in real-time",
+      "netWorth": "Total Balance",
+      "monthlyGrowth": "+14.2% this month",
+      "primaryBtn": "Primary Action",
+      "softBtn": "Secondary Action",
+      "quickFilter": "Quick Filter",
+      "statusBadge": "Verified Business",
+      "inputLabel": "Sample Input Field",
+      "inputPlaceholder": "Interactive focus with live accent ring...",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month"
+    },
+    "fontFamily": {
+      "title": "Typography & Font Family",
+      "subtitle": "Select a typography pairing optimized for fintech data and multi-script legibility",
+      "inter": "AFAB Signature (Inter & Poppins)",
+      "interDesc": "Standard modern fintech benchmark with supreme numerical clarity",
+      "serif": "Luxury Editorial Serif (Playfair & Amiri)",
+      "serifDesc": "High-end private banking serif with classical Arabic Naskh calligraphy",
+      "mono": "Cyber Terminal Monospace (JetBrains Mono)",
+      "monoDesc": "Fixed-width Bloomberg / code terminal aesthetic with tabular numbers",
+      "geometric": "Bold Geometric Impact (Cairo & Montserrat)",
+      "geometricDesc": "Chunky, high-impact geometric blocks with wide bold curves",
+      "kufi": "Monumental Kufic & Roman (Cinzel & Reem Kufi)",
+      "kufiDesc": "Monumental Roman stone capitals paired with authentic geometric Kufic",
+      "system": "System Native UI",
+      "systemDesc": "Zero-latency native OS font (San Francisco, Segoe UI, Roboto)"
+    },
+    "fontSize": {
+      "title": "Writing & Interface Font Size",
+      "subtitle": "Proportionally scale all typography, cards, and tables across the entire website",
+      "sm": "Compact (14px)",
+      "smDesc": "Data-dense ledger view for accountants and multi-column screens",
+      "md": "Standard (16px)",
+      "mdDesc": "Default balanced AFAB readability and proportion",
+      "lg": "Comfortable (18px)",
+      "lgDesc": "Larger relaxed typography reducing eye strain during long sessions",
+      "xl": "Accessible (20px)",
+      "xlDesc": "High-contrast scale for presentations & enhanced accessibility"
+    }
   }
 }

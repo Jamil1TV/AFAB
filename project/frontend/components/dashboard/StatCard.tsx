@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
 export type StatTone = "neutral" | "primary" | "success" | "danger" | "warning" | "info";
 
 const toneIcon: Record<StatTone, string> = {
-  neutral: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa]",
-  primary: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa]",
-  success: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa]",
-  danger: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa]",
-  warning: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa]",
-  info: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[#8b5cf6]/10 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa]",
+  neutral: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)]",
+  primary: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)]",
+  success: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)]",
+  danger: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)]",
+  warning: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)]",
+  info: "bg-gray-50 text-gray-500 dark:bg-white/[0.03] dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)]",
 };
 
 interface StatCardProps {

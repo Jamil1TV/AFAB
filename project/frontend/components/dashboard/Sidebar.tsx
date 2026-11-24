@@ -205,16 +205,16 @@ export function Sidebar() {
           title={collapsed ? item.name : undefined}
           className={`group flex items-center ${collapsed ? "justify-center" : "justify-between"} rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
             isActive 
-              ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:bg-purple-600/20 dark:text-purple-300 shadow-sm" 
+              ? "bg-[var(--primary)]/10 text-[var(--primary)] dark:bg-[var(--primary)]/20 dark:text-[var(--primary)] shadow-sm font-semibold" 
               : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] dark:hover:text-gray-200"
           }`}
         >
           <div className={`flex items-center ${collapsed ? "justify-center w-full" : "gap-3 min-w-0"}`}>
-            <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-[#7c3aed] dark:text-purple-300" : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"}`} />
+            <item.icon className={`h-5 w-5 shrink-0 ${isActive ? "text-[var(--primary)]" : "text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"}`} />
             {!collapsed && <span className="truncate">{item.name}</span>}
           </div>
           {item.badge && !collapsed && (
-            <span className="rounded-full bg-purple-500/10 dark:bg-purple-600/20 border border-purple-500/25 dark:border-purple-500/30 px-2 py-0.5 text-[10px] font-bold text-[#7c3aed] dark:text-purple-300 shadow-sm shrink-0 ms-2">
+            <span className="rounded-full bg-[var(--primary)]/10 dark:bg-[var(--primary)]/20 border border-[var(--primary)]/25 dark:border-[var(--primary)]/30 px-2 py-0.5 text-[10px] font-bold text-[var(--primary)] shadow-sm shrink-0 ms-2">
               {item.badge}
             </span>
           )}

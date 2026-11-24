@@ -303,8 +303,8 @@ export function GeneralSettings({
           </div>
         )}
         {migrationSuccessMsg && (
-          <div className="p-4 rounded-xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] flex items-start gap-3 text-sm animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 shrink-0 text-[#7c3aed] dark:text-[#a78bfa]" />
+          <div className="p-4 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)] flex items-start gap-3 text-sm animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 shrink-0 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
             <p className="font-medium">{migrationSuccessMsg}</p>
           </div>
         )}
@@ -432,8 +432,8 @@ export function GeneralSettings({
 
                 {/* Rich Real Working Fiscal Year Breakdown Card */}
                 <div className="afab-inset p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
-                    <Calendar className="w-4 h-4 text-[#8b5cf6] shrink-0" />
+                  <div className="flex items-center gap-2 text-xs font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)]">
+                    <Calendar className="w-4 h-4 text-[var(--primary)] shrink-0" />
                     <span>
                       {isArabic
                         ? `تمتد السنة المالية من 1 ${fiscalYearDetails.startMonthName} إلى ${fiscalYearDetails.endDay} ${fiscalYearDetails.endMonthName}`
@@ -447,7 +447,7 @@ export function GeneralSettings({
                         key={idx} 
                         className="p-2.5 rounded-xl bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800/60 text-center"
                       >
-                        <p className="text-[10px] uppercase font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+                        <p className="text-[10px] uppercase font-bold text-[var(--primary-hover)] dark:text-[var(--primary)]">
                           {q.name}
                         </p>
                         <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mt-0.5">
@@ -470,7 +470,7 @@ export function GeneralSettings({
         <div className="afab-card overflow-hidden">
           <div className="p-6 border-b border-gray-100 dark:border-gray-800/60 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)]">
                 <CalendarDays className="w-5 h-5" />
               </div>
               <h3 className="afab-card-title">{t("general.regionalFormats")}</h3>
@@ -488,7 +488,7 @@ export function GeneralSettings({
                   <Label className="afab-label mb-0">{t("general.dateFormat")}</Label>
                   <span className="text-[11px] text-gray-500 dark:text-gray-400">
                     {isArabic ? "معاينة:" : "Preview:"}{" "}
-                    <span className="font-mono font-bold text-[#7c3aed] dark:text-[#a78bfa]">{datePreview}</span>
+                    <span className="font-mono font-bold text-[var(--primary-hover)] dark:text-[var(--primary)]">{datePreview}</span>
                   </span>
                 </div>
                 <Select
@@ -582,7 +582,7 @@ export function GeneralSettings({
           <div className="px-6 pb-6 text-center -mt-12 relative z-10">
             <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-white dark:border-[#0c101c] shadow-sm bg-white dark:bg-[#0c101c]">
               <AvatarImage src={profile?.avatarUrl} />
-              <AvatarFallback className="text-2xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] font-bold">
+              <AvatarFallback className="text-2xl bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)] font-bold">
                 {getInitials(profile?.firstName, profile?.lastName)}
               </AvatarFallback>
             </Avatar>
@@ -678,10 +678,10 @@ export function GeneralSettings({
                   {isExportingData ? (
                     <AfabLoader size="xs" />
                   ) : (
-                    <Download className="w-5 h-5 shrink-0 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors" />
+                    <Download className="w-5 h-5 shrink-0 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)] transition-colors" />
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm font-medium group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
+                    <p className="text-sm font-medium group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)] transition-colors">
                       {isExportingData
                         ? isArabic
                           ? "جاري تصدير بياناتك..."
@@ -693,7 +693,7 @@ export function GeneralSettings({
                     </p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 shrink-0 text-gray-400 group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors rtl:rotate-180" />
+                <ChevronRight className="w-4 h-4 shrink-0 text-gray-400 group-hover:text-[var(--primary-hover)] dark:group-hover:text-[var(--primary)] transition-colors rtl:rotate-180" />
               </button>
 
               <button

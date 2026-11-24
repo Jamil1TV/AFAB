@@ -27,11 +27,11 @@ export function AIInsightsCard({
   const profitMarginPct = rawRev > 0 ? Math.round((rawProfit / rawRev) * 1000) / 10 : 0;
 
   return (
-    <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-[#8b5cf6]/30 bg-gradient-to-br from-[#f5f3ff] to-white p-6 shadow-sm dark:from-[#131128] dark:to-[#0c101c]">
+    <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-[var(--primary)]/30 bg-gradient-to-br from-[#f5f3ff] to-white p-6 shadow-sm dark:from-[#131128] dark:to-[#0c101c]">
       <div>
         <div className="relative z-10 mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#8b5cf6] text-white shadow-sm shadow-[#8b5cf6]/30">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[var(--primary)] text-white shadow-sm shadow-[var(--primary)]/30">
               <Sparkles className="h-4 w-4" />
             </div>
             <h3 className="text-sm font-bold text-gray-900 dark:text-white">{tAi("title")}</h3>
@@ -43,7 +43,7 @@ export function AIInsightsCard({
 
         {!hasRealActivity ? (
           <div className="relative z-10 my-2 rounded-xl border border-gray-200/80 bg-white/80 p-4 text-center backdrop-blur-sm dark:border-gray-800/80 dark:bg-[#080c18]/80">
-            <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+            <div className="mx-auto mb-2.5 flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)]">
               <AlertCircle className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-gray-900 dark:text-white">
@@ -59,7 +59,7 @@ export function AIInsightsCard({
           <div className="relative z-10 space-y-3">
             <div className="rounded-xl border border-gray-200/80 bg-white/80 p-3 backdrop-blur-sm dark:border-gray-800/80 dark:bg-[#080c18]/80">
               <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-gray-200">
-                <TrendingUp className="h-3.5 w-3.5 text-[#8b5cf6]" />
+                <TrendingUp className="h-3.5 w-3.5 text-[var(--primary)]" />
                 <span>
                   {isAr ? "هامش صافي التدفق النقدي" : "Net Cash Flow & Margin"}
                 </span>
@@ -77,7 +77,7 @@ export function AIInsightsCard({
 
             <div className="rounded-xl border border-gray-200/80 bg-white/80 p-3 backdrop-blur-sm dark:border-gray-800/80 dark:bg-[#080c18]/80">
               <h4 className="flex items-center gap-1.5 text-xs font-semibold text-gray-900 dark:text-gray-200">
-                <PieChart className="h-3.5 w-3.5 text-[#8b5cf6]" />
+                <PieChart className="h-3.5 w-3.5 text-[var(--primary)]" />
                 <span>
                   {topCat
                     ? isAr

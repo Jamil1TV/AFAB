@@ -120,12 +120,13 @@ Dashboard components include KPI cards, revenue chart, AI insights, recent trans
   - **Orders Management & History**:
     - **Add Order Modal**: Triggered from row action menu (`+ Add Order`) and from the Customer Detail Drawer (`+ Add Order`). Auto-generates order numbers (e.g. `ORD-2024-001`), captures order date, amount (formatted in user's currency), order status (`COMPLETED`, `PENDING`, `PROCESSING`, `CANCELLED`), description/line items, payment method (`Bank Transfer`, `Credit Card`, `Cash`, `Stripe`), and linked invoice number.
     - **Order History & Details in Drawer**: Shows real chronological order records with status badges, line items, amounts, payment methods, and invoice numbers. Adding an order recalculates customer order count and revenue live.
-  - **Left 2/3 Customers Directory Table**:
-    - Multi-select checkboxes, initial avatar with color variety matching Stitch mockup.
-    - Customer ID code badge, customer name, email, phone number, group badge (`Standard`, `Business`, `Premium`, `Enterprise`), formatted revenue, orders count, status chip (`Active`, `Inactive`, `New`, `Lead`), last activity date, and row action menu (`View Details`, `+ Add Order`, `Edit`, `Delete`).
+  - **Left 2/3 Customers Directory (Responsive Dual Presentation)**:
+    - **Desktop & Tablet (`hidden md:block`)**: Full 9-column rich data table with multi-select checkboxes, initial avatar, Customer ID code badge, customer name, email, phone number, group badge (`Standard`, `Business`, `Premium`, `Enterprise`), formatted revenue, orders count, status chip (`Active`, `Inactive`, `New`, `Lead`), last activity date, and row action menu (`View Details`, `+ Add Order`, `Edit`, `Delete`).
+    - **Mobile Card View (`md:hidden`)**: Dedicated touch-optimized customer cards displaying avatar, customer ID code with copy button, name, status, group, revenue, orders count, one-tap phone/email links, and quick order/edit actions.
     - Search input (⌘K keyboard shortcut, matches ID, name, email, phone), status filter dropdown, group filter dropdown, reset filters, and instant CSV export.
     - Pagination bar with page controls and items-per-page selector (10, 25, 50).
   - **Right 1/3 Analytics Column**:
+    - **Adaptive Layout**: Stacks vertically (4 cols) on desktop, spreads in a 3-column row (`md:grid-cols-3`) on tablet, and stacks cleanly on mobile (`grid-cols-1`).
     - Customer Overview: Recharts Donut Pie Chart with center total and active/inactive/new distribution.
     - Top Customers Widget: Ranked customers by revenue with view-all link and details drawer trigger.
     - Customer Activity Widget: Live feed showing recent customer registrations, paid invoices, received payments, and new orders placed.
@@ -137,6 +138,31 @@ Dashboard components include KPI cards, revenue chart, AI insights, recent trans
   - **Real Data Engine**: `CustomerService` operates against `/api/v1/customers` with transparent active-business fallback (`afab_customers_${businessId}` in `localStorage`), enabling immediate interactive CRUD, real KPI math, order additions, and RFC 4180 CSV export with UTF-8 BOM.
   - **Full Localization & Theming**: English (`messages/en/customers.json`) and Arabic RTL (`messages/ar/customers.json`), verified in light and dark modes with design tokens.
   - **Hydration & Layout Stability**: Added root `app/layout.tsx` pass-through layout required by Next.js 16/next-intl, eliminating nested `<html><body>` hydration mismatch warnings.
+
+- `app/[locale]/(dashboard)/dashboard/settings/appearance/page.tsx` & `lib/appearance.ts` (Phase 7 Appearance Delivered):
+  - **Dynamic Theme & Accent Color Customizer**:
+    - Complete color customizer allowing users to customize primary brand accent and theme mood while strictly maintaining AFAB's signature fintech design architecture.
+    - **8 Curated Fintech Accent Presets**: Electric Violet (`#8b5cf6`, signature), Ocean Sapphire (`#3b82f6`), Emerald Wealth (`#10b981`), Sunset Amber (`#f59e0b`), Crimson Ruby (`#f43f5e`), Cyber Cyan (`#06b6d4`), Neon Magenta (`#d946ef`), Titanium Slate (`#64748b`).
+    - **Custom Hex Color Picker**: Native HTML5 color input + hex text input with automatic shade calculation (`adjustHexLightness`, `hexToRgba`).
+    - **Corner Rounding (Border Radius)**: Sharp (8px), Balanced (12px), Modern (16px) — Pill option cleanly eliminated.
+    - **Typography & Radically Distinct Font Archetypes (Site-Wide)**: 6 starkly contrasting typographic personalities delivering immediate visual change across all pages:
+      1. Modern Clean Sans (`inter`): Inter & Poppins standard modern fintech benchmark
+      2. Luxury Editorial Serif (`serif`): Playfair Display & Amiri classical private wealth styling
+      3. Cyber Terminal Monospace (`mono`): JetBrains Mono & Courier New terminal / code aesthetic
+      4. Bold Geometric Impact (`geometric`): Cairo & Montserrat heavy geometric brand curves
+      5. Monumental Kufic & Roman (`kufi`): Cinzel & Reem Kufi monumental stone and heritage calligraphy
+      6. System Native OS (`system`): Zero-latency raw operating system font stack
+    - **Writing / Font Size Scale (Site-Wide)**: 4 proportional typography scales (Compact 14px / 87.5%, Standard 16px / 100%, Comfortable 18px / 112.5%, Accessible 20px / 125%) scaling all headings, body text, tables, forms, and cards site-wide via root `html` font size.
+    - **Interface Density**: Comfortable (standard) vs Compact (`html[data-density="compact"]` with 14px base typography and dense table padding).
+    - **Visual Enhancements**: Ambient Neon Glow (`html[data-glow="true"]`) and Smooth Theme Transitions (`html[data-transitions]`).
+  - **Zero FOUC & Synchronous Injection**:
+    - Synchronous `<head>` bootstrapper in `app/[locale]/layout.tsx` reads `localStorage.getItem("afab_appearance_settings")` before DOM paint and injects `#afab-appearance-theme`, typography rules, and font scale (`document.documentElement.style.fontSize`), preventing any flash of unstyled theme on page refresh.
+  - **Interactive Real-Time Live Preview Sandbox**:
+    - Sticky preview widget on the Appearance screen showcasing real-time changes to KPI balance card (`$124,850.00`), dynamic SVG sparkline chart, primary & soft action buttons, segmented period selector, active font family, and focused input with live accent ring.
+    - **Full Mobile, Tablet & Desktop Responsiveness**: Adaptive 2-column layout (7/5) on desktop, smooth stacked layout on tablet, and floating quick-preview action trigger on mobile (`fixed bottom-5 end-5 z-40 lg:hidden`) for immediate visual feedback without scrolling.
+  - **Full Localization & Persistence**:
+    - Bilingual English and Arabic RTL translations in `messages/{en,ar}/settings.json`.
+    - Persisted in browser `localStorage` and synchronized with user profile via `SettingsService.updateProfile`.
 
 ## 9. Mock/demo data
 `lib/mock-data.ts` contains sample chart, KPI, transaction, and category data.

@@ -201,7 +201,7 @@ export function EditProfileModal({
         <div className="w-full min-w-0 p-6 pb-4 pe-12 border-b border-gray-100 dark:border-gray-800/70">
           <DialogHeader>
             <DialogTitle className="afab-card-title flex items-center gap-2 text-lg">
-              <User className="w-5 h-5 text-[#8b5cf6]" />
+              <User className="w-5 h-5 text-[var(--primary)]" />
               {isArabic ? "تعديل الملف الشخصي" : "Edit Profile"}
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500 dark:text-gray-400">
@@ -223,9 +223,9 @@ export function EditProfileModal({
           {/* Avatar Editor */}
           <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-gray-50/80 dark:bg-[#080c18] border border-gray-200/70 dark:border-gray-800/60">
             <div className="relative group shrink-0">
-              <Avatar className="w-20 h-20 border-2 border-purple-500/30 shadow-md bg-white dark:bg-[#0c101c]">
+              <Avatar className="w-20 h-20 border-2 border-[var(--primary)]/30 shadow-md bg-white dark:bg-[#0c101c]">
                 <AvatarImage src={avatarUrl || undefined} />
-                <AvatarFallback className="text-xl bg-[#8b5cf6]/15 text-[#7c3aed] dark:text-[#a78bfa] font-bold">
+                <AvatarFallback className="text-xl bg-[var(--primary)]/15 text-[var(--primary-hover)] dark:text-[var(--primary)] font-bold">
                   {initials || "U"}
                 </AvatarFallback>
               </Avatar>
@@ -275,7 +275,7 @@ export function EditProfileModal({
               {/* Quick Avatar Presets */}
               <div className="space-y-1">
                 <p className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center justify-center sm:justify-start gap-1">
-                  <Sparkles className="w-3 h-3 text-[#8b5cf6]" />
+                  <Sparkles className="w-3 h-3 text-[var(--primary)]" />
                   {isArabic ? "أو اختر صورة رمزية جاهزة:" : "Or pick a preset avatar:"}
                 </p>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
@@ -288,8 +288,8 @@ export function EditProfileModal({
                         onClick={() => setAvatarUrl(preset)}
                         className={`relative w-8 h-8 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
                           isSelected
-                            ? "border-[#8b5cf6] ring-2 ring-[#8b5cf6]/30 scale-110"
-                            : "border-gray-200 dark:border-gray-700 hover:border-[#8b5cf6]/60"
+                            ? "border-[var(--primary)] ring-2 ring-[var(--primary)]/30 scale-110"
+                            : "border-gray-200 dark:border-gray-700 hover:border-[var(--primary)]/60"
                         }`}
                       >
                         <img src={preset} alt={`Avatar preset ${idx + 1}`} className="w-full h-full object-cover" />

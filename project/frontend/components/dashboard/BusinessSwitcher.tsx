@@ -182,7 +182,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         aria-label="Workspace & Business Selector"
         className={`flex w-full items-center ${
           collapsed ? "justify-center p-1.5" : "justify-between p-2"
-        } rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group select-none border border-transparent hover:border-purple-200 dark:hover:border-purple-500/20`}
+        } rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group select-none border border-transparent hover:border-purple-200 dark:hover:border-[var(--primary)]/20`}
       >
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2.5"} overflow-hidden min-w-0`}>
           {/* Official AFAB Logo (Light & Dark variants) */}
@@ -202,7 +202,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
           {!collapsed && (
             <div className="flex flex-col overflow-hidden min-w-0 text-start">
               <div className="flex items-center gap-1.5">
-                <span className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                <span className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-[var(--primary)] dark:group-hover:text-purple-400 transition-colors">
                   {activeBusiness.name}
                 </span>
                 {!activeBusiness.editable && (
@@ -222,7 +222,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         {!collapsed && (
           <ChevronsUpDown
             className={`h-4 w-4 text-gray-400 group-hover:text-purple-500 shrink-0 ms-1 transition-transform duration-200 ${
-              isOpen ? "rotate-180 text-purple-600 dark:text-purple-400" : ""
+              isOpen ? "rotate-180 text-[var(--primary)] dark:text-[var(--primary)]" : ""
             }`}
           />
         )}
@@ -243,7 +243,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                 isAtLimit
-                  ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                  ? "bg-[var(--primary)]/10 text-[var(--primary)] dark:text-[var(--primary)] border border-[var(--primary)]/20"
                   : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
               }`}
             >
@@ -323,7 +323,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <button
               type="button"
               onClick={handleAddBusinessClick}
-              className="flex w-full items-center justify-between p-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group cursor-pointer"
+              className="flex w-full items-center justify-between p-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30 hover:text-[var(--primary)] dark:hover:text-purple-400 transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div className="h-6 w-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center group-hover:border-purple-500 text-gray-400 group-hover:text-purple-500 transition-colors shrink-0">
@@ -332,7 +332,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 <span className="truncate">{isArabic ? "إضافة عمل جديد" : "Add Business"}</span>
               </div>
               {isAtLimit ? (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-full border border-purple-500/20 shrink-0 ms-1.5">
+                <span className="flex items-center gap-1 text-[10px] font-bold text-[var(--primary)] dark:text-[var(--primary)] bg-[var(--primary)]/10 px-1.5 py-0.5 rounded-full border border-[var(--primary)]/20 shrink-0 ms-1.5">
                   <Crown className="w-2.5 h-2.5 shrink-0" />
                   UPGRADE
                 </span>
@@ -356,7 +356,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <Link
               href="/dashboard/settings/subscription"
               onClick={() => setIsOpen(false)}
-              className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 rounded-lg transition-colors cursor-pointer font-medium"
+              className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs text-[var(--primary)] dark:text-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30 rounded-lg transition-colors cursor-pointer font-medium"
             >
               <span className="flex items-center gap-2 truncate">
                 <CreditCard className="w-3.5 h-3.5 shrink-0" />
@@ -389,20 +389,20 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
 
           {/* Features Highlights */}
           <div className="my-4 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 space-y-2.5">
-            <p className="text-xs font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+            <p className="text-xs font-bold text-purple-900 dark:text-[var(--primary)] uppercase tracking-wider">
               {isArabic ? "ميزات الخطة المدفوعة:" : "What you get with Pro:"}
             </p>
             <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[var(--primary)] dark:text-[var(--primary)] shrink-0" />
                 <span>{isArabic ? "شركات ومساحات عمل متعددة وغير محدودة" : "Multiple independent businesses & workspaces"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[var(--primary)] dark:text-[var(--primary)] shrink-0" />
                 <span>{isArabic ? "محفظة مالية موحدة وتحويل مباشر للعملات" : "Consolidated multi-currency portfolio analytics"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[var(--primary)] dark:text-[var(--primary)] shrink-0" />
                 <span>{isArabic ? "مساعد الذكاء الاصطناعي بلا حدود للتقارير والفواتير" : "Unlimited AI Assistant queries & automated insights"}</span>
               </div>
             </div>
@@ -437,7 +437,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl">
           <DialogHeader className="text-start space-y-2">
-            <div className="h-10 w-10 rounded-xl bg-[#8b5cf6]/10 text-[#8b5cf6] flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -496,7 +496,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
               </Button>
               <Button
                 type="submit"
-                className="rounded-xl bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-bold shadow-lg shadow-[#8b5cf6]/25"
+                className="rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-bold shadow-lg shadow-[var(--primary)]/25"
               >
                 {isArabic ? "إنشاء الشركة" : "Create Business"}
               </Button>

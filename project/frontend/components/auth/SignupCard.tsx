@@ -187,7 +187,7 @@ export function SignupCard() {
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
                 required
-                className="peer h-4.5 w-4.5 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-[#080c18] text-[#8b5cf6] transition-colors focus:ring-2 focus:ring-[#8b5cf6]/20 focus:ring-offset-0 checked:bg-[#8b5cf6] checked:border-[#8b5cf6] cursor-pointer"
+                className="peer h-4.5 w-4.5 rounded-md border border-gray-300 dark:border-gray-700 bg-gray-50/50 dark:bg-[#080c18] text-[var(--primary)] transition-colors focus:ring-2 focus:ring-[var(--primary)]/20 focus:ring-offset-0 checked:bg-[var(--primary)] checked:border-[var(--primary)] cursor-pointer"
               />
             </div>
             <label
@@ -197,14 +197,14 @@ export function SignupCard() {
               {t("agreeTerms")}{" "}
               <Link
                 href="/terms"
-                className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-colors"
+                className="font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-colors"
               >
                 {t("termsLink")}
               </Link>{" "}
               {t("andText")}{" "}
               <Link
                 href="/privacy"
-                className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-colors"
+                className="font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-colors"
               >
                 {t("privacyLink")}
               </Link>
@@ -270,7 +270,7 @@ export function SignupCard() {
           {t("hasAccount")}{" "}
           <Link
             href="/login"
-            className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-colors"
+            className="font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-colors"
           >
             {t("loginLink")}
           </Link>

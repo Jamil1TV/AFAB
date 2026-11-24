@@ -107,7 +107,7 @@ export function DashboardHeader() {
       case "SUCCESS":
         return <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />;
       default:
-        return <Info className="w-4 h-4 text-[#8b5cf6] shrink-0 mt-0.5" />;
+        return <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />;
     }
   };
 
@@ -133,7 +133,7 @@ export function DashboardHeader() {
               tHeader("search") ||
               (isAr ? "ابحث عن أي شيء..." : "Search anything...")
             }
-            className="block w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0c101c] py-2 ps-10 pe-12 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+            className="block w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0c101c] py-2 ps-10 pe-12 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
           />
           <div className="absolute inset-y-0 end-0 flex items-center pe-2">
             <kbd className="hidden items-center gap-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#080c18] px-1.5 font-mono text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:flex">
@@ -187,7 +187,7 @@ export function DashboardHeader() {
                   <button
                     type="button"
                     onClick={handleMarkAllRead}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)] hover:underline"
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
                     <span>{isAr ? "تحديد الكل كمقروء" : "Mark all read"}</span>
@@ -210,7 +210,7 @@ export function DashboardHeader() {
                       className={`p-2.5 rounded-xl transition-colors cursor-pointer flex items-start gap-2.5 ${
                         n.read
                           ? "opacity-75 hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                          : "bg-purple-50/50 dark:bg-purple-950/20 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                          : "bg-purple-50/50 dark:bg-purple-950/20 hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30"
                       }`}
                     >
                       {renderSeverityIcon(n.severity)}
@@ -220,7 +220,7 @@ export function DashboardHeader() {
                             {n.title}
                           </p>
                           {!n.read && (
-                            <span className="h-2 w-2 rounded-full bg-[#8b5cf6] shrink-0" />
+                            <span className="h-2 w-2 rounded-full bg-[var(--primary)] shrink-0" />
                           )}
                         </div>
                         <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-snug mt-0.5">

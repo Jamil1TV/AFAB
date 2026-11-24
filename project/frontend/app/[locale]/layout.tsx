@@ -78,11 +78,75 @@ export default async function RootLayout({
       className={`${inter.variable} ${poppins.variable} ${geistMono.variable}`}
     >
             <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Cairo:wght@600;700;800;900&family=Cinzel:wght@600;700;800;900&family=JetBrains+Mono:wght@400;500;700;800&family=Montserrat:wght@600;700;800&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=Reem+Kufi:wght@500;600;700&display=swap"
+          rel="stylesheet"
+        />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
+                  // Synchronously apply customized appearance theme before render
+                  var rawApp = localStorage.getItem('afab_appearance_settings');
+                  if (rawApp) {
+                    var s = JSON.parse(rawApp);
+                    var presets = {
+                      purple: { primary: '#8b5cf6', hover: '#7c3aed', glow: 'rgba(139, 92, 246, 0.35)', sec: '#191832' },
+                      blue: { primary: '#3b82f6', hover: '#2563eb', glow: 'rgba(59, 130, 246, 0.35)', sec: '#172554' },
+                      emerald: { primary: '#10b981', hover: '#059669', glow: 'rgba(16, 185, 129, 0.35)', sec: '#064e3b' },
+                      amber: { primary: '#f59e0b', hover: '#d97706', glow: 'rgba(245, 158, 11, 0.35)', sec: '#451a03' },
+                      rose: { primary: '#f43f5e', hover: '#e11d48', glow: 'rgba(244, 63, 94, 0.35)', sec: '#4c0519' },
+                      cyan: { primary: '#06b6d4', hover: '#0891b2', glow: 'rgba(6, 182, 212, 0.35)', sec: '#083344' },
+                      magenta: { primary: '#d946ef', hover: '#c026d3', glow: 'rgba(217, 70, 239, 0.35)', sec: '#4a044e' },
+                      slate: { primary: '#64748b', hover: '#475569', glow: 'rgba(100, 116, 139, 0.35)', sec: '#1e293b' }
+                    };
+                    var fontFamilies = {
+                      inter: { body: "var(--font-sans), 'Inter', sans-serif", heading: "var(--font-heading), 'Poppins', sans-serif" },
+                      serif: { body: "'Playfair Display', 'Amiri', Georgia, serif", heading: "'Playfair Display', 'Amiri', Georgia, serif" },
+                      mono: { body: "'JetBrains Mono', 'Courier New', monospace", heading: "'JetBrains Mono', 'Courier New', monospace" },
+                      geometric: { body: "'Cairo', 'Montserrat', sans-serif", heading: "'Cairo', 'Montserrat', sans-serif" },
+                      kufi: { body: "'Reem Kufi', 'Cinzel', serif", heading: "'Cinzel', 'Reem Kufi', serif" },
+                      system: { body: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif", heading: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }
+                    };
+                    var fontSizes = {
+                      sm: '87.5%',
+                      md: '100%',
+                      lg: '112.5%',
+                      xl: '125%'
+                    };
+                    var p = presets[s.accentPreset] || presets.purple;
+                    var pr = (s.accentPreset === 'custom' && s.customPrimaryColor) ? s.customPrimaryColor : p.primary;
+                    var ph = p.hover || pr;
+                    var rad = s.radius === 'sm' ? '0.5rem' : s.radius === 'lg' ? '1rem' : '0.75rem';
+                    var f = fontFamilies[s.fontFamily] || fontFamilies.inter;
+                    var fsz = fontSizes[s.fontSize] || '100%';
+                    var css = ':root{--font-family-body:' + f.body + ';--font-family-heading:' + f.heading + ';--primary:' + pr + ';--primary-hover:' + ph + ';--ring:' + pr + ';--sidebar-primary:' + pr + ';--radius:' + rad + ';--glow-color:' + p.glow + ';}' +
+                              '.dark{--primary:' + pr + ';--primary-hover:' + ph + ';--background:#060813;--card:#0c101c;--popover:#0c101c;--surface-inset:#080c18;--border:#171f2c;--secondary:' + p.sec + ';--ring:' + pr + ';--sidebar-primary:' + pr + ';--radius:' + rad + ';--glow-color:' + p.glow + ';}' +
+                              'body, p, span, a, button, input, select, textarea, label, td, th {font-family:' + f.body + '!important;}' +
+                              'h1,h2,h3,h4,h5,h6,.afab-page-title,.afab-card-title,.text-headline-lg,.text-headline-md,.text-display-lg{font-family:' + f.heading + '!important;}';
+                    var st = document.createElement('style');
+                    st.id = 'afab-appearance-theme';
+                    st.textContent = css;
+                    document.head.appendChild(st);
+                    if (s.density) document.documentElement.setAttribute('data-density', s.density);
+                    if (s.enableGlow !== undefined) document.documentElement.setAttribute('data-glow', s.enableGlow ? 'true' : 'false');
+                    document.documentElement.style.fontSize = fsz;
+                    document.documentElement.setAttribute('data-font', s.fontFamily || 'inter');
+                    document.documentElement.setAttribute('data-font-size', s.fontSize || 'md');
+                  }
+                } catch(e) {}
+
+                try {
+                  window.addEventListener('error', function(event) {
+                    if (event && event.message && (event.message.indexOf('Hydration') !== -1 || event.message.indexOf('hydration') !== -1)) {
+                      if (document.querySelector('[class*="translate-tooltip"]') || (event.message && event.message.indexOf('translate') !== -1)) {
+                        event.stopImmediatePropagation();
+                      }
+                    }
+                  });
                   var clean = function() {
                     var els = document.querySelectorAll('.translate-tooltip-mtz, [class*="translate-tooltip"]');
                     for (var i = 0; i < els.length; i++) els[i].remove();
@@ -101,7 +165,7 @@ export default async function RootLayout({
                   });
                   obs.observe(document.documentElement, { childList: true, subtree: true });
                   window.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(function() { obs.disconnect(); }, 1500);
+                    setTimeout(function() { obs.disconnect(); }, 2000);
                   });
                 } catch (e) {}
               })();

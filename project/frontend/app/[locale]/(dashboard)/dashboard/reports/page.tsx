@@ -155,10 +155,10 @@ export default function ReportsPage() {
         actions={
           <>
             <div className="hidden lg:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-gray-50/50 dark:bg-[#080c18] border border-gray-200 dark:border-gray-800/60 text-xs text-gray-600 dark:text-gray-300">
-              <Sparkles className="w-3.5 h-3.5 text-[#8b5cf6]" />
+              <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
               <span>
                 {isAr ? "عمليات التصدير الشهرية:" : "Monthly Exports:"}{" "}
-                <strong className="text-[#7c3aed] dark:text-[#a78bfa]">
+                <strong className="text-[var(--primary-hover)] dark:text-[var(--primary)]">
                   {exportUsed} / {exportLimit === -1 ? (isAr ? "غير محدود" : "Unlimited") : exportLimit}
                 </strong>
               </span>
@@ -253,7 +253,7 @@ export default function ReportsPage() {
       {/* ── Plan Gated Notice (If Level Restricted) ── */}
       {planGatedMessage && (
         <div className="afab-card p-6 text-center space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)] flex items-center justify-center mx-auto">
             <Lock className="w-6 h-6" />
           </div>
           <div>
@@ -398,11 +398,11 @@ export default function ReportsPage() {
                   <div className="flex items-center justify-between">
                     <h3 className="afab-card-title flex items-center gap-2.5">
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gray-50 dark:bg-white/[0.03] text-gray-500 dark:text-gray-400">
-                        <CreditCard className="h-4 w-4 text-[#8b5cf6]" />
+                        <CreditCard className="h-4 w-4 text-[var(--primary)]" />
                       </span>
                       <span>{isAr ? "تفصيل المصروفات حسب التصنيف" : "Expenses by Category"}</span>
                     </h3>
-                    <span className="text-xs font-bold text-[#8b5cf6]">
+                    <span className="text-xs font-bold text-[var(--primary)]">
                       {formatCurrency(pnlReport.totalExpenses, currency)}
                     </span>
                   </div>
@@ -419,7 +419,7 @@ export default function ReportsPage() {
                           </div>
                           <div className="w-full h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
                             <div 
-                              className="h-full bg-[#8b5cf6] rounded-full transition-all duration-500"
+                              className="h-full bg-[var(--primary)] rounded-full transition-all duration-500"
                               style={{ width: `${Math.min(100, Math.max(2, cat.percentage))}%` }}
                             />
                           </div>
@@ -505,7 +505,7 @@ export default function ReportsPage() {
 
                 <div className="h-72 w-full pt-4">
                   <ChartContainer className="h-full w-full">
-                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 600, height: 272 }}>
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 600, height: 272 }}>
                       <BarChart data={cashFlowReport.monthlyTrend || []}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="currentColor" className="text-gray-200 dark:text-gray-800/50" />
                         <XAxis

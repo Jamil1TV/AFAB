@@ -418,7 +418,7 @@ export default function CurrenciesPage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#8b5cf6]" />
+                <Sparkles className="h-4 w-4 text-[var(--primary)]" />
                 <span>{t("featuredPairs")} ({viewBaseCurrency})</span>
               </h2>
               <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -460,7 +460,7 @@ export default function CurrenciesPage() {
                     onClick={() => setChartMode("macro")}
                     className={`afab-segment ${chartMode === "macro" ? "afab-segment-active" : ""}`}
                   >
-                    <TrendingUp className={`h-3.5 w-3.5 ${chartMode === "macro" ? "text-white" : "text-[#8b5cf6] dark:text-[#a78bfa]"}`} />
+                    <TrendingUp className={`h-3.5 w-3.5 ${chartMode === "macro" ? "text-white" : "text-[var(--primary)] dark:text-[var(--primary)]"}`} />
                     <span>{isArabic ? "المسار التاريخي (1M - 1Y)" : "Historical Trajectory"}</span>
                   </button>
                 </div>
@@ -544,8 +544,8 @@ export default function CurrenciesPage() {
                     onClick={() => setSelectedPair(pair)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all shrink-0 border ${
                       isSelected
-                        ? "bg-[#8b5cf6] border-[#8b5cf6] text-white shadow-sm shadow-[#8b5cf6]/25"
-                        : "bg-gray-50/50 dark:bg-[#080c18] border-gray-200 dark:border-gray-800/60 text-gray-700 dark:text-gray-300 hover:border-[#8b5cf6]/50"
+                        ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm shadow-[var(--primary)]/25"
+                        : "bg-gray-50/50 dark:bg-[#080c18] border-gray-200 dark:border-gray-800/60 text-gray-700 dark:text-gray-300 hover:border-[var(--primary)]/50"
                     }`}
                   >
                     <span>{pair.symbol}</span>

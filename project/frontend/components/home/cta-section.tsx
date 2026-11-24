@@ -31,7 +31,7 @@ export function CTASection() {
 
             {/* Right — Action Buttons */}
             <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-4 lg:justify-end">
-              <button className="inline-flex items-center gap-2 rounded-xl bg-[#8b5cf6] hover:bg-[#7c3aed] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#8b5cf6]/25 transition-all hover:shadow-xl hover:-translate-y-0.5">
+              <button className="inline-flex items-center gap-2 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-8 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[var(--primary)]/25 transition-all hover:shadow-xl hover:-translate-y-0.5">
                 {t("getStartedFree")}
               </button>
               <button className="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-transparent px-8 py-3.5 text-sm font-semibold text-gray-900 dark:text-white transition-colors hover:bg-gray-50 dark:hover:bg-white/5">

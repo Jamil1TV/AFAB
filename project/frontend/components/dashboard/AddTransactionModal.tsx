@@ -197,7 +197,7 @@ function TransactionFormModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder={tModal("descriptionPlaceholder")}
-              className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
             />
           </div>
 
@@ -215,7 +215,7 @@ function TransactionFormModal({
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder={tModal("amountPlaceholder")}
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
               />
             </div>
 
@@ -228,7 +228,7 @@ function TransactionFormModal({
                 value={originalCurrency}
                 disabled={isEditing}
                 onChange={(e) => setOriginalCurrency(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2.5 text-sm font-semibold text-gray-900 dark:text-white disabled:opacity-60 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2.5 text-sm font-semibold text-gray-900 dark:text-white disabled:opacity-60 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
               >
                 {Array.from(new Set([currency, originalCurrency, ...TRANSACTION_CURRENCIES])).map((c) => (
                   <option key={c} value={c}>
@@ -251,7 +251,7 @@ function TransactionFormModal({
                   required
                   value={transactionDate}
                   onChange={(e) => setTransactionDate(e.target.value)}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-3 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-3 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
                 />
               </div>
             </div>
@@ -259,11 +259,11 @@ function TransactionFormModal({
 
           {/* Live FX Preview / Locked Historical FX Snapshot Banner */}
           {!isEditing && fxPreview && originalCurrency !== currency && (
-            <div className="rounded-xl border border-[#8b5cf6]/25 bg-[#8b5cf6]/5 px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-300 flex flex-wrap items-center justify-between gap-2">
+            <div className="rounded-xl border border-[var(--primary)]/25 bg-[var(--primary)]/5 px-3.5 py-2.5 text-xs text-gray-700 dark:text-gray-300 flex flex-wrap items-center justify-between gap-2">
               <span>
                 FX Snapshot: <strong>1 {originalCurrency} = {fxPreview.rate.toFixed(6)} {currency}</strong>
               </span>
-              <span className="font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+              <span className="font-bold text-[var(--primary-hover)] dark:text-[var(--primary)]">
                 ≈ {fxPreview.convertedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} {currency}
               </span>
             </div>
@@ -295,7 +295,7 @@ function TransactionFormModal({
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
                 >
                   <option value="">{tModal("selectCategory")}</option>
                   {filteredCategories.map((cat) => (
@@ -318,7 +318,7 @@ function TransactionFormModal({
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+                  className="w-full appearance-none rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-4 py-2.5 text-sm text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
                 >
                   <option value="BANK_TRANSFER">{tModal("bankTransfer")}</option>
                   <option value="CARD">{tModal("card")}</option>
@@ -340,7 +340,7 @@ function TransactionFormModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder={tModal("notesPlaceholder")}
-              className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
             />
           </div>
 
@@ -351,7 +351,7 @@ function TransactionFormModal({
                 type="checkbox"
                 checked={taxDeductible}
                 onChange={(e) => setTaxDeductible(e.target.checked)}
-                className="w-4 h-4 rounded text-[#8b5cf6] focus:ring-[#8b5cf6] border-gray-300 dark:border-gray-700"
+                className="w-4 h-4 rounded text-[var(--primary)] focus:ring-[var(--primary)] border-gray-300 dark:border-gray-700"
               />
               <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
                 Tax Deductible Business Expense
@@ -384,7 +384,7 @@ function TransactionFormModal({
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold bg-[#8b5cf6] text-white hover:bg-[#7c3aed] disabled:opacity-50 transition-all shadow-lg shadow-[#8b5cf6]/25"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-all shadow-lg shadow-[var(--primary)]/25"
             >
               {submitting ? tModal("saving") : (transactionToEdit ? tModal("updateSubmit") : tModal("submit"))}
             </button>

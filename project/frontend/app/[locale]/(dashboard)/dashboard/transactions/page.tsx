@@ -282,14 +282,14 @@ export default function TransactionsPage() {
             onClick={() => setIsCategoryModalOpen(true)}
             className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/[0.05] transition-all shadow-sm shrink-0 whitespace-nowrap"
           >
-            <FolderTree className="h-4 w-4 text-[#8b5cf6]" />
+            <FolderTree className="h-4 w-4 text-[var(--primary)]" />
             <span>{t("manageCategories")}</span>
           </button>
 
           {/* Split Transaction Button */}
           <button
             onClick={() => setIsSplitModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-purple-500/30 bg-purple-500/10 text-xs font-semibold text-[#8b5cf6] hover:bg-purple-500/20 transition-all shadow-sm shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/10 text-xs font-semibold text-[var(--primary)] hover:bg-[var(--primary)]/20 transition-all shadow-sm shrink-0 whitespace-nowrap"
           >
             <Layers className="h-4 w-4" />
             <span>{t("splitTransaction") || "Split Expense"}</span>
@@ -310,7 +310,7 @@ export default function TransactionsPage() {
               setEditingTx(null);
               setIsModalOpen(true);
             }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#8b5cf6] text-white text-xs font-bold hover:bg-[#7c3aed] transition-all shadow-lg shadow-[#8b5cf6]/25 shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[var(--primary)] text-white text-xs font-bold hover:bg-[var(--primary-hover)] transition-all shadow-lg shadow-[var(--primary)]/25 shrink-0 whitespace-nowrap"
           >
             <Plus className="h-4 w-4" />
             <span>{t("addTransaction")}</span>
@@ -377,7 +377,7 @@ export default function TransactionsPage() {
                 setPage(0);
               }}
               placeholder={tFilters("searchPlaceholder")}
-              className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-10 pe-16 py-2 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
+              className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-10 pe-16 py-2 text-xs text-gray-900 dark:text-white placeholder-gray-400 focus:border-[var(--primary)] focus:outline-none focus:ring-1 focus:ring-[var(--primary)] transition-all"
             />
             <kbd className="absolute end-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-1 rounded border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-medium text-gray-400">
               {tFilters("searchShortcut")}
@@ -393,7 +393,7 @@ export default function TransactionsPage() {
                 setTypeFilter(e.target.value);
                 setPage(0);
               }}
-              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:border-[#8b5cf6] focus:outline-none"
+              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:border-[var(--primary)] focus:outline-none"
             >
               <option value="">{tFilters("allTypes")}</option>
               <option value="INCOME">{tFilters("income")}</option>
@@ -407,7 +407,7 @@ export default function TransactionsPage() {
                 setCategoryFilter(e.target.value);
                 setPage(0);
               }}
-              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:border-[#8b5cf6] focus:outline-none max-w-[150px]"
+              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:border-[var(--primary)] focus:outline-none max-w-[150px]"
             >
               <option value="">{tFilters("allCategories")}</option>
               {categories.map((cat) => (
@@ -424,7 +424,7 @@ export default function TransactionsPage() {
                 setStatusFilter(e.target.value);
                 setPage(0);
               }}
-              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:border-[#8b5cf6] focus:outline-none"
+              className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 focus:border-[var(--primary)] focus:outline-none"
             >
               <option value="">{tFilters("allStatuses")}</option>
               <option value="COMPLETED">{tFilters("completed")}</option>
@@ -483,7 +483,7 @@ export default function TransactionsPage() {
                     <div className="flex items-center gap-1.5">
                       <span>{tTable("date")}</span>
                       {sortField === "date" ? (
-                        sortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-[#8b5cf6]" /> : <ArrowDown className="h-3.5 w-3.5 text-[#8b5cf6]" />
+                        sortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-[var(--primary)]" /> : <ArrowDown className="h-3.5 w-3.5 text-[var(--primary)]" />
                       ) : (
                         <ArrowUpDown className="h-3 w-3 opacity-40" />
                       )}
@@ -497,7 +497,7 @@ export default function TransactionsPage() {
                     <div className="flex items-center justify-end gap-1.5">
                       <span>{tTable("amount")}</span>
                       {sortField === "amount" ? (
-                        sortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-[#8b5cf6]" /> : <ArrowDown className="h-3.5 w-3.5 text-[#8b5cf6]" />
+                        sortOrder === "asc" ? <ArrowUp className="h-3.5 w-3.5 text-[var(--primary)]" /> : <ArrowDown className="h-3.5 w-3.5 text-[var(--primary)]" />
                       ) : (
                         <ArrowUpDown className="h-3 w-3 opacity-40" />
                       )}
@@ -528,7 +528,7 @@ export default function TransactionsPage() {
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[#8b5cf6] transition-colors truncate">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[var(--primary)] transition-colors truncate">
                                 {tx.description}
                               </p>
 
@@ -555,7 +555,7 @@ export default function TransactionsPage() {
 
                               {/* Split Transaction Badge */}
                               {tx.isSplit && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 text-[10px] font-bold border border-purple-500/20" title="Split across multiple categories">
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-[var(--primary)]/10 text-[var(--primary)] dark:text-[var(--primary)] text-[10px] font-bold border border-[var(--primary)]/20" title="Split across multiple categories">
                                   <Layers className="h-3 w-3" /> Split
                                 </span>
                               )}
@@ -646,7 +646,7 @@ export default function TransactionsPage() {
                           <button
                             onClick={() => handleOpenEdit(tx)}
                             title={tTable("edit") || "Edit"}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-[#8b5cf6] hover:bg-[#8b5cf6]/10 transition-colors"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>

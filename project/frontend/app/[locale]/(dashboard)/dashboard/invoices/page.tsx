@@ -62,7 +62,7 @@ function statusBadgeStyle(status: InvoiceStatusType): string {
     case "CANCELLED":
       return "bg-gray-500/10 text-gray-500 dark:text-gray-400 border-gray-500/25";
     default:
-      return "bg-purple-500/10 text-[#7c3aed] dark:text-[#a78bfa] border-purple-500/25";
+      return "bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)] border-[var(--primary)]/25";
   }
 }
 
@@ -438,7 +438,7 @@ export default function InvoicesPage() {
           </button>
           <button
             onClick={openCreateModal}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8b5cf6] text-white text-xs font-bold hover:bg-[#7c3aed] transition-all shadow-lg shadow-[#8b5cf6]/25"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--primary)] text-white text-xs font-bold hover:bg-[var(--primary-hover)] transition-all shadow-lg shadow-[var(--primary)]/25"
           >
             <Plus className="h-4 w-4" />
             {t("createInvoice")}
@@ -520,7 +520,7 @@ export default function InvoicesPage() {
                   setPage(0);
                 }}
                 placeholder="Search invoice # or customer..."
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-3 py-2 text-xs text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] ps-9 pe-3 py-2 text-xs text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none"
               />
             </div>
 
@@ -534,7 +534,7 @@ export default function InvoicesPage() {
                   }}
                   className={`px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-colors ${
                     statusFilter === st
-                      ? "bg-[#8b5cf6] text-white"
+                      ? "bg-[var(--primary)] text-white"
                       : "bg-gray-100 dark:bg-white/[0.04] text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   }`}
                 >
@@ -604,7 +604,7 @@ export default function InvoicesPage() {
                             e.stopPropagation();
                             openInvoiceDetail(inv.id);
                           }}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-[#8b5cf6] hover:bg-[#8b5cf6]/10"
+                          className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
                           title="Inspect invoice"
                         >
                           <Eye className="h-4 w-4" />
@@ -648,7 +648,7 @@ export default function InvoicesPage() {
           <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-5 shadow-sm">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Receivables Breakdown</h3>
             <ChartContainer className="h-44 w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 220, height: 176 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 220, height: 176 }}>
                 <PieChart>
                   <Pie data={statusPieData} dataKey="value" innerRadius={48} outerRadius={70} paddingAngle={3}>
                     {statusPieData.map((entry, idx) => (
@@ -792,7 +792,7 @@ export default function InvoicesPage() {
                     onClick={() =>
                       setFormItems((prev) => [...prev, { description: "", quantity: "1", unitPrice: "", taxRate: "0" }])
                     }
-                    className="text-xs font-semibold text-[#7c3aed] hover:underline flex items-center gap-1"
+                    className="text-xs font-semibold text-[var(--primary-hover)] hover:underline flex items-center gap-1"
                   >
                     <Plus className="h-3.5 w-3.5" /> Add Line
                   </button>
@@ -916,7 +916,7 @@ export default function InvoicesPage() {
                 <button
                   type="submit"
                   disabled={formSubmitting}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-[#8b5cf6] text-white hover:bg-[#7c3aed] disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
                 >
                   {formSubmitting ? "Saving..." : editingInvoice ? "Update Draft" : "Save Draft Invoice"}
                 </button>
@@ -974,7 +974,7 @@ export default function InvoicesPage() {
                       <button
                         disabled={actionBusy}
                         onClick={() => handleIssueInvoice(selectedInvoice, true)}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#8b5cf6] text-white text-xs font-bold hover:bg-[#7c3aed]"
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[var(--primary)] text-white text-xs font-bold hover:bg-[var(--primary-hover)]"
                       >
                         <Send className="h-3.5 w-3.5" /> Issue / Send Invoice
                       </button>

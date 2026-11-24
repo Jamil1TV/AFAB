@@ -247,7 +247,7 @@ export function DeleteAccountModal({
             <div className="space-y-4 animate-in fade-in duration-200">
               <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-[#161b22]/80 p-4 space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-lg bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)] flex items-center justify-center shrink-0">
                     <Download className="w-4 h-4" />
                   </div>
                   <div className="space-y-1 min-w-0">
@@ -315,7 +315,7 @@ export function DeleteAccountModal({
                     type="button"
                     onClick={handleExportBeforeDelete}
                     disabled={isExporting}
-                    className="w-full py-2.5 px-4 rounded-lg border border-[#8b5cf6]/40 bg-[#8b5cf6]/10 hover:bg-[#8b5cf6]/20 text-[#7c3aed] dark:text-[#c4b5fd] text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
+                    className="w-full py-2.5 px-4 rounded-lg border border-[var(--primary)]/40 bg-[var(--primary)]/10 hover:bg-[var(--primary)]/20 text-[var(--primary-hover)] dark:text-[#c4b5fd] text-xs font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-60"
                   >
                     {isExporting ? (
                       <>

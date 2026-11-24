@@ -79,11 +79,11 @@ export function QuickAddBar({ categories, currency = "USD", onSuccess }: QuickAd
 
   return (
     <div className="relative group w-full rounded-2xl p-[1px] bg-gradient-to-r from-purple-500/20 via-indigo-500/10 to-purple-500/20 hover:from-purple-500/40 hover:to-indigo-500/30 transition-all duration-300">
-      <div className="relative rounded-[15px] bg-white/95 dark:bg-[#0c101c]/95 backdrop-blur-xl border border-purple-500/15 dark:border-purple-500/20 p-3 sm:p-4 shadow-xl shadow-purple-500/5">
+      <div className="relative rounded-[15px] bg-white/95 dark:bg-[#0c101c]/95 backdrop-blur-xl border border-purple-500/15 dark:border-[var(--primary)]/20 p-3 sm:p-4 shadow-xl shadow-purple-500/5">
         <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           {/* Magic Icon & Input */}
           <div className="relative flex-1 flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 text-[#8b5cf6] border border-purple-500/20">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
               <Sparkles className="h-4 w-4 animate-pulse" />
             </div>
             <input
@@ -102,14 +102,14 @@ export function QuickAddBar({ categories, currency = "USD", onSuccess }: QuickAd
           {/* Action Button & Key Hint */}
           <div className="flex items-center justify-end gap-2 shrink-0">
             <kbd className="hidden sm:inline-flex items-center gap-1 px-2 py-1 text-[10px] font-semibold tracking-wider text-gray-400 bg-gray-100 dark:bg-gray-800/80 rounded-md border border-gray-200 dark:border-gray-700">
-              Press <span className="text-[#8b5cf6]">N</span> to focus
+              Press <span className="text-[var(--primary)]">N</span> to focus
             </kbd>
             <button
               type="submit"
               disabled={submitting || !parsed.amount}
               className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md ${
                 parsed.amount
-                  ? "bg-[#8b5cf6] hover:bg-[#7c3aed] text-white shadow-[#8b5cf6]/25"
+                  ? "bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white shadow-[var(--primary)]/25"
                   : "bg-gray-100 dark:bg-gray-800/50 text-gray-400 cursor-not-allowed"
               }`}
             >
@@ -158,7 +158,7 @@ export function QuickAddBar({ categories, currency = "USD", onSuccess }: QuickAd
 
             {/* Description Chip */}
             {parsed.description && (
-              <span className="px-2 py-0.5 rounded-lg bg-purple-500/10 text-[#8b5cf6] border border-purple-500/20 font-medium">
+              <span className="px-2 py-0.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 font-medium">
                 &ldquo;{parsed.description}&rdquo;
               </span>
             )}
@@ -168,7 +168,7 @@ export function QuickAddBar({ categories, currency = "USD", onSuccess }: QuickAd
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">
                 <span
                   className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: parsed.categoryColor || "#8b5cf6" }}
+                  style={{ backgroundColor: parsed.categoryColor || "var(--primary)" }}
                 />
                 <Tag className="h-3 w-3 text-gray-400" />
                 <span>{parsed.categoryName}</span>

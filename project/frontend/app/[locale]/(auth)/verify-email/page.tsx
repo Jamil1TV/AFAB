@@ -194,7 +194,7 @@ export default function VerifyEmailPage() {
           {Array.from({ length: 28 }).map((_, i) => {
             const angle = (i / 28) * 360;
             const distance = 90 + (i % 5) * 28;
-            const colors = ["#8b5cf6", "#10b981", "#06b6d4", "#f59e0b", "#ec4899", "#3b82f6"];
+            const colors = ["var(--primary)", "#10b981", "#06b6d4", "#f59e0b", "#ec4899", "#3b82f6"];
             return (
               <motion.div
                 key={i}
@@ -232,7 +232,7 @@ export default function VerifyEmailPage() {
           ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
           : status === "error"
             ? "bg-red-50 text-red-600 dark:bg-red-500/15 dark:text-red-400"
-            : "bg-[#8b5cf6]/10 text-[#7c3aed] dark:bg-[#8b5cf6]/15 dark:text-[#a78bfa]"
+            : "bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:bg-[var(--primary)]/15 dark:text-[var(--primary)]"
           }`}
       >
         <AnimatePresence mode="wait">
@@ -296,19 +296,19 @@ export default function VerifyEmailPage() {
           initial={{ opacity: 0, y: -6, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="mt-4 flex flex-col items-center gap-1.5 rounded-xl bg-purple-50 border border-purple-200 p-3 text-xs text-purple-700 dark:bg-purple-500/10 dark:border-purple-500/30 dark:text-purple-300"
+          className="mt-4 flex flex-col items-center gap-1.5 rounded-xl bg-purple-50 border border-purple-200 p-3 text-xs text-purple-700 dark:bg-[var(--primary)]/10 dark:border-[var(--primary)]/30 dark:text-[var(--primary)]"
         >
           <div className="flex flex-wrap items-center justify-center gap-1.5 font-medium">
-            <Sparkles className="h-3.5 w-3.5 text-[#8b5cf6] animate-pulse" />
+            <Sparkles className="h-3.5 w-3.5 text-[var(--primary)] animate-pulse" />
             <span>Development Verification Code:</span>
-            <span className="font-mono text-sm font-bold tracking-wider text-purple-900 dark:text-purple-100 bg-purple-500/20 px-2 py-0.5 rounded shadow-sm">
+            <span className="font-mono text-sm font-bold tracking-wider text-purple-900 dark:text-purple-100 bg-[var(--primary)]/20 px-2 py-0.5 rounded shadow-sm">
               {devOtp}
             </span>
           </div>
           <button
             type="button"
             onClick={() => handleAutoFill(devOtp)}
-            className="group flex items-center gap-1 text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline cursor-pointer transition-colors"
+            className="group flex items-center gap-1 text-[11px] font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)] hover:underline cursor-pointer transition-colors"
           >
             <Zap className="h-3 w-3 text-amber-500 transition-transform group-hover:scale-125" />
             <span>Click here to auto-fill code</span>
@@ -398,7 +398,7 @@ export default function VerifyEmailPage() {
                     : isError
                       ? "border-2 border-red-500 bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400"
                       : isFocused
-                        ? "border-2 border-[#8b5cf6] bg-white text-gray-900 ring-2 ring-[#8b5cf6]/20 dark:border-[#8b5cf6] dark:bg-[#0c101c] dark:text-white"
+                        ? "border-2 border-[var(--primary)] bg-white text-gray-900 ring-2 ring-[var(--primary)]/20 dark:border-[var(--primary)] dark:bg-[#0c101c] dark:text-white"
                         : isFilled
                           ? "border-2 border-gray-300 bg-white text-gray-900 shadow-sm dark:border-gray-700 dark:bg-[#0c101c] dark:text-white"
                           : "border border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white"
@@ -409,7 +409,7 @@ export default function VerifyEmailPage() {
                 {isFocused && !isSuccess && !isError && (
                   <motion.div
                     layoutId="active-indicator"
-                    className="absolute -bottom-1.5 left-1/2 -ml-1 h-1 w-2 rounded-full bg-[#8b5cf6]"
+                    className="absolute -bottom-1.5 left-1/2 -ml-1 h-1 w-2 rounded-full bg-[var(--primary)]"
                   />
                 )}
               </motion.div>
@@ -427,7 +427,7 @@ export default function VerifyEmailPage() {
             ? "bg-emerald-600 shadow-emerald-500/25 hover:bg-emerald-600"
             : status === "error"
               ? "bg-red-600 shadow-red-600/20 hover:bg-red-700"
-              : "bg-[#8b5cf6] shadow-[#8b5cf6]/25 hover:bg-[#7c3aed]"
+              : "bg-[var(--primary)] shadow-[var(--primary)]/25 hover:bg-[var(--primary-hover)]"
             }`}
         >
           {status === "loading" ? (
@@ -460,7 +460,7 @@ export default function VerifyEmailPage() {
           <button
             onClick={handleResend}
             disabled={countdown > 0 || resending}
-            className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] disabled:opacity-50 disabled:no-underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
+            className="font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] disabled:opacity-50 disabled:no-underline cursor-pointer inline-flex items-center gap-1.5 transition-colors"
           >
             {resending && <RotateCw className="h-3.5 w-3.5 animate-spin" />}
             {countdown > 0

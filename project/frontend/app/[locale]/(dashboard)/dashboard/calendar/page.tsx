@@ -245,7 +245,7 @@ export default function CalendarPage() {
                     onClick={() => setSelectedDate(cell.dateStr!)}
                     className={`h-20 sm:h-24 rounded-xl p-2 text-start flex flex-col justify-between border transition-all ${
                       isSelected
-                        ? "border-[#8b5cf6] bg-[#8b5cf6]/10 dark:bg-[#8b5cf6]/15 shadow-sm"
+                        ? "border-[var(--primary)] bg-[var(--primary)]/10 dark:bg-[var(--primary)]/15 shadow-sm"
                         : "border-gray-100 dark:border-gray-800/60 bg-gray-50/40 dark:bg-[#080c18]/60 hover:border-gray-300 dark:hover:border-gray-700"
                     }`}
                   >
@@ -253,9 +253,9 @@ export default function CalendarPage() {
                       <span
                         className={`text-xs font-bold ${
                           isSelected
-                            ? "text-[#7c3aed] dark:text-[#a78bfa]"
+                            ? "text-[var(--primary-hover)] dark:text-[var(--primary)]"
                             : isToday
-                            ? "text-[#8b5cf6]"
+                            ? "text-[var(--primary)]"
                             : "text-gray-700 dark:text-gray-300"
                         }`}
                       >

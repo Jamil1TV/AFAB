@@ -30,7 +30,7 @@ export function PeriodSelector({ value, onChange, className = "" }: PeriodSelect
             onClick={() => onChange(p)}
             className={`px-3 py-1.5 rounded-lg transition-all ${
               isSelected
-                ? "bg-[#8b5cf6] text-white shadow-sm"
+                ? "bg-[var(--primary)] text-white shadow-sm"
                 : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
             }`}
           >
