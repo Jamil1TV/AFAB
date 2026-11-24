@@ -13,7 +13,7 @@ public class BusinessReadOnlyException extends RuntimeException {
 
     public BusinessReadOnlyException(Business business) {
         super(String.format(
-                "Business '%s' is currently in read-only mode due to your active subscription plan limits. You can view and export data, swap editable businesses in Subscription Settings, or upgrade your plan to restore editing.",
+                "Business '%s' is locked under your current subscription plan. All data inside it is safely preserved; swap your active business allocation in Subscription Settings or upgrade your plan to unlock it.",
                 business != null && business.getName() != null ? business.getName() : "workspace"
         ));
         this.businessId = business != null ? business.getId() : null;

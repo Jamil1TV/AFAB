@@ -29,7 +29,6 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { AddTransactionModal } from "@/components/dashboard/AddTransactionModal";
 import { DeleteTransactionModal } from "@/components/dashboard/DeleteTransactionModal";
 import { ManageCategoriesModal } from "@/components/dashboard/ManageCategoriesModal";
-import { QuickAddBar } from "@/components/dashboard/QuickAddBar";
 import { TransactionDetailDrawer } from "@/components/dashboard/TransactionDetailDrawer";
 import { SplitTransactionModal } from "@/components/dashboard/SplitTransactionModal";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
@@ -317,13 +316,6 @@ export default function TransactionsPage() {
           </button>
         </div>
       </div>
-
-      {/* ── Magic Omni-Bar (Natural Language Quick-Add) ── */}
-      <QuickAddBar
-        categories={categories}
-        currency={currency}
-        onSuccess={fetchTransactions}
-      />
 
       {/* ── KPI Summary Cards ── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

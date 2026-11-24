@@ -14,9 +14,9 @@ export function CTASection() {
             {/* Left — Icon + Text */}
             <div className="flex items-center gap-5 flex-1">
               {/* Official AFAB Logo */}
-              <div className="flex-shrink-0 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm overflow-hidden">
-                <img src="/assets/afablogo.png" alt="AFAB Logo" className="h-10 w-10 object-contain dark:hidden" />
-                <img src="/assets/afablogo_dark.png" alt="AFAB Logo Dark" className="h-10 w-10 object-contain hidden dark:block" />
+              <div className="flex-shrink-0 flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#050814] shadow-sm overflow-hidden">
+                <img src="/assets/afab-logo-light.png" alt="AFAB Logo" className="h-full w-full object-cover dark:hidden" />
+                <img src="/assets/afab-logo-dark.png" alt="AFAB Logo Dark" className="h-full w-full object-cover hidden dark:block" />
               </div>
 
               <div>

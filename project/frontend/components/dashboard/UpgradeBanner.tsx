@@ -1,13 +1,50 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { SubscriptionService } from "@/lib/api/subscription";
+import { AuthStore } from "@/lib/auth-store";
 
 export function UpgradeBanner() {
   const tBanner = useTranslations("Dashboard.banner");
+  const [planSlug, setPlanSlug] = useState<string | null>(null);
+
+  const loadPlan = useCallback(async () => {
+    const cachedTier = AuthStore.getUser()?.planTier;
+    if (cachedTier) {
+      setPlanSlug(cachedTier.toLowerCase());
+    }
+    try {
+      const sub = await SubscriptionService.getMySubscription();
+      const slug = sub?.planSlug?.toLowerCase() || "free";
+      setPlanSlug(slug);
+    } catch {
+      if (!cachedTier) {
+        setPlanSlug("free");
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPlan();
+    const handleSubUpdated = () => loadPlan();
+    window.addEventListener("afab:subscription-updated", handleSubUpdated);
+    window.addEventListener("afab_profile_updated", handleSubUpdated);
+    return () => {
+      window.removeEventListener("afab:subscription-updated", handleSubUpdated);
+      window.removeEventListener("afab_profile_updated", handleSubUpdated);
+    };
+  }, [loadPlan]);
+
+  if (planSlug === null || planSlug === "pro") {
+    return null;
+  }
+
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[var(--primary-hover)] to-[#6d28d9] text-white shadow-lg shadow-[var(--primary-hover)]/20 sm:col-span-2 lg:col-span-4">
+    <div className="pt-4">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[var(--primary-hover)] to-[#6d28d9] text-white shadow-lg shadow-[var(--primary-hover)]/20 sm:col-span-2 lg:col-span-4">
       {/* Background decoration */}
       <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-[80px]" />
       <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-[80px]" />
@@ -49,6 +86,7 @@ export function UpgradeBanner() {
             {tBanner("price")}
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

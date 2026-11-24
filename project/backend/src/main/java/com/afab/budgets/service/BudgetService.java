@@ -7,6 +7,7 @@ import com.afab.budgets.dto.BudgetRequest;
 import com.afab.budgets.dto.BudgetSummaryDTO;
 import com.afab.budgets.repository.BudgetRepository;
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ForbiddenException;
 import com.afab.common.exception.ResourceNotFoundException;
@@ -116,6 +117,7 @@ public class BudgetService {
     public BudgetDTO create(String userEmail, BudgetRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         String businessCurrency = resolveBusinessCurrency(business);
         String requestedCurrency = (request.getCurrency() != null && !request.getCurrency().isBlank())
@@ -153,6 +155,7 @@ public class BudgetService {
     public BudgetDTO update(String userEmail, UUID id, BudgetRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         Budget budget = loadOwnedBudget(id, business.getId());
 
         String businessCurrency = resolveBusinessCurrency(business);
@@ -189,6 +192,7 @@ public class BudgetService {
     public void archive(String userEmail, UUID id) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         Budget budget = loadOwnedBudget(id, business.getId());
 
         budget.setStatus("ARCHIVED");

@@ -20,16 +20,16 @@ export function MobileAuthHeader() {
     <div className="mb-8 flex w-full max-w-[440px] items-center justify-between lg:hidden">
       {/* Logo */}
       <Link href="/" className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm">
+        <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#050814] shadow-sm">
           <img
-            src="/assets/afablogo.png"
+            src="/assets/afab-logo-light.png"
             alt="AFAB Logo"
-            className="h-7 w-7 object-contain dark:hidden"
+            className="h-full w-full object-cover dark:hidden"
           />
           <img
-            src="/assets/afablogo_dark.png"
+            src="/assets/afab-logo-dark.png"
             alt="AFAB Logo Dark"
-            className="h-7 w-7 object-contain hidden dark:block"
+            className="h-full w-full object-cover hidden dark:block"
           />
         </div>
         <span className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-white">

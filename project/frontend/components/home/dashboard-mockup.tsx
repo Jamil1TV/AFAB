@@ -13,11 +13,9 @@ export function DashboardMockup() {
           {/* Brand */}
           <div className="flex items-center justify-between mb-6 bg-gray-100 dark:bg-white/[0.05] p-1.5 rounded-lg">
             <div className="flex items-center gap-1.5 overflow-hidden">
-              <div className="h-5 w-5 shrink-0 rounded-md bg-gradient-to-br from-[#7c3aed] to-[#8b5cf6] flex items-center justify-center">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-white">
-                  <path d="M12 2L2 12L12 22L22 12L12 2Z" fill="currentColor" opacity="0.3" />
-                  <path d="M12 7L7 12L12 17L17 12L12 7Z" fill="currentColor" />
-                </svg>
+              <div className="h-5 w-5 shrink-0 rounded-md overflow-hidden border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#050814] flex items-center justify-center">
+                <img src="/assets/afab-logo-light.png" alt="AFAB Logo" className="h-full w-full object-cover dark:hidden" />
+                <img src="/assets/afab-logo-dark.png" alt="AFAB Logo Dark" className="h-full w-full object-cover hidden dark:block" />
               </div>
               <div className="flex flex-col overflow-hidden">
                 <span className="truncate text-[9px] font-bold text-gray-900 dark:text-white">Acme Corp</span>

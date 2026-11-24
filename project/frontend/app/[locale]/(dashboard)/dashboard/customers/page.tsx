@@ -147,14 +147,14 @@ export default function CustomersPage() {
       .catch((err) => console.error("Failed to load user profile:", err));
   }, []);
 
-  const currency = userProfile?.currency || "USD";
+  const currency = summary?.currency || userProfile?.currency || "USD";
 
   // Data loader
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [sumRes, pageRes] = await Promise.all([
-        CustomerService.getSummary(period, currency),
+        CustomerService.getSummary(period),
         CustomerService.getCustomers({
           search,
           status: statusFilter,
@@ -177,14 +177,14 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  }, [period, currency, search, statusFilter, groupFilter, page, pageSize, tToasts]);
+  }, [period, search, statusFilter, groupFilter, page, pageSize]);
 
   useEffect(() => {
     let ignore = false;
     async function execute() {
       try {
         const [sumRes, pageRes] = await Promise.all([
-          CustomerService.getSummary(period, currency),
+          CustomerService.getSummary(period),
           CustomerService.getCustomers({
             search,
             status: statusFilter,
@@ -215,7 +215,7 @@ export default function CustomersPage() {
     return () => {
       ignore = true;
     };
-  }, [period, currency, search, statusFilter, groupFilter, page, pageSize, tToasts]);
+  }, [period, search, statusFilter, groupFilter, page, pageSize]);
 
   // Click outside listener for row menus
   useEffect(() => {

@@ -1,6 +1,7 @@
 package com.afab.recurring.service;
 
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ForbiddenException;
 import com.afab.common.exception.ResourceNotFoundException;
@@ -96,6 +97,7 @@ public class RecurringTransactionService {
     public RecurringTransactionDTO create(String userEmail, RecurringTransactionRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         validateDates(request.getStartDate(), request.getEndDate());
         String type = request.getType().toUpperCase(Locale.ROOT).trim();
@@ -133,6 +135,7 @@ public class RecurringTransactionService {
     public RecurringTransactionDTO update(String userEmail, UUID id, RecurringTransactionRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         RecurringTransaction rule = loadOwnedRule(id, business.getId());
         validateDates(request.getStartDate(), request.getEndDate());
@@ -176,6 +179,7 @@ public class RecurringTransactionService {
     public RecurringTransactionDTO setActive(String userEmail, UUID id, boolean active) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         RecurringTransaction rule = loadOwnedRule(id, business.getId());
 
         if (active && rule.getEndDate() != null && rule.getNextExecutionDate() != null
@@ -193,6 +197,7 @@ public class RecurringTransactionService {
     public void delete(String userEmail, UUID id) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         RecurringTransaction rule = loadOwnedRule(id, business.getId());
 
         boolean hasExecutions = !executionRepository.findByRecurringTransactionIdOrderByScheduledDateDesc(rule.getId()).isEmpty();
@@ -209,6 +214,7 @@ public class RecurringTransactionService {
 
     public RunResult runDueForRule(String userEmail, UUID id) {
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         RecurringTransaction rule = loadOwnedRule(id, business.getId());
         LocalDate businessToday = currentDateForBusiness(business);
         List<UUID> generatedIds = executeDueOccurrencesForRule(rule.getId(), businessToday);
@@ -227,7 +233,7 @@ public class RecurringTransactionService {
 
         for (RecurringTransaction rule : candidates) {
             Business business = rule.getBusiness();
-            if (business == null || business.getArchivedAt() != null) {
+            if (business == null || business.getArchivedAt() != null || !business.isEditable()) {
                 continue;
             }
             LocalDate businessToday = currentDateForBusiness(business);

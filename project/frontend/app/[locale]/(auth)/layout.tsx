@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { ReactNode } from "react";
-import Image from "next/image";
 import { useTranslations, useLocale } from "next-intl";
 import { AuthHeroGraphic } from "@/components/auth/auth-hero-graphic";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -41,9 +40,9 @@ export default function AuthLayout({
           
           {/* Top Logo */}
           <div className="flex items-center gap-4 relative z-20 shrink-0">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800/60 dark:bg-[#0c101c] overflow-hidden">
-              <Image src="/assets/afablogo.png" alt="AFAB Logo" width={44} height={44} className="object-contain dark:hidden" />
-              <Image src="/assets/afablogo_dark.png" alt="AFAB Logo Dark" width={44} height={44} className="object-contain hidden dark:block" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800/60 dark:bg-[#050814] overflow-hidden">
+              <img src="/assets/afab-logo-light.png" alt="AFAB Logo" className="h-full w-full object-cover dark:hidden" />
+              <img src="/assets/afab-logo-dark.png" alt="AFAB Logo Dark" className="h-full w-full object-cover hidden dark:block" />
             </div>
             <div>
               <h2 className="text-[28px] font-bold text-gray-900 tracking-tight dark:text-white leading-none">AFAB</h2>
@@ -84,9 +83,9 @@ export default function AuthLayout({
           <div className="my-auto w-full flex flex-col items-center justify-center gap-6">
             {/* Mobile Logo (Hidden on Desktop) */}
             <div className="flex lg:hidden items-center gap-4 shrink-0">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800/60 dark:bg-[#0c101c] overflow-hidden">
-                <Image src="/assets/afablogo.png" alt="AFAB Logo" width={52} height={52} className="object-contain dark:hidden" />
-                <Image src="/assets/afablogo_dark.png" alt="AFAB Logo Dark" width={52} height={52} className="object-contain hidden dark:block" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-800/60 dark:bg-[#050814] overflow-hidden">
+                <img src="/assets/afab-logo-light.png" alt="AFAB Logo" className="h-full w-full object-cover dark:hidden" />
+                <img src="/assets/afab-logo-dark.png" alt="AFAB Logo Dark" className="h-full w-full object-cover hidden dark:block" />
               </div>
               <h2 className="text-[32px] font-bold text-gray-900 tracking-tight dark:text-white leading-none">AFAB</h2>
             </div>

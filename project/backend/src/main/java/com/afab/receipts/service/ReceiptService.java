@@ -1,6 +1,7 @@
 package com.afab.receipts.service;
 
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ForbiddenException;
 import com.afab.common.exception.ResourceNotFoundException;
@@ -78,6 +79,7 @@ public class ReceiptService {
 
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         Transaction tx = loadOwnedTransaction(transactionId, business.getId());
 
         byte[] content;
@@ -170,6 +172,7 @@ public class ReceiptService {
     public void delete(String userEmail, UUID receiptId) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         Receipt receipt = loadOwnedReceipt(receiptId, business.getId());
 
         objectStorageService.deleteObject(receipt.getObjectKey());

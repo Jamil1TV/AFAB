@@ -163,15 +163,31 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
         })(),
   });
 
+  const method = (customConfig.method || "GET").toUpperCase();
+
   let response: Response;
   try {
     response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
   } catch {
-    throw new ApiError(
-      "Unable to connect to the server. Please try again.",
-      "NETWORK_ERROR",
-      0
-    );
+    // Retry once after a short delay on idempotent GET requests (handles transient HMR/navigation blips)
+    if (method === "GET" && !customConfig.signal?.aborted) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      try {
+        response = await fetch(`${API_BASE_URL}${endpoint}`, buildConfig());
+      } catch {
+        throw new ApiError(
+          "Unable to connect to the server. Please try again.",
+          "NETWORK_ERROR",
+          0
+        );
+      }
+    } else {
+      throw new ApiError(
+        "Unable to connect to the server. Please try again.",
+        "NETWORK_ERROR",
+        0
+      );
+    }
   }
 
   if (response.status === 401 && requireAuth && !endpoint.includes("/auth/")) {
@@ -242,6 +258,10 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
 
     if (response.status === 403 && errorCode === "BUSINESS_READ_ONLY") {
       if (typeof window !== "undefined") {
+        const currentBizId = AuthStore.getActiveBusinessId();
+        if (currentBizId && (!errorDetails?.businessId || errorDetails.businessId === currentBizId)) {
+          AuthStore.setActiveBusinessId(null);
+        }
         window.dispatchEvent(
           new CustomEvent("afab:business-read-only", {
             detail: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Check,
@@ -94,7 +94,9 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
   const [isLoading, setIsLoading] = useState(true);
   const [submittingAction, setSubmittingAction] = useState<string | null>(null);
 
-  // Modals
+  // Modals & Plan Cards Visibility Toggle
+  const [showPlanCardsOverride, setShowPlanCardsOverride] = useState(false);
+  const planCardsSectionRef = useRef<HTMLDivElement>(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [allocationModalOpen, setAllocationModalOpen] = useState(false);
   const [allocationModalMode, setAllocationModalMode] = useState<
@@ -135,11 +137,16 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
       try {
         const checkoutStatus = searchParams.get("checkout");
         const sessionId = searchParams.get("session_id");
+        const wantsChangePlan = searchParams.get("changePlan") === "true";
+        if (wantsChangePlan) {
+          setShowPlanCardsOverride(true);
+        }
 
         if (checkoutStatus === "success" && sessionId) {
           const verified = await SubscriptionService.verifyCheckoutSession(sessionId);
           if (!active) return;
           setSubscription(verified);
+          setShowPlanCardsOverride(false);
           if (verified?.planSlug) {
             setActivePlan(verified.planSlug);
             AuthStore.updateUser({ planTier: verified.planSlug.toUpperCase() });
@@ -254,12 +261,12 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         },
         {
           name: isAr
-            ? "شركة واحدة قابلة للتعديل (وغير محدود للقراءة فقط)"
-            : "1 Editable Business (Unlimited Read-Only)",
+            ? "شركة واحدة نشطة ومفتوحة (والباقي مقفل مع حفظ البيانات)"
+            : "1 Active Business (Additional Businesses Locked)",
           included: true,
           tooltip: isAr
-            ? "إدارة شركة نشطة واحدة، مع حفظ جميع الشركات الأخرى في وضع القراءة فقط."
-            : "Actively manage 1 business while preserving unlimited historical businesses in read-only mode.",
+            ? "إدارة شركة نشطة واحدة، وتبقى جميع الشركات الأخرى مقفلة مع حفظ بياناتها بأمان حتى الترقية أو التبديل."
+            : "Actively manage 1 business while additional businesses remain safely locked in your navbar until you upgrade or swap.",
         },
         {
           name: isAr
@@ -329,12 +336,12 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         },
         {
           name: isAr
-            ? "حتى 3 شركات قابلة للتعديل (وغير محدود للقراءة فقط)"
-            : "Up to 3 Editable Businesses (Unlimited Read-Only)",
+            ? "حتى 3 شركات نشطة ومفتوحة (والباقي مقفل مع حفظ البيانات)"
+            : "Up to 3 Active Businesses (Additional Locked)",
           included: true,
           tooltip: isAr
-            ? "إدارة والتبديل بين حتى 3 شركات قابلة للتعديل في نفس الوقت."
-            : "Actively manage and switch between up to 3 editable business entities.",
+            ? "إدارة والتبديل بين حتى 3 شركات مفتوحة في نفس الوقت."
+            : "Actively manage and switch between up to 3 unlocked business entities.",
         },
         {
           name: isAr
@@ -397,12 +404,12 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         },
         {
           name: isAr
-            ? "حتى 5 شركات قابلة للتعديل (وغير محدود للقراءة فقط)"
-            : "Up to 5 Editable Businesses (Unlimited Read-Only)",
+            ? "حتى 5 شركات نشطة ومفتوحة (والباقي مقفل مع حفظ البيانات)"
+            : "Up to 5 Active Businesses (Additional Locked)",
           included: true,
           tooltip: isAr
-            ? "إدارة حتى 5 كيانات تجارية مستقلة قابلة للتعديل بالكامل."
-            : "Manage up to 5 independent corporate entities with full editing access.",
+            ? "إدارة حتى 5 كيانات تجارية مستقلة مفتوحة بالكامل."
+            : "Manage up to 5 independent corporate entities with full access.",
         },
         {
           name: isAr ? "تصدير غير محدود للبيانات" : "Export Data (Unlimited)",
@@ -453,25 +460,18 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
       highlight: true,
     },
     {
-      name: isAr ? "المستخدمون" : "Users",
-      free: "1",
-      plus: isAr ? "حتى 3" : "Up to 3",
-      pro: isAr ? "حتى 5" : "Up to 5",
-      highlight: true,
-    },
-    {
-      name: isAr ? "الشركات القابلة للتعديل" : "Editable Businesses",
+      name: isAr ? "الشركات النشطة المفتوحة" : "Active (Unlocked) Businesses",
       hasInfo: true,
       tooltip: isAr
-        ? "عدد الشركات التي يمكنك تعديلها وإدارتها بنشاط. جميع الشركات الإضافية تبقى محفوظة بالكامل في وضع القراءة فقط."
-        : "Number of businesses you can actively edit. Unlimited additional businesses remain preserved in read-only mode.",
+        ? "عدد الشركات التي يمكنك فتحها وإدارتها بنشاط. جميع الشركات الإضافية تبقى مقفلة مع حفظ بياناتها بأمان."
+        : "Number of businesses you can actively open and manage. Additional businesses remain safely locked with all data preserved.",
       free: "1",
       plus: isAr ? "حتى 3" : "Up to 3",
       pro: isAr ? "حتى 5" : "Up to 5",
       highlight: true,
     },
     {
-      name: isAr ? "الشركات في وضع القراءة فقط" : "Read-Only Historical Businesses",
+      name: isAr ? "الشركات المقفلة (البيانات محفوظة)" : "Locked Vaulted Businesses",
       free: isAr ? "غير محدود" : "Unlimited",
       plus: isAr ? "غير محدود" : "Unlimited",
       pro: isAr ? "غير محدود" : "Unlimited",
@@ -525,6 +525,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
           }
         }
         await refreshAllBillingData();
+        setShowPlanCardsOverride(false);
         toast.success(
           isAr
             ? `تمت الترقية إلى باقة ${planId.toUpperCase()} واستعادة صلاحيات التعديل لشركاتك!`
@@ -655,14 +656,20 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
           billingPeriod
         );
         const appliedImmediately = updatedSub?.planSlug === targetDowngradePlan;
+        if (appliedImmediately && selectedIds.length > 0) {
+          const currentActive = AuthStore.getActiveBusinessId();
+          if (!currentActive || !selectedIds.includes(currentActive)) {
+            AuthStore.setActiveBusinessId(selectedIds[0]);
+          }
+        }
         toast.success(
           appliedImmediately
             ? isAr
-              ? `تم تخفيض الباقة إلى ${targetDowngradePlan.toUpperCase()} وتطبيق اختيار الشركات القابلة للتعديل!`
-              : `Downgraded to ${targetDowngradePlan.toUpperCase()}! Your ${selectedIds.length} selected business(es) remain editable and the rest are now read-only.`
+              ? `تم تخفيض الباقة إلى ${targetDowngradePlan.toUpperCase()} وقفل الشركات غير المختارة مع حفظ بياناتها!`
+              : `Downgraded to ${targetDowngradePlan.toUpperCase()}! Your ${selectedIds.length} selected business(es) remain active and the rest are now locked with data saved.`
             : isAr
-            ? "تم جدولة تخفيض الباقة وحفظ اختيار الشركات القابلة للتعديل!"
-            : `Downgrade to ${targetDowngradePlan.toUpperCase()} scheduled for the end of your billing period, and your future business allocation has been saved!`
+            ? "تم جدولة تخفيض الباقة وحفظ اختيار الشركات النشطة!"
+            : `Downgrade to ${targetDowngradePlan.toUpperCase()} scheduled for the end of your billing period, and your future active business selection has been saved!`
         );
       } else if (allocationModalMode === "PENDING_EDIT") {
         const pendingSlug =
@@ -675,13 +682,20 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         );
       } else {
         await BusinessService.updateAllocations(selectedIds);
+        if (selectedIds.length > 0) {
+          const currentActive = AuthStore.getActiveBusinessId();
+          if (!currentActive || !selectedIds.includes(currentActive)) {
+            AuthStore.setActiveBusinessId(selectedIds[0]);
+          }
+        }
         toast.success(
           isAr
-            ? "تم تحديث تخصيص الشركات القابلة للتعديل بنجاح!"
-            : "Editable business allocation updated!"
+            ? "تم تحديث الشركات النشطة والمقفلة بنجاح!"
+            : "Active & locked business allocation updated!"
         );
       }
       await refreshAllBillingData();
+      setShowPlanCardsOverride(false);
       setAllocationModalOpen(false);
     } catch (err: unknown) {
       toast.error(
@@ -697,6 +711,26 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
   };
 
   const ownedBusinesses = allocation?.businesses ?? [];
+  const confirmedPlanSlug = (subscription?.planSlug || activePlan || "free").toLowerCase();
+  const confirmedStatus = (subscription?.status || "ACTIVE").toUpperCase();
+  const hasActivePaidSubscription =
+    (confirmedPlanSlug === "plus" || confirmedPlanSlug === "pro") &&
+    ["ACTIVE", "TRIALING", "PAST_DUE"].includes(confirmedStatus);
+  const shouldShowPlanCards = !hasActivePaidSubscription || showPlanCardsOverride;
+
+  const handleTogglePlanCards = () => {
+    const next = !showPlanCardsOverride;
+    setShowPlanCardsOverride(next);
+    if (next) {
+      setTimeout(() => {
+        planCardsSectionRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 60);
+    }
+  };
+
   const effectiveEndDateFormatted = formatDate(
     subscription?.effectiveCancelAt ||
       subscription?.pendingChangeEffectiveAt ||
@@ -733,17 +767,17 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
             <div>
               <h5 className="text-xs font-bold text-gray-900 dark:text-white leading-snug">
                 {isAr
-                  ? `الشركات القابلة للتعديل: ${
+                  ? `الشركات النشطة: ${
                       allocation?.editableCount ?? subscription?.editableBusinessCount ?? 1
                     } / ${allocation?.editableLimit ?? subscription?.editableBusinessLimit ?? 1}`
-                  : `Editable Businesses: ${
+                  : `Active Businesses: ${
                       allocation?.editableCount ?? subscription?.editableBusinessCount ?? 1
                     } / ${allocation?.editableLimit ?? subscription?.editableBusinessLimit ?? 1}`}
               </h5>
               <p className="text-[11px] text-gray-500 dark:text-gray-400 leading-tight mt-0.5">
                 {isAr
-                  ? "جميع الشركات الإضافية تبقى محفوظة دائماً في وضع القراءة فقط."
-                  : "All additional businesses remain safely preserved in Read-Only mode."}
+                  ? "الشركات الإضافية تبقى مقفلة مع حفظ بياناتها وتعود للفتح عند الترقية أو التبديل."
+                  : "Additional businesses stay safely locked until you upgrade or swap."}
               </p>
             </div>
           </div>
@@ -855,6 +889,46 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-2.5">
+              {hasActivePaidSubscription && confirmedPlanSlug === "plus" && (
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleTogglePlanCards}
+                  className="afab-btn-premium px-4 py-2 text-xs inline-flex items-center gap-1.5"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  <span>
+                    {shouldShowPlanCards
+                      ? isAr
+                        ? "إخفاء خطط الاشتراك"
+                        : "Hide Plan Options"
+                      : isAr
+                      ? "الترقية إلى Pro أو تغيير الخطة"
+                      : "Upgrade to Pro"}
+                  </span>
+                </button>
+              )}
+
+              {hasActivePaidSubscription && confirmedPlanSlug === "pro" && (
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleTogglePlanCards}
+                  className="afab-btn-secondary px-4 py-2 text-xs inline-flex items-center gap-1.5"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span>
+                    {shouldShowPlanCards
+                      ? isAr
+                        ? "إخفاء خطط الاشتراك"
+                        : "Hide Plan Options"
+                      : isAr
+                      ? "تغيير أو تخفيض الخطة"
+                      : "Change / Downgrade Plan"}
+                  </span>
+                </button>
+              )}
+
               {hasPendingChange && (
                 <button
                   type="button"
@@ -1015,13 +1089,13 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
               <div>
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                   {isAr
-                    ? "تخصيص الشركات (القابلة للتعديل مقابل القراءة فقط)"
-                    : "Business Allocation (Editable vs. Read-Only)"}
+                    ? "تخصيص الشركات (المفتوحة مقابل المقفلة)"
+                    : "Business Allocation (Active vs. Locked)"}
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
                   {isAr
-                    ? `باقتك الحالية (${allocation.currentPlanName}) تتيح حتى ${allocation.editableLimit} شركات قابلة للتعديل. لديك حالياً ${allocation.editableCount} قابلة للتعديل و ${allocation.readOnlyCount} للقراءة فقط.`
-                    : `Your ${allocation.currentPlanName} plan allows up to ${allocation.editableLimit} editable business(es). Currently ${allocation.editableCount} editable and ${allocation.readOnlyCount} read-only.`}
+                    ? `باقتك الحالية (${allocation.currentPlanName}) تتيح فتح حتى ${allocation.editableLimit} شركات نشطة. لديك حالياً ${allocation.editableCount} مفتوحة و ${allocation.readOnlyCount} مقفلة (بياناتها محفوظة).`
+                    : `Your ${allocation.currentPlanName} plan unlocks up to ${allocation.editableLimit} active business(es). Currently ${allocation.editableCount} unlocked and ${allocation.readOnlyCount} locked (data safely saved).`}
                 </p>
               </div>
             </div>
@@ -1088,12 +1162,12 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                 {biz.editable ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
                     <Check className="w-3 h-3" />
-                    {isAr ? "قابلة للتعديل" : "Editable"}
+                    {isAr ? "نشطة ومفتوحة" : "Active"}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
                     <Lock className="w-2.5 h-2.5" />
-                    {isAr ? "قراءة فقط" : "Read-Only"}
+                    {isAr ? "مقفلة (محفوظة)" : "Locked"}
                   </span>
                 )}
               </div>
@@ -1102,8 +1176,10 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         </section>
       )}
 
-      {/* ── Billing Toggle & Plus-Exclusive 7-Day Free Trial Alert ── */}
-      <div className="flex flex-col items-center justify-center space-y-4">
+      {/* ── Billing Toggle, Plus Trial Alert & Plan Cards (shown on Free plan or when toggled) ── */}
+      {shouldShowPlanCards && (
+        <div ref={planCardsSectionRef} className="space-y-6">
+          <div className="flex flex-col items-center justify-center space-y-4">
         <div className="afab-segmented">
           <button
             type="button"
@@ -1333,76 +1409,13 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                     </button>
                   )}
                 </div>
-
-                {/* Feature List */}
-                <div
-                  className={`mt-6 pt-6 border-t ${
-                    isPro
-                      ? "border-amber-200/60 dark:border-amber-500/20"
-                      : "border-gray-200 dark:border-gray-800/60"
-                  } space-y-3`}
-                >
-                  <p
-                    className={`text-xs font-semibold tracking-wide uppercase ${
-                      isPro
-                        ? "text-amber-700 dark:text-amber-400"
-                        : "text-gray-900 dark:text-white"
-                    }`}
-                  >
-                    {plan.featuresHeader}
-                  </p>
-
-                  <ul className="space-y-2.5 text-xs text-gray-700 dark:text-gray-300">
-                    {plan.features.map((feature, idx) => (
-                      <li
-                        key={idx}
-                        className={`flex items-center gap-2.5 ${
-                          feature.included
-                            ? ""
-                            : "text-gray-400 dark:text-gray-600"
-                        }`}
-                      >
-                        {feature.included ? (
-                          <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0 stroke-[2.5]" />
-                        ) : (
-                          <X className="w-4 h-4 text-gray-400 dark:text-gray-600 shrink-0 stroke-[2]" />
-                        )}
-
-                        <span className="flex-1">{feature.name}</span>
-
-                        {feature.tooltip && (
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onMouseEnter={() => setActiveTooltip(feature.name)}
-                              onMouseLeave={() => setActiveTooltip(null)}
-                              onClick={() =>
-                                setActiveTooltip(
-                                  activeTooltip === feature.name
-                                    ? null
-                                    : feature.name
-                                )
-                              }
-                              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none"
-                            >
-                              <Info className="w-3.5 h-3.5" />
-                            </button>
-                            {activeTooltip === feature.name && (
-                              <div className="afab-popover absolute z-30 bottom-full end-0 mb-2 w-52 text-[11px] font-normal text-gray-700 dark:text-gray-300">
-                                {feature.tooltip}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
               </div>
             </div>
           );
         })}
       </section>
+        </div>
+      )}
 
       {/* ── Compare Plans Table ── */}
       <section className="afab-card overflow-hidden">

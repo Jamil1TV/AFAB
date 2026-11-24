@@ -125,6 +125,8 @@ class BusinessAllocationServiceTest {
         assertThat(fiveBusinesses.get(3).isEditable()).isTrue();
         assertThat(fiveBusinesses.get(4).isEditable()).isTrue();
         assertThat(fiveBusinesses).hasSize(5); // All 5 preserved!
+        // User's previously active business (#1) was locked -> auto-switched to unlocked primary (#2)
+        assertThat(testUser.getActiveBusinessId()).isEqualTo(fiveBusinesses.get(1).getId());
     }
 
     @Test

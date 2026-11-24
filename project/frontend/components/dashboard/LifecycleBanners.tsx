@@ -48,8 +48,8 @@ export function LifecycleBanners() {
       toast.error(
         detail?.message ||
           (isAr
-            ? "هذه الشركة في وضع القراءة فقط. قم بترقية باقتك أو تغيير تخصيص الشركات للتعديل."
-            : "This business is in read-only mode. Upgrade your plan or update your business allocation to make changes.")
+            ? "هذه الشركة مقفلة حالياً. قم بترقية باقتك أو تبديل الشركة النشطة من إعدادات الاشتراك."
+            : "This business is locked under your current plan. Upgrade your plan or swap your active business in Subscription Settings.")
       );
       loadLifecycleState();
     };
@@ -171,13 +171,13 @@ export function LifecycleBanners() {
             <div className="text-xs">
               <p className="font-bold text-gray-900 dark:text-white">
                 {isAr
-                  ? `شركة "${activeBusiness.name}" في وضع القراءة فقط (Read-Only)`
-                  : `"${activeBusiness.name}" is in Read-Only Mode`}
+                  ? `شركة "${activeBusiness.name}" مقفلة (Locked)`
+                  : `"${activeBusiness.name}" is Locked`}
               </p>
               <p className="text-gray-600 dark:text-gray-300">
                 {isAr
-                  ? "يمكنك عرض كافة التقارير والمعاملات وتصدير البيانات، ولكن لا يمكن إضافة أو تعديل السجلات. يمكنك تبديل الشركات القابلة للتعديل أو ترقية باقتك."
-                  : "You can view all dashboards, transactions, invoices, and export historical data, but write operations are disabled. Swap your editable business allocation or upgrade your plan to edit."}
+                  ? "جميع بيانات هذه الشركة محفوظة بأمان، ولا يمكن فتحها أو عرضها في الباقة الحالية. يمكنك تبديل الشركة النشطة أو ترقية باقتك لإعادة فتحها."
+                  : "All data in this business is safely saved, and access is locked under your current plan limits. Swap your active business allocation or upgrade your plan to unlock it."}
               </p>
             </div>
           </div>

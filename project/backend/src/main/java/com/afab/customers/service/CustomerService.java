@@ -1,6 +1,7 @@
 package com.afab.customers.service;
 
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ConflictException;
 import com.afab.common.exception.ForbiddenException;
@@ -233,6 +234,7 @@ public class CustomerService {
     public CustomerDTO createCustomer(String userEmail, CreateCustomerRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         String cleanEmail = (request.getEmail() != null && !request.getEmail().isBlank())
                 ? request.getEmail().trim().toLowerCase(Locale.ROOT) : null;
@@ -270,6 +272,7 @@ public class CustomerService {
     public CustomerDTO updateCustomer(String userEmail, UUID customerId, UpdateCustomerRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         Customer customer = customerRepository.findActiveById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + customerId));
@@ -333,6 +336,7 @@ public class CustomerService {
     public void archiveCustomer(String userEmail, UUID customerId) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         Customer customer = customerRepository.findActiveById(customerId)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with ID: " + customerId));

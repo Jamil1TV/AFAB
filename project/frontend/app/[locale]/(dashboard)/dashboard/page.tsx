@@ -211,10 +211,8 @@ export default function DashboardPage() {
         <TopCustomers customers={data.customers || []} currency={currency} />
       </div>
 
-      {/* ── Upgrade Banner ── */}
-      <div className="pt-4">
-        <UpgradeBanner />
-      </div>
+      {/* ── Upgrade Banner (automatically hidden on Pro plan) ── */}
+      <UpgradeBanner />
 
     </div>
   );

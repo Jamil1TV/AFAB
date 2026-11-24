@@ -56,7 +56,7 @@ public class RecurringExecutionProcessor {
 
         RecurringTransaction rule = maybeRule.get();
         Business business = rule.getBusiness();
-        if (!rule.isActive() || business == null || business.getArchivedAt() != null) {
+        if (!rule.isActive() || business == null || business.getArchivedAt() != null || !business.isEditable()) {
             return Optional.empty();
         }
 
