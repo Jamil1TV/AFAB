@@ -50,6 +50,7 @@ interface ExportPeriodModalProps {
   defaultFiscalMatricule?: string;
   defaultBusinessAddress?: string;
   defaultBusinessLogo?: string;
+  defaultBusinessPurpose?: string;
   onConfirm: (config: {
     period: string;
     customStart?: string;
@@ -60,6 +61,7 @@ interface ExportPeriodModalProps {
     fiscalMatricule?: string;
     businessAddress?: string;
     businessLogoUrl?: string;
+    businessPurpose?: string;
   }) => Promise<void> | void;
 }
 
@@ -72,6 +74,7 @@ export function ExportPeriodModal({
   defaultFiscalMatricule = "",
   defaultBusinessAddress = "",
   defaultBusinessLogo = "",
+  defaultBusinessPurpose = "",
   onConfirm,
 }: ExportPeriodModalProps) {
   const locale = useLocale();
@@ -84,6 +87,7 @@ export function ExportPeriodModal({
   const [fiscalMatricule, setFiscalMatricule] = useState<string>(defaultFiscalMatricule);
   const [businessAddress, setBusinessAddress] = useState<string>(defaultBusinessAddress);
   const [businessLogo, setBusinessLogo] = useState<string>(defaultBusinessLogo);
+  const [businessPurpose, setBusinessPurpose] = useState<string>(defaultBusinessPurpose);
   const [includeLogo, setIncludeLogo] = useState<boolean>(true);
   const [includeSignature, setIncludeSignature] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -105,9 +109,13 @@ export function ExportPeriodModal({
         defaultBusinessLogo ||
         (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "")
       );
+      setBusinessPurpose(
+        defaultBusinessPurpose ||
+        (typeof window !== "undefined" ? localStorage.getItem("afab_business_purpose") || "" : "")
+      );
       setIsSubmitting(false);
     }
-  }, [open, defaultPeriod, defaultCurrency, defaultFiscalMatricule, defaultBusinessAddress, defaultBusinessLogo]);
+  }, [open, defaultPeriod, defaultCurrency, defaultFiscalMatricule, defaultBusinessAddress, defaultBusinessLogo, defaultBusinessPurpose]);
 
   const activeRange = calculateDateRange(period, customStart, customEnd, isAr);
 
@@ -145,9 +153,11 @@ export function ExportPeriodModal({
     try {
       const cleanMf = fiscalMatricule.trim();
       const cleanAddr = businessAddress.trim();
+      const cleanPurp = businessPurpose.trim();
       if (typeof window !== "undefined") {
         if (cleanMf) localStorage.setItem("afab_fiscal_matricule", cleanMf);
         if (cleanAddr) localStorage.setItem("afab_business_address", cleanAddr);
+        if (cleanPurp) localStorage.setItem("afab_business_purpose", cleanPurp);
         if (businessLogo) localStorage.setItem("afab_business_logo", businessLogo);
       }
       await onConfirm({
@@ -160,6 +170,7 @@ export function ExportPeriodModal({
         fiscalMatricule: cleanMf,
         businessAddress: cleanAddr,
         businessLogoUrl: businessLogo || undefined,
+        businessPurpose: cleanPurp || undefined,
       });
       onOpenChange(false);
     } catch (e) {
@@ -285,6 +296,26 @@ export function ExportPeriodModal({
               value={businessAddress}
               onChange={(e) => setBusinessAddress(e.target.value)}
               placeholder={isAr ? "مثال: شارع الحبيب بورقيبة، تونس / 123 Business Way" : "e.g. Avenue Habib Bourguiba, Tunis / 123 Business Way"}
+              className="h-9 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
+            />
+          </div>
+
+          {/* ── Business Purpose & Activity Input ── */}
+          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label htmlFor="modal-business-purpose" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                {isAr ? "غرض الشركة / طبيعة النشاط (Purpose / Activity):" : "Business Purpose & Activity:"}
+              </label>
+              <span className="text-[10px] text-gray-400">
+                {isAr ? "يُدرج في ترويسة ملفات التصدير" : "Printed in export PDF headers"}
+              </span>
+            </div>
+            <Input
+              id="modal-business-purpose"
+              type="text"
+              value={businessPurpose}
+              onChange={(e) => setBusinessPurpose(e.target.value)}
+              placeholder={isAr ? "مثال: تجارة عامة، خدمات برمجية، استشارات مالية..." : "e.g. Retail, Software Development, Financial Consulting..."}
               className="h-9 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
             />
           </div>

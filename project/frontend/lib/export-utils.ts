@@ -9,6 +9,7 @@ export interface MasterExportData {
   fiscalMatricule?: string;
   businessAddress?: string;
   businessLogoUrl?: string;
+  businessPurpose?: string;
   currency: string;
   generatedAt: string;
   dateRange: string;
@@ -254,6 +255,7 @@ export function exportMasterToExcel(
     ["METADATA", "DETAILS"],
     ["Business Name", data.businessName || "My Business"],
     ...(data.fiscalMatricule ? [["Fiscal Matricule (MF)", data.fiscalMatricule]] : []),
+    ...(data.businessPurpose ? [["Business Purpose / Activity", data.businessPurpose]] : []),
     ...(data.businessAddress ? [["Business Address", data.businessAddress]] : []),
     ...(data.businessLogoUrl ? [["Business Logo", data.businessLogoUrl.startsWith("data:") ? "Custom Business Logo Configured" : data.businessLogoUrl]] : []),
     ["Selected Period", data.dateRange || "All Time"],
@@ -460,7 +462,7 @@ export async function exportMasterToPdf(
 
   // Header Banner Background
   doc.setFillColor(124, 58, 237); // Primary purple #7c3aed
-  doc.rect(0, 0, pageWidth, 38, "F");
+  doc.rect(0, 0, pageWidth, 44, "F");
 
   // Fetch & Embed Logo
   const logoData = includeLogo ? await getLogoBase64(data.businessLogoUrl) : null;
@@ -470,10 +472,10 @@ export async function exportMasterToPdf(
     try {
       // White rounded background container for logo
       doc.setFillColor(255, 255, 255);
-      doc.roundedRect(margin, 5, 24, 24, 3, 3, "F");
+      doc.roundedRect(margin, 5, 26, 26, 3, 3, "F");
       const fmt = (typeof logoData === "string" && (logoData.startsWith("data:image/jpeg") || logoData.startsWith("data:image/jpg"))) ? "JPEG" : "PNG";
-      doc.addImage(logoData, fmt, margin + 1.5, 6.5, 21, 21);
-      textStartX = margin + 28;
+      doc.addImage(logoData, fmt, margin + 1.5, 6.5, 23, 23);
+      textStartX = margin + 30;
     } catch (e) {
       console.warn("Could not render logo in PDF, falling back to vector text", e);
       textStartX = margin;
@@ -485,32 +487,43 @@ export async function exportMasterToPdf(
   // Header Typography
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.text("AFAB — Financial Enterprise Archive", textStartX, 11);
+  doc.setFontSize(13);
+  doc.text("AFAB — Financial Enterprise Archive", textStartX, 10);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.text(
     `${data.businessName || "My Business"}${data.fiscalMatricule ? `  •  Matricule Fiscale (MF): ${data.fiscalMatricule}` : ""}`,
     textStartX,
-    17.5
+    16
   );
+
+  let bannerY = 21.5;
+  if (data.businessPurpose) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    const purposeText = data.businessPurpose.length > 75 ? data.businessPurpose.substring(0, 72) + "..." : data.businessPurpose;
+    doc.text(`Purpose / Activity: ${purposeText}`, textStartX, bannerY);
+    bannerY += 5;
+  }
 
   if (data.businessAddress) {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
-    doc.text(`Address: ${data.businessAddress}`, textStartX, 23);
+    const addrText = data.businessAddress.length > 75 ? data.businessAddress.substring(0, 72) + "..." : data.businessAddress;
+    doc.text(`Address: ${addrText}`, textStartX, bannerY);
+    bannerY += 5;
   }
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.text(
     `Period: ${data.dateRange}  |  Currency: ${data.currency}  |  Generated: ${data.generatedAt || new Date().toLocaleDateString()}`,
     textStartX,
-    data.businessAddress ? 28.5 : 23.5
+    bannerY
   );
 
-  cursorY = 46;
+  cursorY = 52;
 
   // Section 1: Executive KPI Cards
   doc.setTextColor(30, 41, 59);
@@ -681,13 +694,21 @@ export async function exportMasterToPdf(
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(100, 116, 139);
+    let certLineY = cursorY + 18;
+    if (data.businessPurpose) {
+      const purp = data.businessPurpose.length > 55 ? data.businessPurpose.substring(0, 52) + "..." : data.businessPurpose;
+      doc.text(`Purpose: ${purp}`, margin + 6, certLineY);
+      certLineY += 4.5;
+    }
     if (data.businessAddress) {
-      doc.text(`Address: ${data.businessAddress}`, margin + 6, cursorY + 18);
+      const addr = data.businessAddress.length > 55 ? data.businessAddress.substring(0, 52) + "..." : data.businessAddress;
+      doc.text(`Address: ${addr}`, margin + 6, certLineY);
+      certLineY += 4.5;
     }
     doc.text(
       `Digital Certification Date: ${new Date().toLocaleDateString()}  •  Status: AUDITED & COMPLIANT`,
       margin + 6,
-      cursorY + (data.businessAddress ? 23.5 : 19)
+      certLineY
     );
 
     // Right: Wet Signature Image & Title
@@ -739,6 +760,7 @@ export function openPrintableReportWindow(options: {
   fiscalMatricule?: string;
   businessAddress?: string;
   businessLogoUrl?: string;
+  businessPurpose?: string;
   currency: string;
   dateRange?: string;
   kpis?: Array<{ label: string; value: string }>;
@@ -905,6 +927,7 @@ export function openPrintableReportWindow(options: {
           <div>
             <h1 style="font-size:20px; font-weight:800; color:#7c3aed; margin:0;">${options.businessName || "AFAB Enterprise"}</h1>
             <p style="font-size:12px; color:#64748b; margin:4px 0 0 0;">${options.subtitle || "Official Financial & Data Record"}</p>
+            ${options.businessPurpose ? `<p style="font-size:11px; color:#475569; margin:3px 0 0 0; line-height:1.3;"><strong>${options.isAr ? "النشاط / الغرض:" : "Purpose:"}</strong> ${options.businessPurpose}</p>` : ""}
           </div>
         </div>
         <div style="text-align:${options.isAr ? "left" : "right"}; font-size:11px; color:#64748b;">

@@ -55,6 +55,8 @@ export function BusinessProfile({ business }: { business: any }) {
       if (typeof window !== "undefined") {
         if (formData.logoUrl) localStorage.setItem("afab_business_logo", formData.logoUrl);
         if (formData.taxId) localStorage.setItem("afab_fiscal_matricule", formData.taxId);
+        const purpose = formData.description || formData.industry;
+        if (purpose) localStorage.setItem("afab_business_purpose", purpose);
         const addr = [formData.addressLine, formData.city, formData.state, formData.postalCode, formData.country]
           .filter(Boolean)
           .join(", ");
