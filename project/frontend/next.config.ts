@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
     // stale cache entries across git pulls, builds, and concurrent route compilations
     // can trigger ChunkLoadError and RSC fetch failures during local development.
     turbopackFileSystemCacheForDev: false,
+    // Allow long-running Ollama Copilot SSE streams (backend timeout is 90s)
+    proxyTimeout: 120_000,
     // Optimize heavy barrel packages so dev chunks compile cleanly and stay stable across routes.
     optimizePackageImports: [
       "lucide-react",

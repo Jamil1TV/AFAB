@@ -1,4 +1,4 @@
-import { fetchClient } from "./client";
+import { fetchClient, fetchCachedClient } from "./client";
 
 export interface NotificationItem {
   id: string;
@@ -18,8 +18,8 @@ export interface NotificationsResponse {
 }
 
 export class NotificationService {
-  static async list(): Promise<NotificationsResponse> {
-    return fetchClient("/notifications");
+  static async list(force: boolean = false): Promise<NotificationsResponse> {
+    return fetchCachedClient("/notifications", { ttlMs: 15_000, force });
   }
 
   static async markAsRead(id: string): Promise<NotificationsResponse> {

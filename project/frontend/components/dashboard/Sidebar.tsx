@@ -150,15 +150,15 @@ export function Sidebar() {
   }, []);
 
   useEffect(() => {
-    async function fetchProfileAndPlan() {
+    async function fetchProfileAndPlan(force: boolean = false) {
       const cachedTier = AuthStore.getUser()?.planTier;
       if (cachedTier) {
         setPlanSlug(cachedTier.toLowerCase());
       }
       try {
         const [data, sub] = await Promise.all([
-          UserService.getProfile(),
-          SubscriptionService.getMySubscription().catch(() => null),
+          UserService.getProfile(force),
+          SubscriptionService.getMySubscription(force).catch(() => null),
         ]);
         setProfile(data);
         const resolvedSlug = (
@@ -170,14 +170,14 @@ export function Sidebar() {
         ).toLowerCase();
         setPlanSlug(resolvedSlug);
         AuthStore.updateUser({ planTier: resolvedSlug.toUpperCase() });
-      } catch (err) {
-        console.error("Failed to load user profile in Sidebar:", err);
+      } catch {
+        console.warn("Sidebar profile sync deferred");
         if (!cachedTier) {
           setPlanSlug("free");
         }
       }
     }
-    fetchProfileAndPlan();
+    fetchProfileAndPlan(false);
 
     const handleProfileUpdated = (event: Event) => {
       const detail = (event as CustomEvent).detail;
@@ -186,13 +186,11 @@ export function Sidebar() {
         if (detail.planTier) {
           setPlanSlug(String(detail.planTier).toLowerCase());
         }
-      } else {
-        fetchProfileAndPlan();
       }
     };
 
     const handleSubUpdated = () => {
-      fetchProfileAndPlan();
+      fetchProfileAndPlan(true);
     };
 
     window.addEventListener("afab_profile_updated", handleProfileUpdated);

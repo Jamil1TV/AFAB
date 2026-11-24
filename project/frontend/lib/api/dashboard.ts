@@ -1,4 +1,4 @@
-import { fetchClient } from "./client";
+import { fetchClient, fetchCachedClient } from "./client";
 import type { BudgetSummary } from "./budgets";
 
 export interface KpiMetric {
@@ -119,12 +119,7 @@ export interface BusinessProfile {
 }
 
 export class UserService {
-  static async getProfile() {
-    try {
-      return await fetchClient("/user/me");
-    } catch (error) {
-      console.error("[AFAB] Failed to fetch user profile", error);
-      throw error;
-    }
+  static async getProfile(force: boolean = false) {
+    return fetchCachedClient("/user/me", { ttlMs: 15_000, force });
   }
 }

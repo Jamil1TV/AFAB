@@ -25,11 +25,11 @@ export function LifecycleBanners() {
   const [activeBusiness, setActiveBusiness] = useState<BusinessData | null>(null);
   const [openingPortal, setOpeningPortal] = useState(false);
 
-  const loadLifecycleState = useCallback(async () => {
+  const loadLifecycleState = useCallback(async (force: boolean = false) => {
     try {
       const [sub, biz] = await Promise.all([
-        SubscriptionService.getMySubscription().catch(() => null),
-        BusinessService.getMine().catch(() => null),
+        SubscriptionService.getMySubscription(force).catch(() => null),
+        BusinessService.getMine(force).catch(() => null),
       ]);
       if (sub) setSubscription(sub);
       if (biz) setActiveBusiness(biz);
@@ -39,8 +39,8 @@ export function LifecycleBanners() {
   }, []);
 
   useEffect(() => {
-    loadLifecycleState();
-  }, [loadLifecycleState, pathname]);
+    loadLifecycleState(false);
+  }, [loadLifecycleState]);
 
   useEffect(() => {
     const handleReadOnlyBlocked = (event: Event) => {
@@ -51,11 +51,11 @@ export function LifecycleBanners() {
             ? "هذه الشركة مقفلة حالياً. قم بترقية باقتك أو تبديل الشركة النشطة من إعدادات الاشتراك."
             : "This business is locked under your current plan. Upgrade your plan or swap your active business in Subscription Settings.")
       );
-      loadLifecycleState();
+      loadLifecycleState(true);
     };
 
     const handleSubUpdated = () => {
-      loadLifecycleState();
+      loadLifecycleState(true);
     };
 
     window.addEventListener("afab:business-read-only", handleReadOnlyBlocked);

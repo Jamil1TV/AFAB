@@ -83,16 +83,21 @@ export class AuthStore {
       document.cookie = `${CSRF_COOKIE_NAME}=${encodeURIComponent(data.csrfToken)}; path=/; SameSite=Lax${maxAge}`;
     }
 
+    let prevUserRaw: string | null = null;
     if (data.user) {
       try {
-        sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(data.user));
+        prevUserRaw = sessionStorage.getItem(USER_SESSION_KEY);
+        const nextUserRaw = JSON.stringify(data.user);
+        sessionStorage.setItem(USER_SESSION_KEY, nextUserRaw);
         if (data.user.businessId) {
           sessionStorage.setItem(ACTIVE_BUSINESS_KEY, data.user.businessId);
+        }
+        if (prevUserRaw !== nextUserRaw) {
+          window.dispatchEvent(new CustomEvent("afab_profile_updated", { detail: data.user }));
         }
       } catch {
         // ignore quota/private mode errors
       }
-      window.dispatchEvent(new CustomEvent("afab_profile_updated", { detail: data.user }));
     }
   }
 
@@ -131,6 +136,7 @@ export class AuthStore {
       `${SESSION_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax`;
     document.cookie =
       `${CSRF_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax`;
+    window.dispatchEvent(new Event("afab:auth-cleared"));
   }
 
   static getActiveBusinessId(): string | null {
@@ -145,10 +151,14 @@ export class AuthStore {
   static setActiveBusinessId(id: string | null) {
     if (typeof window === "undefined") return;
     try {
+      const prevId = sessionStorage.getItem(ACTIVE_BUSINESS_KEY);
       if (id) {
         sessionStorage.setItem(ACTIVE_BUSINESS_KEY, id);
       } else {
         sessionStorage.removeItem(ACTIVE_BUSINESS_KEY);
+      }
+      if (prevId !== (id ?? null)) {
+        window.dispatchEvent(new Event("afab:business-context-changed"));
       }
     } catch {
       // ignore storage errors
@@ -168,7 +178,7 @@ export class AuthStore {
 
   static hasSessionHint(): boolean {
     if (typeof window === "undefined") return false;
-    return Boolean(inMemoryAccessToken || readCookie(CSRF_COOKIE_NAME));
+    return Boolean(inMemoryAccessToken || readCookie(SESSION_COOKIE_NAME) || readCookie(CSRF_COOKIE_NAME));
   }
 
   static getUser(): UserDto | null {
@@ -187,6 +197,10 @@ export class AuthStore {
     if (typeof window === "undefined") return;
     const user = this.getUser();
     if (!user) return;
+    const hasChanges = (Object.keys(updates) as Array<keyof UserDto>).some(
+      (key) => user[key] !== updates[key]
+    );
+    if (!hasChanges) return;
     const updated = { ...user, ...updates };
     try {
       sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(updated));

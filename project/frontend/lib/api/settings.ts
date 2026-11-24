@@ -1,8 +1,8 @@
-import { fetchClient } from "./client";
+import { fetchClient, fetchCachedClient } from "./client";
 
 export class SettingsService {
   static async getMyBusiness() {
-    return fetchClient("/business/mine");
+    return fetchCachedClient("/business/mine", { ttlMs: 15_000 });
   }
 
   static async updateBusiness(businessId: string, data: Record<string, unknown>) {
@@ -13,7 +13,7 @@ export class SettingsService {
   }
 
   static async getProfile() {
-    return fetchClient("/user/me");
+    return fetchCachedClient("/user/me", { ttlMs: 15_000 });
   }
 
   static async updateProfile(data: Record<string, unknown>) {

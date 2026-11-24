@@ -35,13 +35,13 @@ export function DashboardHeader() {
   const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
-  const loadSubscriptionPlan = useCallback(async () => {
+  const loadSubscriptionPlan = useCallback(async (force: boolean = false) => {
     const cachedTier = AuthStore.getUser()?.planTier;
     if (cachedTier) {
       setCurrentPlanSlug(cachedTier.toLowerCase());
     }
     try {
-      const sub = await SubscriptionService.getMySubscription();
+      const sub = await SubscriptionService.getMySubscription(force);
       const slug = sub?.planSlug?.toLowerCase() || "free";
       setCurrentPlanSlug(slug);
       AuthStore.updateUser({ planTier: slug.toUpperCase() });
@@ -52,9 +52,9 @@ export function DashboardHeader() {
     }
   }, []);
 
-  const loadNotifications = useCallback(async () => {
+  const loadNotifications = useCallback(async (force: boolean = false) => {
     try {
-      const res = await NotificationService.list();
+      const res = await NotificationService.list(force);
       if (res) {
         setUnreadCount(res.unreadCount ?? 0);
         setNotifications(res.notifications ?? []);
@@ -65,17 +65,21 @@ export function DashboardHeader() {
   }, []);
 
   useEffect(() => {
-    loadNotifications();
-    loadSubscriptionPlan();
-  }, [loadNotifications, loadSubscriptionPlan, pathname]);
+    loadNotifications(false);
+    loadSubscriptionPlan(false);
+  }, [loadNotifications, loadSubscriptionPlan]);
 
   useEffect(() => {
     const handleSubUpdated = () => {
-      loadNotifications();
-      loadSubscriptionPlan();
+      loadNotifications(true);
+      loadSubscriptionPlan(true);
     };
-    const handleProfileUpdated = () => {
-      loadSubscriptionPlan();
+    const handleProfileUpdated = (event: Event) => {
+      const detail = (event as CustomEvent)?.detail;
+      const nextTier = detail?.planTier || AuthStore.getUser()?.planTier;
+      if (nextTier) {
+        setCurrentPlanSlug(String(nextTier).toLowerCase());
+      }
     };
     window.addEventListener("afab:subscription-updated", handleSubUpdated);
     window.addEventListener("afab_profile_updated", handleProfileUpdated);
@@ -175,7 +179,7 @@ export function DashboardHeader() {
             onClick={() => {
               const next = !notifOpen;
               setNotifOpen(next);
-              if (next) loadNotifications();
+              if (next) loadNotifications(true);
             }}
             className="relative flex h-9 w-9 items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] transition-colors"
           >

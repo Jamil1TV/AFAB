@@ -20,8 +20,6 @@ export function getApiBaseUrl(): string {
   return "http://127.0.0.1:8080/api/v1";
 }
 
-const API_BASE_URL = getApiBaseUrl();
-
 interface FetchOptions extends RequestInit {
   requireAuth?: boolean;
 }
@@ -44,8 +42,63 @@ export class ApiError extends Error {
   }
 }
 
-// Single-flight deduplication so parallel requests on page reload share one token refresh
+// Single-flight deduplication so parallel requests share one token refresh or shared metadata GET
 let inFlightRefresh: Promise<boolean> | null = null;
+let redirectingToLogin = false;
+
+const inFlightGets = new Map<string, Promise<unknown>>();
+const responseCache = new Map<string, { data: unknown; expiresAt: number }>();
+
+function buildCacheKey(endpoint: string): string {
+  const userId = AuthStore.getUser()?.id || "anon";
+  const businessId = AuthStore.getActiveBusinessId() || "default";
+  return `${userId}::${businessId}::${endpoint}`;
+}
+
+/**
+ * Clears cached responses and in-flight shared GET deduplication entries.
+ * When `endpointPrefix` is omitted, wipes all cached API entries.
+ */
+export function invalidateApiCache(endpointPrefix?: string): void {
+  if (!endpointPrefix) {
+    responseCache.clear();
+    inFlightGets.clear();
+    return;
+  }
+  const needle = `::${endpointPrefix}`;
+  for (const key of Array.from(responseCache.keys())) {
+    if (key.includes(needle)) {
+      responseCache.delete(key);
+    }
+  }
+  for (const key of Array.from(inFlightGets.keys())) {
+    if (key.includes(needle)) {
+      inFlightGets.delete(key);
+    }
+  }
+}
+
+// Register cache invalidation listeners once across HMR in browser environments
+if (typeof window !== "undefined") {
+  const w = window as unknown as { __afabApiCacheListenersBound?: boolean };
+  if (!w.__afabApiCacheListenersBound) {
+    w.__afabApiCacheListenersBound = true;
+    window.addEventListener("afab:auth-cleared", () => {
+      invalidateApiCache();
+    });
+    window.addEventListener("afab:business-context-changed", () => {
+      invalidateApiCache();
+    });
+    window.addEventListener("afab:subscription-updated", () => {
+      invalidateApiCache("/subscription");
+      invalidateApiCache("/business");
+    });
+    window.addEventListener("afab:business-read-only", () => {
+      invalidateApiCache("/subscription");
+      invalidateApiCache("/business");
+    });
+  }
+}
 
 export async function tryRefreshToken(): Promise<boolean> {
   if (inFlightRefresh) {
@@ -61,48 +114,51 @@ export async function tryRefreshToken(): Promise<boolean> {
       headers["X-CSRF-Token"] = csrfToken;
     }
 
+    const baseUrl = getApiBaseUrl();
+    let res: Response | null = null;
+
+    for (let attempt = 0; attempt <= 1; attempt++) {
+      try {
+        res = await fetch(`${baseUrl}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers,
+        });
+        break;
+      } catch (refreshErr: unknown) {
+        if (refreshErr instanceof Error && refreshErr.name === "AbortError") {
+          return false;
+        }
+        if (attempt === 0) {
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        } else {
+          console.warn("[AFAB API] Silent token refresh network failure");
+          return false;
+        }
+      }
+    }
+
+    if (!res) return false;
+
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        AuthStore.clearAuth();
+      }
+      return false;
+    }
+
     try {
-      const baseUrl = getApiBaseUrl();
-      let res = await fetch(`${baseUrl}/auth/refresh`, {
-        method: "POST",
-        credentials: "include",
-        headers,
-      });
-
-      // If relative proxy /api/v1 failed, attempt direct port 8080 in browser as fallback
-      if (!res.ok && typeof window !== "undefined" && baseUrl.startsWith("/")) {
-        try {
-          const directBase = `${window.location.protocol}//${window.location.hostname}:8080/api/v1`;
-          const directRes = await fetch(`${directBase}/auth/refresh`, {
-            method: "POST",
-            credentials: "include",
-            headers,
-          });
-          if (directRes.ok) {
-            res = directRes;
-          }
-        } catch {
-          // ignore direct fallback error
-        }
-      }
-
-      if (!res.ok) {
-        if (res.status === 401 || res.status === 403) {
-          AuthStore.clearAuth();
-        }
-        return false;
-      }
-
       const data = await res.json();
       if (data?.accessToken) {
         AuthStore.setAccessToken(data.accessToken, data.csrfToken);
+        redirectingToLogin = false;
         if (data.user) {
           AuthStore.setAuth(data);
         }
         return true;
       }
-    } catch (refreshErr) {
-      console.warn("[AFAB API] Silent token refresh network exception:", refreshErr);
+    } catch {
+      // malformed JSON from refresh endpoint
     }
     return false;
   })();
@@ -155,8 +211,6 @@ function buildAuthHeaders(
   return merged;
 }
 
-let redirectingToLogin = false;
-
 function redirectToLogin(): boolean {
   AuthStore.clearAuth();
   if (typeof window !== "undefined") {
@@ -178,12 +232,18 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
   const { requireAuth = true, headers, body, ...customConfig } = options;
   const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
 
+  if (AuthStore.getAccessToken()) {
+    redirectingToLogin = false;
+  }
+
   // After a hard page reload, in-memory accessToken is null — silently refresh via HttpOnly cookie first.
   if (requireAuth && !AuthStore.getAccessToken() && !endpoint.includes("/auth/")) {
     const refreshed = await tryRefreshToken();
     if (!refreshed && !AuthStore.getAccessToken()) {
-      redirectToLogin();
-      return new Promise<Response>(() => {});
+      if (redirectToLogin()) {
+        return new Promise<Response>(() => {});
+      }
+      throw new ApiError("Authentication required. Please sign in again.", "UNAUTHORIZED", 401);
     }
   }
 
@@ -205,43 +265,30 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
   });
 
   const method = (customConfig.method || "GET").toUpperCase();
+  const baseUrl = getApiBaseUrl();
 
-  let response: Response;
-  const primaryBase = getApiBaseUrl();
-  const secondaryBase =
-    typeof window !== "undefined" && primaryBase.startsWith("/")
-      ? `${window.location.protocol}//${window.location.hostname}:8080/api/v1`
-      : primaryBase.includes("127.0.0.1")
-      ? primaryBase.replace("127.0.0.1", "localhost")
-      : primaryBase.includes("localhost")
-      ? primaryBase.replace("localhost", "127.0.0.1")
-      : primaryBase;
+  const isSafeRetry = method === "GET" || method === "HEAD" || method === "OPTIONS";
+  const maxRetries = isSafeRetry
+    ? 2
+    : typeof ReadableStream !== "undefined" && body instanceof ReadableStream
+    ? 0
+    : 1;
 
-  try {
-    response = await fetch(`${primaryBase}${endpoint}`, buildConfig());
-  } catch (err: unknown) {
-    if (customConfig.signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
-      throw err;
-    }
-    console.warn(`[AFAB API] Primary base (${primaryBase}) failed for ${endpoint}. Retrying secondary base (${secondaryBase})...`, err);
-    // Attempt 2: quick retry after 200ms using secondary host resolution
-    await new Promise((resolve) => setTimeout(resolve, 200));
+  let response: Response | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      response = await fetch(`${secondaryBase}${endpoint}`, buildConfig());
-    } catch (secondErr: unknown) {
-      if (customConfig.signal?.aborted || (secondErr instanceof Error && secondErr.name === "AbortError")) {
-        throw secondErr;
+      response = await fetch(`${baseUrl}${endpoint}`, buildConfig());
+      break;
+    } catch (err: unknown) {
+      if (customConfig.signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
+        throw err;
       }
-      console.warn(`[AFAB API] Secondary base (${secondaryBase}) failed for ${endpoint}. Retrying primary base...`, secondErr);
-      // Attempt 3: retry after 500ms using primary host resolution
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      try {
-        response = await fetch(`${primaryBase}${endpoint}`, buildConfig());
-      } catch (retryErr: unknown) {
-        if (customConfig.signal?.aborted || (retryErr instanceof Error && retryErr.name === "AbortError")) {
-          throw retryErr;
-        }
-        console.error(`[AFAB API] All connection attempts failed for ${endpoint}:`, retryErr);
+      if (attempt < maxRetries) {
+        const delayMs = attempt === 0 ? 250 : 600;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      } else {
+        console.warn(`[AFAB API] Network unreachable for ${method} ${endpoint}`);
         throw new ApiError(
           "Unable to connect to the server. Please try again.",
           "NETWORK_ERROR",
@@ -251,13 +298,24 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
     }
   }
 
+  if (!response) {
+    throw new ApiError(
+      "Unable to connect to the server. Please try again.",
+      "NETWORK_ERROR",
+      0
+    );
+  }
+
   if (response.status === 401 && requireAuth && !endpoint.includes("/auth/")) {
     const refreshed = await tryRefreshToken();
     if (refreshed) {
       try {
-        const refreshedBase = getApiBaseUrl();
-        response = await fetch(`${refreshedBase}${endpoint}`, buildConfig());
-      } catch {
+        response = await fetch(`${baseUrl}${endpoint}`, buildConfig());
+      } catch (err: unknown) {
+        if (customConfig.signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
+          throw err;
+        }
+        console.warn(`[AFAB API] Retry after refresh failed for ${method} ${endpoint}`);
         throw new ApiError(
           "Unable to connect to the server. Please try again.",
           "NETWORK_ERROR",
@@ -272,6 +330,7 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
 
 export async function fetchClient(endpoint: string, options: FetchOptions = {}) {
   const { requireAuth = true } = options;
+  const method = (options.method || "GET").toUpperCase();
   const response = await fetchRawClient(endpoint, options);
 
   if (!response.ok) {
@@ -346,6 +405,23 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
     throw new ApiError(errorMsg, errorCode, response.status, errorDetails);
   }
 
+  // Automatically invalidate related cached GET endpoints on successful mutations
+  if (method !== "GET" && method !== "HEAD") {
+    if (endpoint.startsWith("/user/me")) {
+      invalidateApiCache("/user/me");
+    } else if (endpoint.startsWith("/business")) {
+      invalidateApiCache("/business");
+      invalidateApiCache("/subscription");
+    } else if (endpoint.startsWith("/billing") || endpoint.startsWith("/subscription")) {
+      invalidateApiCache("/subscription");
+      invalidateApiCache("/business");
+    } else if (endpoint.startsWith("/notifications")) {
+      invalidateApiCache("/notifications");
+    } else if (endpoint.startsWith("/auth/logout") || endpoint.startsWith("/auth/login")) {
+      invalidateApiCache();
+    }
+  }
+
   if (response.status === 204) {
     return null;
   }
@@ -356,4 +432,48 @@ export async function fetchClient(endpoint: string, options: FetchOptions = {}) 
   }
 
   return JSON.parse(responseText);
+}
+
+/**
+ * Single-flight deduplicated + short-TTL cached GET helper for shared metadata endpoints
+ * (`/user/me`, `/subscription/me`, `/business`, `/business/mine`, `/notifications`).
+ * Prevents simultaneous component mounts from hammering identical backend endpoints.
+ */
+export async function fetchCachedClient<T = any>(
+  endpoint: string,
+  options: FetchOptions & { ttlMs?: number; force?: boolean } = {}
+): Promise<T> {
+  const { ttlMs = 15_000, force = false, ...fetchOptions } = options;
+  const key = buildCacheKey(endpoint);
+
+  if (!force) {
+    const cached = responseCache.get(key);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data as T;
+    }
+
+    const existingFlight = inFlightGets.get(key);
+    if (existingFlight) {
+      return existingFlight as Promise<T>;
+    }
+  }
+
+  const promise = (async () => {
+    const data = await fetchClient(endpoint, fetchOptions);
+    responseCache.set(key, {
+      data,
+      expiresAt: Date.now() + ttlMs,
+    });
+    return data as T;
+  })();
+
+  inFlightGets.set(key, promise);
+
+  try {
+    return await promise;
+  } finally {
+    if (inFlightGets.get(key) === promise) {
+      inFlightGets.delete(key);
+    }
+  }
 }

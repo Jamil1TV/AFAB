@@ -155,18 +155,6 @@ export default function AfabCopilotPage() {
   }, []);
 
   useEffect(() => {
-    let active = true;
-    AiService.getHealth()
-      .then((h) => {
-        if (!active) return;
-        setHealth(h);
-        setBackendConnected(true);
-      })
-      .catch(() => {
-        if (!active) return;
-        setBackendConnected(false);
-      });
-
     const unsub = AiService.subscribeHealth({
       onHealth: (liveHealth) => {
         setHealth(liveHealth);
@@ -191,7 +179,6 @@ export default function AfabCopilotPage() {
     });
 
     return () => {
-      active = false;
       unsub();
     };
   }, []);

@@ -13,37 +13,24 @@ export function AppearanceInitializer() {
   const { setTheme } = useTheme();
 
   useEffect(() => {
-    // 1. Synchronously apply appearance on initial client hydration
-    const initialSettings = getStoredAppearance();
-    applyAppearance(initialSettings, setTheme);
+    // Synchronously apply appearance on initial client hydration without rebroadcasting
+    applyAppearance(getStoredAppearance(), setTheme, { persist: false, broadcast: false });
 
-    // 2. React to in-app appearance mutations
-    const handleAppearanceChanged = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      if (customEvent.detail) {
-        applyAppearance(customEvent.detail, setTheme);
-      } else {
-        applyAppearance(getStoredAppearance(), setTheme);
-      }
-    };
-
-    // 3. React to multi-tab storage updates
+    // React only to cross-tab storage updates
     const handleStorage = (e: StorageEvent) => {
       if (e.key === "afab_appearance_settings" && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
-          applyAppearance(parsed, setTheme);
+          applyAppearance(parsed, setTheme, { persist: false, broadcast: false });
         } catch {
           // ignore parsing error
         }
       }
     };
 
-    window.addEventListener("afab_appearance_changed", handleAppearanceChanged);
     window.addEventListener("storage", handleStorage);
 
     return () => {
-      window.removeEventListener("afab_appearance_changed", handleAppearanceChanged);
       window.removeEventListener("storage", handleStorage);
     };
   }, [setTheme]);

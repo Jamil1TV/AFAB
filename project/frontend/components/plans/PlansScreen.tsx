@@ -104,9 +104,9 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
   >("MANAGE");
   const [targetDowngradePlan, setTargetDowngradePlan] = useState<"free" | "plus">("plus");
 
-  const refreshAllBillingData = useCallback(async () => {
+  const refreshAllBillingData = useCallback(async (notifyApp: boolean = false) => {
     const [sub, alloc, hist] = await Promise.all([
-      SubscriptionService.getMySubscription(),
+      SubscriptionService.getMySubscription(notifyApp),
       BusinessService.getAllocations().catch(() => null),
       SubscriptionService.getBillingHistory().catch(() => null),
     ]);
@@ -124,7 +124,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
     }
     if (alloc) setAllocation(alloc);
     if (hist) setHistory(hist);
-    if (typeof window !== "undefined") {
+    if (notifyApp && typeof window !== "undefined") {
       window.dispatchEvent(new Event("afab:subscription-updated"));
     }
   }, []);
@@ -154,7 +154,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
           if (verified?.billingInterval === "YEARLY") {
             setBillingPeriod("yearly");
           }
-          await refreshAllBillingData();
+          await refreshAllBillingData(true);
           toast.success(
             isAr
               ? "تم تفعيل اشتراكك عبر Stripe بنجاح!"
@@ -524,7 +524,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
             return;
           }
         }
-        await refreshAllBillingData();
+        await refreshAllBillingData(true);
         setShowPlanCardsOverride(false);
         toast.success(
           isAr
@@ -597,7 +597,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
     setSubmittingAction("cancel");
     try {
       await SubscriptionService.cancelSubscription(selectedBusinessIds);
-      await refreshAllBillingData();
+      await refreshAllBillingData(true);
       setCancelModalOpen(false);
       toast.success(
         isTrialActive
@@ -626,7 +626,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
     setSubmittingAction("resume");
     try {
       await SubscriptionService.resumeSubscription();
-      await refreshAllBillingData();
+      await refreshAllBillingData(true);
       toast.success(
         isAr
           ? "تم استئناف اشتراكك وإلغاء التغيير المجدول بنجاح!"
@@ -694,7 +694,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
             : "Active & locked business allocation updated!"
         );
       }
-      await refreshAllBillingData();
+      await refreshAllBillingData(true);
       setShowPlanCardsOverride(false);
       setAllocationModalOpen(false);
     } catch (err: unknown) {

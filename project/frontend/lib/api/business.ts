@@ -1,4 +1,4 @@
-import { fetchClient } from "./client";
+import { fetchClient, fetchCachedClient, invalidateApiCache } from "./client";
 import { AuthStore } from "@/lib/auth-store";
 
 export interface UpdateBusinessPayload {
@@ -87,15 +87,15 @@ export class BusinessService {
   /**
    * List all businesses the current user belongs to
    */
-  static async list(): Promise<BusinessData[]> {
-    return fetchClient("/business");
+  static async list(force: boolean = false): Promise<BusinessData[]> {
+    return fetchCachedClient("/business", { ttlMs: 15_000, force });
   }
 
   /**
    * Get the active business in current context
    */
-  static async getMine(): Promise<BusinessData> {
-    return fetchClient("/business/mine");
+  static async getMine(force: boolean = false): Promise<BusinessData> {
+    return fetchCachedClient("/business/mine", { ttlMs: 15_000, force });
   }
 
   /**
@@ -109,6 +109,7 @@ export class BusinessService {
     if (created?.id) {
       AuthStore.setActiveBusinessId(created.id);
     }
+    invalidateApiCache("/business");
     return created;
   }
 
@@ -120,6 +121,7 @@ export class BusinessService {
       method: "PUT",
     });
     AuthStore.setActiveBusinessId(businessId);
+    invalidateApiCache("/business");
     return switched;
   }
 
@@ -141,6 +143,7 @@ export class BusinessService {
     if (updated?.onboardingComplete) {
       AuthStore.updateUser({ onboardingComplete: true });
     }
+    invalidateApiCache("/business");
     return updated;
   }
 
@@ -154,6 +157,7 @@ export class BusinessService {
     if (AuthStore.getActiveBusinessId() === businessId) {
       AuthStore.setActiveBusinessId(null);
     }
+    invalidateApiCache("/business");
   }
 
   /**
@@ -170,10 +174,12 @@ export class BusinessService {
     selectedBusinessIds: string[],
     primaryBusinessId?: string
   ): Promise<BusinessAllocationSummary> {
-    return fetchClient("/business/allocations", {
+    const res = await fetchClient("/business/allocations", {
       method: "PUT",
       body: JSON.stringify({ selectedBusinessIds, primaryBusinessId }),
     });
+    invalidateApiCache("/business");
+    return res;
   }
 
   /**

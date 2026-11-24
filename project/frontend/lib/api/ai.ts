@@ -145,7 +145,7 @@ export class AiService {
   }
 
   static async getHealth(fresh: boolean = true): Promise<AiHealthResponse> {
-    return fetchClient(`/ai/health?fresh=${fresh ? "true" : "false"}`);
+    return fetchClient(`/ai/health?fresh=${fresh ? "true" : "false"}`, { requireAuth: false });
   }
 
   /**

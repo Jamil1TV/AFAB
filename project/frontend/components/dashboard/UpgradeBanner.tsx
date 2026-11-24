@@ -11,13 +11,13 @@ export function UpgradeBanner() {
   const tBanner = useTranslations("Dashboard.banner");
   const [planSlug, setPlanSlug] = useState<string | null>(null);
 
-  const loadPlan = useCallback(async () => {
+  const loadPlan = useCallback(async (force: boolean = false) => {
     const cachedTier = AuthStore.getUser()?.planTier;
     if (cachedTier) {
       setPlanSlug(cachedTier.toLowerCase());
     }
     try {
-      const sub = await SubscriptionService.getMySubscription();
+      const sub = await SubscriptionService.getMySubscription(force);
       const slug = sub?.planSlug?.toLowerCase() || "free";
       setPlanSlug(slug);
     } catch {
@@ -28,13 +28,19 @@ export function UpgradeBanner() {
   }, []);
 
   useEffect(() => {
-    loadPlan();
-    const handleSubUpdated = () => loadPlan();
+    loadPlan(false);
+    const handleSubUpdated = () => loadPlan(true);
+    const handleProfileUpdated = (event: Event) => {
+      const tier = (event as CustomEvent)?.detail?.planTier || AuthStore.getUser()?.planTier;
+      if (tier) {
+        setPlanSlug(String(tier).toLowerCase());
+      }
+    };
     window.addEventListener("afab:subscription-updated", handleSubUpdated);
-    window.addEventListener("afab_profile_updated", handleSubUpdated);
+    window.addEventListener("afab_profile_updated", handleProfileUpdated);
     return () => {
       window.removeEventListener("afab:subscription-updated", handleSubUpdated);
-      window.removeEventListener("afab_profile_updated", handleSubUpdated);
+      window.removeEventListener("afab_profile_updated", handleProfileUpdated);
     };
   }, [loadPlan]);
 

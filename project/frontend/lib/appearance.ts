@@ -444,7 +444,8 @@ export function getStoredAppearance(): AppearanceSettings {
  */
 export function applyAppearance(
   settings: AppearanceSettings,
-  setThemeFn?: (theme: string) => void
+  setThemeFn?: (theme: string) => void,
+  options: { persist?: boolean; broadcast?: boolean } = {}
 ): void {
   if (typeof window === "undefined") return;
 
@@ -550,15 +551,19 @@ export function applyAppearance(
   root.setAttribute("data-font-size", settings.fontSize || "md");
   root.style.fontSize = sizeObj.scalePercent;
 
-  try {
-    localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(settings));
-  } catch (err) {
-    console.error("Failed to save appearance settings to localStorage:", err);
+  if (options.persist !== false) {
+    try {
+      localStorage.setItem(APPEARANCE_STORAGE_KEY, JSON.stringify(settings));
+    } catch (err) {
+      console.error("Failed to save appearance settings to localStorage:", err);
+    }
   }
 
-  window.dispatchEvent(
-    new CustomEvent("afab_appearance_changed", { detail: settings })
-  );
+  if (options.broadcast !== false) {
+    window.dispatchEvent(
+      new CustomEvent("afab_appearance_changed", { detail: settings })
+    );
+  }
 }
 
 /**

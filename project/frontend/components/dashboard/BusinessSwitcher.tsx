@@ -95,9 +95,9 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
     },
   ]);
 
-  const fetchBusinesses = useCallback(async () => {
+  const fetchBusinesses = useCallback(async (force: boolean = false) => {
     try {
-      const list = await BusinessService.list();
+      const list = await BusinessService.list(force);
       if (list && list.length > 0) {
         const activeFromApi = list.find((b) => Boolean(b.active) && b.editable !== false);
         const currentStoredId = AuthStore.getActiveBusinessId();
@@ -116,7 +116,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             id: b.id,
             name: b.name,
             currency: b.currency,
-            plan: b.userRole || planTier,
+            plan: b.userRole || "",
             isActive: Boolean(b.active),
             editable: b.editable !== false,
             primary: Boolean(b.primary),
@@ -124,37 +124,39 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
           }))
         );
       }
-    } catch (err) {
-      console.error("Failed to load businesses:", err);
+    } catch {
+      console.warn("Failed to load businesses");
     }
-  }, [planTier]);
+  }, []);
 
-  const fetchPlan = useCallback(async () => {
+  const fetchPlan = useCallback(async (force: boolean = false) => {
     const cachedTier = AuthStore.getUser()?.planTier;
     if (cachedTier) {
       setCurrentPlanSlug(cachedTier.toLowerCase());
     }
     try {
-      const sub = await SubscriptionService.getMySubscription();
+      const sub = await SubscriptionService.getMySubscription(force);
       const slug = sub?.planSlug?.toLowerCase() || "free";
       setCurrentPlanSlug(slug);
       AuthStore.updateUser({ planTier: slug.toUpperCase() });
     } catch {
-      if (!cachedTier) {
-        setCurrentPlanSlug((profile?.planTier || profile?.planType || "free").toLowerCase());
-      }
+      // Fall back silently to profile/cached tier
     }
-  }, [profile?.planTier, profile?.planType]);
+  }, []);
 
   useEffect(() => {
-    fetchBusinesses();
-    fetchPlan();
+    fetchBusinesses(false);
+    fetchPlan(false);
     const handleSubUpdated = () => {
-      fetchBusinesses();
-      fetchPlan();
+      fetchBusinesses(true);
+      fetchPlan(true);
     };
-    const handleProfileUpdated = () => {
-      fetchPlan();
+    const handleProfileUpdated = (event: Event) => {
+      const detail = (event as CustomEvent)?.detail;
+      const nextTier = detail?.planTier || AuthStore.getUser()?.planTier;
+      if (nextTier) {
+        setCurrentPlanSlug(String(nextTier).toLowerCase());
+      }
     };
     window.addEventListener("afab:subscription-updated", handleSubUpdated);
     window.addEventListener("afab_profile_updated", handleProfileUpdated);
@@ -296,7 +298,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 )}
               </div>
               <span className="truncate text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                {activeBusiness.plan}
+                {activeBusiness.plan || planTier}
               </span>
             </div>
           )}
@@ -398,7 +400,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                         )}
                       </div>
                       <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                        {biz.currency} • {isLocked ? (isArabic ? "البيانات محفوظة" : "Data Saved") : biz.plan}
+                        {biz.currency} • {isLocked ? (isArabic ? "البيانات محفوظة" : "Data Saved") : (biz.plan || planTier)}
                       </p>
                     </div>
                   </div>

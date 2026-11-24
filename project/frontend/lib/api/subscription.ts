@@ -1,4 +1,4 @@
-import { fetchClient } from "./client";
+import { fetchClient, fetchCachedClient } from "./client";
 
 export interface SubscriptionSnapshot {
   planId: string;
@@ -92,8 +92,8 @@ export class SubscriptionService {
   /**
    * Fetch current user's active plan, lifecycle state, limits, and real-time usage counters.
    */
-  static async getMySubscription(): Promise<SubscriptionSnapshot> {
-    return fetchClient("/subscription/me");
+  static async getMySubscription(force: boolean = false): Promise<SubscriptionSnapshot> {
+    return fetchCachedClient("/subscription/me", { ttlMs: 15_000, force });
   }
 
   /**
