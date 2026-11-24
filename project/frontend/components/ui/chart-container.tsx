@@ -63,8 +63,8 @@ export function ChartContainer({
   return (
     <div
       ref={ref}
-      style={{ minHeight: `${minHeight}px` }}
-      className={`relative w-full min-w-0 min-h-0 ${className}`}
+      style={{ minHeight: `${minHeight}px`, height: "100%" }}
+      className={`relative w-full h-full min-w-0 min-h-0 ${className}`}
     >
       {hasSize ? children : null}
     </div>

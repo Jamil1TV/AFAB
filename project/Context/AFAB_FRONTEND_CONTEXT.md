@@ -34,6 +34,7 @@ frontend/
 │   └── ui/                     # shared primitives
 ├── i18n/routing.ts             # en/ar
 ├── lib/api/                    # API client and feature services
+├── lib/export-utils.ts         # Multi-sheet Excel (.xlsx via xlsx) & Branded PDF (.pdf via jsPDF) export engine
 ├── lib/auth-store.ts           # browser auth storage
 ├── lib/constants/business-data.ts
 ├── lib/design-tokens.ts
@@ -198,6 +199,8 @@ Rules:
 - Prefer Server Components; add `"use client"` only for state, event handlers, or browser APIs.
 - Keep business logic/data access out of presentational components where practical.
 - Follow current React state/context pattern; do not add global state without a real need.
+- **Data & Export Screen (`/dashboard/settings/data-export`)**: Full multi-sheet Excel (.xlsx) and enterprise PDF (.pdf) generator featuring embedded AFAB official logo, pre-download confirmation modal (`ExportPeriodModal`), real-time period filter bar, live API data synchronization across transactions, customer CRM records (with IDs and order references), invoices, and financial P&L statements. Supports UTF-8 encoding for Arabic, high-res print preview, and light/dark theme matching.
+- **Wet Signature Screen (`/dashboard/settings/signature`)**: Official signature manager with PNG/JPEG upload and live drawing canvas. Converts paper backgrounds into transparent ink, allows setting signatory name and title, and automatically stamps customer invoices (`/dashboard/invoices`), enterprise PDFs, Excel workbooks, and certified print previews.
 - Use `lib/api/*` services.
 - Implement loading, empty, error, and success states.
 - Avoid new `any` types; improve legacy `any` when safely in scope.

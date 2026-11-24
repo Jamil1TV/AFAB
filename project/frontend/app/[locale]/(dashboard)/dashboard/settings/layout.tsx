@@ -7,7 +7,7 @@ import { SettingsProvider } from "@/components/settings/SettingsProvider";
 import { 
   Settings, Building2, CreditCard, Users, Bell, 
   ShieldCheck, Webhook, Download, Palette, Globe,
-  ChevronDown, PanelLeftClose, PanelLeftOpen
+  ChevronDown, PanelLeftClose, PanelLeftOpen, FileSignature
 } from "lucide-react";
 
 export default function SettingsLayout({
@@ -24,6 +24,7 @@ export default function SettingsLayout({
   const tabs = [
     { id: "general", path: "/dashboard/settings/general", label: t("tabs.general"), icon: <Settings className="w-4 h-4" /> },
     { id: "business-profile", path: "/dashboard/settings/business-profile", label: t("tabs.businessProfile"), icon: <Building2 className="w-4 h-4" /> },
+    { id: "signature", path: "/dashboard/settings/signature", label: t("tabs.signature"), icon: <FileSignature className="w-4 h-4" /> },
     { id: "subscription", path: "/dashboard/settings/subscription", label: t("tabs.subscription"), icon: <CreditCard className="w-4 h-4" /> },
     { id: "users-permissions", path: "/dashboard/settings/users-permissions", label: t("tabs.usersPermissions"), icon: <Users className="w-4 h-4" /> },
     { id: "notifications", path: "/dashboard/settings/notifications", label: t("tabs.notifications"), icon: <Bell className="w-4 h-4" /> },

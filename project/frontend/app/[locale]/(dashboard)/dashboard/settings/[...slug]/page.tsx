@@ -4,7 +4,8 @@ import { usePathname } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { 
   Settings, Building2, CreditCard, Users, Bell, 
-  ShieldCheck, Webhook, Download, Palette, Globe 
+  ShieldCheck, Webhook, Download, Palette, Globe,
+  FileSignature 
 } from "lucide-react";
 
 export default function SettingsCatchAllPage() {
@@ -18,6 +19,7 @@ export default function SettingsCatchAllPage() {
   const tabs = [
     { id: "general", label: t("tabs.general"), icon: <Settings className="w-4 h-4" /> },
     { id: "business-profile", label: t("tabs.businessProfile"), icon: <Building2 className="w-4 h-4" /> },
+    { id: "signature", label: t("tabs.signature"), icon: <FileSignature className="w-4 h-4" /> },
     { id: "subscription", label: t("tabs.subscription"), icon: <CreditCard className="w-4 h-4" /> },
     { id: "users-permissions", label: t("tabs.usersPermissions"), icon: <Users className="w-4 h-4" /> },
     { id: "notifications", label: t("tabs.notifications"), icon: <Bell className="w-4 h-4" /> },

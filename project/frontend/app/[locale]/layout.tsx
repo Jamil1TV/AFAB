@@ -141,32 +141,28 @@ export default async function RootLayout({
                 } catch(e) {}
 
                 try {
-                  window.addEventListener('error', function(event) {
-                    if (event && event.message && (event.message.indexOf('Hydration') !== -1 || event.message.indexOf('hydration') !== -1)) {
-                      if (document.querySelector('[class*="translate-tooltip"]') || (event.message && event.message.indexOf('translate') !== -1)) {
-                        event.stopImmediatePropagation();
-                      }
+                  // Suppress console hydration noise caused by third-party browser translation extensions
+                  var origError = console.error;
+                  console.error = function() {
+                    var args = Array.prototype.slice.call(arguments);
+                    var str = args.join(' ');
+                    if (str.indexOf('translate-tooltip') !== -1 || (str.indexOf('Hydration') !== -1 && (str.indexOf('translate') !== -1 || str.indexOf('extension') !== -1))) {
+                      return;
                     }
-                  });
-                  var clean = function() {
-                    var els = document.querySelectorAll('.translate-tooltip-mtz, [class*="translate-tooltip"]');
-                    for (var i = 0; i < els.length; i++) els[i].remove();
+                    origError.apply(console, args);
                   };
-                  clean();
-                  var obs = new MutationObserver(function(mutations) {
-                    for (var i = 0; i < mutations.length; i++) {
-                      var m = mutations[i];
-                      for (var j = 0; j < m.addedNodes.length; j++) {
-                        var node = m.addedNodes[j];
-                        if (node.nodeType === 1 && (node.className && typeof node.className === 'string' && node.className.indexOf('translate-tooltip') !== -1)) {
-                          node.remove();
-                        }
-                      }
-                    }
-                  });
-                  obs.observe(document.documentElement, { childList: true, subtree: true });
-                  window.addEventListener('DOMContentLoaded', function() {
-                    setTimeout(function() { obs.disconnect(); }, 2000);
+
+                  // Hide extension tooltips via CSS without mutating DOM during React hydration
+                  var extStyle = document.createElement('style');
+                  extStyle.textContent = '.translate-tooltip-mtz, [class*="translate-tooltip"] { display: none !important; }';
+                  document.head.appendChild(extStyle);
+
+                  // Only safely clean up DOM nodes after React hydration has fully completed
+                  window.addEventListener('load', function() {
+                    setTimeout(function() {
+                      var els = document.querySelectorAll('.translate-tooltip-mtz');
+                      for (var i = 0; i < els.length; i++) els[i].remove();
+                    }, 1000);
                   });
                 } catch (e) {}
               })();

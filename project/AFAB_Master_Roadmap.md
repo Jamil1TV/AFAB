@@ -28,7 +28,8 @@
 | Recurring Transactions & Private Receipts (Phase 13 / P1.4) | ✅ | ✅ | **Built & Verified (`V22`)** (Idempotent timezone-aware scheduler + private MinIO receipt storage with magic-byte validation) |
 | Calendar | ❌ | ❌ | Planned in Phase 14 (P2/P3) |
 | AI Assistant route | ❌ | placeholder | Deferred to P2/P3 (Gemma 4 E4B via Ollama, EmbeddingGemma 2, pgvector) |
-| Settings: Users & Permissions, Notifications, Integrations, Data & Export | ❌ | "Coming soon" | Planned in Phases 7, 14, 17, 21 |
+| Settings: Appearance, Data & Export, Wet Signature | ✅ | ✅ | **Built & Verified** (Live Theme customizer, complete multi-sheet Excel .xlsx + enterprise PDF exports with embedded AFAB logo, pre-download period selection modal, Wet Signature PNG/JPEG upload & live canvas drawing with transparent background processing, automatic certification on invoices and data exports, Arabic/English, responsive) |
+| Settings: Users & Permissions, Notifications, Integrations | ❌ | "Coming soon" | Planned in Phases 7, 14, 17 |
 | Savings Goals, Investments | ❌ | ❌ | Deferred to P2/P3 (Phases 11–12) |
 
 ---

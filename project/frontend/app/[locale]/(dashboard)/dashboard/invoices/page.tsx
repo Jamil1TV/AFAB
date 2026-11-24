@@ -20,8 +20,12 @@ import {
   Pencil,
   Trash2,
   AlertCircle,
+  Printer,
+  FileSignature,
+  CheckCircle2,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { toast } from "sonner";
 import { ChartContainer } from "@/components/ui/chart-container";
@@ -38,6 +42,8 @@ import {
 import { CustomerService, Customer } from "@/lib/api/customers";
 import { UserService } from "@/lib/api/dashboard";
 import { formatCurrency } from "@/lib/currency";
+import { getWetSignature, WetSignatureData } from "@/lib/signature-utils";
+import { openPrintableInvoiceWindow } from "@/lib/export-utils";
 
 interface DraftLineItem {
   description: string;
@@ -69,6 +75,19 @@ function statusBadgeStyle(status: InvoiceStatusType): string {
 export default function InvoicesPage() {
   const t = useTranslations("Invoices");
   const tKpi = useTranslations("Invoices.kpi");
+  const locale = useLocale();
+  const isAr = locale === "ar";
+
+  const [wetSignature, setWetSignature] = useState<WetSignatureData | null>(null);
+
+  useEffect(() => {
+    setWetSignature(getWetSignature());
+    const handler = (e: any) => {
+      setWetSignature(e.detail || getWetSignature());
+    };
+    window.addEventListener("afab-signature-updated", handler);
+    return () => window.removeEventListener("afab-signature-updated", handler);
+  }, []);
 
   const [summary, setSummary] = useState<InvoiceSummaryResponse | null>(null);
   const [invoicesData, setInvoicesData] = useState<InvoicePageResponse | null>(null);
@@ -962,6 +981,13 @@ export default function InvoicesPage() {
 
                 {/* Lifecycle Actions */}
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    disabled={actionBusy}
+                    onClick={() => openPrintableInvoiceWindow({ invoice: selectedInvoice, isAr })}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-purple-200 dark:border-purple-800/80 bg-purple-50/60 dark:bg-purple-950/20 text-[var(--primary)] text-xs font-semibold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
+                  >
+                    <Printer className="h-3.5 w-3.5" /> {isAr ? "طباعة / PDF الفاتورة" : "Print / PDF Invoice"}
+                  </button>
                   {selectedInvoice.status === "DRAFT" && (
                     <>
                       <button
@@ -1083,6 +1109,50 @@ export default function InvoicesPage() {
                           </span>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Wet Signature & Signatory Seal */}
+                <div className="pt-4 border-t border-gray-100 dark:border-gray-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                      <FileSignature className="w-3.5 h-3.5 text-[var(--primary)]" />
+                      <span>{isAr ? "التوقيع الحي والاعتماد الرسمي" : "Authorized Signature & Seal"}</span>
+                    </h3>
+                  </div>
+                  {wetSignature?.dataUrl && wetSignature.enabled ? (
+                    <div className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-white/[0.02] p-4 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold text-gray-900 dark:text-white">
+                          {wetSignature.signatoryName}
+                        </p>
+                        <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                          {wetSignature.signatoryTitle}
+                        </p>
+                        <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="w-3 h-3" /> {isAr ? "معتمد وموثق رقمياً" : "Digitally Certified"}
+                        </span>
+                      </div>
+                      <div className="h-14 w-36 flex items-center justify-end">
+                        <img
+                          src={wetSignature.dataUrl}
+                          alt="Wet Signature"
+                          className="max-h-full max-w-full object-contain filter contrast-125"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 p-4 text-center">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {isAr ? "لم يتم إضافة توقيع حي بعد." : "No wet signature configured yet."}
+                      </p>
+                      <Link
+                        href="/dashboard/settings/signature"
+                        className="text-xs font-semibold text-[var(--primary)] hover:underline mt-1 inline-block"
+                      >
+                        {isAr ? "إضافة توقيعك الحي من الإعدادات ←" : "Configure your wet signature in Settings →"}
+                      </Link>
                     </div>
                   )}
                 </div>

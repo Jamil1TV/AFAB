@@ -56,10 +56,6 @@ export function SecuritySettings({ profile }: { profile: any }) {
   const [regeneratedCodes, setRegeneratedCodes] = useState<string[] | null>(null);
   const [regeneratingCodes, setRegeneratingCodes] = useState(false);
 
-  useEffect(() => {
-    fetchSessions();
-  }, []);
-
   const fetchSessions = async () => {
     try {
       const data = await AuthService.getActiveSessions();
@@ -70,6 +66,10 @@ export function SecuritySettings({ profile }: { profile: any }) {
       setIsLoadingSessions(false);
     }
   };
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
