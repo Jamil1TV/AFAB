@@ -34,6 +34,24 @@ public class AiMessage {
     @Column(name = "tools_used_json", columnDefinition = "TEXT")
     private String toolsUsedJson;
 
+    @Column(name = "thinking_content", columnDefinition = "TEXT")
+    private String thinkingContent;
+
+    @Column(name = "charts_json", columnDefinition = "TEXT")
+    private String chartsJson;
+
+    @Column(name = "action_drafts_json", columnDefinition = "TEXT")
+    private String actionDraftsJson;
+
+    @Column(name = "attachments_json", columnDefinition = "TEXT")
+    private String attachmentsJson;
+
+    @Column(name = "reasoning_mode", nullable = false, length = 16)
+    private String reasoningMode = "fast";
+
+    @Column(name = "response_language", length = 24)
+    private String responseLanguage;
+
     @Column(name = "data_coverage", length = 50)
     private String dataCoverage;
 
@@ -85,6 +103,24 @@ public class AiMessage {
 
     public String getToolsUsedJson() { return toolsUsedJson; }
     public void setToolsUsedJson(String toolsUsedJson) { this.toolsUsedJson = toolsUsedJson; }
+
+    public String getThinkingContent() { return thinkingContent; }
+    public void setThinkingContent(String thinkingContent) { this.thinkingContent = thinkingContent; }
+
+    public String getChartsJson() { return chartsJson; }
+    public void setChartsJson(String chartsJson) { this.chartsJson = chartsJson; }
+
+    public String getActionDraftsJson() { return actionDraftsJson; }
+    public void setActionDraftsJson(String actionDraftsJson) { this.actionDraftsJson = actionDraftsJson; }
+
+    public String getAttachmentsJson() { return attachmentsJson; }
+    public void setAttachmentsJson(String attachmentsJson) { this.attachmentsJson = attachmentsJson; }
+
+    public String getReasoningMode() { return reasoningMode; }
+    public void setReasoningMode(String reasoningMode) { this.reasoningMode = reasoningMode; }
+
+    public String getResponseLanguage() { return responseLanguage; }
+    public void setResponseLanguage(String responseLanguage) { this.responseLanguage = responseLanguage; }
 
     public String getDataCoverage() { return dataCoverage; }
     public void setDataCoverage(String dataCoverage) { this.dataCoverage = dataCoverage; }

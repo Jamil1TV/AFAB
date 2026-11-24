@@ -11,17 +11,20 @@ import {
   XCircle,
   AlertCircle,
   X,
+  Sparkles,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { AfabLoader } from "@/components/ui/afab-loader";
+import { useCopilot } from "@/components/ai/CopilotContextProvider";
 import { BudgetApi, BudgetItem, BudgetPeriodType, BudgetSummary } from "@/lib/api/budgets";
 import { TransactionService, CategoryItem } from "@/lib/api/transactions";
 import { formatCurrency } from "@/lib/currency";
 
 export default function BudgetsPage() {
+  const { openCopilot } = useCopilot();
   const t = useTranslations("Budgets");
   const tSum = useTranslations("Budgets.summary");
   const tStatus = useTranslations("Budgets.status");
@@ -307,6 +310,20 @@ export default function BudgetsPage() {
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        openCopilot({
+                          prompt: `Analyze my budget "${b.name}" (${b.percentageConsumed.toFixed(1)}% consumed: ${b.actualSpending} / ${b.budgetAmount} ${b.currency}, ${b.startDate} to ${b.endDate}) and list the transactions driving it.`,
+                          autoSend: true,
+                          screenContext: { page: "budgets", budgetId: b.id, budgetName: b.name },
+                        })
+                      }
+                      className="p-1.5 rounded-lg text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
+                      title="Ask AI"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => openEditModal(b)}

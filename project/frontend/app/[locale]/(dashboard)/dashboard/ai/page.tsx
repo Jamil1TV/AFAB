@@ -14,25 +14,32 @@ import {
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
+  Paperclip,
   Plus,
   RefreshCw,
   Search,
   Send,
   Sparkles,
   Square,
+  Sunrise,
   Trash2,
+  Upload,
   X,
   Zap,
 } from "lucide-react";
 import {
+  AiActionDraft,
+  AiAttachmentItem,
   AiService,
   AiStatusResponse,
   AiHealthResponse,
   AiConversationSummary,
   AiMessageItem,
+  AiReasoningMode,
   BusinessMemoryItem,
 } from "@/lib/api/ai";
 import { ApiError } from "@/lib/api/client";
+import { compressImageFile } from "@/lib/image-compress";
 import { CopilotWelcome } from "@/components/ai/CopilotWelcome";
 import {
   CopilotThinkingCard,
@@ -41,8 +48,18 @@ import {
 import { CopilotMessageBubble } from "@/components/ai/CopilotMessageBubble";
 import { BusinessMemoryDrawer } from "@/components/ai/BusinessMemoryDrawer";
 import { AiModelStatusBadge } from "@/components/ai/AiModelStatusBadge";
+import { AttachmentPreviewChip } from "@/components/ai/AttachmentPreviewChip";
+import { VoiceDictationButton } from "@/components/ai/VoiceDictationButton";
 import { AfabLoader } from "@/components/ui/afab-loader";
 import { toast } from "sonner";
+
+interface StagedChip {
+  attachment: AiAttachmentItem;
+  localPreviewUrl?: string;
+}
+
+const ACCEPTED_FILE_TYPES =
+  "image/jpeg,image/png,image/webp,application/pdf,.xlsx,.csv,.txt,.json,.md";
 
 function formatNumber(n: number, locale: string): string {
   try {
@@ -101,14 +118,22 @@ export default function AfabCopilotPage() {
   const [conversations, setConversations] = useState<AiConversationSummary[]>([]);
   const [memories, setMemories] = useState<BusinessMemoryItem[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [activeLanguage, setActiveLanguage] = useState<string | null>(null);
   const [messages, setMessages] = useState<AiMessageItem[]>([]);
   const [suggestedFollowUps, setSuggestedFollowUps] = useState<string[]>([]);
   const [todayStartMs, setTodayStartMs] = useState<number | null>(null);
 
   const [input, setInput] = useState("");
+  const [interimVoice, setInterimVoice] = useState("");
+  const [reasoningMode, setReasoningMode] = useState<AiReasoningMode>("fast");
+  const [stagedAttachments, setStagedAttachments] = useState<StagedChip[]>([]);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [sending, setSending] = useState(false);
   const [streamingText, setStreamingText] = useState("");
+  const [thinkingText, setThinkingText] = useState("");
   const [activeTools, setActiveTools] = useState<string[]>([]);
   const [completedTools, setCompletedTools] = useState<CompletedToolInfo[]>([]);
   const [quotaExhaustedMsg, setQuotaExhaustedMsg] = useState<string | null>(null);
@@ -125,6 +150,7 @@ export default function AfabCopilotPage() {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -142,10 +168,7 @@ export default function AfabCopilotPage() {
         setConversations(convsRes || []);
         setMemories(memRes || []);
       })
-      .catch((err) => {
-        if (!active) return;
-        console.error("Failed to load Copilot workspace:", err);
-      })
+      .catch(() => {})
       .finally(() => {
         if (active) setLoadingPage(false);
       });
@@ -214,7 +237,7 @@ export default function AfabCopilotPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingText, activeTools, completedTools]);
+  }, [messages, streamingText, thinkingText, activeTools, completedTools]);
 
   useEffect(() => {
     const el = textareaRef.current;
@@ -231,6 +254,31 @@ export default function AfabCopilotPage() {
     setStatus(statusRes);
     setMemories(memRes);
   }, []);
+
+  const stageFiles = useCallback(
+    async (files: FileList | File[]) => {
+      const list = Array.from(files);
+      if (list.length === 0) return;
+      setUploadingFile(true);
+      try {
+        for (const raw of list.slice(0, 3)) {
+          const prepared = await compressImageFile(raw);
+          const uploaded = await AiService.stageAttachment(prepared);
+          const localUrl =
+            uploaded.kind === "IMAGE" ? URL.createObjectURL(prepared) : undefined;
+          setStagedAttachments((prev) => [
+            ...prev.slice(0, 2),
+            { attachment: uploaded, localPreviewUrl: localUrl },
+          ]);
+        }
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : t("attachments.uploadFailed"));
+      } finally {
+        setUploadingFile(false);
+      }
+    },
+    [t]
+  );
 
   const handleMessagesScroll = () => {
     const el = scrollContainerRef.current;
@@ -251,6 +299,7 @@ export default function AfabCopilotPage() {
     try {
       const detail = await AiService.getConversation(id);
       setMessages(detail.messages || []);
+      setActiveLanguage(detail.activeLanguage || null);
       setSuggestedFollowUps([]);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Unable to load conversation");
@@ -259,8 +308,10 @@ export default function AfabCopilotPage() {
 
   const handleNewChat = () => {
     setActiveConversationId(null);
+    setActiveLanguage(null);
     setMessages([]);
     setStreamingText("");
+    setThinkingText("");
     setActiveTools([]);
     setCompletedTools([]);
     setSuggestedFollowUps([]);
@@ -302,30 +353,36 @@ export default function AfabCopilotPage() {
     abortRef.current = null;
     setSending(false);
     setStreamPhase(null);
+    setThinkingText("");
     setActiveTools([]);
     setCompletedTools([]);
   };
 
   const handleSend = async (promptOverride?: string) => {
     const text = (promptOverride ?? input).trim();
-    if (!text || sending) return;
+    const attached = stagedAttachments;
+    if ((!text && attached.length === 0) || sending) return;
 
     setQuotaExhaustedMsg(null);
     setChatError(null);
     setInput("");
+    setInterimVoice("");
+    setStagedAttachments([]);
     setSending(true);
     setStreamPhase("retrieving");
     setStreamingText("");
+    setThinkingText("");
     setActiveTools([]);
     setCompletedTools([]);
     setSuggestedFollowUps([]);
 
     const optimisticUserMsg: AiMessageItem = {
-      id: `local-user-${messages.length + 1}`,
+      id: `local-user-${Date.now()}`,
       role: "user",
-      content: text,
+      content: text || `[Attached ${attached.map((a) => a.attachment.originalFilename).join(", ")}]`,
       evidence: [],
       toolsUsed: [],
+      attachments: attached.map((a) => a.attachment),
       promptTokens: 0,
       completionTokens: 0,
       totalTokens: 0,
@@ -336,6 +393,7 @@ export default function AfabCopilotPage() {
     const controller = new AbortController();
     abortRef.current = controller;
     let accumulated = "";
+    let accumulatedThought = "";
 
     try {
       const donePayload = await AiService.streamChat(
@@ -343,11 +401,20 @@ export default function AfabCopilotPage() {
           message: text,
           conversationId: activeConversationId,
           locale,
+          reasoningMode,
+          attachmentIds: attached.map((a) => a.attachment.id),
         },
         {
           signal: controller.signal,
-          onStatus: (phase) => {
+          onStatus: (phase, meta) => {
             setStreamPhase(phase);
+            if (typeof meta?.activeLanguage === "string") {
+              setActiveLanguage(meta.activeLanguage);
+            }
+          },
+          onThought: (thoughtDelta) => {
+            accumulatedThought += thoughtDelta;
+            setThinkingText(accumulatedThought);
           },
           onToolStart: (tool) => {
             setActiveTools((prev) => (prev.includes(tool) ? prev : [...prev, tool]));
@@ -360,6 +427,10 @@ export default function AfabCopilotPage() {
             accumulated += delta;
             setStreamingText(accumulated);
           },
+          onReplace: (replacedText) => {
+            accumulated = replacedText;
+            setStreamingText(replacedText);
+          },
         }
       );
 
@@ -368,10 +439,15 @@ export default function AfabCopilotPage() {
           id: donePayload.messageId,
           role: "assistant",
           content: donePayload.content,
+          thinkingContent: donePayload.thinkingContent,
           evidence: donePayload.evidence || [],
           toolsUsed: donePayload.toolsUsed || [],
+          charts: donePayload.charts || [],
+          actionDrafts: donePayload.actionDrafts || [],
           dataCoverage: donePayload.dataCoverage,
           modelId: donePayload.modelId,
+          reasoningMode: donePayload.reasoningMode,
+          responseLanguage: donePayload.responseLanguage,
           promptTokens: donePayload.tokenUsage.promptTokens,
           completionTokens: donePayload.tokenUsage.completionTokens,
           totalTokens: donePayload.tokenUsage.totalTokens,
@@ -380,10 +456,14 @@ export default function AfabCopilotPage() {
         };
         setMessages((prev) => [...prev, assistantMsg]);
         setStreamingText("");
+        setThinkingText("");
         setActiveTools([]);
         setCompletedTools([]);
         setSuggestedFollowUps(donePayload.suggestedFollowUps || []);
         setActiveConversationId(donePayload.conversationId);
+        if (donePayload.responseLanguage) {
+          setActiveLanguage(donePayload.responseLanguage);
+        }
         setStatus((prev) =>
           prev ? { ...prev, quota: donePayload.tokenUsage } : prev
         );
@@ -397,14 +477,19 @@ export default function AfabCopilotPage() {
     } catch (err: unknown) {
       if ((err as { name?: string })?.name === "AbortError") {
         setStreamingText("");
+        setThinkingText("");
         return;
       }
       setMessages((prev) => prev.filter((m) => m.id !== optimisticUserMsg.id));
       setStreamingText("");
+      setThinkingText("");
       setInput(text);
 
       if (err instanceof ApiError && err.code === "PLAN_LIMIT_REACHED") {
         setQuotaExhaustedMsg(err.message);
+        if (reasoningMode === "deep") {
+          setReasoningMode("fast");
+        }
       } else {
         const msg = err instanceof Error ? err.message : "Failed to get Copilot response.";
         setChatError(msg);
@@ -423,6 +508,21 @@ export default function AfabCopilotPage() {
       setActiveTools([]);
       setCompletedTools([]);
     }
+  };
+
+  const handleDraftUpdated = (messageId: string, updatedDraft: AiActionDraft) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id !== messageId
+          ? m
+          : {
+              ...m,
+              actionDrafts: (m.actionDrafts || []).map((d) =>
+                d.draftId === updatedDraft.draftId ? updatedDraft : d
+              ),
+            }
+      )
+    );
   };
 
   const handleRegenerateFromIndex = (assistantIdx: number) => {
@@ -541,7 +641,7 @@ export default function AfabCopilotPage() {
   return (
     <div className="mx-auto w-full max-w-[1440px] px-3 sm:px-5 py-3 sm:py-4">
       <div className="flex h-[calc(100vh-5.75rem)] min-h-[580px] gap-4 relative">
-        {/* ── Mobile Conversation Sidebar Overlay ── */}
+        {/* Mobile Conversation Sidebar Overlay */}
         <AnimatePresence>
           {mobileHistoryOpen && (
             <motion.div
@@ -557,7 +657,7 @@ export default function AfabCopilotPage() {
                 exit={{ x: isAr ? 300 : -300 }}
                 transition={{ type: "spring", stiffness: 360, damping: 34 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-76 h-full bg-white dark:bg-[#0c101c] border-e border-gray-200 dark:border-gray-800 p-4 flex flex-col shadow-2xl"
+                className="w-76 h-full bg-[var(--card)] border-e border-gray-200 dark:border-gray-800 p-4 flex flex-col shadow-2xl"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-bold text-gray-900 dark:text-white">
@@ -600,9 +700,9 @@ export default function AfabCopilotPage() {
           )}
         </AnimatePresence>
 
-        {/* ── Desktop Collapsible Conversation History Sidebar ── */}
+        {/* Desktop Collapsible Conversation History Sidebar */}
         {sidebarOpen && (
-          <aside className="hidden lg:flex w-72 shrink-0 flex-col afab-card p-3.5 bg-white/90 dark:bg-[#0c101c]/95 backdrop-blur-xl">
+          <aside className="hidden lg:flex w-72 shrink-0 flex-col afab-card p-3.5 bg-[var(--card)]/95 backdrop-blur-xl">
             <motion.button
               whileTap={{ scale: 0.985 }}
               type="button"
@@ -637,9 +737,8 @@ export default function AfabCopilotPage() {
               {renderConversationList(false)}
             </div>
 
-            {/* ── Token Quota Fuel Card ── */}
             {quota && (
-              <div className="mt-3 rounded-2xl border border-gray-200/80 dark:border-gray-800/80 bg-gray-50/75 dark:bg-[#080c18] p-3 space-y-2.5">
+              <div className="mt-3 rounded-2xl border border-gray-200/80 dark:border-gray-800/80 bg-[var(--surface-inset)] p-3 space-y-2.5">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
                     <Zap className="h-3.5 w-3.5 text-[var(--primary)]" />
@@ -689,10 +788,36 @@ export default function AfabCopilotPage() {
           </aside>
         )}
 
-        {/* ── Main Copilot Studio Workspace ── */}
-        <section className="relative flex-1 flex flex-col afab-card overflow-hidden bg-white dark:bg-[#0c101c]">
-          {/* Single-Row Glass Header */}
-          <header className="flex items-center justify-between gap-3 border-b border-gray-200/80 dark:border-gray-800/80 bg-white/80 dark:bg-[#0c101c]/85 backdrop-blur-xl px-4 sm:px-6 py-3 shrink-0">
+        {/* Main Copilot Studio Workspace */}
+        <section
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragActive(true);
+          }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragActive(false);
+            if (e.dataTransfer.files?.length) {
+              stageFiles(e.dataTransfer.files);
+            }
+          }}
+          className="relative flex-1 flex flex-col afab-card overflow-hidden bg-[var(--card)]"
+        >
+          {dragActive && (
+            <div className="pointer-events-none absolute inset-3 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--primary)] bg-[var(--card)]/90 backdrop-blur-md text-center p-6">
+              <Upload className="h-10 w-10 text-[var(--primary)] mb-2" />
+              <p className="text-base font-bold text-gray-900 dark:text-white">
+                {t("attachments.dropHere")}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {t("attachments.supportedHint")}
+              </p>
+            </div>
+          )}
+
+          {/* Header */}
+          <header className="flex items-center justify-between gap-3 border-b border-gray-200/80 dark:border-gray-800/80 bg-[var(--card)]/90 backdrop-blur-xl px-4 sm:px-6 py-3 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <button
                 type="button"
@@ -723,12 +848,17 @@ export default function AfabCopilotPage() {
 
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <h1 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate max-w-[280px]">
+                  <h1 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate max-w-[260px]">
                     {activeConversation ? activeConversation.title : t("title")}
                   </h1>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 shrink-0">
                     {t("badge")}
                   </span>
+                  {activeLanguage && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--surface-inset)] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 shrink-0">
+                      {t(`languageLabel.${activeLanguage}`)}
+                    </span>
+                  )}
                   <AiModelStatusBadge
                     health={health}
                     backendConnected={backendConnected}
@@ -744,12 +874,16 @@ export default function AfabCopilotPage() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              {quota && (
-                <span className="lg:hidden inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-gray-800 px-2.5 py-1.5 text-[11px] font-semibold tabular-nums text-gray-700 dark:text-gray-300">
-                  <Zap className="h-3 w-3 text-[var(--primary)]" />
-                  {formatNumber(Math.max(0, quota.monthlyTokensRemaining), locale)} {t("remaining")}
-                </span>
-              )}
+              <button
+                type="button"
+                onClick={() => handleSend(t("morningBriefPrompt"))}
+                disabled={sending}
+                className="hidden md:inline-flex afab-btn-secondary px-3 py-1.5 text-xs"
+                title={t("morningBriefButton")}
+              >
+                <Sunrise className="h-3.5 w-3.5 text-amber-500" />
+                <span>{t("morningBriefButton")}</span>
+              </button>
 
               <button
                 type="button"
@@ -783,7 +917,7 @@ export default function AfabCopilotPage() {
             </div>
           </header>
 
-          {/* Local Ollama Offline Notice (honest status, never fakes AI) */}
+          {/* Local Ollama Offline Notice */}
           {((health && (!health.ollamaReachable || !health.chatModelReady)) ||
             (status && (!status.ollamaReachable || !status.chatModelReady))) && (
             <div className="mx-4 sm:mx-6 mt-3 rounded-2xl border border-amber-500/30 bg-amber-50/80 dark:bg-amber-500/10 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shrink-0">
@@ -805,7 +939,7 @@ export default function AfabCopilotPage() {
             </div>
           )}
 
-          {/* Plan Token / Query Quota Exhausted Banner */}
+          {/* Plan Quota Exhausted Banner */}
           {quotaExhaustedMsg && (
             <div className="mx-4 sm:mx-6 mt-3 rounded-2xl border border-red-500/30 bg-red-50/80 dark:bg-red-500/10 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shrink-0">
               <div className="flex items-start gap-2.5">
@@ -824,7 +958,7 @@ export default function AfabCopilotPage() {
             </div>
           )}
 
-          {/* Inline Copilot Error Banner */}
+          {/* Inline Error Banner */}
           {chatError && (
             <div
               role="alert"
@@ -867,20 +1001,20 @@ export default function AfabCopilotPage() {
                     isLatestAssistant={idx === latestAssistantIdx}
                     canRegenerate={!sending}
                     onRegenerate={() => handleRegenerateFromIndex(idx)}
+                    onDraftUpdated={handleDraftUpdated}
                   />
                 ))}
 
-                {/* Active Animated Thinking / Streaming Card */}
                 {sending && (
                   <CopilotThinkingCard
                     activeTools={activeTools}
                     completedTools={completedTools}
                     streamingText={streamingText}
+                    thinkingText={thinkingText}
                     streamPhase={streamPhase}
                   />
                 )}
 
-                {/* Animated Follow-Up Suggestions */}
                 {!sending && suggestedFollowUps.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: 6 }}
@@ -925,7 +1059,7 @@ export default function AfabCopilotPage() {
                 onClick={scrollToBottom}
                 title={t("scrollToBottom")}
                 aria-label={t("scrollToBottom")}
-                className="absolute bottom-28 end-6 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-[#11172a]/95 text-gray-700 dark:text-gray-200 shadow-lg hover:border-[var(--primary)]/50 hover:text-[var(--primary)] backdrop-blur-md transition-colors"
+                className="absolute bottom-32 end-6 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-[var(--surface-inset)]/95 text-gray-700 dark:text-gray-200 shadow-lg hover:border-[var(--primary)]/50 hover:text-[var(--primary)] backdrop-blur-md transition-colors"
               >
                 <ArrowDown className="h-4 w-4" />
               </motion.button>
@@ -933,31 +1067,91 @@ export default function AfabCopilotPage() {
           </AnimatePresence>
 
           {/* Floating Glass Command Composer */}
-          <div className="px-4 sm:px-6 pb-4 pt-2 bg-gradient-to-t from-white via-white/95 to-transparent dark:from-[#0c101c] dark:via-[#0c101c]/95 dark:to-transparent shrink-0">
+          <div className="px-4 sm:px-6 pb-4 pt-2 bg-gradient-to-t from-[var(--card)] via-[var(--card)]/95 to-transparent shrink-0">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSend();
               }}
-              className="max-w-3xl mx-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-[#080c18]/90 shadow-sm focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--primary)]/15 transition-all p-2.5 sm:p-3"
+              className="max-w-3xl mx-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-[var(--surface-inset)] shadow-sm focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--primary)]/15 transition-all p-2.5 sm:p-3 space-y-2"
             >
-              <div className="flex items-end gap-2.5">
+              {stagedAttachments.length > 0 && (
+                <div className="flex flex-wrap gap-2 pb-1">
+                  {stagedAttachments.map((chip) => (
+                    <AttachmentPreviewChip
+                      key={chip.attachment.id}
+                      attachment={chip.attachment}
+                      localPreviewUrl={chip.localPreviewUrl}
+                      onRemove={() => {
+                        if (chip.localPreviewUrl) URL.revokeObjectURL(chip.localPreviewUrl);
+                        setStagedAttachments((prev) =>
+                          prev.filter((item) => item.attachment.id !== chip.attachment.id)
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+
+              <div className="flex items-end gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={ACCEPTED_FILE_TYPES}
+                  onChange={(e) => {
+                    if (e.target.files?.length) stageFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sending || uploadingFile}
+                  title={t("attachments.attachTitle")}
+                  aria-label={t("attachments.attachTitle")}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 dark:border-gray-800 bg-[var(--card)] text-gray-500 hover:border-[var(--primary)]/40 hover:text-[var(--primary)] disabled:opacity-50 transition-colors"
+                >
+                  {uploadingFile ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-[var(--primary)]" />
+                  ) : (
+                    <Paperclip className="h-4 w-4" />
+                  )}
+                </button>
+
                 <textarea
                   ref={textareaRef}
                   rows={1}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onPaste={(e) => {
+                    const files = e.clipboardData?.files;
+                    if (files && files.length > 0) {
+                      e.preventDefault();
+                      stageFiles(files);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       handleSend();
                     }
                   }}
-                  placeholder={t("placeholder")}
+                  placeholder={interimVoice || t("placeholder")}
                   disabled={sending}
                   maxLength={4000}
                   className="flex-1 min-h-[38px] max-h-40 bg-transparent px-1.5 py-1.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none resize-none leading-relaxed"
                   dir={isAr ? "rtl" : "auto"}
+                />
+
+                <VoiceDictationButton
+                  defaultLocale={locale}
+                  disabled={sending}
+                  onInterimChange={setInterimVoice}
+                  onTranscript={(spoken) =>
+                    setInput((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
+                  }
                 />
 
                 {sending ? (
@@ -974,7 +1168,7 @@ export default function AfabCopilotPage() {
                   <motion.button
                     whileTap={{ scale: 0.96 }}
                     type="submit"
-                    disabled={!input.trim()}
+                    disabled={!input.trim() && stagedAttachments.length === 0}
                     className="afab-btn-primary h-10 px-4 text-xs shrink-0"
                   >
                     <Send className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -983,11 +1177,40 @@ export default function AfabCopilotPage() {
                 )}
               </div>
 
-              <div className="mt-2 pt-2 border-t border-gray-200/70 dark:border-gray-800/70 flex items-center justify-between gap-2 px-1 text-[10.5px] text-gray-400 dark:text-gray-500">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
-                  <span>{t("composerLanguages")}</span>
-                </span>
+              <div className="pt-2 border-t border-gray-200/70 dark:border-gray-800/70 flex flex-wrap items-center justify-between gap-2 px-1 text-[10.5px] text-gray-400 dark:text-gray-500">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-800 bg-[var(--card)] p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setReasoningMode("fast")}
+                      className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10.5px] font-semibold transition-colors ${
+                        reasoningMode === "fast"
+                          ? "bg-[var(--primary)] text-white"
+                          : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      <Zap className="h-3 w-3" />
+                      <span>{t("fastMode")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReasoningMode("deep")}
+                      className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10.5px] font-semibold transition-colors ${
+                        reasoningMode === "deep"
+                          ? "bg-[var(--primary)] text-white"
+                          : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                      }`}
+                    >
+                      <Brain className="h-3 w-3" />
+                      <span>{t("deepMode")}</span>
+                    </button>
+                  </div>
+
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
+                    <span>{t("composerLanguages")}</span>
+                  </span>
+                </div>
                 <span className="hidden sm:inline">{t("composerHint")}</span>
               </div>
             </form>

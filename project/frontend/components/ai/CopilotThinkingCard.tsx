@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Sparkles, Clock } from "lucide-react";
+import { Brain, CheckCircle2, ChevronDown, ChevronRight, Clock, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { CopilotMarkdown } from "@/components/ai/CopilotMarkdown";
 
@@ -15,6 +15,7 @@ interface CopilotThinkingCardProps {
   activeTools: string[];
   completedTools: CompletedToolInfo[];
   streamingText: string;
+  thinkingText?: string;
   streamPhase?: string | null;
 }
 
@@ -28,6 +29,13 @@ const KNOWN_TOOLS = new Set([
   "get_budgets_status",
   "get_recurring_commitments",
   "get_data_coverage",
+  "simulate_cashflow_forecast",
+  "get_financial_pulse",
+  "propose_transaction_draft",
+  "propose_invoice_draft",
+  "propose_budget_draft",
+  "propose_payment_reminder",
+  "propose_business_memory",
 ]);
 
 const PHASE_KEYS = ["memory", "ledger", "synthesis"] as const;
@@ -36,11 +44,13 @@ export function CopilotThinkingCard({
   activeTools,
   completedTools,
   streamingText,
+  thinkingText = "",
   streamPhase = null,
 }: CopilotThinkingCardProps) {
   const t = useTranslations("AI");
   const [elapsedMs, setElapsedMs] = useState(0);
   const [phaseIdx, setPhaseIdx] = useState(0);
+  const [showThoughts, setShowThoughts] = useState(true);
 
   useEffect(() => {
     const startedAt = Date.now();
@@ -58,6 +68,8 @@ export function CopilotThinkingCard({
   const activeHeadline =
     activeTools.length > 0
       ? getToolLabel(activeTools[activeTools.length - 1])
+      : thinkingText
+      ? t("deepThinkingLive")
       : streamPhase === "warming_model"
       ? t("thinkingPhases.warmingModel")
       : t(`thinkingPhases.${PHASE_KEYS[phaseIdx]}`);
@@ -71,7 +83,6 @@ export function CopilotThinkingCard({
       transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
       className="flex items-start gap-3"
     >
-      {/* Refined Copilot Indicator */}
       <div className="relative flex h-9 w-9 shrink-0 items-center justify-center mt-0.5">
         <span
           aria-hidden="true"
@@ -82,17 +93,14 @@ export function CopilotThinkingCard({
         </span>
       </div>
 
-      {/* Elevated Thinking / Live Stream Card */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 space-y-2.5">
         {!streamingText ? (
-          <div className="relative overflow-hidden rounded-2xl rounded-ss-md border border-[var(--primary)]/30 bg-white/95 dark:bg-[#0b1020]/95 p-4 shadow-lg shadow-[var(--glow-color)] backdrop-blur-md space-y-3.5">
-            {/* Subtle top animated shimmer line */}
+          <div className="relative overflow-hidden rounded-2xl rounded-ss-md border border-[var(--primary)]/30 bg-[var(--card)]/95 p-4 shadow-lg shadow-[var(--glow-color)] backdrop-blur-md space-y-3.5">
             <div
               aria-hidden="true"
               className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[var(--primary)] to-transparent opacity-80"
             />
 
-            {/* Phase Shimmer Header + Live Elapsed Timer */}
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <AnimatePresence mode="wait">
@@ -108,13 +116,33 @@ export function CopilotThinkingCard({
                   </motion.p>
                 </AnimatePresence>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.04] px-2 py-0.5 text-[11px] font-medium tabular-nums text-gray-500 dark:text-gray-400 shrink-0">
+              <span className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-800 bg-[var(--surface-inset)] px-2 py-0.5 text-[11px] font-medium tabular-nums text-gray-500 dark:text-gray-400 shrink-0">
                 <Clock className="h-3 w-3 text-[var(--primary)]" />
                 {t("elapsedSeconds", { seconds: elapsedSeconds })}
               </span>
             </div>
 
-            {/* Live Tool Pipeline Chips */}
+            {thinkingText && (
+              <div className="rounded-xl border border-[var(--primary)]/20 bg-[var(--surface-inset)] p-2.5 text-[11.5px] text-gray-600 dark:text-gray-300">
+                <button
+                  type="button"
+                  onClick={() => setShowThoughts((v) => !v)}
+                  className="w-full flex items-center justify-between gap-2 font-semibold text-[var(--primary)] mb-1"
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <Brain className="h-3.5 w-3.5" />
+                    <span>{t("reasoningTrace")}</span>
+                  </span>
+                  {showThoughts ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+                </button>
+                {showThoughts && (
+                  <p className="whitespace-pre-wrap leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                    {thinkingText}
+                  </p>
+                )}
+              </div>
+            )}
+
             {(activeTools.length > 0 || completedTools.length > 0) && (
               <div className="flex flex-wrap gap-1.5">
                 {completedTools.map((item, idx) => (
@@ -152,7 +180,6 @@ export function CopilotThinkingCard({
               </div>
             )}
 
-            {/* Tapered Skeleton Lines */}
             <div className="space-y-2 pt-0.5" aria-hidden="true">
               <div className="h-2.5 w-[92%] rounded-full bg-gray-200/80 dark:bg-white/[0.06] animate-pulse" />
               <div className="h-2.5 w-[76%] rounded-full bg-gray-200/70 dark:bg-white/[0.05] animate-pulse [animation-delay:120ms]" />
@@ -163,9 +190,8 @@ export function CopilotThinkingCard({
           <motion.div
             initial={{ opacity: 0.92 }}
             animate={{ opacity: 1 }}
-            className="rounded-2xl rounded-ss-md border border-[var(--primary)]/30 bg-white dark:bg-[#0b1020] p-4 sm:p-5 shadow-md shadow-[var(--glow-color)] space-y-3"
+            className="rounded-2xl rounded-ss-md border border-[var(--primary)]/30 bg-[var(--card)] p-4 sm:p-5 shadow-md shadow-[var(--glow-color)] space-y-3"
           >
-            {/* Compact Streaming Meta Header */}
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100 dark:border-gray-800/80">
               <div className="flex items-center gap-2">
                 <span className="relative flex h-2 w-2">
@@ -198,4 +224,3 @@ export function CopilotThinkingCard({
     </motion.div>
   );
 }
-

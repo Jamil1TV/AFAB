@@ -103,7 +103,7 @@ export function BusinessMemoryDrawer({
             exit={{ x: slideOffset }}
             transition={{ type: "spring", stiffness: 360, damping: 34 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative flex h-full w-full max-w-lg flex-col bg-white dark:bg-[#0c101c] border-s border-gray-200 dark:border-gray-800 shadow-2xl"
+            className="relative flex h-full w-full max-w-lg flex-col bg-[var(--card)] border-s border-gray-200 dark:border-gray-800 shadow-2xl"
           >
             <div className="flex items-start justify-between gap-3 border-b border-gray-200 dark:border-gray-800 p-5">
               <div className="flex items-start gap-3">
@@ -130,7 +130,7 @@ export function BusinessMemoryDrawer({
             <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
               <form
                 onSubmit={handleCreate}
-                className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/75 dark:bg-[#080c18] p-4 space-y-3"
+                className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-[var(--surface-inset)] p-4 space-y-3"
               >
                 <div className="flex items-center gap-2 text-xs font-bold text-gray-900 dark:text-white">
                   <Plus className="h-3.5 w-3.5 text-[var(--primary)]" />
@@ -210,7 +210,7 @@ export function BusinessMemoryDrawer({
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.22, delay: Math.min(idx * 0.03, 0.24) }}
-                      className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] p-3.5 space-y-2 hover:border-[var(--primary)]/35 transition-colors"
+                      className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-[var(--surface-inset)] p-3.5 space-y-2 hover:border-[var(--primary)]/35 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 space-y-1">

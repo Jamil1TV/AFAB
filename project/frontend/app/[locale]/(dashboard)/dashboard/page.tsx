@@ -1,6 +1,7 @@
 "use client";
 
 import { KpiCard } from "@/components/dashboard/KpiCard";
+import { useCopilot } from "@/components/ai/CopilotContextProvider";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { AIInsightsCard } from "@/components/dashboard/AIInsightsCard";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
@@ -21,6 +22,7 @@ import { formatCurrency } from "@/lib/currency";
 export default function DashboardPage() {
   const tWelcome = useTranslations("Dashboard.welcome");
   const tKpi = useTranslations("Dashboard.kpi");
+  const { openCopilot } = useCopilot();
   
   const [data, setData] = useState<DashboardSummaryResponse | null>(null);
   const [userProfile, setUserProfile] = useState<{ firstName?: string; currency?: string } | null>(null);
@@ -151,6 +153,13 @@ export default function DashboardPage() {
           isPositive={revenue.isPositive} 
           icon={DollarSign}
           data={revSparkline}
+          onAskAi={() =>
+            openCopilot({
+              prompt: `Explain my total revenue (${revenue.value}, change ${revenue.change}) for the ${period.toLowerCase()} period and highlight top revenue drivers.`,
+              autoSend: true,
+              screenContext: { page: "dashboard", metric: "revenue", period },
+            })
+          }
         />
         <KpiCard 
           title={tKpi("totalExpenses")} 
@@ -159,6 +168,13 @@ export default function DashboardPage() {
           isPositive={expenses.isPositive} 
           icon={CreditCard}
           data={expSparkline}
+          onAskAi={() =>
+            openCopilot({
+              prompt: `Break down my expenses (${expenses.value}, change ${expenses.change}) for the ${period.toLowerCase()} period and flag unusual spikes or missing receipts.`,
+              autoSend: true,
+              screenContext: { page: "dashboard", metric: "expenses", period },
+            })
+          }
         />
         <KpiCard 
           title={tKpi("netProfit")} 
@@ -167,6 +183,13 @@ export default function DashboardPage() {
           isPositive={profit.isPositive} 
           icon={TrendingUp}
           data={profitSparkline}
+          onAskAi={() =>
+            openCopilot({
+              prompt: `Analyze my net profit (${profit.value}) for the ${period.toLowerCase()} period vs previous period and recommend margin improvements.`,
+              autoSend: true,
+              screenContext: { page: "dashboard", metric: "profit", period },
+            })
+          }
         />
         <KpiCard 
           title={tKpi("cashFlow")} 
@@ -175,6 +198,13 @@ export default function DashboardPage() {
           isPositive={cashFlow.isPositive} 
           icon={Wallet}
           data={cashFlowSparkline}
+          onAskAi={() =>
+            openCopilot({
+              prompt: `Simulate my cashflow outlook for the next 6 months based on current cashflow (${cashFlow.value}), recurring commitments, and unpaid invoices.`,
+              autoSend: true,
+              screenContext: { page: "dashboard", metric: "cashflow", period },
+            })
+          }
         />
       </div>
 

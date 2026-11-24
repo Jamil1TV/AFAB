@@ -10,9 +10,12 @@ import com.afab.finance.repository.TransactionRepository;
 import com.afab.receipts.domain.Receipt;
 import com.afab.receipts.dto.ReceiptDTO;
 import com.afab.receipts.repository.ReceiptRepository;
+import com.afab.ai.rag.AiEntityChangedEvent;
 import com.afab.security.AuditService;
 import com.afab.user.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,6 +52,18 @@ public class ReceiptService {
     private final AuditService auditService;
     private final long maxFileSizeBytes;
     private final int presignExpirySeconds;
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    private void publishRagChange(UUID businessId, UUID receiptId, boolean deleted) {
+        if (eventPublisher != null && businessId != null && receiptId != null) {
+            eventPublisher.publishEvent(new AiEntityChangedEvent(businessId, "RECEIPT", receiptId, deleted));
+        }
+    }
 
     public ReceiptService(
             ReceiptRepository receiptRepository,
@@ -133,6 +148,7 @@ public class ReceiptService {
         }
 
         auditService.log(user, "UPLOAD_RECEIPT", "Receipt", receipt.getId(), null);
+        publishRagChange(business.getId(), receipt.getId(), false);
         return toDTO(receipt);
     }
 
@@ -179,6 +195,7 @@ public class ReceiptService {
         receipt.setDeletedAt(Instant.now());
         receiptRepository.save(receipt);
         auditService.log(user, "DELETE_RECEIPT", "Receipt", receipt.getId(), null);
+        publishRagChange(business.getId(), receipt.getId(), true);
     }
 
     private Transaction loadOwnedTransaction(UUID transactionId, UUID businessId) {

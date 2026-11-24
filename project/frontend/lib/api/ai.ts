@@ -1,10 +1,34 @@
-import { fetchClient, fetchRawClient, ApiError, getApiBaseUrl } from "./client";
+import {
+  fetchClient,
+  fetchCachedClient,
+  fetchRawClient,
+  invalidateApiCache,
+  ApiError,
+  getApiBaseUrl,
+} from "./client";
 import { AuthStore } from "@/lib/auth-store";
 
 export const AI_API_BASE_URL = getApiBaseUrl();
 
+export type AiReasoningMode = "fast" | "deep";
+export type AiLanguageCode =
+  | "EN"
+  | "FR"
+  | "AR_MSA"
+  | "AR_DERJA_SCRIPT"
+  | "AR_DERJA_ARABIZI";
+
 export interface AiEvidenceItem {
-  type: "TRANSACTION" | "INVOICE" | "CUSTOMER" | "BUDGET" | "RECURRING" | "MEMORY" | "SUMMARY" | "REPORT" | string;
+  type:
+    | "TRANSACTION"
+    | "INVOICE"
+    | "CUSTOMER"
+    | "BUDGET"
+    | "RECURRING"
+    | "MEMORY"
+    | "SUMMARY"
+    | "REPORT"
+    | string;
   id: string;
   title: string;
   subtitle?: string | null;
@@ -12,6 +36,87 @@ export interface AiEvidenceItem {
   currency?: string | null;
   date?: string | null;
   href?: string | null;
+}
+
+export interface AiChartSeriesSpec {
+  key: string;
+  label: string;
+  colorToken: "primary" | "emerald" | "rose" | "amber" | "sky" | string;
+}
+
+export interface AiChartSpec {
+  id: string;
+  chartType: "bar" | "line" | "area" | "donut" | string;
+  title: string;
+  subtitle?: string | null;
+  currency?: string | null;
+  xKey: string;
+  series: AiChartSeriesSpec[];
+  data: Array<Record<string, string | number>>;
+}
+
+export interface AiActionDraft {
+  draftId: string;
+  actionType:
+    | "CREATE_TRANSACTION"
+    | "CREATE_INVOICE"
+    | "CREATE_BUDGET"
+    | "PAYMENT_REMINDER"
+    | "SAVE_MEMORY"
+    | string;
+  status: "PENDING" | "APPROVED" | "DISMISSED" | string;
+  title: string;
+  summary: string;
+  payload: Record<string, unknown>;
+  stagedAttachmentId?: string | null;
+  createdEntityId?: string | null;
+  createdEntityHref?: string | null;
+}
+
+export interface AiAttachmentItem {
+  id: string;
+  kind: "IMAGE" | "DOCUMENT" | string;
+  originalFilename: string;
+  contentType: string;
+  fileSizeBytes: number;
+  hasExtractedText: boolean;
+  extractedPreview?: string | null;
+  status: string;
+  createdAt?: string | null;
+}
+
+export interface AiPulseAlert {
+  id: string;
+  type:
+    | "SPENDING_SPIKE"
+    | "DUPLICATE_EXPENSE"
+    | "BUDGET_BURN"
+    | "MISSING_RECEIPTS"
+    | "OVERDUE_INVOICES"
+    | string;
+  severity: "HIGH" | "MEDIUM" | "INFO" | string;
+  title: string;
+  description: string;
+  metricValue?: number | null;
+  currency?: string | null;
+  actionLabel: string;
+  copilotPrompt: string;
+  href: string;
+}
+
+export interface AiPulseResponse {
+  currency: string;
+  generatedAt: string;
+  highCount: number;
+  mediumCount: number;
+  infoCount: number;
+  monthRevenue: number;
+  monthExpenses: number;
+  monthNetProfit: number;
+  overdueTotal: number;
+  overdueCount: number;
+  missingReceiptCount: number;
+  alerts: AiPulseAlert[];
 }
 
 export interface AiTokenUsage {
@@ -52,10 +157,16 @@ export interface AiChatResponse {
   conversationTitle: string;
   messageId: string;
   content: string;
+  thinkingContent?: string | null;
   evidence: AiEvidenceItem[];
   toolsUsed: string[];
+  charts?: AiChartSpec[];
+  actionDrafts?: AiActionDraft[];
+  attachments?: AiAttachmentItem[];
   dataCoverage: string;
   modelId: string;
+  reasoningMode?: AiReasoningMode | string;
+  responseLanguage?: AiLanguageCode | string | null;
   latencyMs: number;
   tokenUsage: AiTokenUsage;
   suggestedFollowUps: string[];
@@ -66,6 +177,7 @@ export interface AiConversationSummary {
   id: string;
   title: string;
   locale: string;
+  activeLanguage?: AiLanguageCode | string;
   createdAt: string;
   updatedAt: string;
   messageCount: number;
@@ -75,10 +187,16 @@ export interface AiMessageItem {
   id: string;
   role: "user" | "assistant" | string;
   content: string;
+  thinkingContent?: string | null;
   evidence: AiEvidenceItem[];
   toolsUsed: string[];
+  charts?: AiChartSpec[];
+  actionDrafts?: AiActionDraft[];
+  attachments?: AiAttachmentItem[];
   dataCoverage?: string | null;
   modelId?: string | null;
+  reasoningMode?: AiReasoningMode | string;
+  responseLanguage?: AiLanguageCode | string | null;
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
@@ -90,6 +208,7 @@ export interface AiConversationDetail {
   id: string;
   title: string;
   locale: string;
+  activeLanguage?: AiLanguageCode | string;
   createdAt: string;
   updatedAt: string;
   messages: AiMessageItem[];
@@ -126,8 +245,10 @@ export interface AiIndexSyncResponse {
 }
 
 export interface StreamHandlers {
-  onStatus?: (phase: string) => void;
+  onStatus?: (phase: string, meta?: Record<string, unknown>) => void;
+  onThought?: (text: string) => void;
   onDelta?: (text: string) => void;
+  onReplace?: (text: string) => void;
   onToolStart?: (tool: string) => void;
   onToolDone?: (tool: string, evidenceCount: number) => void;
   onDone?: (response: AiChatResponse) => void;
@@ -148,11 +269,10 @@ export class AiService {
     return fetchClient(`/ai/health?fresh=${fresh ? "true" : "false"}`, { requireAuth: false });
   }
 
-  /**
-   * Real-time AI model availability monitor with visibility awareness.
-   * Periodically fetches lightweight health snapshots (15ms) without exhausting
-   * the browser's HTTP/1.1 6-connection limit on localhost.
-   */
+  static async getPulse(force: boolean = false): Promise<AiPulseResponse> {
+    return fetchCachedClient("/ai/pulse", { ttlMs: 60_000, force });
+  }
+
   static subscribeHealth(handlers: HealthStreamHandlers): () => void {
     let active = true;
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
@@ -196,7 +316,6 @@ export class AiService {
       document.addEventListener("visibilitychange", handleVisibility);
     }
 
-    // Initial check immediately
     check(true).then(() => {
       scheduleNext();
     });
@@ -226,10 +345,31 @@ export class AiService {
     return fetchClient(`/ai/conversations/${id}`, { method: "DELETE" });
   }
 
+  static async stageAttachment(file: File): Promise<AiAttachmentItem> {
+    const formData = new FormData();
+    formData.append("file", file);
+    return fetchClient("/ai/attachments/stage", {
+      method: "POST",
+      body: formData,
+    });
+  }
+
+  static async fetchAttachmentPreviewUrl(id: string): Promise<string> {
+    const res = await fetchRawClient(`/ai/attachments/${id}/preview`);
+    if (!res.ok) {
+      throw new ApiError("Unable to load attachment preview", "PREVIEW_FAILED", res.status);
+    }
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  }
+
   static async sendChat(payload: {
     message: string;
     conversationId?: string | null;
     locale?: string;
+    reasoningMode?: AiReasoningMode;
+    attachmentIds?: string[];
+    screenContext?: Record<string, string>;
   }): Promise<AiChatResponse> {
     return fetchClient("/ai/chat", {
       method: "POST",
@@ -238,7 +378,14 @@ export class AiService {
   }
 
   static async streamChat(
-    payload: { message: string; conversationId?: string | null; locale?: string },
+    payload: {
+      message: string;
+      conversationId?: string | null;
+      locale?: string;
+      reasoningMode?: AiReasoningMode;
+      attachmentIds?: string[];
+      screenContext?: Record<string, string>;
+    },
     handlers: StreamHandlers
   ): Promise<AiChatResponse | null> {
     const response = await fetchRawClient("/ai/chat/stream", {
@@ -325,11 +472,19 @@ export class AiService {
         return;
       } else if (eventName === "status") {
         if (typeof parsed?.phase === "string") {
-          handlers.onStatus?.(parsed.phase);
+          handlers.onStatus?.(parsed.phase, parsed as Record<string, unknown>);
+        }
+      } else if (eventName === "thought") {
+        if (typeof parsed?.text === "string") {
+          handlers.onThought?.(parsed.text);
         }
       } else if (eventName === "delta") {
         if (typeof parsed?.text === "string") {
           handlers.onDelta?.(parsed.text);
+        }
+      } else if (eventName === "replace") {
+        if (typeof parsed?.text === "string") {
+          handlers.onReplace?.(parsed.text);
         }
       } else if (eventName === "tool_start") {
         if (typeof parsed?.tool === "string") {
@@ -380,6 +535,99 @@ export class AiService {
     }
 
     return finalPayload;
+  }
+
+  static async approveTransactionDraft(payload: {
+    messageId: string;
+    draftId: string;
+    type: string;
+    amount: number;
+    originalCurrency?: string;
+    description: string;
+    transactionDate: string;
+    categoryId?: string | null;
+    paymentMethod?: string;
+    status?: string;
+    notes?: string;
+    stagedAttachmentId?: string | null;
+    extractedOcrText?: string;
+  }): Promise<AiActionDraft> {
+    const res: AiActionDraft = await fetchClient("/ai/actions/approve-transaction", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    invalidateApiCache("/dashboard");
+    invalidateApiCache("/transactions");
+    invalidateApiCache("/ai/pulse");
+    return res;
+  }
+
+  static async approveInvoiceDraft(payload: {
+    messageId: string;
+    draftId: string;
+    customerId?: string | null;
+    issueDate: string;
+    dueDate: string;
+    currency?: string;
+    discountAmount?: number;
+    notes?: string;
+    issueImmediately?: boolean;
+    items: Array<{
+      description: string;
+      quantity: number;
+      unitPrice: number;
+      taxRate?: number;
+    }>;
+  }): Promise<AiActionDraft> {
+    const res: AiActionDraft = await fetchClient("/ai/actions/approve-invoice", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    invalidateApiCache("/dashboard");
+    invalidateApiCache("/invoices");
+    invalidateApiCache("/ai/pulse");
+    return res;
+  }
+
+  static async approveBudgetDraft(payload: {
+    messageId: string;
+    draftId: string;
+    name: string;
+    amount: number;
+    categoryId?: string | null;
+    periodType?: string;
+    alertThresholdPercent?: number;
+    description?: string;
+  }): Promise<AiActionDraft> {
+    const res: AiActionDraft = await fetchClient("/ai/actions/approve-budget", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    invalidateApiCache("/dashboard");
+    invalidateApiCache("/budgets");
+    invalidateApiCache("/ai/pulse");
+    return res;
+  }
+
+  static async approveMemoryDraft(payload: {
+    messageId: string;
+    draftId: string;
+    memoryType: string;
+    title: string;
+    content: string;
+  }): Promise<AiActionDraft> {
+    const res: AiActionDraft = await fetchClient("/ai/actions/approve-memory", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    invalidateApiCache("/ai/memory");
+    return res;
+  }
+
+  static async dismissDraft(messageId: string, draftId: string): Promise<AiActionDraft> {
+    return fetchClient(`/ai/messages/${messageId}/drafts/${encodeURIComponent(draftId)}/dismiss`, {
+      method: "PATCH",
+    });
   }
 
   static async listMemory(status: string = "ALL"): Promise<BusinessMemoryItem[]> {

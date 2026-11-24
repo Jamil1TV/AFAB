@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useMemo } from "react";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 interface KpiCardProps {
@@ -11,9 +11,10 @@ interface KpiCardProps {
   isPositive: boolean;
   icon: LucideIcon;
   data: number[];
+  onAskAi?: () => void;
 }
 
-export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: KpiCardProps) {
+export function KpiCard({ title, value, change, isPositive, icon: Icon, data, onAskAi }: KpiCardProps) {
   const tKpi = useTranslations("Dashboard.kpi");
   const gradientId = useId();
 
@@ -84,7 +85,18 @@ export function KpiCard({ title, value, change, isPositive, icon: Icon, data }: 
   }, [data, isPositive, isZero]);
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[var(--primary)]/10 min-w-0">
+    <div className="group relative overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-[var(--card)] p-4 sm:p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:hover:shadow-[var(--primary)]/10 min-w-0">
+      {onAskAi && (
+        <button
+          type="button"
+          onClick={onAskAi}
+          title="Ask Copilot about this metric"
+          aria-label="Ask Copilot about this metric"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 absolute top-2.5 end-2.5 z-10 flex h-6 w-6 items-center justify-center rounded-lg border border-[var(--primary)]/30 bg-[var(--surface-inset)] text-[var(--primary)] hover:bg-[var(--primary)] hover:text-white transition-all"
+        >
+          <Sparkles className="h-3 w-3" />
+        </button>
+      )}
       <div className="flex items-start justify-between gap-2 min-w-0">
         <div className="flex items-center gap-2.5 min-w-0 flex-1">
           <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100/80 dark:bg-white/[0.04] text-gray-500 dark:text-gray-400 group-hover:bg-[var(--primary)]/10 group-hover:text-[var(--primary)] transition-colors">

@@ -13,8 +13,11 @@ import com.afab.customers.dto.CustomerSummaryDTO.OverviewDonut;
 import com.afab.customers.dto.CustomerSummaryDTO.TopCustomerItem;
 import com.afab.customers.repository.CustomerRepository;
 import com.afab.customers.service.CustomerFinancialMetricsProvider.CustomerMetrics;
+import com.afab.ai.rag.AiEntityChangedEvent;
 import com.afab.security.AuditService;
 import com.afab.user.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +49,18 @@ public class CustomerService {
     private final CurrentBusinessService currentBusinessService;
     private final AuditService auditService;
     private final CustomerFinancialMetricsProvider metricsProvider;
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    private void publishRagChange(UUID businessId, UUID customerId, boolean deleted) {
+        if (eventPublisher != null && businessId != null && customerId != null) {
+            eventPublisher.publishEvent(new AiEntityChangedEvent(businessId, "CUSTOMER", customerId, deleted));
+        }
+    }
 
     public CustomerService(
             CustomerRepository customerRepository,
@@ -264,6 +279,7 @@ public class CustomerService {
 
         customer = customerRepository.save(customer);
         auditService.log(user, "CREATE", "Customer", customer.getId(), "{\"customerCode\":\"" + code + "\"}");
+        publishRagChange(business.getId(), customer.getId(), false);
 
         return toDTO(customer, CustomerMetrics.empty(), true);
     }
@@ -322,6 +338,7 @@ public class CustomerService {
 
         customer = customerRepository.save(customer);
         auditService.log(user, "UPDATE", "Customer", customer.getId(), null);
+        publishRagChange(business.getId(), customer.getId(), false);
 
         CustomerMetrics metrics = metricsProvider != null
                 ? metricsProvider.getMetricsForCustomer(business.getId(), customer.getId())
@@ -350,6 +367,7 @@ public class CustomerService {
         customerRepository.save(customer);
 
         auditService.log(user, "ARCHIVE", "Customer", customer.getId(), null);
+        publishRagChange(business.getId(), customer.getId(), true);
     }
 
     private String generateNextCustomerCode(UUID businessId) {

@@ -29,6 +29,9 @@ public class AiConversation {
     @Column(nullable = false, length = 16)
     private String locale = "en";
 
+    @Column(name = "active_language", nullable = false, length = 24)
+    private String activeLanguage = "EN";
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -66,6 +69,9 @@ public class AiConversation {
 
     public String getLocale() { return locale; }
     public void setLocale(String locale) { this.locale = locale; }
+
+    public String getActiveLanguage() { return activeLanguage; }
+    public void setActiveLanguage(String activeLanguage) { this.activeLanguage = activeLanguage; }
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

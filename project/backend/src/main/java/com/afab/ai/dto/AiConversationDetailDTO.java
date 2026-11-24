@@ -8,6 +8,7 @@ public record AiConversationDetailDTO(
         UUID id,
         String title,
         String locale,
+        String activeLanguage,
         Instant createdAt,
         Instant updatedAt,
         List<AiMessageDTO> messages

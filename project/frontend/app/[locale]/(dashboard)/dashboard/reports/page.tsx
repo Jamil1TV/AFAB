@@ -49,10 +49,12 @@ import { KpiCard } from "@/components/dashboard/KpiCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { AfabLoader } from "@/components/ui/afab-loader";
 import { ChartContainer } from "@/components/ui/chart-container";
+import { useCopilot } from "@/components/ai/CopilotContextProvider";
 import { CHART_PALETTE, chartSemantic, chartTooltipStyle } from "@/lib/design-tokens";
 import { formatCurrency } from "@/lib/currency";
 
 export default function ReportsPage() {
+  const { openCopilot } = useCopilot();
   const locale = useLocale();
   const isAr = locale === "ar";
 
@@ -163,6 +165,21 @@ export default function ReportsPage() {
                 </strong>
               </span>
             </div>
+
+            <button
+              type="button"
+              onClick={() =>
+                openCopilot({
+                  prompt: `Analyze my ${activeTab.toUpperCase()} financial report for period "${period}" and explain key changes, anomalies, and recommendations.`,
+                  autoSend: true,
+                  screenContext: { page: "reports", tab: activeTab, period },
+                })
+              }
+              className="afab-btn-secondary"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
+              <span>{isAr ? "اشرح التقرير" : "Explain Report"}</span>
+            </button>
 
             <button
               type="button"

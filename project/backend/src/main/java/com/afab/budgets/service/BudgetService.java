@@ -14,8 +14,11 @@ import com.afab.common.exception.ResourceNotFoundException;
 import com.afab.finance.domain.Category;
 import com.afab.finance.repository.CategoryRepository;
 import com.afab.finance.repository.TransactionRepository;
+import com.afab.ai.rag.AiEntityChangedEvent;
 import com.afab.security.AuditService;
 import com.afab.user.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +44,18 @@ public class BudgetService {
     private final TransactionRepository transactionRepository;
     private final CurrentBusinessService currentBusinessService;
     private final AuditService auditService;
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    private void publishRagChange(UUID businessId, UUID budgetId, boolean deleted) {
+        if (eventPublisher != null && businessId != null && budgetId != null) {
+            eventPublisher.publishEvent(new AiEntityChangedEvent(businessId, "BUDGET", budgetId, deleted));
+        }
+    }
 
     public BudgetService(
             BudgetRepository budgetRepository,
@@ -148,6 +163,7 @@ public class BudgetService {
 
         budget = budgetRepository.save(budget);
         auditService.log(user, "CREATE", "Budget", budget.getId(), null);
+        publishRagChange(business.getId(), budget.getId(), false);
         return evaluateBudget(budget);
     }
 
@@ -185,6 +201,7 @@ public class BudgetService {
 
         budget = budgetRepository.save(budget);
         auditService.log(user, "UPDATE", "Budget", budget.getId(), null);
+        publishRagChange(business.getId(), budget.getId(), false);
         return evaluateBudget(budget);
     }
 
@@ -199,6 +216,7 @@ public class BudgetService {
         budget.setArchivedAt(Instant.now());
         budgetRepository.save(budget);
         auditService.log(user, "ARCHIVE", "Budget", budget.getId(), null);
+        publishRagChange(business.getId(), budget.getId(), true);
     }
 
     public BudgetDTO evaluateBudget(Budget budget) {

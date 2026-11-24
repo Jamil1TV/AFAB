@@ -11,6 +11,7 @@ import {
   Lock,
   ShieldCheck,
   Sparkles,
+  Sunrise,
   Target,
   TrendingUp,
 } from "lucide-react";
@@ -124,7 +125,7 @@ export function CopilotWelcome({ onSelectPrompt, disabled = false }: CopilotWelc
               aria-hidden="true"
               className="pointer-events-none absolute -inset-2 rounded-3xl bg-[var(--primary)]/20 blur-xl"
             />
-            <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--primary)]/30 bg-gradient-to-b from-[var(--primary)]/15 via-[var(--primary)]/5 to-transparent dark:to-[#080c18] shadow-lg shadow-[var(--primary)]/10 backdrop-blur-md">
+            <div className="relative z-10 flex h-14 w-14 items-center justify-center rounded-2xl border border-[var(--primary)]/30 bg-gradient-to-b from-[var(--primary)]/15 via-[var(--primary)]/5 to-[var(--surface-inset)] shadow-lg shadow-[var(--primary)]/10 backdrop-blur-md">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] text-white shadow-md shadow-[var(--primary)]/25">
                 <Sparkles className="h-5 w-5" />
               </div>
@@ -148,14 +149,22 @@ export function CopilotWelcome({ onSelectPrompt, disabled = false }: CopilotWelc
           {t("welcomeSubtitle")}
         </p>
 
-        {/* Capability Strip */}
         <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => onSelectPrompt(t("morningBriefPrompt"))}
+            className="afab-btn-primary px-4 py-2 text-xs shadow-md"
+          >
+            <Sunrise className="h-3.5 w-3.5" />
+            <span>{t("morningBriefButton")}</span>
+          </button>
           {capabilities.map((cap) => {
             const Icon = cap.icon;
             return (
               <span
                 key={cap.label}
-                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-800/80 bg-white/80 dark:bg-[#080c18]/80 px-3 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300 shadow-2xs"
+                className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-800/80 bg-[var(--card)]/90 px-3 py-1.5 text-[11px] font-medium text-gray-600 dark:text-gray-300 shadow-2xs"
               >
                 <Icon className="h-3 w-3 text-[var(--primary)]" />
                 {cap.label}
@@ -183,7 +192,7 @@ export function CopilotWelcome({ onSelectPrompt, disabled = false }: CopilotWelc
               type="button"
               disabled={disabled}
               onClick={() => onSelectPrompt(card.text)}
-              className="group relative flex flex-col justify-between text-start p-4 rounded-2xl border border-gray-200/90 dark:border-gray-800/80 bg-white/90 dark:bg-[#080c18]/90 hover:border-[var(--primary)]/50 hover:shadow-lg hover:shadow-[var(--primary)]/[0.07] dark:hover:bg-[#0e1326] transition-all min-h-[148px] gap-3 disabled:opacity-50"
+              className="group relative flex flex-col justify-between text-start p-4 rounded-2xl border border-gray-200/90 dark:border-gray-800/80 bg-[var(--surface-inset)] hover:border-[var(--primary)]/50 hover:shadow-lg hover:shadow-[var(--primary)]/[0.07] transition-all min-h-[148px] gap-3 disabled:opacity-50"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">

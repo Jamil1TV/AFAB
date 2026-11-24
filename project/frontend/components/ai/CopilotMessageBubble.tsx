@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Brain, ChevronDown, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import {
   ArrowUpRight,
@@ -14,8 +15,13 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { AiEvidenceItem, AiMessageItem } from "@/lib/api/ai";
+import { AiActionDraft, AiEvidenceItem, AiMessageItem } from "@/lib/api/ai";
 import { CopilotMarkdown } from "@/components/ai/CopilotMarkdown";
+import { CopilotChartCard } from "@/components/ai/CopilotChartCard";
+import { CopilotActionDraftCard } from "@/components/ai/CopilotActionDraftCard";
+import { CopilotReminderCard } from "@/components/ai/CopilotReminderCard";
+import { CopilotMemoryProposalCard } from "@/components/ai/CopilotMemoryProposalCard";
+import { AttachmentPreviewChip } from "@/components/ai/AttachmentPreviewChip";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -25,6 +31,7 @@ interface CopilotMessageBubbleProps {
   isLatestAssistant?: boolean;
   canRegenerate?: boolean;
   onRegenerate?: () => void;
+  onDraftUpdated?: (messageId: string, updatedDraft: AiActionDraft) => void;
 }
 
 const KNOWN_TOOLS = new Set([
@@ -37,6 +44,13 @@ const KNOWN_TOOLS = new Set([
   "get_budgets_status",
   "get_recurring_commitments",
   "get_data_coverage",
+  "simulate_cashflow_forecast",
+  "get_financial_pulse",
+  "propose_transaction_draft",
+  "propose_invoice_draft",
+  "propose_budget_draft",
+  "propose_payment_reminder",
+  "propose_business_memory",
 ]);
 
 function formatTimestamp(iso: string, locale: string): string {
@@ -81,9 +95,11 @@ export function CopilotMessageBubble({
   isLatestAssistant = false,
   canRegenerate = false,
   onRegenerate,
+  onDraftUpdated,
 }: CopilotMessageBubbleProps) {
   const t = useTranslations("AI");
   const [copied, setCopied] = useState(false);
+  const [thoughtExpanded, setThoughtExpanded] = useState(false);
 
   const handleCopy = async () => {
     try {
@@ -107,8 +123,15 @@ export function CopilotMessageBubble({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }}
-        className="group flex flex-col items-end gap-1"
+        className="group flex flex-col items-end gap-1.5"
       >
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="flex flex-wrap justify-end gap-1.5 max-w-[88%] sm:max-w-[74%]">
+            {message.attachments.map((att) => (
+              <AttachmentPreviewChip key={att.id} attachment={att} compact />
+            ))}
+          </div>
+        )}
         <div className="max-w-[88%] sm:max-w-[74%] rounded-2xl rounded-ee-md bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] text-white px-4 py-3 text-[14.5px] leading-relaxed shadow-md shadow-[var(--glow-color)] whitespace-pre-wrap">
           {message.content}
         </div>
@@ -141,7 +164,7 @@ export function CopilotMessageBubble({
       <Link
         key={`${ev.type}-${ev.id}-${idx}`}
         href={href}
-        className="group flex items-center justify-between gap-2.5 rounded-xl border border-gray-200/80 dark:border-gray-800/90 bg-gray-50/75 dark:bg-[#060914] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/5 dark:hover:bg-[#10162b] px-3 py-2.5 text-xs transition-all"
+        className="group flex items-center justify-between gap-2.5 rounded-xl border border-gray-200/80 dark:border-gray-800/90 bg-[var(--surface-inset)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/5 px-3 py-2.5 text-xs transition-all"
       >
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
@@ -191,7 +214,7 @@ export function CopilotMessageBubble({
       </div>
 
       {/* Assistant Card */}
-      <div className="flex-1 min-w-0 space-y-3 rounded-2xl rounded-ss-md border border-gray-200/90 dark:border-gray-800/80 bg-white dark:bg-[#0a0f1e] p-4 sm:p-5 shadow-xs">
+      <div className="flex-1 min-w-0 space-y-3 rounded-2xl rounded-ss-md border border-gray-200/90 dark:border-gray-800/80 bg-[var(--card)] p-4 sm:p-5 shadow-xs">
         {/* Meta Header */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100 dark:border-gray-800/70">
           <div className="flex items-center gap-2 flex-wrap">
@@ -201,6 +224,12 @@ export function CopilotMessageBubble({
             {message.modelId && (
               <span className="rounded-md bg-gray-100 dark:bg-white/[0.06] px-1.5 py-0.5 font-mono text-[10px] font-medium text-gray-500 dark:text-gray-400">
                 {message.modelId}
+              </span>
+            )}
+            {message.reasoningMode === "deep" && (
+              <span className="inline-flex items-center gap-1 rounded-md bg-[var(--primary)]/10 px-1.5 py-0.5 text-[10px] font-bold text-[var(--primary)]">
+                <Brain className="h-2.5 w-2.5" />
+                {t("deepModeBadge")}
               </span>
             )}
             {latencySec && (
@@ -213,6 +242,32 @@ export function CopilotMessageBubble({
             <span className="text-[10px] text-gray-400 dark:text-gray-500">{timeStr}</span>
           )}
         </div>
+
+        {/* Collapsible Deep Reasoning Trace */}
+        {message.thinkingContent && (
+          <div className="rounded-xl border border-gray-200/80 dark:border-gray-800 bg-[var(--surface-inset)]">
+            <button
+              type="button"
+              onClick={() => setThoughtExpanded((v) => !v)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2 text-[11px] font-semibold text-gray-600 dark:text-gray-300 hover:text-[var(--primary)] transition-colors"
+            >
+              <span className="inline-flex items-center gap-1.5">
+                <Brain className="h-3.5 w-3.5 text-[var(--primary)]" />
+                <span>{t("reasoningTrace")}</span>
+              </span>
+              {thoughtExpanded ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+            </button>
+            {thoughtExpanded && (
+              <div className="px-3 pb-3 pt-1 text-[11.5px] text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed border-t border-gray-200/60 dark:border-gray-800/60 max-h-60 overflow-y-auto custom-scrollbar">
+                {message.thinkingContent}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Tools Used Pill Strip */}
         {message.toolsUsed && message.toolsUsed.length > 0 && (
@@ -231,6 +286,47 @@ export function CopilotMessageBubble({
 
         {/* Executive Markdown Body */}
         <CopilotMarkdown content={message.content} />
+
+        {/* Interactive Recharts Visualizations */}
+        {message.charts && message.charts.length > 0 && (
+          <div className="space-y-3 pt-1">
+            {message.charts.map((chart) => (
+              <CopilotChartCard key={chart.id} chart={chart} />
+            ))}
+          </div>
+        )}
+
+        {/* Human-in-the-Loop Action Drafts, Payment Reminders & Memory Proposals */}
+        {message.actionDrafts && message.actionDrafts.length > 0 && (
+          <div className="space-y-2.5 pt-1">
+            {message.actionDrafts.map((draft) => {
+              const handleDraftUpdate = (updated: AiActionDraft) => {
+                onDraftUpdated?.(message.id, updated);
+              };
+              if (draft.actionType === "PAYMENT_REMINDER") {
+                return <CopilotReminderCard key={draft.draftId} draft={draft} />;
+              }
+              if (draft.actionType === "SAVE_MEMORY") {
+                return (
+                  <CopilotMemoryProposalCard
+                    key={draft.draftId}
+                    messageId={message.id}
+                    draft={draft}
+                    onUpdated={handleDraftUpdate}
+                  />
+                );
+              }
+              return (
+                <CopilotActionDraftCard
+                  key={draft.draftId}
+                  messageId={message.id}
+                  draft={draft}
+                  onUpdated={handleDraftUpdate}
+                />
+              );
+            })}
+          </div>
+        )}
 
         {/* Verified Evidence Cards Grid */}
         {message.evidence && message.evidence.length > 0 && (
@@ -304,4 +400,3 @@ export function CopilotMessageBubble({
     </motion.div>
   );
 }
-

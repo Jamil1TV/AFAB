@@ -18,8 +18,11 @@ import com.afab.invoices.dto.InvoiceDTO.InvoiceItemDTO;
 import com.afab.invoices.dto.InvoiceDTO.PaymentDTO;
 import com.afab.invoices.repository.InvoiceRepository;
 import com.afab.invoices.repository.PaymentRepository;
+import com.afab.ai.rag.AiEntityChangedEvent;
 import com.afab.security.AuditService;
 import com.afab.user.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -53,6 +56,18 @@ public class InvoiceService {
     private final InvoiceNumberGenerator invoiceNumberGenerator;
     private final CurrentBusinessService currentBusinessService;
     private final AuditService auditService;
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    private void publishRagChange(UUID businessId, String sourceType, UUID sourceId, boolean deleted) {
+        if (eventPublisher != null && businessId != null && sourceId != null) {
+            eventPublisher.publishEvent(new AiEntityChangedEvent(businessId, sourceType, sourceId, deleted));
+        }
+    }
 
     public InvoiceService(
             InvoiceRepository invoiceRepository,
@@ -294,6 +309,7 @@ public class InvoiceService {
 
         invoice = invoiceRepository.save(invoice);
         auditService.log(user, "CREATE", "Invoice", invoice.getId(), "{\"invoiceNumber\":\"" + invoiceNumber + "\"}");
+        publishRagChange(business.getId(), "INVOICE", invoice.getId(), false);
 
         return toDTO(invoice, List.of(), LocalDate.now());
     }
@@ -333,6 +349,7 @@ public class InvoiceService {
 
         invoice = invoiceRepository.save(invoice);
         auditService.log(user, "UPDATE", "Invoice", invoice.getId(), null);
+        publishRagChange(business.getId(), "INVOICE", invoice.getId(), false);
 
         return toDTO(invoice, List.of(), LocalDate.now());
     }
@@ -365,6 +382,7 @@ public class InvoiceService {
         invoice = invoiceRepository.save(invoice);
 
         auditService.log(user, "ISSUE", "Invoice", invoice.getId(), "{\"status\":\"" + invoice.getStatus() + "\"}");
+        publishRagChange(business.getId(), "INVOICE", invoice.getId(), false);
         return toDTO(invoice, List.of(), LocalDate.now());
     }
 
@@ -396,6 +414,7 @@ public class InvoiceService {
         invoice = invoiceRepository.save(invoice);
 
         auditService.log(user, "CANCEL", "Invoice", invoice.getId(), null);
+        publishRagChange(business.getId(), "INVOICE", invoice.getId(), false);
         return toDTO(invoice, List.of(), LocalDate.now());
     }
 
@@ -520,6 +539,8 @@ public class InvoiceService {
                 invoice.getId(),
                 "{\"paymentId\":\"" + payment.getId() + "\",\"transactionId\":\"" + incomeTx.getId() + "\",\"amount\":" + paymentAmount.toPlainString() + "}"
         );
+        publishRagChange(business.getId(), "INVOICE", invoice.getId(), false);
+        publishRagChange(business.getId(), "TRANSACTION", incomeTx.getId(), false);
 
         return toPaymentDTO(payment);
     }

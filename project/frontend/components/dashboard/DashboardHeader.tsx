@@ -16,6 +16,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSidebar } from "@/components/dashboard/Sidebar";
+import { useCopilot } from "@/components/ai/CopilotContextProvider";
 import { NotificationService, NotificationItem } from "@/lib/api/notifications";
 import { SubscriptionService } from "@/lib/api/subscription";
 import { AuthStore } from "@/lib/auth-store";
@@ -28,6 +29,7 @@ export function DashboardHeader() {
   const router = useRouter();
   const pathname = usePathname();
   const { setMobileOpen } = useSidebar();
+  const { openCopilot } = useCopilot();
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -159,6 +161,21 @@ export function DashboardHeader() {
 
       {/* Right side actions */}
       <div className="ms-auto flex items-center gap-2 sm:gap-3 shrink-0">
+        {!pathname?.startsWith("/dashboard/ai") && (
+          <button
+            type="button"
+            onClick={() => openCopilot()}
+            className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-[var(--primary)]/30 bg-[var(--primary)]/10 px-3 py-1.5 text-xs font-semibold text-[var(--primary)] hover:bg-[var(--primary)]/20 transition-colors"
+            title="Ask AFAB Copilot (Ctrl+K)"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>{isAr ? "اسأل المساعد" : "Ask Copilot"}</span>
+            <kbd className="rounded bg-[var(--card)] px-1.5 py-0.5 font-mono text-[10px] text-gray-500 border border-gray-200 dark:border-gray-700">
+              Ctrl+K
+            </kbd>
+          </button>
+        )}
+
         {/* Theme Toggle */}
         <ThemeToggle />
 

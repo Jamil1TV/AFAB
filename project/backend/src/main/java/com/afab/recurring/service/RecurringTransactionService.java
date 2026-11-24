@@ -13,11 +13,13 @@ import com.afab.recurring.dto.RecurringTransactionDTO;
 import com.afab.recurring.dto.RecurringTransactionRequest;
 import com.afab.recurring.repository.RecurringTransactionExecutionRepository;
 import com.afab.recurring.repository.RecurringTransactionRepository;
+import com.afab.ai.rag.AiEntityChangedEvent;
 import com.afab.security.AuditService;
 import com.afab.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -46,6 +48,18 @@ public class RecurringTransactionService {
     private final RecurringExecutionProcessor executionProcessor;
     private final AuditService auditService;
     private final Clock clock;
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    private void publishRagChange(UUID businessId, UUID ruleId, boolean deleted) {
+        if (eventPublisher != null && businessId != null && ruleId != null) {
+            eventPublisher.publishEvent(new AiEntityChangedEvent(businessId, "RECURRING", ruleId, deleted));
+        }
+    }
 
     @Autowired
     public RecurringTransactionService(
@@ -128,6 +142,7 @@ public class RecurringTransactionService {
 
         rule = recurringRepository.save(rule);
         auditService.log(user, "CREATE", "RecurringTransaction", rule.getId(), null);
+        publishRagChange(business.getId(), rule.getId(), false);
         return toDTO(rule);
     }
 
@@ -172,6 +187,7 @@ public class RecurringTransactionService {
 
         rule = recurringRepository.save(rule);
         auditService.log(user, "UPDATE", "RecurringTransaction", rule.getId(), null);
+        publishRagChange(business.getId(), rule.getId(), false);
         return toDTO(rule);
     }
 
@@ -190,6 +206,7 @@ public class RecurringTransactionService {
         rule.setActive(active);
         rule = recurringRepository.save(rule);
         auditService.log(user, active ? "RESUME" : "PAUSE", "RecurringTransaction", rule.getId(), null);
+        publishRagChange(business.getId(), rule.getId(), false);
         return toDTO(rule);
     }
 
@@ -206,9 +223,11 @@ public class RecurringTransactionService {
             rule.setActive(false);
             recurringRepository.save(rule);
             auditService.log(user, "DEACTIVATE", "RecurringTransaction", rule.getId(), null);
+            publishRagChange(business.getId(), rule.getId(), false);
         } else {
             recurringRepository.delete(rule);
             auditService.log(user, "DELETE", "RecurringTransaction", rule.getId(), null);
+            publishRagChange(business.getId(), rule.getId(), true);
         }
     }
 

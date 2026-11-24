@@ -216,12 +216,13 @@ public class OllamaModelGateway implements AiModelGateway {
             JsonNode root = objectMapper.readTree(res.body());
             JsonNode msg = root.path("message");
             String content = msg.path("content").asText("");
+            String thinking = msg.path("thinking").asText("");
             List<GatewayToolCall> toolCalls = parseToolCalls(msg.path("tool_calls"));
             int promptTokens = root.path("prompt_eval_count").asInt(0);
             int completionTokens = root.path("eval_count").asInt(0);
             String usedModel = root.path("model").asText(request.model());
 
-            return new GatewayChatResponse(content, toolCalls, promptTokens, completionTokens, usedModel);
+            return new GatewayChatResponse(content, toolCalls, promptTokens, completionTokens, usedModel, thinking);
         } catch (AiServiceUnavailableException e) {
             throw e;
         } catch (Exception e) {
@@ -237,6 +238,15 @@ public class OllamaModelGateway implements AiModelGateway {
 
     @Override
     public GatewayChatResponse chatStream(GatewayChatRequest request, Consumer<String> onDelta) {
+        return chatStream(request, onDelta, null);
+    }
+
+    @Override
+    public GatewayChatResponse chatStream(
+            GatewayChatRequest request,
+            Consumer<String> onDelta,
+            Consumer<String> onThought
+    ) {
         assertEnabled();
         acquireGpuPermit();
         try {
@@ -254,6 +264,7 @@ public class OllamaModelGateway implements AiModelGateway {
             }
 
             StringBuilder fullContent = new StringBuilder();
+            StringBuilder fullThinking = new StringBuilder();
             List<GatewayToolCall> toolCalls = new ArrayList<>();
             int promptTokens = 0;
             int completionTokens = 0;
@@ -268,6 +279,13 @@ public class OllamaModelGateway implements AiModelGateway {
                         throw new AiServiceUnavailableException("Ollama error: " + chunk.path("error").asText());
                     }
                     JsonNode msg = chunk.path("message");
+                    String thoughtDelta = msg.path("thinking").asText("");
+                    if (!thoughtDelta.isEmpty()) {
+                        fullThinking.append(thoughtDelta);
+                        if (onThought != null) {
+                            onThought.accept(thoughtDelta);
+                        }
+                    }
                     String delta = msg.path("content").asText("");
                     if (!delta.isEmpty()) {
                         fullContent.append(delta);
@@ -287,7 +305,9 @@ public class OllamaModelGateway implements AiModelGateway {
                 }
             }
 
-            return new GatewayChatResponse(fullContent.toString(), toolCalls, promptTokens, completionTokens, usedModel);
+            return new GatewayChatResponse(
+                    fullContent.toString(), toolCalls, promptTokens, completionTokens, usedModel, fullThinking.toString()
+            );
         } catch (AiServiceUnavailableException e) {
             throw e;
         } catch (Exception e) {
@@ -304,7 +324,7 @@ public class OllamaModelGateway implements AiModelGateway {
         Map<String, Object> root = new LinkedHashMap<>();
         root.put("model", request.model());
         root.put("stream", stream);
-        root.put("think", properties.isThinkingEnabled());
+        root.put("think", request.thinkingEnabled() || properties.isThinkingEnabled());
         root.put("keep_alive", "15m");
 
         List<Map<String, Object>> msgList = new ArrayList<>();
@@ -314,6 +334,9 @@ public class OllamaModelGateway implements AiModelGateway {
             item.put("content", m.content() != null ? m.content() : "");
             if (m.toolName() != null && !m.toolName().isBlank()) {
                 item.put("tool_name", m.toolName());
+            }
+            if (m.images() != null && !m.images().isEmpty()) {
+                item.put("images", m.images());
             }
             if (m.toolCalls() != null && !m.toolCalls().isEmpty()) {
                 List<Map<String, Object>> tcList = new ArrayList<>();

@@ -12,13 +12,16 @@ public class AiProperties {
     private String chatModel = "gemma4:e4b";
     private String embedModel = "embeddinggemma-2:270m";
     private int embeddingDimension = 768;
-    private int numCtx = 4096;
+    private int numCtx = 6144;
+    private int deepNumCtx = 8192;
     private int maxOutputTokens = 1024;
+    private int deepMaxOutputTokens = 2048;
     private int maxToolCallsPerTurn = 4;
+    private int deepMaxToolCallsPerTurn = 6;
     private int maxConcurrentRequests = 1;
     private int timeoutSeconds = 90;
     private boolean thinkingEnabled = false;
-    private String promptVersion = "copilot-v1.0";
+    private String promptVersion = "copilot-v2.0";
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
@@ -38,11 +41,20 @@ public class AiProperties {
     public int getNumCtx() { return numCtx; }
     public void setNumCtx(int numCtx) { this.numCtx = numCtx; }
 
+    public int getDeepNumCtx() { return deepNumCtx; }
+    public void setDeepNumCtx(int deepNumCtx) { this.deepNumCtx = deepNumCtx; }
+
     public int getMaxOutputTokens() { return maxOutputTokens; }
     public void setMaxOutputTokens(int maxOutputTokens) { this.maxOutputTokens = maxOutputTokens; }
 
+    public int getDeepMaxOutputTokens() { return deepMaxOutputTokens; }
+    public void setDeepMaxOutputTokens(int deepMaxOutputTokens) { this.deepMaxOutputTokens = deepMaxOutputTokens; }
+
     public int getMaxToolCallsPerTurn() { return maxToolCallsPerTurn; }
     public void setMaxToolCallsPerTurn(int maxToolCallsPerTurn) { this.maxToolCallsPerTurn = maxToolCallsPerTurn; }
+
+    public int getDeepMaxToolCallsPerTurn() { return deepMaxToolCallsPerTurn; }
+    public void setDeepMaxToolCallsPerTurn(int deepMaxToolCallsPerTurn) { this.deepMaxToolCallsPerTurn = deepMaxToolCallsPerTurn; }
 
     public int getMaxConcurrentRequests() { return maxConcurrentRequests; }
     public void setMaxConcurrentRequests(int maxConcurrentRequests) { this.maxConcurrentRequests = maxConcurrentRequests; }

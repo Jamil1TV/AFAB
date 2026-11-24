@@ -12,8 +12,11 @@ import com.afab.finance.domain.Transaction;
 import com.afab.finance.dto.*;
 import com.afab.finance.repository.CategoryRepository;
 import com.afab.finance.repository.TransactionRepository;
+import com.afab.ai.rag.AiEntityChangedEvent;
 import com.afab.security.AuditService;
 import com.afab.user.User;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -38,6 +41,18 @@ public class TransactionService {
     private final AuditService auditService;
     private final com.afab.finance.stats.FinanceStatsService financeStatsService;
     private final ExchangeRateService exchangeRateService;
+    private ApplicationEventPublisher eventPublisher;
+
+    @Autowired(required = false)
+    public void setEventPublisher(ApplicationEventPublisher eventPublisher) {
+        this.eventPublisher = eventPublisher;
+    }
+
+    private void publishRagChange(UUID businessId, UUID txId, boolean deleted) {
+        if (eventPublisher != null && businessId != null && txId != null) {
+            eventPublisher.publishEvent(new AiEntityChangedEvent(businessId, "TRANSACTION", txId, deleted));
+        }
+    }
 
     public TransactionService(TransactionRepository transactionRepository,
                               CategoryRepository categoryRepository,
@@ -279,6 +294,7 @@ public class TransactionService {
         }
 
         tx = transactionRepository.save(tx);
+        publishRagChange(business.getId(), tx.getId(), false);
         return mapToDTO(tx);
     }
 
@@ -364,6 +380,7 @@ public class TransactionService {
         }
 
         tx = transactionRepository.save(tx);
+        publishRagChange(business.getId(), tx.getId(), false);
         return mapToDTO(tx);
     }
 
@@ -404,6 +421,7 @@ public class TransactionService {
         transactionRepository.save(tx);
 
         auditService.log(user, "DELETE", "Transaction", tx.getId(), null);
+        publishRagChange(business.getId(), tx.getId(), true);
     }
 
     @Transactional(readOnly = true)

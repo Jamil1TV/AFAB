@@ -23,6 +23,7 @@ import {
   Printer,
   FileSignature,
   CheckCircle2,
+  Sparkles,
 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
@@ -32,6 +33,7 @@ import { ChartContainer } from "@/components/ui/chart-container";
 import { AfabLoader } from "@/components/ui/afab-loader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
+import { useCopilot } from "@/components/ai/CopilotContextProvider";
 import {
   InvoiceService,
   InvoiceSummaryResponse,
@@ -74,6 +76,7 @@ function statusBadgeStyle(status: InvoiceStatusType): string {
 }
 
 export default function InvoicesPage() {
+  const { openCopilot } = useCopilot();
   const t = useTranslations("Invoices");
   const tKpi = useTranslations("Invoices.kpi");
   const locale = useLocale();
@@ -135,17 +138,6 @@ export default function InvoicesPage() {
   const [payIdempotencyKey, setPayIdempotencyKey] = useState("");
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -623,16 +615,35 @@ export default function InvoicesPage() {
                         </span>
                       </td>
                       <td className="px-5 py-4 text-end">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openInvoiceDetail(inv.id);
-                          }}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
-                          title="Inspect invoice"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
+                        <div className="inline-flex items-center gap-1">
+                          {(inv.status === "OVERDUE" || inv.status === "UNPAID" || inv.status === "PARTIALLY_PAID") && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openCopilot({
+                                  prompt: `Draft an Email & WhatsApp payment reminder for invoice ${inv.invoiceNumber} (${inv.customerName || "Client"}, balance ${inv.outstandingBalance} ${inv.currency}, due ${inv.dueDate}).`,
+                                  autoSend: true,
+                                  screenContext: { page: "invoices", invoiceNumber: inv.invoiceNumber },
+                                });
+                              }}
+                              className="p-1.5 rounded-lg text-[var(--primary)] hover:bg-[var(--primary)]/10"
+                              title="Draft AI Reminder"
+                            >
+                              <Sparkles className="h-4 w-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openInvoiceDetail(inv.id);
+                            }}
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10"
+                            title="Inspect invoice"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
