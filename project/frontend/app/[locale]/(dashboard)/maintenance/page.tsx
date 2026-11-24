@@ -31,8 +31,8 @@ export default function MaintenancePage() {
 
             {/* Ambient Background Effects */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 flex items-center justify-center">
-                <div className="absolute top-0 left-0 w-[40vw] h-[40vw] bg-[#8b5cf6]/5 dark:bg-[#8b5cf6]/10 blur-[120px] rounded-full translate-x-[-20%] translate-y-[-20%]"></div>
-                <div className="absolute bottom-0 right-0 w-[40vw] h-[40vw] bg-[#8b5cf6]/10 dark:bg-[#8b5cf6]/15 blur-[120px] rounded-full translate-x-[20%] translate-y-[20%]"></div>
+                <div className="absolute top-0 left-0 w-[40vw] h-[40vw] bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 blur-[120px] rounded-full translate-x-[-20%] translate-y-[-20%]"></div>
+                <div className="absolute bottom-0 right-0 w-[40vw] h-[40vw] bg-[var(--primary)]/10 dark:bg-[var(--primary)]/15 blur-[120px] rounded-full translate-x-[20%] translate-y-[20%]"></div>
             </div>
 
             <main className="relative z-10 w-full max-w-[800px] mx-auto flex flex-col items-center text-center">
@@ -62,14 +62,14 @@ export default function MaintenancePage() {
                 {/* Status Card */}
                 <div className="max-w-md w-full mx-auto mb-10">
                     <div className="afab-card p-6 flex flex-col items-center gap-2 relative overflow-hidden">
-                        <span className="font-sans text-xs text-[#7c3aed] dark:text-[#a78bfa] uppercase tracking-widest font-bold mb-1">Estimated Time</span>
+                        <span className="font-sans text-xs text-[var(--primary)] uppercase tracking-widest font-bold mb-1">Estimated Time</span>
                         <div className="flex items-center gap-3">
-                            <Activity className="text-[#8b5cf6] h-6 w-6 animate-pulse" />
+                            <Activity className="text-[var(--primary)] h-6 w-6 animate-pulse" />
                             <span className="font-heading text-2xl sm:text-3xl text-gray-900 dark:text-white font-bold">30 – 60 Minutes</span>
                         </div>
                         <div className="w-full h-1.5 bg-gray-100 dark:bg-[#080c18] rounded-full mt-5 overflow-hidden">
                             <div
-                                className="h-full bg-[#8b5cf6] rounded-full transition-all duration-1000 ease-linear"
+                                className="h-full bg-[var(--primary)] rounded-full transition-all duration-1000 ease-linear"
                                 style={{ width: `${progress}%` }}
                             ></div>
                         </div>
@@ -98,7 +98,7 @@ export default function MaintenancePage() {
                 <div className="flex flex-col items-center gap-2">
                     <div className="flex flex-wrap items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 font-sans">
                         Need urgent help?
-                        <a href="mailto:support@afab.ai" className="text-[#7c3aed] dark:text-[#a78bfa] font-semibold hover:underline flex items-center gap-1 group">
+                        <a href="mailto:support@afab.ai" className="text-[var(--primary)] font-semibold hover:underline flex items-center gap-1 group">
                             Contact Support
                             <ArrowRight className="h-4 w-4 group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1 transition-transform" />
                         </a>

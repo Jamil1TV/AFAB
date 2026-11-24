@@ -390,8 +390,8 @@ export function BinanceLiveChart({
           <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full overflow-visible">
             <defs>
               <linearGradient id="liveWaveGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
               </linearGradient>
             </defs>
 
@@ -455,7 +455,7 @@ export function BinanceLiveChart({
                     return d;
                   })()}
                   fill="none"
-                  stroke="#8b5cf6"
+                  stroke="var(--primary)"
                   strokeWidth="2.5"
                 />
               </g>

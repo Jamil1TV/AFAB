@@ -85,7 +85,7 @@ export default function SettingsLayout({
                   {isActive && (
                     <div className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[var(--primary)] rounded-full" />
                   )}
-                  <span className={`shrink-0 ${isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
+                  <span className={`shrink-0 ${isActive ? "text-[var(--primary)]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
                     {tab.icon}
                   </span>
                   {!collapsed && <span className="truncate">{tab.label}</span>}

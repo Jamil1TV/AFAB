@@ -19,7 +19,7 @@ export function BudgetOverviewCard({ budgets, currency }: BudgetOverviewCardProp
     <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-5 sm:p-6 shadow-sm">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="h-9 w-9 shrink-0 rounded-xl bg-purple-500/10 text-[#7c3aed] dark:text-[#a78bfa] flex items-center justify-center">
+          <div className="h-9 w-9 shrink-0 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
             <PiggyBank className="h-4.5 w-4.5" />
           </div>
           <div className="min-w-0">
@@ -37,7 +37,7 @@ export function BudgetOverviewCard({ budgets, currency }: BudgetOverviewCardProp
         </div>
         <Link
           href="/dashboard/budgets"
-          className="inline-flex items-center gap-1 text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline shrink-0 self-start sm:self-auto"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--primary)] hover:underline shrink-0 self-start sm:self-auto"
         >
           <span>{t("manageLink")}</span>
           <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -47,7 +47,7 @@ export function BudgetOverviewCard({ budgets, currency }: BudgetOverviewCardProp
       {items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-white/[0.02] p-4 text-center text-xs text-gray-500 dark:text-gray-400">
           {t("emptyNotice")}{" "}
-          <Link href="/dashboard/budgets" className="text-[#7c3aed] dark:text-[#a78bfa] font-semibold hover:underline">
+          <Link href="/dashboard/budgets" className="text-[var(--primary)] font-semibold hover:underline">
             {t("createNow")}
           </Link>
         </div>

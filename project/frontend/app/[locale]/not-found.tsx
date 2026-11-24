@@ -144,8 +144,8 @@ export default function NotFound() {
         
         <div className="mt-12">
           <Link href={`/${locale}/support`} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center justify-center gap-1.5 transition-colors">
-            {isArabic ? "تحتاج مساعدة؟" : "Need help?"} <span className="text-[#7c3aed] dark:text-[#a78bfa] font-semibold">{isArabic ? "اتصل بالدعم" : "Contact Support"}</span> 
-            <ArrowRight className={`w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa] transition-transform ${isArabic ? 'rotate-180' : ''}`} />
+            {isArabic ? "تحتاج مساعدة؟" : "Need help?"} <span className="text-[var(--primary)] font-semibold">{isArabic ? "اتصل بالدعم" : "Contact Support"}</span> 
+            <ArrowRight className={`w-4 h-4 text-[var(--primary)] transition-transform ${isArabic ? 'rotate-180' : ''}`} />
           </Link>
         </div>
       </div>

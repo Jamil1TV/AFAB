@@ -65,7 +65,7 @@ export function BusinessPortfolioImpactCard({
       {/* Card Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-gray-100 dark:border-gray-800/60">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
             <Globe className="h-5 w-5" />
           </div>
           <div>
@@ -87,7 +87,7 @@ export function BusinessPortfolioImpactCard({
 
         {/* Base Currency Pill */}
         <div className="afab-inset flex items-center gap-2.5 self-start sm:self-auto px-3.5 py-2">
-          <Wallet className="h-4 w-4 text-[#7c3aed] dark:text-[#a78bfa]" />
+          <Wallet className="h-4 w-4 text-[var(--primary)]" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-semibold">
               {isArabic ? "الرصيد الأساسي" : "Base Balance"}
@@ -104,10 +104,10 @@ export function BusinessPortfolioImpactCard({
         {valuations.map((item) => (
           <div
             key={item.currency}
-            className="afab-inset p-4 hover:border-[#8b5cf6]/50 transition-all duration-200 group"
+            className="afab-inset p-4 hover:border-[var(--primary)]/50 transition-all duration-200 group"
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider group-hover:text-[#7c3aed] dark:group-hover:text-[#a78bfa] transition-colors">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider group-hover:text-[var(--primary)] transition-colors">
                 {item.currency}
               </span>
               <span className="text-[10px] font-mono text-gray-400 dark:text-gray-500">
@@ -139,7 +139,7 @@ export function BusinessPortfolioImpactCard({
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 text-[#7c3aed] dark:text-[#a78bfa] font-semibold shrink-0">
+        <div className="flex items-center gap-1.5 text-[var(--primary)] font-semibold shrink-0">
           <Sparkles className="h-3.5 w-3.5" />
           <span>Real-time Interbank Rates</span>
         </div>

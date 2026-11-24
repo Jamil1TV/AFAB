@@ -176,7 +176,7 @@ function TransactionFormModal({
               }}
               className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
                 type === "EXPENSE"
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
+                  ? "bg-[var(--primary)] text-white shadow-md shadow-[var(--primary)]/20"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}
             >

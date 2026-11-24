@@ -288,7 +288,7 @@ export function FxTrajectoryChart({
       >
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-[#0c101c]/60 backdrop-blur-xs">
-            <span className="inline-block h-6 w-6 rounded-full border-2 border-[#8b5cf6] border-t-transparent animate-spin" />
+            <span className="inline-block h-6 w-6 rounded-full border-2 border-[var(--primary)] border-t-transparent animate-spin" />
           </div>
         )}
 
@@ -441,7 +441,7 @@ export function FxTrajectoryChart({
               transform: "translate(-50%, -100%)",
               pointerEvents: "none",
             }}
-            className="z-20 flex flex-col items-center bg-[#0c101c]/95 backdrop-blur-md text-white text-[11px] font-mono px-3 py-1.5 rounded-xl shadow-xl border border-[#8b5cf6]/20 whitespace-nowrap"
+            className="z-20 flex flex-col items-center bg-[#0c101c]/95 backdrop-blur-md text-white text-[11px] font-mono px-3 py-1.5 rounded-xl shadow-xl border border-[var(--primary)]/20 whitespace-nowrap"
           >
             <span className="font-bold text-emerald-400">
               1 {fromCurrency} = {activePoint.rate.toFixed(4)} {toCurrency}
@@ -486,7 +486,7 @@ export function FxTrajectoryChart({
           <span className="text-gray-400 dark:text-gray-500 block text-[10px] uppercase font-bold tracking-wider">
             {isArabic ? "التقلب والانتشار" : "Spread & Vol"}
           </span>
-          <span className="font-bold text-[#7c3aed] dark:text-[#a78bfa] font-mono mt-0.5 block">
+          <span className="font-bold text-[var(--primary)] font-mono mt-0.5 block">
             {((maxRate - minRate)).toFixed(4)} ({volatility.toFixed(1)}%)
           </span>
         </div>

@@ -91,7 +91,7 @@ export function CancelSubscriptionModal({
           {/* Key lifecycle guarantees */}
           <div className="rounded-2xl bg-gray-50 dark:bg-[#080c18] border border-gray-200/80 dark:border-gray-800 p-4 space-y-2.5 text-xs">
             <div className="flex items-start gap-2.5">
-              <Calendar className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa] shrink-0 mt-0.5" />
+              <Calendar className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-gray-900 dark:text-white">
                   {isAr ? "موعد انتهاء الوصول المدفوع:" : "When paid access ends:"}
@@ -143,7 +143,7 @@ export function CancelSubscriptionModal({
 
           {/* 1-Business Pre-selection when user owns > 1 business */}
           {businesses.length > 1 && (
-            <div className="rounded-2xl border border-purple-200 dark:border-purple-500/25 bg-purple-50/40 dark:bg-purple-950/15 p-4 space-y-2.5">
+            <div className="rounded-2xl border border-[var(--primary)]/25 bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 p-4 space-y-2.5">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-bold text-gray-900 dark:text-white">
                   {isAr
@@ -174,15 +174,15 @@ export function CancelSubscriptionModal({
                       }}
                       className={`flex items-center justify-between p-2.5 rounded-xl border text-xs cursor-pointer transition-all ${
                         isSelected
-                          ? "bg-white dark:bg-[#0c101c] border-[#8b5cf6] shadow-sm"
-                          : "bg-white/60 dark:bg-[#080c18]/60 border-gray-200 dark:border-gray-800 hover:border-purple-300"
+                          ? "bg-white dark:bg-[#0c101c] border-[var(--primary)] shadow-sm"
+                          : "bg-white/60 dark:bg-[#080c18]/60 border-gray-200 dark:border-gray-800 hover:border-[var(--primary)]/40"
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div
                           className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
                             isSelected
-                              ? "bg-[#8b5cf6] text-white"
+                              ? "bg-[var(--primary)] text-white"
                               : "bg-gray-100 dark:bg-gray-800 text-gray-500"
                           }`}
                         >

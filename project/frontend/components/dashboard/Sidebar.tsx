@@ -334,7 +334,7 @@ export function Sidebar() {
           tabIndex={0}
           className={`flex items-center ${collapsed ? "justify-center p-1" : "gap-3 w-full bg-white dark:bg-[#0c101c] p-2.5 rounded-xl border border-gray-200 dark:border-gray-800/60 shadow-sm"} cursor-pointer hover:bg-gray-50 dark:hover:bg-white/[0.04] transition-all`}
         >
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-500 to-purple-600 p-[1.5px] shrink-0">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[var(--primary)] to-[var(--accent)] p-[1.5px] shrink-0">
             <div className="w-full h-full rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden flex items-center justify-center text-xs font-bold text-gray-900 dark:text-white">
               {profile?.avatarUrl ? (
                 <img 

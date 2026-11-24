@@ -296,12 +296,12 @@ export default function VerifyEmailPage() {
           initial={{ opacity: 0, y: -6, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.3 }}
-          className="mt-4 flex flex-col items-center gap-1.5 rounded-xl bg-purple-50 border border-purple-200 p-3 text-xs text-purple-700 dark:bg-[var(--primary)]/10 dark:border-[var(--primary)]/30 dark:text-[var(--primary)]"
+          className="mt-4 flex flex-col items-center gap-1.5 rounded-xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 p-3 text-xs text-[var(--primary)]"
         >
           <div className="flex flex-wrap items-center justify-center gap-1.5 font-medium">
             <Sparkles className="h-3.5 w-3.5 text-[var(--primary)] animate-pulse" />
             <span>Development Verification Code:</span>
-            <span className="font-mono text-sm font-bold tracking-wider text-purple-900 dark:text-purple-100 bg-[var(--primary)]/20 px-2 py-0.5 rounded shadow-sm">
+            <span className="font-mono text-sm font-bold tracking-wider text-[var(--primary)] bg-[var(--primary)]/20 px-2 py-0.5 rounded shadow-sm">
               {devOtp}
             </span>
           </div>

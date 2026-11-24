@@ -67,7 +67,7 @@ export function PlansScreen({ embedded = false }: { embedded?: boolean } = {}) {
     <Suspense
       fallback={
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-6 w-6 animate-spin text-[#7c3aed]" />
+          <Loader2 className="h-6 w-6 animate-spin text-[var(--primary)]" />
         </div>
       }
     >
@@ -845,7 +845,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                 {/* Dates & Trial Countdown */}
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-600 dark:text-gray-400">
                   {isTrialActive && (
-                    <span className="font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
+                    <span className="font-semibold text-[var(--primary)]">
                       {isAr
                         ? `فترة تجريبية لمدة 7 أيام: متبقي ${
                             subscription.trialDaysRemaining ?? 7
@@ -1003,7 +1003,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
               <div className="rounded-2xl bg-gray-50/80 dark:bg-[#080c18] border border-gray-200/80 dark:border-gray-800 p-4 space-y-2">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-bold text-gray-900 dark:text-white inline-flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
                     <span>
                       {isAr ? "استهلاك رموز AFAB Copilot هذا الشهر" : "Monthly AFAB Copilot Token Allowance"}
                     </span>
@@ -1017,7 +1017,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                 <div className="h-2 w-full rounded-full bg-gray-200/80 dark:bg-gray-800 overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      pct >= 90 ? "bg-red-500" : pct >= 75 ? "bg-amber-500" : "bg-[#8b5cf6]"
+                      pct >= 90 ? "bg-red-500" : pct >= 75 ? "bg-amber-500" : "bg-[var(--primary)]"
                     }`}
                     style={{ width: `${pct}%` }}
                   />
@@ -1117,7 +1117,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         <section className="afab-card p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center shrink-0">
                 <Building2 className="w-5 h-5" />
               </div>
               <div>
@@ -1172,7 +1172,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <Building2 className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa]" />
+                      <Building2 className="w-4 h-4 text-[var(--primary)]" />
                     )}
                   </div>
                   <div className="min-w-0">
@@ -1181,7 +1181,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                         {biz.name}
                       </p>
                       {biz.primary && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/10 text-[#7c3aed] dark:text-[#a78bfa]">
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--primary)]/10 text-[var(--primary)]">
                           {isAr ? "رئيسية" : "Primary"}
                         </span>
                       )}
@@ -1246,7 +1246,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
 
         {/* 7-day free trial banner (EXCLUSIVELY for Plus) */}
         {isTrialActive ? (
-          <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs text-white bg-gradient-to-r from-purple-600 to-indigo-600 border border-purple-400/40 px-5 py-2.5 rounded-2xl shadow-md shadow-purple-600/20">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 text-xs text-white bg-gradient-to-r from-[var(--primary)] to-[var(--accent)] border border-[var(--primary)]/40 px-5 py-2.5 rounded-2xl shadow-md shadow-[var(--primary)]/20">
             <Clock className="w-4 h-4 text-amber-300 animate-pulse shrink-0" />
             <span>
               <strong>
@@ -1262,10 +1262,10 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
             </span>
           </div>
         ) : isPlusTrialEligible ? (
-          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-700 dark:text-gray-300 bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 px-4 py-2 rounded-xl shadow-sm">
-            <Gift className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa] shrink-0" />
+          <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-gray-700 dark:text-gray-300 bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 border border-[var(--primary)]/20 px-4 py-2 rounded-xl shadow-sm">
+            <Gift className="w-4 h-4 text-[var(--primary)] shrink-0" />
             <span>
-              <strong className="text-[#7c3aed] dark:text-[#a78bfa] font-semibold underline underline-offset-2">
+              <strong className="text-[var(--primary)] font-semibold underline underline-offset-2">
                 {isAr
                   ? "تجربة مجانية لمدة 7 أيام متاحة حصرياً على باقة Plus."
                   : "7-day free trial available exclusively on the Plus plan."}
@@ -1356,7 +1356,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                     {isAr ? "/ شهر" : "/ month"}
                   </span>
                   {billingPeriod === "yearly" && price > 0 && (
-                    <span className="text-[11px] text-[#7c3aed] dark:text-[#a78bfa] font-semibold ms-1">
+                    <span className="text-[11px] text-[var(--primary)] font-semibold ms-1">
                       {isAr ? "(تدفع سنوياً)" : "(billed annually)"}
                     </span>
                   )}
@@ -1581,7 +1581,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
             {/* Subscription Lifecycle History */}
             <div className="afab-card p-6 space-y-4">
               <div className="flex items-center gap-2.5">
-                <History className="w-5 h-5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                <History className="w-5 h-5 text-[var(--primary)]" />
                 <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                   {isAr ? "سجل تغييرات الاشتراك" : "Subscription Change History"}
                 </h3>
@@ -1660,7 +1660,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                           href={pay.hostedInvoiceUrl}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-[#7c3aed] dark:text-[#a78bfa] hover:underline inline-flex items-center gap-1 font-semibold"
+                          className="text-[var(--primary)] hover:underline inline-flex items-center gap-1 font-semibold"
                         >
                           <span>{isAr ? "الفاتورة" : "Invoice"}</span>
                           <ExternalLink className="w-3 h-3" />

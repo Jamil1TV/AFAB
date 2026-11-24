@@ -354,7 +354,7 @@ export default function RecurringTransactionsPage() {
                           type="button"
                           onClick={() => openEditModal(rule)}
                           title={tActions("edit")}
-                          className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-[#7c3aed] dark:hover:text-[#a78bfa] hover:bg-purple-500/10 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>

@@ -249,7 +249,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         aria-label="Workspace & Business Selector"
         className={`flex w-full items-center ${
           collapsed ? "justify-center p-1.5" : "justify-between p-2"
-        } rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group select-none border border-transparent hover:border-purple-200 dark:hover:border-[var(--primary)]/20`}
+        } rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group select-none border border-transparent hover:border-[var(--primary)]/30`}
       >
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2.5"} overflow-hidden min-w-0`}>
           {/* Official AFAB Logo (Light & Dark variants) */}
@@ -269,7 +269,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
           {!collapsed && (
             <div className="flex flex-col overflow-hidden min-w-0 text-start">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-[var(--primary)] dark:group-hover:text-purple-400 transition-colors">
+                <span className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-[var(--primary)] dark:group-hover:text-[var(--primary)] transition-colors">
                   {activeBusiness.name}
                 </span>
                 {showPlanBadge && (
@@ -277,7 +277,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                     className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-wide shrink-0 ${
                       isProPlan
                         ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm shadow-amber-500/20"
-                        : "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/20"
+                        : "bg-[var(--primary)] text-white shadow-sm shadow-[var(--primary)]/20"
                     }`}
                   >
                     {isProPlan ? (
@@ -304,7 +304,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
 
         {!collapsed && (
           <ChevronsUpDown
-            className={`h-4 w-4 text-gray-400 group-hover:text-purple-500 shrink-0 ms-1 transition-transform duration-200 ${
+            className={`h-4 w-4 text-gray-400 group-hover:text-[var(--primary)] shrink-0 ms-1 transition-transform duration-200 ${
               isOpen ? "rotate-180 text-[var(--primary)] dark:text-[var(--primary)]" : ""
             }`}
           />
@@ -316,7 +316,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         <div
           className={`absolute z-50 top-full mt-2 ${
             collapsed ? "start-full ms-2 -top-1 w-64" : "start-0 end-0 w-full"
-          } rounded-2xl bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 p-2 shadow-2xl shadow-purple-900/10 dark:shadow-black/80 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150`}
+          } rounded-2xl bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 p-2 shadow-2xl shadow-black/40 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150`}
         >
           {/* Header & Plan Limit Status */}
           <div className="px-2.5 py-1.5 border-b border-gray-100 dark:border-gray-800/80 flex items-center justify-between gap-2">
@@ -363,7 +363,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                   }}
                   className={`flex items-center justify-between p-2 rounded-xl text-start cursor-pointer transition-all ${
                     isSelected
-                      ? "bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60"
+                      ? "bg-[var(--primary)]/10 border border-[var(--primary)]/30 shadow-sm"
                       : isLocked
                       ? "bg-amber-50/40 dark:bg-amber-500/[0.04] hover:bg-amber-50/80 dark:hover:bg-amber-500/10 border border-amber-500/15 opacity-85"
                       : "hover:bg-gray-50 dark:hover:bg-white/[0.04] border border-transparent"
@@ -373,7 +373,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                     <div
                       className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
                         isSelected
-                          ? "bg-purple-600 text-white shadow-sm shadow-purple-500/30"
+                          ? "bg-[var(--primary)] text-white shadow-sm shadow-[var(--primary)]/30"
                           : isLocked
                           ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                           : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
@@ -403,7 +403,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                     </div>
                   </div>
                   {isSelected && (
-                    <div className="h-4 w-4 rounded-full bg-purple-600 text-white flex items-center justify-center shrink-0 ms-1.5">
+                    <div className="h-4 w-4 rounded-full bg-[var(--primary)] text-white flex items-center justify-center shrink-0 ms-1.5">
                       <Check className="w-2.5 h-2.5" />
                     </div>
                   )}
@@ -417,10 +417,10 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <button
               type="button"
               onClick={handleAddBusinessClick}
-              className="flex w-full items-center justify-between p-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30 hover:text-[var(--primary)] dark:hover:text-purple-400 transition-colors group cursor-pointer"
+              className="flex w-full items-center justify-between p-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-[var(--primary)]/10 dark:hover:bg-[var(--primary)]/10 hover:text-[var(--primary)] dark:hover:text-[var(--primary)] transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <div className="h-6 w-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center group-hover:border-purple-500 text-gray-400 group-hover:text-purple-500 transition-colors shrink-0">
+                <div className="h-6 w-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center group-hover:border-[var(--primary)] text-gray-400 group-hover:text-[var(--primary)] transition-colors shrink-0">
                   <Plus className="w-3.5 h-3.5" />
                 </div>
                 <span className="truncate">{isArabic ? "إضافة عمل جديد" : "Add Business"}</span>
@@ -431,7 +431,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                   UPGRADE
                 </span>
               ) : (
-                <Plus className="w-3.5 h-3.5 text-gray-400 group-hover:text-purple-500 shrink-0" />
+                <Plus className="w-3.5 h-3.5 text-gray-400 group-hover:text-[var(--primary)] shrink-0" />
               )}
             </button>
           </div>
@@ -450,7 +450,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <Link
               href="/dashboard/settings/subscription"
               onClick={() => setIsOpen(false)}
-              className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs text-[var(--primary)] dark:text-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30 rounded-lg transition-colors cursor-pointer font-medium"
+              className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs text-[var(--primary)] dark:text-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:bg-[var(--primary)]/10 rounded-lg transition-colors cursor-pointer font-medium"
             >
               <span className="flex items-center gap-2 truncate">
                 <CreditCard className="w-3.5 h-3.5 shrink-0" />
@@ -466,7 +466,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
       <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
         <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl">
           <DialogHeader className="text-start space-y-3">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--accent)] flex items-center justify-center text-white shadow-lg shadow-[var(--primary)]/30">
               <Crown className="w-6 h-6" />
             </div>
             <div>
@@ -482,8 +482,8 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
           </DialogHeader>
 
           {/* Features Highlights */}
-          <div className="my-4 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 space-y-2.5">
-            <p className="text-xs font-bold text-purple-900 dark:text-[var(--primary)] uppercase tracking-wider">
+          <div className="my-4 p-4 rounded-xl bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 border border-[var(--primary)]/20 space-y-2.5">
+            <p className="text-xs font-bold text-[var(--primary)] dark:text-[var(--primary)] uppercase tracking-wider">
               {isArabic ? "ميزات الخطة المدفوعة:" : "What you get with Pro:"}
             </p>
             <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
@@ -518,7 +518,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 setIsUpgradeModalOpen(false);
                 router.push("/dashboard/settings/subscription");
               }}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-purple-500/25"
+              className="afab-btn-primary font-bold shadow-md shadow-[var(--primary)]/25"
             >
               <Crown className="w-4 h-4 ltr:mr-1.5 rtl:ml-1.5" />
               {isArabic ? "ترقية إلى برو الآن" : "Upgrade to Pro"}
@@ -625,9 +625,9 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             </div>
           </DialogHeader>
 
-          <div className="my-3 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 space-y-2 text-xs text-gray-700 dark:text-gray-300">
+          <div className="my-3 p-4 rounded-xl bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 border border-[var(--primary)]/20 space-y-2 text-xs text-gray-700 dark:text-gray-300">
             <div className="flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+              <ShieldCheck className="w-4 h-4 text-[var(--primary)] dark:text-[var(--primary)] shrink-0 mt-0.5" />
               <span>
                 {isArabic
                   ? "ترقية الباقة إلى Plus (3 شركات) أو Pro (5 شركات) تعيد فتح الوصول فوراً إلى شركاتك وبياناتها."
@@ -662,7 +662,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 setLockedBusinessTarget(null);
                 router.push("/dashboard/settings/subscription");
               }}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-purple-500/25 text-xs"
+              className="afab-btn-primary font-bold shadow-md shadow-[var(--primary)]/25 text-xs"
             >
               <Crown className="w-4 h-4 ltr:mr-1.5 rtl:ml-1.5" />
               {isArabic ? "ترقية الباقة لفتح الشركة" : "Upgrade to Unlock"}

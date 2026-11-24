@@ -165,7 +165,7 @@ export function ManageCategoriesModal({
               }}
               className={`py-2 rounded-xl text-xs font-bold transition-all ${
                 activeTab === "EXPENSE"
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
+                  ? "bg-[var(--primary)] text-white shadow-md shadow-[var(--primary)]/20"
                   : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
               }`}
             >
@@ -344,7 +344,7 @@ export function ManageCategoriesModal({
                   </span>
                 ) : (
                   <>
-                    <span className="rounded-full bg-purple-100 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)] dark:text-[var(--primary)]">
+                    <span className="rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)]">
                       {t("custom")}
                     </span>
                     <button

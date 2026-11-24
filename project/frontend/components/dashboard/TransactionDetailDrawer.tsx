@@ -205,7 +205,7 @@ export function TransactionDetailDrawer({
                 {formatCurrency(transaction.amount, baseCurr)}
               </div>
               {hasForeignFx && transaction.originalAmount != null && origCurr && (
-                <p className="mt-1 text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1 flex-wrap">
+                <p className="mt-1 text-xs text-[var(--primary)] font-medium flex items-center gap-1 flex-wrap">
                   <Globe className="h-3.5 w-3.5 shrink-0" />
                   <span>
                     {t("original")}: {formatCurrency(transaction.originalAmount, origCurr)} @{" "}
@@ -232,7 +232,7 @@ export function TransactionDetailDrawer({
             )}
 
             {transaction.priceHikePercentage && transaction.priceHikePercentage > 0 && (
-              <div className="p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/25 flex items-start gap-3 text-indigo-700 dark:text-indigo-400">
+              <div className="p-3.5 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/25 flex items-start gap-3 text-[var(--primary)]">
                 <TrendingUp className="h-5 w-5 shrink-0 mt-0.5" />
                 <div className="text-xs">
                   <span className="font-bold block">

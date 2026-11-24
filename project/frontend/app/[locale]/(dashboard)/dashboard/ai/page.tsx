@@ -759,7 +759,7 @@ export default function AfabCopilotPage() {
             <div className="flex items-center gap-2 shrink-0">
               {quota && (
                 <span className="lg:hidden inline-flex items-center gap-1 rounded-xl border border-gray-200 dark:border-gray-800 px-2.5 py-1.5 text-[11px] font-semibold tabular-nums text-gray-700 dark:text-gray-300">
-                  <Zap className="h-3 w-3 text-[#7c3aed]" />
+                  <Zap className="h-3 w-3 text-[var(--primary)]" />
                   {formatNumber(Math.max(0, quota.monthlyTokensRemaining), locale)} {t("remaining")}
                 </span>
               )}
@@ -787,9 +787,9 @@ export default function AfabCopilotPage() {
                 onClick={() => setMemoryDrawerOpen(true)}
                 className="afab-btn-secondary px-3 py-1.5 text-xs"
               >
-                <Brain className="h-3.5 w-3.5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                <Brain className="h-3.5 w-3.5 text-[var(--primary)]" />
                 <span className="hidden sm:inline">{t("memoryButton")}</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-[#8b5cf6]/12 text-[#7c3aed] dark:text-[#c4b5fd] text-[10px] font-bold tabular-nums">
+                <span className="px-1.5 py-0.2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold tabular-nums">
                   {memories.length}
                 </span>
               </button>

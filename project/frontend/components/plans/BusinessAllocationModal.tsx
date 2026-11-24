@@ -118,7 +118,7 @@ export function BusinessAllocationModal({
       <DialogContent className="max-w-xl p-6 bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl">
         <DialogHeader className="text-start space-y-2.5">
           <div className="flex items-center justify-between gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/25 flex items-center justify-center text-[#7c3aed] dark:text-[#a78bfa]">
+            <div className="h-11 w-11 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/25 flex items-center justify-center text-[var(--primary)]">
               <Building2 className="w-5 h-5" />
             </div>
             <span
@@ -182,10 +182,10 @@ export function BusinessAllocationModal({
                 }}
                 className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                   checked
-                    ? "bg-purple-50/60 dark:bg-purple-950/25 border-[#8b5cf6] shadow-sm cursor-pointer"
+                    ? "bg-[var(--primary)]/10 border-[var(--primary)] shadow-sm cursor-pointer"
                     : disabledToAdd
                     ? "bg-gray-50/60 dark:bg-[#080c18]/50 border-gray-200 dark:border-gray-800/70 opacity-65 cursor-not-allowed"
-                    : "bg-white dark:bg-[#080c18] border-gray-200 dark:border-gray-800 hover:border-purple-300 cursor-pointer"
+                    : "bg-white dark:bg-[#080c18] border-gray-200 dark:border-gray-800 hover:border-[var(--primary)]/40 cursor-pointer"
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -193,7 +193,7 @@ export function BusinessAllocationModal({
                   <div
                     className={`w-5 h-5 rounded-md flex items-center justify-center border transition-colors shrink-0 ${
                       checked
-                        ? "bg-[#8b5cf6] border-[#8b5cf6] text-white"
+                        ? "bg-[var(--primary)] border-[var(--primary)] text-white"
                         : "border-gray-300 dark:border-gray-700 bg-white dark:bg-[#0c101c]"
                     }`}
                   >
@@ -209,7 +209,7 @@ export function BusinessAllocationModal({
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <Building2 className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa]" />
+                      <Building2 className="w-4 h-4 text-[var(--primary)]" />
                     )}
                   </div>
 
@@ -219,7 +219,7 @@ export function BusinessAllocationModal({
                         {biz.name}
                       </p>
                       {biz.primary && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/10 text-[#7c3aed] dark:text-[#a78bfa] border border-purple-500/20">
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
                           {isAr ? "رئيسية" : "Primary"}
                         </span>
                       )}

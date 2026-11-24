@@ -16,9 +16,9 @@ export function AnimatedStars() {
 
       {/* ── Night Sky Stars Background (Light Mode) ── */}
       <div className="absolute inset-0 z-0 pointer-events-none dark:hidden opacity-80 overflow-hidden">
-        <div className="absolute inset-0 stars-1" style={{ backgroundImage: 'radial-gradient(1px 1px at 20px 30px, #8b5cf6, transparent), radial-gradient(1px 1px at 40px 70px, #8b5cf6, transparent), radial-gradient(1px 1px at 90px 130px, #8b5cf6, transparent), radial-gradient(1.5px 1.5px at 160px 40px, #8b5cf6, transparent)', backgroundSize: '200px 200px' }} />
-        <div className="absolute inset-0 stars-2" style={{ backgroundImage: 'radial-gradient(1.5px 1.5px at 50px 160px, #8b5cf6, transparent), radial-gradient(2px 2px at 130px 250px, #8b5cf6, transparent), radial-gradient(1.5px 1.5px at 220px 80px, #8b5cf6, transparent), radial-gradient(2px 2px at 280px 120px, #8b5cf6, transparent)', backgroundSize: '300px 300px' }} />
-        <div className="absolute inset-0 stars-3" style={{ backgroundImage: 'radial-gradient(2px 2px at 100px 100px, #8b5cf6, transparent), radial-gradient(2.5px 2.5px at 200px 300px, #8b5cf6, transparent), radial-gradient(2px 2px at 350px 50px, #8b5cf6, transparent), radial-gradient(3px 3px at 300px 250px, #8b5cf6, transparent)', backgroundSize: '400px 400px' }} />
+        <div className="absolute inset-0 stars-1" style={{ backgroundImage: 'radial-gradient(1px 1px at 20px 30px, var(--primary), transparent), radial-gradient(1px 1px at 40px 70px, var(--primary), transparent), radial-gradient(1px 1px at 90px 130px, var(--primary), transparent), radial-gradient(1.5px 1.5px at 160px 40px, var(--primary), transparent)', backgroundSize: '200px 200px' }} />
+        <div className="absolute inset-0 stars-2" style={{ backgroundImage: 'radial-gradient(1.5px 1.5px at 50px 160px, var(--primary), transparent), radial-gradient(2px 2px at 130px 250px, var(--primary), transparent), radial-gradient(1.5px 1.5px at 220px 80px, var(--primary), transparent), radial-gradient(2px 2px at 280px 120px, var(--primary), transparent)', backgroundSize: '300px 300px' }} />
+        <div className="absolute inset-0 stars-3" style={{ backgroundImage: 'radial-gradient(2px 2px at 100px 100px, var(--primary), transparent), radial-gradient(2.5px 2.5px at 200px 300px, var(--primary), transparent), radial-gradient(2px 2px at 350px 50px, var(--primary), transparent), radial-gradient(3px 3px at 300px 250px, var(--primary), transparent)', backgroundSize: '400px 400px' }} />
       </div>
 
       {/* ── Night Sky Stars Background (Dark Mode) ── */}

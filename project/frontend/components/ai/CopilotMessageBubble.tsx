@@ -63,7 +63,7 @@ function getEvidenceBadgeClass(type: string): string {
     case "INVOICE":
       return "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20";
     case "TRANSACTION":
-      return "bg-purple-500/10 text-[#7c3aed] dark:text-[#c4b5fd] border-purple-500/20";
+      return "bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/20";
     case "BUDGET":
       return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20";
     case "MEMORY":
@@ -71,7 +71,7 @@ function getEvidenceBadgeClass(type: string): string {
     case "CUSTOMER":
       return "bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20";
     default:
-      return "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] border-[#8b5cf6]/20";
+      return "bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/20";
   }
 }
 
@@ -141,7 +141,7 @@ export function CopilotMessageBubble({
       <Link
         key={`${ev.type}-${ev.id}-${idx}`}
         href={href}
-        className="group flex items-center justify-between gap-2.5 rounded-xl border border-gray-200/80 dark:border-gray-800/90 bg-gray-50/75 dark:bg-[#060914] hover:border-[#8b5cf6]/50 hover:bg-purple-50/35 dark:hover:bg-[#10162b] px-3 py-2.5 text-xs transition-all"
+        className="group flex items-center justify-between gap-2.5 rounded-xl border border-gray-200/80 dark:border-gray-800/90 bg-gray-50/75 dark:bg-[#060914] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/5 dark:hover:bg-[#10162b] px-3 py-2.5 text-xs transition-all"
       >
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
@@ -167,7 +167,7 @@ export function CopilotMessageBubble({
               {formattedAmount}
             </span>
           )}
-          <ArrowUpRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-[#8b5cf6] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform rtl:rotate-180" />
+          <ArrowUpRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-[var(--primary)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform rtl:rotate-180" />
         </div>
       </Link>
     );

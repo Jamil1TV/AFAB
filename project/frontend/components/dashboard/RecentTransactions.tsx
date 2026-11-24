@@ -44,7 +44,7 @@ export function RecentTransactions({ transactions, currency = "USD" }: { transac
               <div key={tx.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
                   <div 
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white text-xs font-bold shadow-sm ${tx.color || "bg-purple-500"}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white text-xs font-bold shadow-sm ${tx.color || "bg-[var(--primary)]"}`}
                   >
                     {tx.initials || "TX"}
                   </div>

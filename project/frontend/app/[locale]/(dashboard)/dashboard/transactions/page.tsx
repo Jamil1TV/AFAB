@@ -513,7 +513,7 @@ export default function TransactionsPage() {
                         <div className="flex items-center gap-3">
                           <div
                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white font-bold text-xs shadow-sm ${
-                              isIncome ? "bg-emerald-500" : "bg-purple-600"
+                              isIncome ? "bg-emerald-500" : "bg-[var(--primary)]"
                             }`}
                           >
                             {isIncome ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
@@ -631,7 +631,7 @@ export default function TransactionsPage() {
                           <button
                             onClick={() => handleDuplicate(tx)}
                             title={t("duplicate") || "Duplicate"}
-                            className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
                           >
                             <Copy className="h-4 w-4" />
                           </button>

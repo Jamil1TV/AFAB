@@ -460,7 +460,7 @@ export default function ExpensesPage() {
                         <td className="px-6 py-4 text-gray-500 dark:text-gray-400">{tx.transactionDate}</td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-600 text-white font-bold text-xs shadow-sm">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)] text-white font-bold text-xs shadow-sm">
                               <ArrowDownLeft className="h-4 w-4" />
                             </div>
                             <div>
@@ -586,7 +586,7 @@ export default function ExpensesPage() {
             <div className="space-y-3">
               {(!summary?.recurringList || summary.recurringList.length === 0) ? (
                 <div className="py-6 text-center text-gray-400">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-purple-400 mb-2">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] mb-2">
                     <Repeat className="h-5 w-5 opacity-60" />
                   </div>
                   <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">No recurring rules yet</p>
@@ -596,7 +596,7 @@ export default function ExpensesPage() {
                 summary.recurringList.map((item) => (
                   <div key={item.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-purple-400 font-bold text-xs border border-[var(--primary)]/20">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] font-bold text-xs border border-[var(--primary)]/20">
                         <Repeat className="h-4 w-4" />
                       </div>
                       <div>
@@ -623,7 +623,7 @@ export default function ExpensesPage() {
           <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-gray-200 dark:border-gray-800/80 bg-white dark:bg-[#0c101c] p-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/60 pb-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-600 text-white font-bold text-xs">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)] text-white font-bold text-xs">
                   <ArrowDownLeft className="h-5 w-5" />
                 </div>
                 <div>

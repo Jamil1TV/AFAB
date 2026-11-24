@@ -19,7 +19,7 @@ export function ReminderCard({ reminders }: { reminders: any[] }) {
     switch (type) {
       case "Tax": return "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400";
       case "Meeting": return "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400";
-      case "Subscription": return "bg-purple-50 text-[var(--primary)] dark:bg-[var(--primary)]/10 dark:text-[var(--primary)]";
+      case "Subscription": return "bg-[var(--primary)]/10 text-[var(--primary)] dark:bg-[var(--primary)]/10 dark:text-[var(--primary)]";
       default: return "bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
     }
   };

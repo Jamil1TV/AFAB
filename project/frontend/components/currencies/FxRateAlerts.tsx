@@ -191,7 +191,7 @@ export function FxRateAlerts({ pairs, baseCurrency = "QAR", isArabic = false }: 
                     type="checkbox"
                     checked={a.isActive}
                     onChange={() => handleToggleAlert(a.id)}
-                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-700 accent-[#8b5cf6] focus:ring-[#8b5cf6]"
+                    className="h-4 w-4 rounded border-gray-300 dark:border-gray-700 accent-[var(--primary)] focus:ring-[var(--primary)]"
                   />
                   <div>
                     <div className="flex items-center gap-2">
