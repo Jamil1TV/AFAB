@@ -54,12 +54,12 @@ export function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
-                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-[var(--primary)]"
               >
                 {link.label}
               </a>
             ))}
-            <button className="flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+            <button className="flex items-center gap-1 rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-[var(--primary)]">
               {t("resources")}
               <ChevronDown className="h-3.5 w-3.5" />
             </button>
@@ -72,18 +72,18 @@ export function Navbar() {
               variant="ghost"
               size="sm"
               onClick={toggleLanguage}
-              className="gap-1.5 text-sm rounded-full px-4"
+              className="gap-1.5 text-sm rounded-full px-4 hover:text-[var(--primary)]"
             >
               <Globe className="h-4 w-4" />
               {tLang("switchTo")}
             </Button>
             <Link href="/login">
-              <Button variant="outline" size="sm" className="rounded-full px-6 border-gray-200 dark:border-gray-800 bg-transparent hover:bg-gray-50 dark:hover:bg-white/5">
+              <Button variant="outline" size="sm" className="rounded-full px-6 border-gray-200 dark:border-gray-800 bg-transparent hover:bg-gray-50 dark:hover:bg-white/5 hover:border-[var(--primary)]/40 hover:text-[var(--primary)]">
                 {t("login")}
               </Button>
             </Link>
             <Link href="/signup">
-              <Button size="sm" className="rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-6 text-white font-medium border-0">
+              <Button size="sm" className="rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-6 text-white font-medium border-0 shadow-sm shadow-[var(--glow-color)]">
                 {t("getStarted")}
               </Button>
             </Link>

@@ -28,7 +28,7 @@ export function DashboardMockup() {
           {/* Nav Items */}
           <nav className="flex flex-col gap-0.5 flex-1">
             {/* Active */}
-            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-[#8b5cf6]/10 text-[#7c3aed] dark:bg-[#8b5cf6]/20 dark:text-[#a78bfa] text-[8px] font-medium">
+            <div className="flex items-center justify-between px-2 py-1.5 rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] dark:bg-[var(--primary)]/20 dark:text-[var(--primary)] text-[8px] font-medium">
               <div className="flex items-center gap-1.5">
                 <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/></svg>
                 Overview
@@ -57,16 +57,16 @@ export function DashboardMockup() {
                 <span className="text-[8px] w-[10px] text-center opacity-60">✨</span>
                 AI Assistant
               </div>
-              <span className="bg-[#8b5cf6] text-white text-[6px] px-1.5 py-0.5 rounded-full font-bold">New</span>
+              <span className="bg-[var(--primary)] text-white text-[6px] px-1.5 py-0.5 rounded-full font-bold">New</span>
             </div>
           </nav>
 
           {/* Upgrade Card */}
-          <div className="mt-auto bg-gradient-to-br from-[#7c3aed] to-[#6d28d9] rounded-xl p-2.5 relative overflow-hidden">
+          <div className="mt-auto bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] rounded-xl p-2.5 relative overflow-hidden">
             <div className="absolute -right-4 -top-4 h-12 w-12 rounded-full bg-white/10 blur-xl" />
             <p className="text-white font-bold text-[9px] mb-0.5 relative z-10">Upgrade to Pro</p>
             <p className="text-white/80 text-[7px] mb-2 leading-[1.4] relative z-10">Unlock AI insights, custom reports, and unlimited invoices.</p>
-            <div className="bg-white text-[#7c3aed] text-center py-1 rounded-md text-[8px] font-bold relative z-10">Upgrade Now</div>
+            <div className="bg-white text-[var(--primary)] text-center py-1 rounded-md text-[8px] font-bold relative z-10">Upgrade Now</div>
           </div>
         </div>
 
@@ -96,9 +96,9 @@ export function DashboardMockup() {
               </div>
               <div className="flex items-center justify-center w-6 h-6 rounded-full relative">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 dark:text-gray-400"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-                <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[#7c3aed] rounded-full border border-white dark:border-[#080c18]" />
+                <div className="absolute top-0 right-0 w-1.5 h-1.5 bg-[var(--primary)] rounded-full border border-white dark:border-[#080c18]" />
               </div>
-              <div className="bg-[#7c3aed] text-white rounded-full px-3 py-1.5 flex items-center gap-1 text-[8px] font-bold">
+              <div className="bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white rounded-full px-3 py-1.5 flex items-center gap-1 text-[8px] font-bold">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                 Create
               </div>
@@ -144,7 +144,7 @@ export function DashboardMockup() {
                   <p className="text-gray-500 dark:text-gray-400 text-[8px]">Your cash flow over the last 7 days</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#8b5cf6]" /><span className="text-[7px] text-gray-500 dark:text-gray-400">Revenue</span></div>
+                  <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[var(--primary)]" /><span className="text-[7px] text-gray-500 dark:text-gray-400">Revenue</span></div>
                   <div className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#0ea5e9]" /><span className="text-[7px] text-gray-500 dark:text-gray-400">Expenses</span></div>
                 </div>
               </div>
@@ -165,13 +165,13 @@ export function DashboardMockup() {
                     </linearGradient>
                   </defs>
 
-                  {/* Revenue Line (Purple) */}
-                  <path d="M0,60 Q40,65 80,40 T160,15 T240,40 T300,30" fill="none" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round" />
+                  {/* Revenue Line (Dynamic Primary) */}
+                  <path d="M0,60 Q40,65 80,40 T160,15 T240,40 T300,30" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" />
                   <path d="M0,60 Q40,65 80,40 T160,15 T240,40 T300,30 L300,100 L0,100 Z" fill="url(#revenueGrad)" opacity="0.4" />
                   <defs>
                     <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.5" />
-                      <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+                      <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
                     </linearGradient>
                   </defs>
                 </svg>
@@ -179,26 +179,26 @@ export function DashboardMockup() {
             </div>
 
             {/* AI Insights Card */}
-            <div className="relative overflow-hidden rounded-xl border border-[#8b5cf6]/30 bg-gradient-to-br from-[#f5f0ff] to-white dark:from-[#131128] dark:to-[#0c101c] p-4 shadow-sm">
-              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[#8b5cf6]/20 blur-xl" />
+            <div className="relative overflow-hidden rounded-xl border border-[var(--primary)]/30 bg-gradient-to-br from-[var(--primary)]/5 to-white dark:from-[var(--primary)]/10 dark:to-[#0c101c] p-4 shadow-sm">
+              <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-[var(--primary)]/20 blur-xl" />
               
               <div className="flex items-center justify-between mb-3 relative z-10">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-5 w-5 rounded-full bg-[#8b5cf6] flex items-center justify-center text-white">
+                  <div className="h-5 w-5 rounded-full bg-[var(--primary)] flex items-center justify-center text-white">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
                   </div>
                   <h3 className="text-gray-900 dark:text-white font-bold text-[10px]">AI Assistant Insights</h3>
                 </div>
-                <span className="bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] border border-[#8b5cf6]/30 text-[7px] px-1.5 py-0.5 rounded-full font-bold">Premium</span>
+                <span className="bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/30 text-[7px] px-1.5 py-0.5 rounded-full font-bold">Premium</span>
               </div>
 
               <div className="space-y-2 relative z-10">
                 <div className="bg-white/60 dark:bg-black/20 p-2 rounded-lg border border-gray-100 dark:border-white/5 backdrop-blur-sm">
-                  <p className="text-gray-900 dark:text-gray-200 font-semibold text-[8px]"><span className="text-[#8b5cf6] mr-1">✦</span> High Marketing Spend</p>
+                  <p className="text-gray-900 dark:text-gray-200 font-semibold text-[8px]"><span className="text-[var(--primary)] mr-1">✦</span> High Marketing Spend</p>
                   <p className="text-gray-500 dark:text-gray-400 text-[7px] mt-0.5 leading-relaxed">Marketing expenses are up 42% this month. Consider optimizing your Google Ads campaigns.</p>
                 </div>
                 <div className="bg-white/60 dark:bg-black/20 p-2 rounded-lg border border-gray-100 dark:border-white/5 backdrop-blur-sm">
-                  <p className="text-gray-900 dark:text-gray-200 font-semibold text-[8px]"><span className="text-[#8b5cf6] mr-1">✦</span> Unused Subscriptions</p>
+                  <p className="text-gray-900 dark:text-gray-200 font-semibold text-[8px]"><span className="text-[var(--primary)] mr-1">✦</span> Unused Subscriptions</p>
                   <p className="text-gray-500 dark:text-gray-400 text-[7px] mt-0.5 leading-relaxed">3 software subscriptions haven't been used in 60+ days. Canceling saves $340/mo.</p>
                 </div>
               </div>

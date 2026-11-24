@@ -34,7 +34,7 @@ export function StatsTestimonialSection() {
               <div className="flex flex-wrap gap-8 lg:gap-12">
                 {stats.map((stat) => (
                   <div key={stat.label}>
-                    <div className="text-4xl font-bold tracking-tight text-[#8b5cf6] lg:text-5xl">
+                    <div className="text-4xl font-bold tracking-tight text-[var(--primary)] lg:text-5xl">
                       {stat.value}
                     </div>
                     <div className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
@@ -49,12 +49,12 @@ export function StatsTestimonialSection() {
           {/* ═══════════════════════════════════════ */}
           {/* RIGHT — Testimonial Card                */}
           {/* ═══════════════════════════════════════ */}
-          <div className="flex flex-col justify-between rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-8 shadow-sm lg:col-span-2 lg:p-10">
+          <div className="flex flex-col justify-between rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-8 shadow-sm hover:border-[var(--primary)]/30 transition-colors lg:col-span-2 lg:p-10">
             {/* Quote */}
             <div>
-              {/* Purple Quote Icon */}
+              {/* Quote Icon */}
               <div className="mb-5">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-[#8b5cf6]">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-[var(--primary)]">
                   <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" fill="currentColor" />
                   <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" fill="currentColor" />
                 </svg>
@@ -89,13 +89,13 @@ export function StatsTestimonialSection() {
               {/* Carousel Arrow Buttons */}
               <div className="flex items-center gap-2">
                 <button
-                  className="rounded-full border border-gray-200 dark:border-gray-700 bg-transparent p-2 transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                  className="rounded-full border border-gray-200 dark:border-gray-700 bg-transparent p-2 transition-colors hover:bg-gray-50 dark:hover:bg-white/5 hover:border-[var(--primary)]/40 hover:text-[var(--primary)]"
                   onClick={() => setCurrent((c) => Math.max(0, c - 1))}
                 >
                   <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-white rtl:rotate-180" />
                 </button>
                 <button
-                  className="rounded-full border border-gray-200 dark:border-gray-700 bg-transparent p-2 transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
+                  className="rounded-full border border-gray-200 dark:border-gray-700 bg-transparent p-2 transition-colors hover:bg-gray-50 dark:hover:bg-white/5 hover:border-[var(--primary)]/40 hover:text-[var(--primary)]"
                   onClick={() => setCurrent((c) => Math.min(2, c + 1))}
                 >
                   <ChevronRight className="h-4 w-4 text-gray-600 dark:text-white rtl:rotate-180" />
@@ -112,7 +112,7 @@ export function StatsTestimonialSection() {
             <div
               key={i}
               className={`h-2 rounded-full transition-all ${
-                i === current ? "w-5 bg-[#8b5cf6]" : "w-2 bg-gray-300 dark:bg-gray-600"
+                i === current ? "w-5 bg-[var(--primary)]" : "w-2 bg-gray-300 dark:bg-gray-600"
               }`}
             />
           ))}

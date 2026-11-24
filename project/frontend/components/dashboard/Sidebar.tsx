@@ -287,10 +287,10 @@ export function Sidebar() {
       {/* ── Upgrade Card (shown ONLY for Free plan when sidebar is expanded) ── */}
       {!collapsed && planSlug === "free" && (
         <div className="px-3 py-3 shrink-0">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-purple-50/90 via-indigo-50/40 to-white dark:from-[#131735] dark:via-[#0f132b] dark:to-[#090c1e] border border-purple-200/80 dark:border-purple-500/25 p-4 shadow-md shadow-purple-500/5 dark:shadow-2xl dark:shadow-black/60 transition-all">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[var(--primary)]/10 via-[var(--primary)]/5 to-white dark:from-[#131735] dark:via-[#0f132b] dark:to-[#090c1e] border border-[var(--primary)]/25 p-4 shadow-md shadow-[var(--glow-color)]/10 dark:shadow-2xl dark:shadow-black/60 transition-all">
             {/* Ambient decorative lighting */}
-            <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-purple-500/15 dark:bg-purple-600/25 blur-2xl pointer-events-none" />
-            <div className="absolute -start-4 -bottom-4 h-20 w-20 rounded-full bg-indigo-500/10 dark:bg-indigo-600/20 blur-xl pointer-events-none" />
+            <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-[var(--primary)]/15 dark:bg-[var(--primary)]/25 blur-2xl pointer-events-none" />
+            <div className="absolute -start-4 -bottom-4 h-20 w-20 rounded-full bg-[var(--primary-hover)]/10 dark:bg-[var(--primary-hover)]/20 blur-xl pointer-events-none" />
 
             <h4 className="relative z-10 text-sm font-bold text-gray-900 dark:text-white">
               {locale === "ar" ? "افتح المزيد مع برو" : (tSidebar("upgradeCardTitle") || "Unlock more with Pro")}
@@ -301,8 +301,8 @@ export function Sidebar() {
 
             <div className="relative my-2.5 h-20 w-full flex items-center justify-center">
               {/* Radial glow halo */}
-              <div className="absolute h-16 w-16 rounded-full bg-purple-500/25 dark:bg-purple-600/35 blur-xl pointer-events-none" />
-              <div className="relative rounded-2xl p-1 bg-[#090d20] border border-purple-200/80 dark:border-purple-500/40 shadow-md shadow-purple-500/15 dark:shadow-[0_0_25px_rgba(139,92,246,0.35)] overflow-hidden">
+              <div className="absolute h-16 w-16 rounded-full bg-[var(--primary)]/25 dark:bg-[var(--primary)]/35 blur-xl pointer-events-none" />
+              <div className="relative rounded-2xl p-1 bg-[#090d20] border border-[var(--primary)]/40 shadow-md shadow-[var(--glow-color)] dark:shadow-[0_0_25px_var(--glow-color)] overflow-hidden">
                 <img 
                   src="/images/plans/crystal-cube.jpg" 
                   alt="Pro Crystal"
@@ -314,7 +314,7 @@ export function Sidebar() {
             <Link 
               href="/dashboard/settings/subscription"
               prefetch={devSafePrefetch}
-              className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3 py-2.5 text-xs font-bold text-white shadow-md shadow-purple-600/30 dark:shadow-purple-900/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="relative z-10 flex items-center justify-center gap-1.5 w-full rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-95 px-3 py-2.5 text-xs font-bold text-white shadow-md shadow-[var(--glow-color)] transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>{locale === "ar" ? "الترقية الآن" : (tSidebar("upgradeBtn") || "Upgrade Now")}</span>
               <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -407,7 +407,7 @@ export function Sidebar() {
                 onClick={() => setUserMenuOpen(false)}
                 className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/[0.06] rounded-xl transition-colors text-start cursor-pointer"
               >
-                <Sparkles className="h-4 w-4 text-purple-400 shrink-0" />
+                <Sparkles className="h-4 w-4 text-[var(--primary)] shrink-0" />
                 <span>{locale === "ar" ? "الملف التجاري" : (tSidebar("businessProfile") || "Business Profile")}</span>
               </Link>
             </div>

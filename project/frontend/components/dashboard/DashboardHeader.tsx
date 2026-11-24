@@ -220,7 +220,7 @@ export function DashboardHeader() {
                       className={`p-2.5 rounded-xl transition-colors cursor-pointer flex items-start gap-2.5 ${
                         n.read
                           ? "opacity-75 hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                          : "bg-purple-50/50 dark:bg-purple-950/20 hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30"
+                          : "bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 hover:bg-[var(--primary)]/15"
                       }`}
                     >
                       {renderSeverityIcon(n.severity)}
@@ -264,7 +264,7 @@ export function DashboardHeader() {
                 ? "/dashboard/settings/subscription?changePlan=true"
                 : "/dashboard/settings/subscription"
             }
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-purple-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] hover:opacity-95 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-[var(--glow-color)] transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span>

@@ -6,7 +6,7 @@ import { LifecycleBanners } from "@/components/dashboard/LifecycleBanners";
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50/50 dark:bg-[#060813] text-gray-900 dark:text-white selection:bg-[#8b5cf6]/30">
+    <div className="flex h-screen overflow-hidden bg-gray-50/50 dark:bg-[#060813] text-gray-900 dark:text-white selection:bg-[var(--primary)]/30">
       <Sidebar />
       <div className="flex w-0 flex-1 flex-col h-screen overflow-hidden min-w-0">
         <DashboardHeader />

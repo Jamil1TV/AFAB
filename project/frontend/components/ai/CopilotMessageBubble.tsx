@@ -109,7 +109,7 @@ export function CopilotMessageBubble({
         transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] as const }}
         className="group flex flex-col items-end gap-1"
       >
-        <div className="max-w-[88%] sm:max-w-[74%] rounded-2xl rounded-ee-md bg-gradient-to-br from-[#8b5cf6] to-[#6d28d9] text-white px-4 py-3 text-[14.5px] leading-relaxed shadow-md shadow-[#8b5cf6]/20 whitespace-pre-wrap">
+        <div className="max-w-[88%] sm:max-w-[74%] rounded-2xl rounded-ee-md bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] text-white px-4 py-3 text-[14.5px] leading-relaxed shadow-md shadow-[var(--glow-color)] whitespace-pre-wrap">
           {message.content}
         </div>
         <div className="flex items-center gap-2 px-1 text-[10px] text-gray-400 dark:text-gray-500">
@@ -186,7 +186,7 @@ export function CopilotMessageBubble({
       className="flex items-start gap-3"
     >
       {/* Copilot Avatar Badge */}
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#8b5cf6]/15 to-[#10b981]/10 border border-[#8b5cf6]/25 text-[#7c3aed] dark:text-[#c4b5fd] mt-0.5 shadow-2xs">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary)]/15 to-[#10b981]/10 border border-[var(--primary)]/25 text-[var(--primary)] mt-0.5 shadow-2xs">
         <Sparkles className="h-4 w-4" />
       </div>
 
@@ -237,10 +237,10 @@ export function CopilotMessageBubble({
           <div className="pt-3 border-t border-gray-100 dark:border-gray-800/80 space-y-2">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                <Database className="h-3.5 w-3.5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                <Database className="h-3.5 w-3.5 text-[var(--primary)]" />
                 <span>{t("evidenceTitle")}</span>
               </div>
-              <span className="text-[10px] font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
+              <span className="text-[10px] font-semibold text-[var(--primary)]">
                 {t("sourcesCount", { count: message.evidence.length })}
               </span>
             </div>
@@ -285,7 +285,7 @@ export function CopilotMessageBubble({
               <button
                 type="button"
                 onClick={onRegenerate}
-                className="inline-flex items-center gap-1 rounded-lg border border-gray-200/80 dark:border-gray-800 px-2 py-1 text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:border-[#8b5cf6]/40 hover:bg-[#8b5cf6]/5 hover:text-[#7c3aed] dark:hover:text-[#c4b5fd] transition-colors"
+                className="inline-flex items-center gap-1 rounded-lg border border-gray-200/80 dark:border-gray-800 px-2 py-1 text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:border-[var(--primary)]/40 hover:bg-[var(--primary)]/5 hover:text-[var(--primary)] transition-colors"
                 title={t("regenerate")}
               >
                 <RotateCcw className="h-3 w-3" />

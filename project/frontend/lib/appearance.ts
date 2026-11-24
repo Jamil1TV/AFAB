@@ -452,7 +452,7 @@ export function applyAppearance(
     setThemeFn(settings.themeMode);
   }
 
-  const { primary, primaryHover, glow, darkSecondary } = resolveAccentColors(
+  const { primary, primaryHover, glow, darkSecondary, lightTint } = resolveAccentColors(
     settings.accentPreset,
     settings.customPrimaryColor
   );
@@ -479,14 +479,27 @@ export function applyAppearance(
       --primary: ${primary};
       --primary-hover: ${primaryHover};
       --primary-foreground: #ffffff;
+      --secondary: ${lightTint};
+      --secondary-foreground: ${primary};
+      --accent: ${lightTint};
+      --accent-foreground: ${primary};
       --ring: ${primary};
       --sidebar-primary: ${primary};
       --sidebar-accent: ${hexToRgba(primary, 0.08)};
       --sidebar-accent-foreground: ${primary};
       --radius: ${radiusObj.valueRem};
+      --radius-sm: calc(${radiusObj.valueRem} * 0.5);
+      --radius-md: calc(${radiusObj.valueRem} * 0.75);
+      --radius-lg: ${radiusObj.valueRem};
+      --radius-xl: calc(${radiusObj.valueRem} * 1.33);
+      --radius-2xl: calc(${radiusObj.valueRem} * 1.67);
+      --radius-3xl: calc(${radiusObj.valueRem} * 2);
+      --radius-4xl: calc(${radiusObj.valueRem} * 2.67);
       --glow-color: ${glow};
     }
     .dark {
+      --font-family-body: ${fontObj.cssFamilyBody};
+      --font-family-heading: ${fontObj.cssFamilyHeading};
       --primary: ${primary};
       --primary-hover: ${primaryHover};
       --primary-foreground: #ffffff;
@@ -504,9 +517,16 @@ export function applyAppearance(
       --sidebar-accent: ${darkSecondary};
       --sidebar-accent-foreground: ${adjustHexLightness(primary, 30)};
       --radius: ${radiusObj.valueRem};
+      --radius-sm: calc(${radiusObj.valueRem} * 0.5);
+      --radius-md: calc(${radiusObj.valueRem} * 0.75);
+      --radius-lg: ${radiusObj.valueRem};
+      --radius-xl: calc(${radiusObj.valueRem} * 1.33);
+      --radius-2xl: calc(${radiusObj.valueRem} * 1.67);
+      --radius-3xl: calc(${radiusObj.valueRem} * 2);
+      --radius-4xl: calc(${radiusObj.valueRem} * 2.67);
       --glow-color: ${glow};
     }
-    body, p, span, a, button, input, select, textarea, label, td, th {
+    html, body, p, span, a, button, input, select, textarea, label, td, th, li {
       font-family: var(--font-family-body) !important;
     }
     h1, h2, h3, h4, h5, h6, .afab-page-title, .afab-card-title, .text-headline-lg, .text-headline-md, .text-display-lg {

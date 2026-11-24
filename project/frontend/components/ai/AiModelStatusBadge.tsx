@@ -93,9 +93,9 @@ export function AiModelStatusBadge({
     pillLabel = t("modelMissing");
   } else if (isBusy) {
     pillClass =
-      "border-[#8b5cf6]/30 bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#c4b5fd] hover:bg-[#8b5cf6]/15";
-    dotClass = "bg-[#8b5cf6]";
-    pingClass = "bg-[#8b5cf6]";
+      "border-[var(--primary)]/30 bg-[var(--primary)]/10 text-[var(--primary)] hover:bg-[var(--primary)]/15";
+    dotClass = "bg-[var(--primary)]";
+    pingClass = "bg-[var(--primary)]";
     showPing = true;
   }
 

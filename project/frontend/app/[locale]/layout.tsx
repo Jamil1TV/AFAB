@@ -95,14 +95,20 @@ export default async function RootLayout({
                   if (rawApp) {
                     var s = JSON.parse(rawApp);
                     var presets = {
-                      purple: { primary: '#8b5cf6', hover: '#7c3aed', glow: 'rgba(139, 92, 246, 0.35)', sec: '#191832' },
-                      blue: { primary: '#3b82f6', hover: '#2563eb', glow: 'rgba(59, 130, 246, 0.35)', sec: '#172554' },
-                      emerald: { primary: '#10b981', hover: '#059669', glow: 'rgba(16, 185, 129, 0.35)', sec: '#064e3b' },
-                      amber: { primary: '#f59e0b', hover: '#d97706', glow: 'rgba(245, 158, 11, 0.35)', sec: '#451a03' },
-                      rose: { primary: '#f43f5e', hover: '#e11d48', glow: 'rgba(244, 63, 94, 0.35)', sec: '#4c0519' },
-                      cyan: { primary: '#06b6d4', hover: '#0891b2', glow: 'rgba(6, 182, 212, 0.35)', sec: '#083344' },
-                      magenta: { primary: '#d946ef', hover: '#c026d3', glow: 'rgba(217, 70, 239, 0.35)', sec: '#4a044e' },
-                      slate: { primary: '#64748b', hover: '#475569', glow: 'rgba(100, 116, 139, 0.35)', sec: '#1e293b' }
+                      purple: { primary: '#8b5cf6', hover: '#7c3aed', glow: 'rgba(139, 92, 246, 0.35)', sec: '#191832', light: '#f5f3ff' },
+                      blue: { primary: '#3b82f6', hover: '#2563eb', glow: 'rgba(59, 130, 246, 0.35)', sec: '#172554', light: '#eff6ff' },
+                      emerald: { primary: '#10b981', hover: '#059669', glow: 'rgba(16, 185, 129, 0.35)', sec: '#064e3b', light: '#ecfdf5' },
+                      amber: { primary: '#f59e0b', hover: '#d97706', glow: 'rgba(245, 158, 11, 0.35)', sec: '#451a03', light: '#fffbeb' },
+                      rose: { primary: '#f43f5e', hover: '#e11d48', glow: 'rgba(244, 63, 94, 0.35)', sec: '#4c0519', light: '#fff1f2' },
+                      cyan: { primary: '#06b6d4', hover: '#0891b2', glow: 'rgba(6, 182, 212, 0.35)', sec: '#083344', light: '#ecfeff' },
+                      magenta: { primary: '#d946ef', hover: '#c026d3', glow: 'rgba(217, 70, 239, 0.35)', sec: '#4a044e', light: '#fdf4ff' },
+                      slate: { primary: '#64748b', hover: '#475569', glow: 'rgba(100, 116, 139, 0.35)', sec: '#1e293b', light: '#f8fafc' }
+                    };
+                    var surfaces = {
+                      midnight: { bg: '#060813', card: '#0c101c', inset: '#080c18', border: '#171f2c' },
+                      oled: { bg: '#000000', card: '#0a0a0a', inset: '#050505', border: '#171717' },
+                      slate: { bg: '#090d16', card: '#0f172a', inset: '#0b1120', border: '#1e293b' },
+                      charcoal: { bg: '#111318', card: '#181b22', inset: '#13161c', border: '#232730' }
                     };
                     var fontFamilies = {
                       inter: { body: "var(--font-sans), 'Inter', sans-serif", heading: "var(--font-heading), 'Poppins', sans-serif" },
@@ -119,14 +125,16 @@ export default async function RootLayout({
                       xl: '125%'
                     };
                     var p = presets[s.accentPreset] || presets.purple;
+                    var surf = surfaces[s.darkSurface] || surfaces.midnight;
                     var pr = (s.accentPreset === 'custom' && s.customPrimaryColor) ? s.customPrimaryColor : p.primary;
                     var ph = p.hover || pr;
+                    var plt = p.light || '#f5f3ff';
                     var rad = s.radius === 'sm' ? '0.5rem' : s.radius === 'lg' ? '1rem' : '0.75rem';
                     var f = fontFamilies[s.fontFamily] || fontFamilies.inter;
                     var fsz = fontSizes[s.fontSize] || '100%';
-                    var css = ':root{--font-family-body:' + f.body + ';--font-family-heading:' + f.heading + ';--primary:' + pr + ';--primary-hover:' + ph + ';--ring:' + pr + ';--sidebar-primary:' + pr + ';--radius:' + rad + ';--glow-color:' + p.glow + ';}' +
-                              '.dark{--primary:' + pr + ';--primary-hover:' + ph + ';--background:#060813;--card:#0c101c;--popover:#0c101c;--surface-inset:#080c18;--border:#171f2c;--secondary:' + p.sec + ';--ring:' + pr + ';--sidebar-primary:' + pr + ';--radius:' + rad + ';--glow-color:' + p.glow + ';}' +
-                              'body, p, span, a, button, input, select, textarea, label, td, th {font-family:' + f.body + '!important;}' +
+                    var css = ':root{--font-family-body:' + f.body + ';--font-family-heading:' + f.heading + ';--primary:' + pr + ';--primary-hover:' + ph + ';--secondary:' + plt + ';--secondary-foreground:' + pr + ';--accent:' + plt + ';--accent-foreground:' + pr + ';--ring:' + pr + ';--sidebar-primary:' + pr + ';--radius:' + rad + ';--glow-color:' + p.glow + ';}' +
+                              '.dark{--font-family-body:' + f.body + ';--font-family-heading:' + f.heading + ';--primary:' + pr + ';--primary-hover:' + ph + ';--background:' + surf.bg + ';--card:' + surf.card + ';--popover:' + surf.card + ';--surface-inset:' + surf.inset + ';--border:' + surf.border + ';--secondary:' + p.sec + ';--secondary-foreground:' + pr + ';--accent:' + p.sec + ';--accent-foreground:' + pr + ';--ring:' + pr + ';--sidebar-primary:' + pr + ';--radius:' + rad + ';--glow-color:' + p.glow + ';}' +
+                              'html, body, p, span, a, button, input, select, textarea, label, td, th, li {font-family:' + f.body + '!important;}' +
                               'h1,h2,h3,h4,h5,h6,.afab-page-title,.afab-card-title,.text-headline-lg,.text-headline-md,.text-display-lg{font-family:' + f.heading + '!important;}';
                     var st = document.createElement('style');
                     st.id = 'afab-appearance-theme';

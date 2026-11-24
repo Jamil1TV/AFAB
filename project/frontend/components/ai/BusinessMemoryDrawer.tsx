@@ -107,7 +107,7 @@ export function BusinessMemoryDrawer({
           >
             <div className="flex items-start justify-between gap-3 border-b border-gray-200 dark:border-gray-800 p-5">
               <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#8b5cf6]/15 to-[#10b981]/10 text-[#7c3aed] dark:text-[#c4b5fd] border border-[#8b5cf6]/25">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary)]/15 to-[#10b981]/10 text-[var(--primary)] border border-[var(--primary)]/25">
                   <Brain className="h-5 w-5" />
                 </div>
                 <div>
@@ -133,7 +133,7 @@ export function BusinessMemoryDrawer({
                 className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-gray-50/75 dark:bg-[#080c18] p-4 space-y-3"
               >
                 <div className="flex items-center gap-2 text-xs font-bold text-gray-900 dark:text-white">
-                  <Plus className="h-3.5 w-3.5 text-[#7c3aed] dark:text-[#a78bfa]" />
+                  <Plus className="h-3.5 w-3.5 text-[var(--primary)]" />
                   <span>{t("addTitle")}</span>
                 </div>
 
@@ -210,12 +210,12 @@ export function BusinessMemoryDrawer({
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.22, delay: Math.min(idx * 0.03, 0.24) }}
-                      className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] p-3.5 space-y-2 hover:border-[#8b5cf6]/35 transition-colors"
+                      className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] p-3.5 space-y-2 hover:border-[var(--primary)]/35 transition-colors"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 space-y-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[var(--primary)]/10 text-[var(--primary)]">
                               {t(`types.${mem.memoryType}`)}
                             </span>
                             <span

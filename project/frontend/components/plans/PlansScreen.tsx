@@ -749,7 +749,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         title={
           <span className="inline-flex flex-wrap items-center gap-2">
             <span>{isAr ? "إدارة" : "Manage"}</span>
-            <span className="bg-gradient-to-r from-[#8b5cf6] via-indigo-500 to-[#7c3aed] dark:from-[#a78bfa] dark:via-indigo-400 dark:to-[#8b5cf6] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[var(--primary)] via-indigo-500 to-[var(--primary-hover)] bg-clip-text text-transparent">
               {isAr ? "اشتراكك وباقتك" : "Subscription & Plans"}
             </span>
           </span>
@@ -761,7 +761,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
         }
         actions={
           <div className="afab-card flex items-center gap-3 p-3 px-4 max-w-sm">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)]">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -786,10 +786,10 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
 
       {/* ── Complete Subscription Management Overview Card ── */}
       {subscription && (
-        <section className="afab-card p-6 border border-[#8b5cf6]/25 space-y-5">
+        <section className="afab-card p-6 border border-[var(--primary)]/25 space-y-5">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-11 h-11 rounded-2xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/25 text-[#7c3aed] dark:text-[#a78bfa] flex items-center justify-center shrink-0">
+              <div className="w-11 h-11 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/25 text-[var(--primary)] flex items-center justify-center shrink-0">
                 <CreditCard className="w-5 h-5" />
               </div>
               <div className="space-y-1">
@@ -805,7 +805,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                       isPastDue
                         ? "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/25"
                         : isTrialActive
-                        ? "bg-purple-500/10 text-[#7c3aed] dark:text-[#a78bfa] border-purple-500/25"
+                        ? "bg-[var(--primary)]/10 text-[var(--primary)] border-[var(--primary)]/25"
                         : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25"
                     }`}
                   >
@@ -1296,14 +1296,14 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
               key={plan.id}
               className={`rounded-2xl p-6 flex flex-col justify-between relative transition-all duration-300 ${
                 isPlus
-                  ? "bg-gradient-to-b from-purple-50/80 via-white to-white dark:from-[#8b5cf6]/10 dark:via-[#0c101c] dark:to-[#0c101c] border-2 border-[#8b5cf6] dark:border-[#8b5cf6]/80 shadow-lg shadow-[#8b5cf6]/10 lg:scale-[1.02] z-20"
+                  ? "bg-gradient-to-b from-[var(--primary)]/10 via-white to-white dark:from-[var(--primary)]/15 dark:via-[#0c101c] dark:to-[#0c101c] border-2 border-[var(--primary)] dark:border-[var(--primary)]/80 shadow-lg shadow-[var(--glow-color)] lg:scale-[1.02] z-20"
                   : isPro
                   ? "bg-gradient-to-b from-amber-50/60 via-white to-white dark:from-amber-500/[0.07] dark:via-[#0c101c] dark:to-[#0c101c] border border-amber-500/40 dark:border-amber-500/30 hover:border-amber-500/60 dark:hover:border-amber-500/50 shadow-sm afab-card-hover group"
                   : "afab-card afab-card-hover group"
               }`}
             >
               {isPlus && (
-                <div className="absolute -top-3.5 inset-x-0 mx-auto w-fit bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-[10px] px-3.5 py-1 rounded-full border border-purple-400/40 flex items-center gap-1 shadow-md shadow-purple-600/30 whitespace-nowrap">
+                <div className="absolute -top-3.5 inset-x-0 mx-auto w-fit bg-gradient-to-r from-[var(--primary)] to-[var(--primary-hover)] text-white font-bold text-[10px] px-3.5 py-1 rounded-full border border-white/20 flex items-center gap-1 shadow-md shadow-[var(--glow-color)] whitespace-nowrap">
                   <Sparkles className="w-3 h-3 text-amber-300" />
                   <span>
                     {plan.badge || (isAr ? "الأكثر شيوعاً" : "Most Popular")}
@@ -1318,7 +1318,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                       plan.id === "free"
                         ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400"
                         : plan.id === "plus"
-                        ? "bg-[#8b5cf6]/10 border-purple-200 dark:border-purple-500/30 text-[#7c3aed] dark:text-[#a78bfa]"
+                        ? "bg-[var(--primary)]/10 border-[var(--primary)]/30 text-[var(--primary)]"
                         : "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400"
                     }`}
                   >
@@ -1468,12 +1468,12 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                     <span>{isAr ? "مجاني" : "Free"}</span>
                   </div>
                 </th>
-                <th className="afab-th py-4 text-center w-1/5 bg-purple-50/50 dark:bg-[#8b5cf6]/[0.06] border-x border-purple-100 dark:border-purple-500/20 relative">
-                  <span className="text-[9px] uppercase tracking-wider font-bold text-[#7c3aed] dark:text-[#a78bfa] block mb-0.5">
+                <th className="afab-th py-4 text-center w-1/5 bg-[var(--primary)]/[0.06] border-x border-[var(--primary)]/20 relative">
+                  <span className="text-[9px] uppercase tracking-wider font-bold text-[var(--primary)] block mb-0.5">
                     {isAr ? "☆ الأكثر شيوعاً" : "☆ Most Popular"}
                   </span>
                   <div className="inline-flex items-center gap-1.5 font-bold text-gray-900 dark:text-white text-sm">
-                    <span className="w-5 h-5 rounded-md bg-[#8b5cf6]/10 border border-purple-200 dark:border-purple-500/30 flex items-center justify-center text-[#7c3aed] dark:text-[#a78bfa]">
+                    <span className="w-5 h-5 rounded-md bg-[var(--primary)]/10 border border-[var(--primary)]/30 flex items-center justify-center text-[var(--primary)]">
                       <Zap className="w-3 h-3 fill-current" />
                     </span>
                     <span>Plus</span>
@@ -1527,7 +1527,7 @@ function PlansScreenInner({ embedded = false }: { embedded?: boolean }) {
                     )}
                   </td>
 
-                  <td className="afab-td text-center bg-purple-50/40 dark:bg-[#8b5cf6]/[0.04] border-x border-purple-100 dark:border-purple-500/20">
+                  <td className="afab-td text-center bg-[var(--primary)]/[0.04] border-x border-[var(--primary)]/20">
                     {typeof row.plus === "boolean" ? (
                       row.plus ? (
                         <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto stroke-[2.5]" />
