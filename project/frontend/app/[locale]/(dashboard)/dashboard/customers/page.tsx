@@ -682,8 +682,8 @@ export default function CustomersPage() {
               <div className="p-8">
                 <EmptyState
                   icon={Users}
-                  title={tTable("emptyTitle")}
-                  description={tTable("emptyDesc")}
+                  title={tTable.has("emptyTitle") ? tTable("emptyTitle") : "No customers yet"}
+                  description={tTable.has("emptyDesc") ? tTable("emptyDesc") : "Add your first customer to start tracking orders, invoices, and revenue."}
                   action={
                     <button onClick={openAddModal} className="afab-btn-primary text-xs mt-3">
                       <Plus className="h-3.5 w-3.5" />
@@ -853,8 +853,16 @@ export default function CustomersPage() {
                     <td colSpan={9}>
                       <EmptyState
                         icon={Users}
-                        title={search || statusFilter !== "ALL" || groupFilter !== "ALL" ? tTable("noResults") : "No customers yet."}
-                        description={tTable("noCustomersYet")}
+                        title={
+                          search || statusFilter !== "ALL" || groupFilter !== "ALL"
+                            ? (tTable.has("noResults") ? tTable("noResults") : "No customers found matching your criteria")
+                            : (tTable.has("emptyTitle") ? tTable("emptyTitle") : "No customers yet")
+                        }
+                        description={
+                          tTable.has("emptyDesc")
+                            ? tTable("emptyDesc")
+                            : (tTable.has("noCustomersYet") ? tTable("noCustomersYet") : "No customers added yet.")
+                        }
                         action={
                           <button
                             type="button"

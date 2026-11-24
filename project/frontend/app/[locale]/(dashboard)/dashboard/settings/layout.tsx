@@ -20,6 +20,7 @@ export default function SettingsLayout({
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const devSafePrefetch = process.env.NODE_ENV === "production" ? undefined : false;
   
   const tabs = [
     { id: "general", path: "/dashboard/settings/general", label: t("tabs.general"), icon: <Settings className="w-4 h-4" /> },
@@ -72,6 +73,7 @@ export default function SettingsLayout({
                 <Link
                   key={tab.id}
                   href={tab.path}
+                  prefetch={devSafePrefetch}
                   title={collapsed ? tab.label : undefined}
                   className={`group flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative
                     ${isActive 
@@ -160,6 +162,7 @@ export default function SettingsLayout({
                       <Link
                         key={tab.id}
                         href={tab.path}
+                        prefetch={devSafePrefetch}
                         onClick={() => setMobileNavOpen(false)}
                         className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors
                           ${isActive 
