@@ -133,11 +133,11 @@ export function CopilotWelcome({
   const alertTotal = pulse ? pulse.highCount + pulse.mediumCount : 0;
 
   return (
-    <div className="relative min-h-full flex flex-col justify-center max-w-3xl mx-auto py-2 sm:py-4 gap-4 sm:gap-5">
+    <div className="relative min-h-full flex flex-col justify-center max-w-3xl mx-auto py-1 gap-3 xl:gap-4">
       {/* Theme-Synced Atmospheric Top Aura */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-4 left-1/2 -translate-x-1/2 h-44 w-80 rounded-full bg-[var(--primary)]/[0.14] blur-3xl"
+        className="pointer-events-none absolute -top-4 left-1/2 -translate-x-1/2 h-36 w-72 rounded-full bg-[var(--primary)]/[0.14] blur-3xl"
       />
 
       {/* Compact Executive Hero */}
@@ -145,28 +145,28 @@ export function CopilotWelcome({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] as const }}
-        className="relative text-center space-y-2.5"
+        className="relative text-center space-y-1.5"
       >
         <div className="flex justify-center">
-          <div className="relative flex h-11 w-11 items-center justify-center">
+          <div className="relative flex h-9 w-9 items-center justify-center">
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute -inset-1.5 rounded-2xl bg-[var(--primary)]/20 blur-md"
+              className="pointer-events-none absolute -inset-1 rounded-xl bg-[var(--primary)]/20 blur-md"
             />
-            <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--primary)]/30 bg-[var(--surface-inset)] shadow-md shadow-[var(--primary)]/10">
-              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] text-white shadow-sm">
-                <Sparkles className="h-4 w-4" />
+            <div className="relative z-10 flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--primary)]/30 bg-[var(--surface-inset)] shadow-md shadow-[var(--primary)]/10">
+              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--primary)] to-[var(--primary-hover)] text-white shadow-sm">
+                <Sparkles className="h-3.5 w-3.5" />
               </div>
             </div>
           </div>
         </div>
 
-        <h2 className="font-heading text-2xl sm:text-[28px] font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
+        <h2 className="font-heading text-xl sm:text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
           <span>{t("heroTitleStart")}</span>
           <span className="ai-accent-gradient">{t("heroTitleHighlight")}</span>
         </h2>
 
-        <p className="text-xs sm:text-[13px] text-gray-500 dark:text-gray-400 max-w-xl mx-auto leading-relaxed">
+        <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xl mx-auto leading-snug">
           {t("welcomeSubtitle")}
         </p>
       </motion.div>
@@ -176,7 +176,7 @@ export function CopilotWelcome({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.28, delay: 0.04, ease: [0.22, 1, 0.36, 1] as const }}
-        className="relative rounded-2xl border border-[var(--border)] bg-[var(--surface-inset)]/90 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-3 backdrop-blur-md"
+        className="relative rounded-xl border border-[var(--border)] bg-[var(--surface-inset)]/90 px-3 py-2 flex flex-wrap items-center justify-between gap-2.5 backdrop-blur-md"
       >
         {pulse ? (
           <div className="flex flex-wrap items-center gap-3 text-xs">
@@ -260,7 +260,7 @@ export function CopilotWelcome({
           type="button"
           disabled={disabled}
           onClick={() => onSelectPrompt(t("morningBriefPrompt"))}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white px-3.5 py-1.5 text-xs font-semibold shadow-sm shadow-[var(--glow-color)] transition-all disabled:opacity-50 ms-auto"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white px-3 py-1.5 text-xs font-semibold shadow-sm shadow-[var(--glow-color)] transition-all disabled:opacity-50 ms-auto"
         >
           <Sunrise className="h-3.5 w-3.5" />
           <span>{t("morningBriefButton")}</span>
@@ -272,7 +272,7 @@ export function CopilotWelcome({
         variants={CONTAINER_VARIANTS}
         initial="hidden"
         animate="visible"
-        className="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-2"
       >
         {bentoCards.map((card) => {
           const Icon = card.icon;
@@ -285,10 +285,10 @@ export function CopilotWelcome({
               type="button"
               disabled={disabled}
               onClick={card.onClick}
-              className="group relative flex items-start gap-3 text-start p-3.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-inset)]/75 hover:bg-[var(--surface-inset)] hover:border-[var(--primary)]/45 hover:shadow-md hover:shadow-[var(--primary)]/[0.06] transition-all disabled:opacity-50"
+              className="group relative flex items-start gap-2.5 text-start p-3 rounded-xl border border-[var(--border)] bg-[var(--surface-inset)]/75 hover:bg-[var(--surface-inset)] hover:border-[var(--primary)]/45 hover:shadow-md hover:shadow-[var(--primary)]/[0.06] transition-all disabled:opacity-50"
             >
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border mt-0.5 ${card.tileClass}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border mt-0.5 ${card.tileClass}`}
               >
                 <Icon className="h-4 w-4" />
               </span>
@@ -296,7 +296,7 @@ export function CopilotWelcome({
               <div className="min-w-0 flex-1 space-y-0.5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <h3 className="text-[13px] font-bold text-gray-900 dark:text-white group-hover:text-[var(--primary)] transition-colors truncate">
+                    <h3 className="text-[12.5px] font-bold text-gray-900 dark:text-white group-hover:text-[var(--primary)] transition-colors truncate">
                       {card.title}
                     </h3>
                     {card.badge && (
@@ -307,7 +307,7 @@ export function CopilotWelcome({
                   </div>
                   <ArrowUpRight className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 group-hover:text-[var(--primary)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform rtl:rotate-180 shrink-0" />
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 leading-snug line-clamp-2">
+                <p className="text-[11.5px] text-gray-500 dark:text-gray-400 leading-snug line-clamp-1 sm:line-clamp-2">
                   {card.desc}
                 </p>
               </div>
@@ -317,14 +317,14 @@ export function CopilotWelcome({
       </motion.div>
 
       {/* Compact Quick Suggestion Pills */}
-      <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0.5">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 pt-0">
         {quickPills.map((pill) => (
           <button
             key={pill.key}
             type="button"
             disabled={disabled}
             onClick={pill.onClick}
-            className="rounded-full border border-[var(--border)] bg-[var(--card)] hover:border-[var(--primary)]/45 hover:text-[var(--primary)] px-3 py-1 text-[11.5px] font-medium text-gray-600 dark:text-gray-300 transition-colors disabled:opacity-50"
+            className="rounded-full border border-[var(--border)] bg-[var(--card)] hover:border-[var(--primary)]/45 hover:text-[var(--primary)] px-2.5 py-1 text-[11px] font-medium text-gray-600 dark:text-gray-300 transition-colors disabled:opacity-50"
           >
             {pill.label}
           </button>

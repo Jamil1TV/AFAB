@@ -638,8 +638,8 @@ export default function AfabCopilotPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-3 sm:px-5 py-2.5 sm:py-3.5">
-      <div className="flex h-[calc(100vh-5rem)] min-h-[580px] gap-3.5 relative">
+    <div className="h-full w-full overflow-hidden mx-auto max-w-[1440px] px-3 sm:px-4 py-2 sm:py-2.5 flex flex-col">
+      <div className="flex flex-1 min-h-0 gap-3 relative">
         {/* Mobile Conversation Sidebar Overlay */}
         <AnimatePresence>
           {mobileHistoryOpen && (
@@ -704,7 +704,7 @@ export default function AfabCopilotPage() {
 
         {/* Desktop Collapsible Conversation History Sidebar */}
         {sidebarOpen && (
-          <aside className="hidden lg:flex w-[264px] shrink-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-3.5 shadow-sm backdrop-blur-xl">
+          <aside className="hidden lg:flex w-[264px] shrink-0 min-h-0 overflow-hidden flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-3.5 shadow-sm backdrop-blur-xl">
             <motion.button
               whileTap={{ scale: 0.985 }}
               type="button"
@@ -807,7 +807,7 @@ export default function AfabCopilotPage() {
               stageFiles(e.dataTransfer.files);
             }
           }}
-          className="relative flex-1 flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm overflow-hidden"
+          className="relative min-h-0 flex-1 flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm overflow-hidden"
         >
           {dragActive && (
             <div className="pointer-events-none absolute inset-3 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--primary)] bg-[var(--card)]/90 backdrop-blur-md text-center p-6">
@@ -822,7 +822,7 @@ export default function AfabCopilotPage() {
           )}
 
           {/* Clean Single-Row Studio Header */}
-          <header className="h-14 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--card)]/90 backdrop-blur-xl px-4 sm:px-5 shrink-0">
+          <header className="h-12 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--card)]/90 backdrop-blur-xl px-4 sm:px-5 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <button
                 type="button"
@@ -982,7 +982,7 @@ export default function AfabCopilotPage() {
           <div
             ref={scrollContainerRef}
             onScroll={handleMessagesScroll}
-            className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 custom-scrollbar relative"
+            className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 py-2.5 custom-scrollbar relative"
           >
             {loadingPage ? (
               <div className="flex h-full items-center justify-center">
@@ -1074,7 +1074,7 @@ export default function AfabCopilotPage() {
           </AnimatePresence>
 
           {/* Flagship Two-Zone Command Composer */}
-          <div className="px-4 sm:px-6 pb-3.5 pt-1.5 bg-gradient-to-t from-[var(--card)] via-[var(--card)]/95 to-transparent shrink-0">
+          <div className="px-4 sm:px-6 pb-2.5 pt-1 bg-gradient-to-t from-[var(--card)] via-[var(--card)]/95 to-transparent shrink-0">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1123,7 +1123,7 @@ export default function AfabCopilotPage() {
               )}
 
               {/* Zone 1: Full-width non-clipping textarea */}
-              <div className="px-3.5 pt-2.5 pb-1">
+              <div className="px-3.5 pt-2 pb-0.5">
                 <textarea
                   ref={textareaRef}
                   rows={1}
@@ -1145,13 +1145,13 @@ export default function AfabCopilotPage() {
                   placeholder={t("placeholder")}
                   disabled={sending}
                   maxLength={4000}
-                  className="w-full min-h-[38px] max-h-40 bg-transparent py-1 text-[14px] leading-6 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none resize-none"
+                  className="w-full min-h-[34px] max-h-40 bg-transparent py-1 text-[14px] leading-6 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none resize-none"
                   dir={isAr ? "rtl" : "auto"}
                 />
               </div>
 
               {/* Zone 2: Unified Bottom Action Bar */}
-              <div className="px-2.5 pb-2.5 pt-1 flex items-center justify-between gap-2">
+              <div className="px-2.5 pb-2 pt-0.5 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"

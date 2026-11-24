@@ -13,7 +13,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       <div className="flex w-0 flex-1 flex-col h-screen overflow-hidden min-w-0">
         <DashboardHeader />
         <LifecycleBanners />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+        <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar">
           {children}
         </main>
       </div>
