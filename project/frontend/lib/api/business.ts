@@ -41,6 +41,14 @@ export interface BusinessData {
   fiscalYearStartMonth: number;
   industry?: string;
   businessType?: string;
+  businessEmail?: string;
+  phoneNumber?: string;
+  taxId?: string;
+  addressLine?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  description?: string;
   logoUrl?: string;
   status: string;
   userRole?: string;

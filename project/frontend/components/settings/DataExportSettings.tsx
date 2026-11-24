@@ -39,6 +39,7 @@ import {
   exportDatasetToExcel, 
   openPrintableReportWindow,
   calculateDateRange,
+  formatBusinessAddress,
   PERIOD_PRESETS,
   MasterExportData 
 } from "@/lib/export-utils";
@@ -262,8 +263,13 @@ export function DataExportSettings({
       };
     });
 
+    const mf = (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : "") || business?.taxId;
+    const addr = (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "") || formatBusinessAddress(business);
+
     return {
       businessName: business?.name || profile?.companyName || "AFAB Business",
+      fiscalMatricule: mf,
+      businessAddress: addr,
       currency: currencyToUse,
       generatedAt: new Date().toLocaleString(isAr ? "ar-EG" : "en-US"),
       dateRange: range.label,
@@ -310,11 +316,19 @@ export function DataExportSettings({
     currency: string;
     includeLogo: boolean;
     includeSignature: boolean;
+    fiscalMatricule?: string;
+    businessAddress?: string;
   }) => {
     if (!modalAction) return;
 
     try {
       const data = getExportDataForPeriod(config.period, config.customStart, config.customEnd, config.currency);
+      if (config.fiscalMatricule) {
+        data.fiscalMatricule = config.fiscalMatricule;
+      }
+      if (config.businessAddress) {
+        data.businessAddress = config.businessAddress;
+      }
 
       if (modalAction === "master-excel") {
         setExportingMasterExcel(true);
@@ -331,6 +345,8 @@ export function DataExportSettings({
           title: isAr ? "الأرشيف المالي الشامل — AFAB" : "AFAB Enterprise — Financial & Data Archive",
           subtitle: isAr ? "سجل المعاملات والعملاء والفواتير المعتمد" : "Certified Financial Records & Business Registry",
           businessName: data.businessName,
+          fiscalMatricule: data.fiscalMatricule,
+          businessAddress: data.businessAddress,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -405,12 +421,18 @@ export function DataExportSettings({
       } else if (modalAction === "transactions-excel") {
         const headers = ["ID", "Date", "Description", "Type", "Category", "Amount", "Currency", "Payment Method", "Status", "Notes"];
         const rows = data.transactions.map((t) => [t.id, t.date, t.description, t.type, t.category, t.amount, t.currency, t.paymentMethod, t.status, t.notes]);
-        exportDatasetToExcel("Transactions", headers, rows, "AFAB_Transactions", data.dateRange);
+        exportDatasetToExcel("Transactions", headers, rows, "AFAB_Transactions", data.dateRange, {
+          businessName: data.businessName,
+          fiscalMatricule: data.fiscalMatricule,
+          businessAddress: data.businessAddress
+        });
         toast.success(isAr ? "تم تحميل معاملات إكسل بنجاح!" : "Transactions Excel downloaded!");
       } else if (modalAction === "transactions-pdf") {
         openPrintableReportWindow({
           title: isAr ? "سجل المعاملات — AFAB" : "AFAB — Transactions Ledger",
           businessName: data.businessName,
+          fiscalMatricule: data.fiscalMatricule,
+          businessAddress: data.businessAddress,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -425,12 +447,18 @@ export function DataExportSettings({
       } else if (modalAction === "customers-excel") {
         const headers = ["Customer ID / Code", "Order / Ref #", "Name", "Email", "Phone", "Total Spent in Period", "Orders Count", "Status", "Group"];
         const rows = data.customers.map((c) => [c.id, c.orderNumber, c.name, c.email, c.phone, c.totalSpent, c.invoicesCount, c.status, c.group]);
-        exportDatasetToExcel("Customers", headers, rows, "AFAB_Customers_Registry", data.dateRange);
+        exportDatasetToExcel("Customers", headers, rows, "AFAB_Customers_Registry", data.dateRange, {
+          businessName: data.businessName,
+          fiscalMatricule: data.fiscalMatricule,
+          businessAddress: data.businessAddress
+        });
         toast.success(isAr ? "تم تحميل دليل العملاء بنجاح!" : "Customers directory Excel downloaded!");
       } else if (modalAction === "customers-pdf") {
         openPrintableReportWindow({
           title: isAr ? "سجل العملاء — AFAB" : "AFAB — Customer Directory",
           businessName: data.businessName,
+          fiscalMatricule: data.fiscalMatricule,
+          businessAddress: data.businessAddress,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -445,12 +473,18 @@ export function DataExportSettings({
       } else if (modalAction === "invoices-excel") {
         const headers = ["Invoice #", "Customer", "Issue Date", "Due Date", "Total", "Currency", "Status"];
         const rows = data.invoices.map((i) => [i.invoiceNumber, i.customerName, i.issueDate, i.dueDate, i.totalAmount, i.currency, i.status]);
-        exportDatasetToExcel("Invoices", headers, rows, "AFAB_Invoices_Billing", data.dateRange);
+        exportDatasetToExcel("Invoices", headers, rows, "AFAB_Invoices_Billing", data.dateRange, {
+          businessName: data.businessName,
+          fiscalMatricule: data.fiscalMatricule,
+          businessAddress: data.businessAddress
+        });
         toast.success(isAr ? "تم تحميل الفواتير بنجاح!" : "Invoices Excel downloaded!");
       } else if (modalAction === "invoices-pdf") {
         openPrintableReportWindow({
           title: isAr ? "سجل الفواتير — AFAB" : "AFAB — Invoices Registry",
           businessName: data.businessName,
+          fiscalMatricule: data.fiscalMatricule,
+          businessAddress: data.businessAddress,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -980,6 +1014,8 @@ export function DataExportSettings({
         actionType={modalAction}
         defaultPeriod={selectedPeriod}
         defaultCurrency={selectedCurrency}
+        defaultFiscalMatricule={business?.taxId || (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : "")}
+        defaultBusinessAddress={formatBusinessAddress(business) || (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "")}
         onConfirm={handleConfirmModal}
       />
     </div>

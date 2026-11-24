@@ -41,9 +41,10 @@ import {
 } from "@/lib/api/invoices";
 import { CustomerService, Customer } from "@/lib/api/customers";
 import { UserService } from "@/lib/api/dashboard";
+import { BusinessService, BusinessData } from "@/lib/api/business";
 import { formatCurrency } from "@/lib/currency";
 import { getWetSignature, WetSignatureData } from "@/lib/signature-utils";
-import { openPrintableInvoiceWindow } from "@/lib/export-utils";
+import { openPrintableInvoiceWindow, formatBusinessAddress } from "@/lib/export-utils";
 
 interface DraftLineItem {
   description: string;
@@ -93,6 +94,7 @@ export default function InvoicesPage() {
   const [invoicesData, setInvoicesData] = useState<InvoicePageResponse | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [userProfile, setUserProfile] = useState<{ currency?: string } | null>(null);
+  const [currentBusiness, setCurrentBusiness] = useState<BusinessData | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
@@ -204,6 +206,9 @@ export default function InvoicesPage() {
         setUserProfile(prof);
         if (prof?.currency) setFormCurrency(prof.currency);
       })
+      .catch(() => {});
+    BusinessService.getMine()
+      .then((b) => setCurrentBusiness(b))
       .catch(() => {});
     CustomerService.getCustomers({ page: 0, size: 100 })
       .then((res) => setCustomers(res.content || []))
@@ -970,6 +975,23 @@ export default function InvoicesPage() {
                     <p className="text-xs text-gray-500 mt-1">
                       {selectedInvoice.customerName || "Walk-in / General"} · Issued {selectedInvoice.issueDate} · Due {selectedInvoice.dueDate}
                     </p>
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                        {isAr ? "المعرف الجبائي (MF):" : "Fiscal Matricule (MF):"}
+                      </span>
+                      {currentBusiness?.taxId ? (
+                        <span className="text-[11px] font-mono font-bold text-[var(--primary)] bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
+                          {currentBusiness.taxId}
+                        </span>
+                      ) : (
+                        <Link
+                          href="/dashboard/settings/business-profile"
+                          className="text-[11px] font-semibold text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+                        >
+                          {isAr ? "إضافة المعرف الجبائي من الإعدادات +" : "Set in Business Settings +"}
+                        </Link>
+                      )}
+                    </div>
                   </div>
                   <button
                     onClick={() => setSelectedInvoice(null)}
@@ -983,7 +1005,15 @@ export default function InvoicesPage() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     disabled={actionBusy}
-                    onClick={() => openPrintableInvoiceWindow({ invoice: selectedInvoice, isAr })}
+                    onClick={() =>
+                      openPrintableInvoiceWindow({
+                        invoice: selectedInvoice,
+                        business: currentBusiness,
+                        fiscalMatricule: currentBusiness?.taxId || (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : ""),
+                        businessAddress: formatBusinessAddress(currentBusiness) || (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : ""),
+                        isAr,
+                      })
+                    }
                     className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-purple-200 dark:border-purple-800/80 bg-purple-50/60 dark:bg-purple-950/20 text-[var(--primary)] text-xs font-semibold hover:bg-purple-100 dark:hover:bg-purple-900/40 transition-colors"
                   >
                     <Printer className="h-3.5 w-3.5" /> {isAr ? "طباعة / PDF الفاتورة" : "Print / PDF Invoice"}
@@ -1130,6 +1160,11 @@ export default function InvoicesPage() {
                         <p className="text-[11px] text-gray-500 dark:text-gray-400">
                           {wetSignature.signatoryTitle}
                         </p>
+                        {currentBusiness?.taxId && (
+                          <p className="text-[10px] font-mono font-semibold text-[var(--primary)] mt-0.5">
+                            {isAr ? "المعرف الجبائي:" : "MF:"} {currentBusiness.taxId}
+                          </p>
+                        )}
                         <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
                           <CheckCircle2 className="w-3 h-3" /> {isAr ? "معتمد وموثق رقمياً" : "Digitally Certified"}
                         </span>

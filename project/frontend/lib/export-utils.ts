@@ -6,6 +6,8 @@ import { getWetSignature } from "./signature-utils";
 
 export interface MasterExportData {
   businessName: string;
+  fiscalMatricule?: string;
+  businessAddress?: string;
   currency: string;
   generatedAt: string;
   dateRange: string;
@@ -49,6 +51,19 @@ export interface MasterExportData {
     totalInvoicesCount: number;
     totalTransactionsCount: number;
   };
+}
+
+export function formatBusinessAddress(b?: any): string {
+  if (!b) return "";
+  if (typeof b === "string") return b.trim();
+  const parts = [
+    b.addressLine,
+    b.city,
+    b.state,
+    b.postalCode,
+    b.country
+  ].filter((p) => typeof p === "string" && p.trim().length > 0);
+  return parts.join(", ");
 }
 
 let cachedLogoBase64: string | null = null;
@@ -216,6 +231,8 @@ export function exportMasterToExcel(
     [],
     ["METADATA", "DETAILS"],
     ["Business Name", data.businessName || "My Business"],
+    ...(data.fiscalMatricule ? [["Fiscal Matricule (MF)", data.fiscalMatricule]] : []),
+    ...(data.businessAddress ? [["Business Address", data.businessAddress]] : []),
     ["Selected Period", data.dateRange || "All Time"],
     ["Reporting Currency", data.currency || "USD"],
     ["Export Date & Time", data.generatedAt || new Date().toLocaleString()],
@@ -257,7 +274,7 @@ export function exportMasterToExcel(
   ];
   const txBanner = [
     ["AFAB ENTERPRISE — TRANSACTION LEDGER"],
-    [`Period: ${data.dateRange}  |  Business: ${data.businessName}  |  Currency: ${data.currency}`],
+    [`Period: ${data.dateRange}  |  Business: ${data.businessName}${data.fiscalMatricule ? `  |  MF: ${data.fiscalMatricule}` : ""}  |  Currency: ${data.currency}`],
     []
   ];
   const txRows = data.transactions.map((tx) => [
@@ -301,7 +318,7 @@ export function exportMasterToExcel(
   ];
   const custBanner = [
     ["AFAB ENTERPRISE — CUSTOMER & CLIENT DIRECTORY"],
-    [`Period: ${data.dateRange}  |  Business: ${data.businessName}  |  Currency: ${data.currency}`],
+    [`Period: ${data.dateRange}  |  Business: ${data.businessName}${data.fiscalMatricule ? `  |  MF: ${data.fiscalMatricule}` : ""}  |  Currency: ${data.currency}`],
     []
   ];
   const customerRows = data.customers.map((c) => [
@@ -341,7 +358,7 @@ export function exportMasterToExcel(
   ];
   const invBanner = [
     ["AFAB ENTERPRISE — INVOICES & BILLING REGISTER"],
-    [`Period: ${data.dateRange}  |  Business: ${data.businessName}  |  Currency: ${data.currency}`],
+    [`Period: ${data.dateRange}  |  Business: ${data.businessName}${data.fiscalMatricule ? `  |  MF: ${data.fiscalMatricule}` : ""}  |  Currency: ${data.currency}`],
     []
   ];
   const invoiceRows = data.invoices.map((inv) => [
@@ -377,13 +394,19 @@ export function exportDatasetToExcel(
   headers: string[],
   rows: (string | number | boolean | null | undefined)[][],
   filenamePrefix: string,
-  periodLabel: string = "All Time"
+  periodLabel: string = "All Time",
+  meta?: { businessName?: string; fiscalMatricule?: string; businessAddress?: string }
 ) {
   const wb = XLSX.utils.book_new();
   const dateStr = new Date().toISOString().split("T")[0];
   const banner = [
     [`AFAB ENTERPRISE — ${sheetName.toUpperCase()}`],
-    [`Period: ${periodLabel}  |  Exported: ${new Date().toLocaleDateString()}`],
+    [
+      `Period: ${periodLabel}  |  Business: ${meta?.businessName || "AFAB Enterprise"}` +
+      (meta?.fiscalMatricule ? `  |  MF: ${meta.fiscalMatricule}` : "") +
+      (meta?.businessAddress ? `  |  Address: ${meta.businessAddress}` : "") +
+      `  |  Exported: ${new Date().toLocaleDateString()}`
+    ],
     []
   ];
   const ws = XLSX.utils.aoa_to_sheet([...banner, headers, ...rows]);
@@ -414,7 +437,7 @@ export async function exportMasterToPdf(
 
   // Header Banner Background
   doc.setFillColor(124, 58, 237); // Primary purple #7c3aed
-  doc.rect(0, 0, pageWidth, 32, "F");
+  doc.rect(0, 0, pageWidth, 38, "F");
 
   // Fetch & Embed Logo
   const logoData = includeLogo ? await getLogoBase64() : null;
@@ -424,9 +447,9 @@ export async function exportMasterToPdf(
     try {
       // White rounded background container for logo
       doc.setFillColor(255, 255, 255);
-      doc.roundedRect(margin, 5, 22, 22, 3, 3, "F");
-      doc.addImage(logoData, "PNG", margin + 1.5, 6.5, 19, 19);
-      textStartX = margin + 26;
+      doc.roundedRect(margin, 5, 24, 24, 3, 3, "F");
+      doc.addImage(logoData, "PNG", margin + 1.5, 6.5, 21, 21);
+      textStartX = margin + 28;
     } catch (e) {
       console.warn("Could not render logo in PDF, falling back to vector text", e);
       textStartX = margin;
@@ -438,23 +461,32 @@ export async function exportMasterToPdf(
   // Header Typography
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text("AFAB — Financial Enterprise Archive", textStartX, 13);
+  doc.setFontSize(14);
+  doc.text("AFAB — Financial Enterprise Archive", textStartX, 11);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text(
+    `${data.businessName || "My Business"}${data.fiscalMatricule ? `  •  Matricule Fiscale (MF): ${data.fiscalMatricule}` : ""}`,
+    textStartX,
+    17.5
+  );
+
+  if (data.businessAddress) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.text(`Address: ${data.businessAddress}`, textStartX, 23);
+  }
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(7.5);
   doc.text(
-    `Business: ${data.businessName || "My Business"}  |  Currency: ${data.currency}  |  Period: ${data.dateRange}`,
+    `Period: ${data.dateRange}  |  Currency: ${data.currency}  |  Generated: ${data.generatedAt || new Date().toLocaleDateString()}`,
     textStartX,
-    20
-  );
-  doc.text(
-    `Generated: ${data.generatedAt || new Date().toLocaleDateString()}  |  Certified Digital Record`,
-    textStartX,
-    26
+    data.businessAddress ? 28.5 : 23.5
   );
 
-  cursorY = 42;
+  cursorY = 46;
 
   // Section 1: Executive KPI Cards
   doc.setTextColor(30, 41, 59);
@@ -605,20 +637,34 @@ export async function exportMasterToPdf(
     const boxWidth = pageWidth - margin * 2;
     doc.setFillColor(248, 250, 252);
     doc.setDrawColor(226, 232, 240);
-    doc.roundedRect(margin, cursorY, boxWidth, 34, 2, 2, "FD");
+    doc.roundedRect(margin, cursorY, boxWidth, 38, 2, 2, "FD");
 
     // Left: Certification Seal Text
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
     doc.setTextColor(30, 41, 59);
-    doc.text("Executive Certification & Authenticity Guarantee", margin + 6, cursorY + 8);
+    doc.text("Executive Certification & Authenticity Guarantee", margin + 6, cursorY + 7.5);
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(124, 58, 237);
+    doc.text(
+      `${data.businessName || "Enterprise"}${data.fiscalMatricule ? `  •  Matricule Fiscale (MF): ${data.fiscalMatricule}` : ""}`,
+      margin + 6,
+      cursorY + 13
+    );
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.setTextColor(100, 116, 139);
-    doc.text("This financial record is certified electronically by AFAB Platform.", margin + 6, cursorY + 14);
-    doc.text(`Digital Sign Date: ${new Date().toLocaleDateString()}`, margin + 6, cursorY + 19);
-    doc.text("Status: VERIFIED & AUDITED", margin + 6, cursorY + 24);
+    if (data.businessAddress) {
+      doc.text(`Address: ${data.businessAddress}`, margin + 6, cursorY + 18);
+    }
+    doc.text(
+      `Digital Certification Date: ${new Date().toLocaleDateString()}  •  Status: AUDITED & COMPLIANT`,
+      margin + 6,
+      cursorY + (data.businessAddress ? 23.5 : 19)
+    );
 
     // Right: Wet Signature Image & Title
     const sigBlockX = pageWidth - margin - 58;
@@ -641,7 +687,7 @@ export async function exportMasterToPdf(
     doc.setTextColor(100, 116, 139);
     doc.text(signature.signatoryTitle || "Executive Management", sigBlockX, cursorY + 28);
 
-    cursorY += 38;
+    cursorY += 42;
   }
 
   // Footer on all pages
@@ -666,6 +712,8 @@ export function openPrintableReportWindow(options: {
   title: string;
   subtitle?: string;
   businessName: string;
+  fiscalMatricule?: string;
+  businessAddress?: string;
   currency: string;
   dateRange?: string;
   kpis?: Array<{ label: string; value: string }>;
@@ -831,8 +879,10 @@ export function openPrintableReportWindow(options: {
           </div>
         </div>
         <div style="text-align:${options.isAr ? "left" : "right"}; font-size:11px; color:#64748b;">
-          <div><strong>${options.businessName}</strong></div>
-          <div style="color:#7c3aed; font-weight:600;">Period: ${options.dateRange || "All Time"}</div>
+          <div><strong style="font-size:13px; color:#0f172a;">${options.businessName}</strong></div>
+          ${options.fiscalMatricule ? `<div style="color:#7c3aed; font-weight:700; margin-top:2px;">${options.isAr ? "المعرف الجبائي (MF):" : "Matricule Fiscale (MF):"} ${options.fiscalMatricule}</div>` : ""}
+          ${options.businessAddress ? `<div style="color:#475569; margin-top:2px;">${options.businessAddress}</div>` : ""}
+          <div style="color:#64748b; font-weight:600; margin-top:2px;">Period: ${options.dateRange || "All Time"}</div>
           <div>${new Date().toLocaleDateString()}</div>
         </div>
       </div>
@@ -864,6 +914,8 @@ export function openPrintableReportWindow(options: {
 export function openPrintableInvoiceWindow(options: {
   invoice: any;
   business?: any;
+  fiscalMatricule?: string;
+  businessAddress?: string;
   isAr?: boolean;
   includeSignature?: boolean;
 }) {
@@ -871,6 +923,8 @@ export function openPrintableInvoiceWindow(options: {
   const dir = isAr ? "rtl" : "ltr";
   const align = isAr ? "right" : "left";
   const signature = options.includeSignature !== false ? getWetSignature(business?.id) : null;
+  const mf = options.fiscalMatricule || business?.taxId || (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : "");
+  const addr = options.businessAddress || formatBusinessAddress(business) || (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "");
 
   const win = window.open("", "_blank");
   if (!win) {
@@ -902,6 +956,8 @@ export function openPrintableInvoiceWindow(options: {
         </div>
         <div style="font-size:11px; color:#64748b; margin-top:4px;">
           ${isAr ? "تم إصدار هذه الفاتورة وتوقيعها رسمياً." : "Issued and certified electronically under AFAB standards."}
+          ${mf ? `<span style="display:block; font-weight:600; color:#475569; margin-top:2px;">${isAr ? "المعرف الجبائي:" : "Matricule Fiscale (MF):"} ${mf}</span>` : ""}
+          ${addr ? `<span style="display:block; color:#64748b; font-size:10px; margin-top:1px;">${addr}</span>` : ""}
         </div>
       </div>
       <div style="text-align:${isAr ? "left" : "right"}; min-width:180px;">
@@ -981,6 +1037,11 @@ export function openPrintableInvoiceWindow(options: {
           <div>
             <h1 style="font-size:22px; font-weight:800; color:#7c3aed; margin:0;">${business?.name || "AFAB Enterprise"}</h1>
             <p style="font-size:12px; color:#64748b; margin:4px 0 0 0;">${business?.businessEmail || "finance@afab.com"}</p>
+            ${addr ? `<p style="font-size:11px; color:#475569; margin:3px 0 0 0;">${addr}</p>` : ""}
+            ${mf ? `
+            <div style="display:inline-block; margin-top:6px; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; background:#f5f3ff; color:#7c3aed; border:1px solid #ddd6fe;">
+              ${isAr ? "المعرف الجبائي (MF):" : "Matricule Fiscale (MF):"} ${mf}
+            </div>` : ""}
           </div>
         </div>
         <div style="text-align:${isAr ? "left" : "right"};">

@@ -82,7 +82,9 @@
     "businessEmail": "Business Email",
     "phoneNumber": "Phone Number",
     "website": "Business Website",
-    "taxId": "Tax ID / VAT Number (Optional)",
+    "taxId": "Fiscal Matricule / Tax ID (MF)",
+    "taxIdPlaceholder": "e.g. 1234567/A/B/M/000 (Matricule Fiscale)",
+    "taxIdHelp": "Your official fiscal matricule (MF) printed on invoices, Excel exports, and PDF reports.",
     "address": "Business Address",
     "city": "City",
     "state": "State / Region",
@@ -327,7 +329,6 @@
     "startDate": "Start Date",
     "endDate": "End Date",
     "activePeriod": "Active Period",
-    "filteredCount": "Filtered Records",
-    "logoIncluded": "AFAB Official Logo Included in Exports"
+    "filteredCount": "Filtered Records"
   }
 }

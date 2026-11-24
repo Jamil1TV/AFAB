@@ -11,15 +11,15 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { 
-  FileSpreadsheet, 
-  FileText, 
-  Printer, 
-  Calendar, 
-  Clock, 
-  Filter, 
-  Check, 
-  ShieldCheck, 
+import {
+  FileSpreadsheet,
+  FileText,
+  Printer,
+  Calendar,
+  Clock,
+  Filter,
+  Check,
+  ShieldCheck,
   Loader2,
   CalendarDays,
   Image as ImageIcon,
@@ -47,6 +47,8 @@ interface ExportPeriodModalProps {
   actionType: ExportActionType | null;
   defaultPeriod?: string;
   defaultCurrency?: string;
+  defaultFiscalMatricule?: string;
+  defaultBusinessAddress?: string;
   onConfirm: (config: {
     period: string;
     customStart?: string;
@@ -54,6 +56,8 @@ interface ExportPeriodModalProps {
     currency: string;
     includeLogo: boolean;
     includeSignature: boolean;
+    fiscalMatricule?: string;
+    businessAddress?: string;
   }) => Promise<void> | void;
 }
 
@@ -63,6 +67,8 @@ export function ExportPeriodModal({
   actionType,
   defaultPeriod = "all",
   defaultCurrency = "USD",
+  defaultFiscalMatricule = "",
+  defaultBusinessAddress = "",
   onConfirm,
 }: ExportPeriodModalProps) {
   const locale = useLocale();
@@ -72,6 +78,8 @@ export function ExportPeriodModal({
   const [customStart, setCustomStart] = useState<string>("");
   const [customEnd, setCustomEnd] = useState<string>("");
   const [currency, setCurrency] = useState<string>(defaultCurrency);
+  const [fiscalMatricule, setFiscalMatricule] = useState<string>(defaultFiscalMatricule);
+  const [businessAddress, setBusinessAddress] = useState<string>(defaultBusinessAddress);
   const [includeLogo, setIncludeLogo] = useState<boolean>(true);
   const [includeSignature, setIncludeSignature] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -81,9 +89,17 @@ export function ExportPeriodModal({
     if (open) {
       setPeriod(defaultPeriod || "all");
       setCurrency(defaultCurrency || "USD");
+      setFiscalMatricule(
+        defaultFiscalMatricule || 
+        (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : "")
+      );
+      setBusinessAddress(
+        defaultBusinessAddress ||
+        (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "")
+      );
       setIsSubmitting(false);
     }
-  }, [open, defaultPeriod, defaultCurrency]);
+  }, [open, defaultPeriod, defaultCurrency, defaultFiscalMatricule, defaultBusinessAddress]);
 
   const activeRange = calculateDateRange(period, customStart, customEnd, isAr);
 
@@ -119,6 +135,12 @@ export function ExportPeriodModal({
   const handleDownload = async () => {
     setIsSubmitting(true);
     try {
+      const cleanMf = fiscalMatricule.trim();
+      const cleanAddr = businessAddress.trim();
+      if (typeof window !== "undefined") {
+        if (cleanMf) localStorage.setItem("afab_fiscal_matricule", cleanMf);
+        if (cleanAddr) localStorage.setItem("afab_business_address", cleanAddr);
+      }
       await onConfirm({
         period,
         customStart,
@@ -126,6 +148,8 @@ export function ExportPeriodModal({
         currency,
         includeLogo,
         includeSignature,
+        fiscalMatricule: cleanMf,
+        businessAddress: cleanAddr,
       });
       onOpenChange(false);
     } catch (e) {
@@ -170,7 +194,7 @@ export function ExportPeriodModal({
                       isSelected
                         ? "bg-[var(--primary)] text-white border-[var(--primary)] shadow-sm shadow-purple-500/20"
                         : "bg-gray-50 dark:bg-white/[0.03] text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700"
-                    }`}
+                      }`}
                   >
                     {isAr ? p.labelAr : p.labelEn}
                   </button>
@@ -214,6 +238,46 @@ export function ExportPeriodModal({
               </div>
             </div>
           )}
+
+          {/* ── Fiscal Matricule (MF) Input ── */}
+          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label htmlFor="modal-fiscal-matricule" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                {isAr ? "المعرف الجبائي (Matricule Fiscale / MF):" : "Fiscal Matricule / Tax ID (MF):"}
+              </label>
+              <span className="text-[10px] text-gray-400">
+                {isAr ? "يُدرج في الترويسة والأختام الرسمية" : "Printed on headers & seals"}
+              </span>
+            </div>
+            <Input
+              id="modal-fiscal-matricule"
+              type="text"
+              value={fiscalMatricule}
+              onChange={(e) => setFiscalMatricule(e.target.value)}
+              placeholder={isAr ? "مثال: 1234567/A/B/M/000 أو المعرف الجبائي" : "e.g. 1234567/A/B/M/000 or MF-849201"}
+              className="h-9 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
+            />
+          </div>
+
+          {/* ── Business Address Input ── */}
+          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label htmlFor="modal-business-address" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                {isAr ? "عنوان مقر الشركة (Business Address):" : "Official Business Address:"}
+              </label>
+              <span className="text-[10px] text-gray-400">
+                {isAr ? "يُدرج في ترويسة التقارير والفواتير" : "Printed on report & invoice headers"}
+              </span>
+            </div>
+            <Input
+              id="modal-business-address"
+              type="text"
+              value={businessAddress}
+              onChange={(e) => setBusinessAddress(e.target.value)}
+              placeholder={isAr ? "مثال: شارع الحبيب بورقيبة، تونس / 123 Business Way" : "e.g. Avenue Habib Bourguiba, Tunis / 123 Business Way"}
+              className="h-9 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
+            />
+          </div>
 
           {/* ── Currency & Logo Options ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -298,11 +362,10 @@ export function ExportPeriodModal({
               type="button"
               onClick={handleDownload}
               disabled={isSubmitting}
-              className={`w-full sm:w-auto font-semibold rounded-xl text-xs h-10 px-5 flex items-center justify-center gap-2 shadow-sm ${
-                isExcel
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
-                  : "bg-[var(--primary)] hover:bg-[var(--primary-hover,#7c3aed)] text-white shadow-purple-500/20"
-              }`}
+              className={`w-full sm:w-auto font-semibold rounded-xl text-xs h-10 px-5 flex items-center justify-center gap-2 shadow-sm ${isExcel
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+                : "bg-[var(--primary)] hover:bg-[var(--primary-hover,#7c3aed)] text-white shadow-purple-500/20"
+                }`}
             >
               {isSubmitting ? (
                 <>
@@ -319,13 +382,13 @@ export function ExportPeriodModal({
                       ? isExcel
                         ? "تنزيل ملف إكسل الآن"
                         : isPdf
-                        ? "تنزيل ملف PDF الآن"
-                        : "فتح معاينة الطباعة"
+                          ? "تنزيل ملف PDF الآن"
+                          : "فتح معاينة الطباعة"
                       : isExcel
-                      ? "Download Excel (.xlsx) Now"
-                      : isPdf
-                      ? "Download PDF (.pdf) Now"
-                      : "Open Print View"}
+                        ? "Download Excel (.xlsx) Now"
+                        : isPdf
+                          ? "Download PDF (.pdf) Now"
+                          : "Open Print View"}
                   </span>
                 </>
               )}

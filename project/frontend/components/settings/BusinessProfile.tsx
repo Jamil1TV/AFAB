@@ -195,8 +195,11 @@ export function BusinessProfile({ business }: { business: any }) {
                   className="afab-input"
                   value={formData.taxId}
                   onChange={(e) => setFormData({ ...formData, taxId: e.target.value })}
-                  placeholder="Optional"
+                  placeholder={t("businessProfile.taxIdPlaceholder")}
                 />
+                <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                  {t("businessProfile.taxIdHelp")}
+                </p>
               </div>
 
               <div className="space-y-2 md:col-span-2">
