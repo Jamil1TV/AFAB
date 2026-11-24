@@ -182,8 +182,9 @@ export function ExportPeriodModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-6 bg-white dark:bg-[#0c101c] border-gray-200 dark:border-gray-800/80 rounded-3xl shadow-xl">
-        <DialogHeader className="space-y-2 text-start">
+      <DialogContent className="sm:max-w-xl max-h-[88vh] flex flex-col p-0 gap-0 bg-white dark:bg-[#0c101c] border-gray-200 dark:border-gray-800/80 rounded-3xl shadow-2xl overflow-hidden">
+        {/* ── Fixed Header ── */}
+        <DialogHeader className="p-5 pb-3.5 pe-12 space-y-1.5 text-start border-b border-gray-100 dark:border-gray-800/60 shrink-0">
           <div className="flex items-center justify-between">
             {getFormatBadge()}
           </div>
@@ -192,12 +193,13 @@ export function ExportPeriodModal({
           </DialogTitle>
           <DialogDescription className="text-xs text-gray-500 dark:text-gray-400">
             {isAr
-              ? "حدد النطاق الزمني والعملة التي ترغب في تضمينها في ملف التصدير قبل التنزيل."
-              : "Select the date range and reporting currency you wish to include in your export before downloading."}
+              ? "حدد النطاق والبيانات الرسمية التي ترغب في تضمينها في ملف التصدير قبل التنزيل."
+              : "Select the date range and official business details you wish to include in your export."}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 pt-2">
+        {/* ── Scrollable Body ── */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* ── Period Presets Pills ── */}
           <div>
             <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-2">
@@ -260,34 +262,57 @@ export function ExportPeriodModal({
             </div>
           )}
 
-          {/* ── Fiscal Matricule (MF) Input ── */}
-          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="modal-fiscal-matricule" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
-                {isAr ? "المعرف الجبائي (Matricule Fiscale / MF):" : "Fiscal Matricule / Tax ID (MF):"}
-              </label>
-              <span className="text-[10px] text-gray-400">
-                {isAr ? "يُدرج في الترويسة والأختام الرسمية" : "Printed on headers & seals"}
-              </span>
+          {/* ── Business Info: Fiscal Matricule & Purpose (2 Columns) ── */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Fiscal Matricule (MF) Input */}
+            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1">
+              <div className="flex items-center justify-between">
+                <label htmlFor="modal-fiscal-matricule" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                  {isAr ? "المعرف الجبائي (MF):" : "Fiscal Matricule (MF):"}
+                </label>
+                <span className="text-[10px] text-gray-400">
+                  {isAr ? "في الترويسة" : "Headers & seals"}
+                </span>
+              </div>
+              <Input
+                id="modal-fiscal-matricule"
+                type="text"
+                value={fiscalMatricule}
+                onChange={(e) => setFiscalMatricule(e.target.value)}
+                placeholder={isAr ? "مثال: 1234567/A/B/M/000" : "e.g. 1234567/A/B/M/000"}
+                className="h-8.5 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
+              />
             </div>
-            <Input
-              id="modal-fiscal-matricule"
-              type="text"
-              value={fiscalMatricule}
-              onChange={(e) => setFiscalMatricule(e.target.value)}
-              placeholder={isAr ? "مثال: 1234567/A/B/M/000 أو المعرف الجبائي" : "e.g. 1234567/A/B/M/000 or MF-849201"}
-              className="h-9 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
-            />
+
+            {/* Business Purpose & Activity Input */}
+            <div className="p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1">
+              <div className="flex items-center justify-between">
+                <label htmlFor="modal-business-purpose" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
+                  {isAr ? "غرض الشركة / النشاط:" : "Purpose & Activity:"}
+                </label>
+                <span className="text-[10px] text-gray-400">
+                  {isAr ? "طبيعة النشاط" : "Business scope"}
+                </span>
+              </div>
+              <Input
+                id="modal-business-purpose"
+                type="text"
+                value={businessPurpose}
+                onChange={(e) => setBusinessPurpose(e.target.value)}
+                placeholder={isAr ? "مثال: تجارة عامة، برمجيات..." : "e.g. Retail, Software, Consulting..."}
+                className="h-8.5 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
+              />
+            </div>
           </div>
 
           {/* ── Business Address Input ── */}
-          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1.5">
+          <div className="p-3 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1">
             <div className="flex items-center justify-between">
               <label htmlFor="modal-business-address" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
                 {isAr ? "عنوان مقر الشركة (Business Address):" : "Official Business Address:"}
               </label>
               <span className="text-[10px] text-gray-400">
-                {isAr ? "يُدرج في ترويسة التقارير والفواتير" : "Printed on report & invoice headers"}
+                {isAr ? "يُدرج في الترويسة" : "Printed on headers"}
               </span>
             </div>
             <Input
@@ -296,27 +321,7 @@ export function ExportPeriodModal({
               value={businessAddress}
               onChange={(e) => setBusinessAddress(e.target.value)}
               placeholder={isAr ? "مثال: شارع الحبيب بورقيبة، تونس / 123 Business Way" : "e.g. Avenue Habib Bourguiba, Tunis / 123 Business Way"}
-              className="h-9 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
-            />
-          </div>
-
-          {/* ── Business Purpose & Activity Input ── */}
-          <div className="p-3.5 rounded-2xl bg-gray-50 dark:bg-white/[0.02] border border-gray-200 dark:border-gray-800 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label htmlFor="modal-business-purpose" className="block text-xs font-bold text-gray-700 dark:text-gray-300">
-                {isAr ? "غرض الشركة / طبيعة النشاط (Purpose / Activity):" : "Business Purpose & Activity:"}
-              </label>
-              <span className="text-[10px] text-gray-400">
-                {isAr ? "يُدرج في ترويسة ملفات التصدير" : "Printed in export PDF headers"}
-              </span>
-            </div>
-            <Input
-              id="modal-business-purpose"
-              type="text"
-              value={businessPurpose}
-              onChange={(e) => setBusinessPurpose(e.target.value)}
-              placeholder={isAr ? "مثال: تجارة عامة، خدمات برمجية، استشارات مالية..." : "e.g. Retail, Software Development, Financial Consulting..."}
-              className="h-9 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
+              className="h-8.5 text-xs rounded-xl bg-white dark:bg-[#0c101c]"
             />
           </div>
 
@@ -344,7 +349,7 @@ export function ExportPeriodModal({
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                 {isAr ? "الشعار والعلامة التجارية:" : "Business Logo & Branding:"}
               </label>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="flex items-center gap-2 h-9 px-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.03] cursor-pointer hover:bg-gray-100/60 dark:hover:bg-white/[0.05]">
                   <input
                     type="checkbox"
@@ -353,24 +358,24 @@ export function ExportPeriodModal({
                     className="rounded text-[var(--primary)] focus:ring-[var(--primary)] h-4 w-4"
                   />
                   <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                    {isAr ? "تضمين شعار المؤسسة في الملفات" : "Include Business Logo in Exports"}
+                    {isAr ? "تضمين شعار المؤسسة" : "Include Business Logo"}
                   </span>
                 </label>
 
                 {includeLogo && (
-                  <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-gray-50/80 dark:bg-white/[0.02] border border-gray-200/80 dark:border-gray-800/80">
-                    <div className="flex items-center gap-2.5 overflow-hidden">
-                      <div className="h-8 w-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/40 flex items-center justify-center p-1 overflow-hidden shrink-0">
+                  <div className="flex items-center justify-between gap-3 p-1.5 px-2.5 rounded-xl bg-gray-50/80 dark:bg-white/[0.02] border border-gray-200/80 dark:border-gray-800/80">
+                    <div className="flex items-center gap-2 overflow-hidden">
+                      <div className="h-7 w-7 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/40 flex items-center justify-center p-0.5 overflow-hidden shrink-0">
                         <img
                           src={businessLogo || "/assets/afab-logo-light.png"}
                           alt="Logo Preview"
                           className="max-h-full max-w-full object-contain"
                         />
                       </div>
-                      <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400 truncate">
+                      <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 truncate">
                         {businessLogo
-                          ? (isAr ? "شعار مخصص مدرج" : "Custom Logo Active")
-                          : (isAr ? "شعار AFAB الافتراضي" : "Default AFAB Logo")}
+                          ? (isAr ? "شعار مخصص" : "Custom Logo")
+                          : (isAr ? "شعار AFAB" : "Default Logo")}
                       </span>
                     </div>
 
@@ -399,37 +404,38 @@ export function ExportPeriodModal({
                       <button
                         type="button"
                         onClick={() => document.getElementById("modal-logo-upload")?.click()}
-                        className="px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)] border border-purple-200 dark:border-purple-800/80 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
+                        className="px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)] border border-purple-200 dark:border-purple-800/80 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
                       >
-                        {isAr ? "تغيير الشعار" : "Upload / Change"}
+                        {isAr ? "تغيير" : "Change"}
                       </button>
                     </div>
                   </div>
                 )}
               </div>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                {isAr ? "التوقيع الحي المعتمد:" : "Wet Signature:"}
-              </label>
-              <label className="flex items-center gap-2 h-9 px-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.03] cursor-pointer hover:bg-gray-100/60 dark:hover:bg-white/[0.05]">
-                <input
-                  type="checkbox"
-                  checked={includeSignature}
-                  onChange={(e) => setIncludeSignature(e.target.checked)}
-                  className="rounded text-[var(--primary)] focus:ring-[var(--primary)] h-4 w-4"
-                />
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                  <FileSignature className="w-3.5 h-3.5 text-[var(--primary)]" />
-                  <span>{isAr ? "تضمين التوقيع الحي" : "Include Wet Signature"}</span>
-                </span>
-              </label>
-            </div>
+          {/* ── Wet Signature Checkbox ── */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+              {isAr ? "التوقيع الحي المعتمد:" : "Wet Signature:"}
+            </label>
+            <label className="flex items-center gap-2 h-9 px-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.03] cursor-pointer hover:bg-gray-100/60 dark:hover:bg-white/[0.05]">
+              <input
+                type="checkbox"
+                checked={includeSignature}
+                onChange={(e) => setIncludeSignature(e.target.checked)}
+                className="rounded text-[var(--primary)] focus:ring-[var(--primary)] h-4 w-4"
+              />
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <FileSignature className="w-3.5 h-3.5 text-[var(--primary)]" />
+                <span>{isAr ? "تضمين التوقيع الحي" : "Include Wet Signature"}</span>
+              </span>
+            </label>
           </div>
 
           {/* ── Active Scope Preview Badge ── */}
-          <div className="rounded-2xl border border-purple-200/60 dark:border-purple-900/40 bg-purple-50/50 dark:bg-purple-950/20 p-3.5 flex items-center justify-between text-xs">
+          <div className="rounded-2xl border border-purple-200/60 dark:border-purple-900/40 bg-purple-50/50 dark:bg-purple-950/20 p-3 flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
               <Clock className="w-4 h-4 text-[var(--primary)]" />
               <span>{isAr ? "نطاق التصدير الفعلي:" : "Active Export Range:"}</span>
@@ -438,55 +444,55 @@ export function ExportPeriodModal({
               {activeRange.label}
             </span>
           </div>
+        </div>
 
-          {/* ── Dialog Action Buttons ── */}
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-end gap-2.5 border-t border-gray-100 dark:border-gray-800/60">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-              className="w-full sm:w-auto rounded-xl text-xs h-10 px-4"
-            >
-              {isAr ? "إلغاء" : "Cancel"}
-            </Button>
+        {/* ── Dialog Action Buttons (Sticky Footer) ── */}
+        <div className="p-4 px-5 flex flex-col sm:flex-row items-center justify-end gap-2.5 border-t border-gray-100 dark:border-gray-800/60 bg-gray-50/80 dark:bg-white/[0.02] shrink-0 z-10">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto rounded-xl text-xs h-10 px-4"
+          >
+            {isAr ? "إلغاء" : "Cancel"}
+          </Button>
 
-            <Button
-              type="button"
-              onClick={handleDownload}
-              disabled={isSubmitting}
-              className={`w-full sm:w-auto font-semibold rounded-xl text-xs h-10 px-5 flex items-center justify-center gap-2 shadow-sm ${isExcel
-                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
-                : "bg-[var(--primary)] hover:bg-[var(--primary-hover,#7c3aed)] text-white shadow-purple-500/20"
-                }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{isAr ? "جاري التجهيز والتنزيل..." : "Preparing Download..."}</span>
-                </>
-              ) : (
-                <>
-                  {isExcel && <FileSpreadsheet className="w-4 h-4" />}
-                  {isPdf && <FileText className="w-4 h-4" />}
-                  {isPrint && <Printer className="w-4 h-4" />}
-                  <span>
-                    {isAr
-                      ? isExcel
-                        ? "تنزيل ملف إكسل الآن"
-                        : isPdf
-                          ? "تنزيل ملف PDF الآن"
-                          : "فتح معاينة الطباعة"
-                      : isExcel
-                        ? "Download Excel (.xlsx) Now"
-                        : isPdf
-                          ? "Download PDF (.pdf) Now"
-                          : "Open Print View"}
-                  </span>
-                </>
-              )}
-            </Button>
-          </div>
+          <Button
+            type="button"
+            onClick={handleDownload}
+            disabled={isSubmitting}
+            className={`w-full sm:w-auto font-semibold rounded-xl text-xs h-10 px-5 flex items-center justify-center gap-2 shadow-sm ${isExcel
+              ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
+              : "bg-[var(--primary)] hover:bg-[var(--primary-hover,#7c3aed)] text-white shadow-purple-500/20"
+              }`}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>{isAr ? "جاري التجهيز والتنزيل..." : "Preparing Download..."}</span>
+              </>
+            ) : (
+              <>
+                {isExcel && <FileSpreadsheet className="w-4 h-4" />}
+                {isPdf && <FileText className="w-4 h-4" />}
+                {isPrint && <Printer className="w-4 h-4" />}
+                <span>
+                  {isAr
+                    ? isExcel
+                      ? "تنزيل ملف إكسل الآن"
+                      : isPdf
+                        ? "تنزيل ملف PDF الآن"
+                        : "فتح معاينة الطباعة"
+                    : isExcel
+                      ? "Download Excel (.xlsx) Now"
+                      : isPdf
+                        ? "Download PDF (.pdf) Now"
+                        : "Open Print View"}
+                </span>
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
