@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  Search,
   Bell,
   Menu,
   Globe,
@@ -18,6 +17,8 @@ import { useLocale, useTranslations } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
 import { useSidebar } from "@/components/dashboard/Sidebar";
 import { NotificationService, NotificationItem } from "@/lib/api/notifications";
+import { SubscriptionService } from "@/lib/api/subscription";
+import { AuthStore } from "@/lib/auth-store";
 
 export function DashboardHeader() {
   const locale = useLocale();
@@ -31,7 +32,25 @@ export function DashboardHeader() {
   const [notifOpen, setNotifOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
   const notifRef = useRef<HTMLDivElement>(null);
+
+  const loadSubscriptionPlan = useCallback(async () => {
+    const cachedTier = AuthStore.getUser()?.planTier;
+    if (cachedTier) {
+      setCurrentPlanSlug(cachedTier.toLowerCase());
+    }
+    try {
+      const sub = await SubscriptionService.getMySubscription();
+      const slug = sub?.planSlug?.toLowerCase() || "free";
+      setCurrentPlanSlug(slug);
+      AuthStore.updateUser({ planTier: slug.toUpperCase() });
+    } catch {
+      if (!cachedTier) {
+        setCurrentPlanSlug("free");
+      }
+    }
+  }, []);
 
   const loadNotifications = useCallback(async () => {
     try {
@@ -47,13 +66,24 @@ export function DashboardHeader() {
 
   useEffect(() => {
     loadNotifications();
-  }, [loadNotifications, pathname]);
+    loadSubscriptionPlan();
+  }, [loadNotifications, loadSubscriptionPlan, pathname]);
 
   useEffect(() => {
-    const handleSubUpdated = () => loadNotifications();
+    const handleSubUpdated = () => {
+      loadNotifications();
+      loadSubscriptionPlan();
+    };
+    const handleProfileUpdated = () => {
+      loadSubscriptionPlan();
+    };
     window.addEventListener("afab:subscription-updated", handleSubUpdated);
-    return () => window.removeEventListener("afab:subscription-updated", handleSubUpdated);
-  }, [loadNotifications]);
+    window.addEventListener("afab_profile_updated", handleProfileUpdated);
+    return () => {
+      window.removeEventListener("afab:subscription-updated", handleSubUpdated);
+      window.removeEventListener("afab_profile_updated", handleProfileUpdated);
+    };
+  }, [loadNotifications, loadSubscriptionPlan]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -107,44 +137,24 @@ export function DashboardHeader() {
       case "SUCCESS":
         return <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />;
       default:
-        return <Info className="w-4 h-4 text-[#8b5cf6] shrink-0 mt-0.5" />;
+        return <Info className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />;
     }
   };
 
+  const showUpgradeToPro = currentPlanSlug === "free" || currentPlanSlug === "plus";
+
   return (
-    <header className="z-30 flex h-16 shrink-0 items-center gap-4 border-b border-gray-200 dark:border-gray-800/60 bg-white/80 dark:bg-[#080c18]/80 px-4 backdrop-blur-md sm:gap-6 sm:px-6">
+    <header className="z-30 flex h-16 shrink-0 items-center justify-between gap-4 border-b border-gray-200 dark:border-gray-800/60 bg-white/80 dark:bg-[#080c18]/80 px-4 backdrop-blur-md sm:gap-6 sm:px-6">
       {/* Mobile menu trigger */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] lg:hidden"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05] lg:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
 
-      {/* Global Search */}
-      <div className="flex flex-1 items-center">
-        <div className="relative w-full max-w-md">
-          <div className="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-3">
-            <Search className="h-4 w-4 text-gray-400" />
-          </div>
-          <input
-            type="text"
-            placeholder={
-              tHeader("search") ||
-              (isAr ? "ابحث عن أي شيء..." : "Search anything...")
-            }
-            className="block w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#0c101c] py-2 ps-10 pe-12 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[#8b5cf6] focus:outline-none focus:ring-1 focus:ring-[#8b5cf6] transition-all"
-          />
-          <div className="absolute inset-y-0 end-0 flex items-center pe-2">
-            <kbd className="hidden items-center gap-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#080c18] px-1.5 font-mono text-[10px] font-medium text-gray-500 dark:text-gray-400 sm:flex">
-              <span className="text-xs">⌘</span>K
-            </kbd>
-          </div>
-        </div>
-      </div>
-
       {/* Right side actions */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="ms-auto flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Theme Toggle */}
         <ThemeToggle />
 
@@ -187,7 +197,7 @@ export function DashboardHeader() {
                   <button
                     type="button"
                     onClick={handleMarkAllRead}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)] hover:underline"
                   >
                     <CheckCheck className="w-3.5 h-3.5" />
                     <span>{isAr ? "تحديد الكل كمقروء" : "Mark all read"}</span>
@@ -210,7 +220,7 @@ export function DashboardHeader() {
                       className={`p-2.5 rounded-xl transition-colors cursor-pointer flex items-start gap-2.5 ${
                         n.read
                           ? "opacity-75 hover:bg-gray-50 dark:hover:bg-white/[0.03]"
-                          : "bg-purple-50/50 dark:bg-purple-950/20 hover:bg-purple-50 dark:hover:bg-purple-950/30"
+                          : "bg-purple-50/50 dark:bg-purple-950/20 hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30"
                       }`}
                     >
                       {renderSeverityIcon(n.severity)}
@@ -220,7 +230,7 @@ export function DashboardHeader() {
                             {n.title}
                           </p>
                           {!n.read && (
-                            <span className="h-2 w-2 rounded-full bg-[#8b5cf6] shrink-0" />
+                            <span className="h-2 w-2 rounded-full bg-[var(--primary)] shrink-0" />
                           )}
                         </div>
                         <p className="text-[11px] text-gray-600 dark:text-gray-400 leading-snug mt-0.5">
@@ -246,18 +256,24 @@ export function DashboardHeader() {
           )}
         </div>
 
-        {/* Upgrade to Pro Button */}
-        <Link
-          href="/dashboard/settings/subscription"
-          className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-purple-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
-        >
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>
-            {isAr
-              ? "الترقية إلى برو"
-              : tHeader("upgradeToPro") || "Upgrade to Pro"}
-          </span>
-        </Link>
+        {/* Upgrade to Pro Button (shown for Free and Plus plans; hidden for Pro) */}
+        {showUpgradeToPro && (
+          <Link
+            href={
+              currentPlanSlug === "plus"
+                ? "/dashboard/settings/subscription?changePlan=true"
+                : "/dashboard/settings/subscription"
+            }
+            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white shadow-md shadow-purple-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>
+              {isAr
+                ? "الترقية إلى برو"
+                : tHeader("upgradeToPro") || "Upgrade to Pro"}
+            </span>
+          </Link>
+        )}
       </div>
     </header>
   );

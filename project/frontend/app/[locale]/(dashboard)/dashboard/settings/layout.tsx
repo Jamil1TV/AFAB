@@ -75,13 +75,13 @@ export default function SettingsLayout({
                   title={collapsed ? tab.label : undefined}
                   className={`group flex items-center ${collapsed ? "justify-center" : "gap-3"} px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative
                     ${isActive 
-                      ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]" 
+                      ? "bg-[var(--primary)]/10 text-[var(--primary)] dark:text-[var(--primary)]" 
                       : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white"
                     }`}
                 >
                   {/* Active indicator bar */}
                   {isActive && (
-                    <div className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#8b5cf6] rounded-full" />
+                    <div className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[var(--primary)] rounded-full" />
                   )}
                   <span className={`shrink-0 ${isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300"}`}>
                     {tab.icon}
@@ -128,11 +128,11 @@ export default function SettingsLayout({
                       href={tab.path}
                       className={`inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
                         isActive
-                          ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]"
+                          ? "bg-[var(--primary)]/10 text-[var(--primary)] dark:text-[var(--primary)]"
                           : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white"
                       }`}
                     >
-                      <span className={isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500"}>
+                      <span className={isActive ? "text-[var(--primary)]" : "text-gray-400 dark:text-gray-500"}>
                         {tab.icon}
                       </span>
                       {tab.label}
@@ -146,7 +146,7 @@ export default function SettingsLayout({
                 className="afab-card flex items-center justify-between w-full px-4 py-3 text-sm font-medium text-gray-900 dark:text-white"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-[#7c3aed] dark:text-[#a78bfa]">{activeTab.icon}</span>
+                  <span className="text-[var(--primary)]">{activeTab.icon}</span>
                   {activeTab.label}
                 </div>
                 <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${mobileNavOpen ? "rotate-180" : ""}`} />
@@ -163,11 +163,11 @@ export default function SettingsLayout({
                         onClick={() => setMobileNavOpen(false)}
                         className={`flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors
                           ${isActive 
-                            ? "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]" 
+                            ? "bg-[var(--primary)]/10 text-[var(--primary)] dark:text-[var(--primary)]" 
                             : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.05] hover:text-gray-900 dark:hover:text-white"
                           }`}
                       >
-                        <span className={isActive ? "text-[#7c3aed] dark:text-[#a78bfa]" : "text-gray-400 dark:text-gray-500"}>
+                        <span className={isActive ? "text-[var(--primary)]" : "text-gray-400 dark:text-gray-500"}>
                           {tab.icon}
                         </span>
                         {tab.label}

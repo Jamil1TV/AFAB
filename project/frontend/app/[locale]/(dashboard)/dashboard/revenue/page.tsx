@@ -201,7 +201,7 @@ export default function RevenuePage() {
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8b5cf6] text-white text-xs font-bold hover:bg-[#7c3aed] transition-all shadow-lg shadow-[#8b5cf6]/25"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--primary)] text-white text-xs font-bold hover:bg-[var(--primary-hover)] transition-all shadow-lg shadow-[var(--primary)]/25"
           >
             <Plus className="h-4 w-4" />
             {t("createNew")}
@@ -268,7 +268,7 @@ export default function RevenuePage() {
 
           <div className="h-64 w-full">
             <ChartContainer className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 520, height: 256 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 520, height: 256 }}>
                 <AreaChart data={overviewChartData}>
                   <defs>
                     <linearGradient id="revenueChartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -310,7 +310,7 @@ export default function RevenuePage() {
 
           <div className="relative h-44 w-full flex items-center justify-center my-2">
             <ChartContainer className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 520, height: 256 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 520, height: 256 }}>
                 <PieChart>
                   <Pie
                     data={revenuePieData}
@@ -384,7 +384,7 @@ export default function RevenuePage() {
                     setPage(0);
                   }}
                   placeholder={tFilters("searchPlaceholder")}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-12 py-2 text-xs font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-12 py-2 text-xs font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[var(--primary)] focus:outline-none"
                 />
                 <span className="absolute inset-y-0 right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-gray-400">
                   ⌘K
@@ -398,7 +398,7 @@ export default function RevenuePage() {
                     setCategoryFilter(e.target.value);
                     setPage(0);
                   }}
-                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 focus:border-[#8b5cf6] focus:outline-none"
+                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 focus:border-[var(--primary)] focus:outline-none"
                 >
                   <option value="">{tFilters("allSources")}</option>
                   {categories.map((cat) => (
@@ -447,7 +447,7 @@ export default function RevenuePage() {
                               <ArrowUpRight className="h-4 w-4" />
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[#8b5cf6] transition-colors">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[var(--primary)] transition-colors">
                                 {tx.description}
                               </p>
                               <p className="text-[10px] text-gray-400 font-normal">Ref: #{tx.id.substring(0, 8)}</p>

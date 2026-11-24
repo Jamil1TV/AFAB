@@ -13,6 +13,7 @@ import com.afab.ai.rag.AiVectorRepository.RetrievedMemory;
 import com.afab.ai.tools.AiFinanceToolRegistry;
 import com.afab.ai.tools.AiFinanceToolRegistry.ToolExecutionResult;
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ForbiddenException;
 import com.afab.common.exception.ResourceNotFoundException;
@@ -115,6 +116,7 @@ public class AiCopilotService {
     public AiIndexSyncResponseDTO syncIndex(String userEmail) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         AiRagIndexService.IndexSyncStats stats = ragIndexService.syncBusinessIndex(business);
         auditService.logBusinessEvent(user, "AI_INDEX_SYNC", business.getId(),
                 "{\"indexed\":" + stats.indexedCount() + ",\"embeddings\":" + stats.embeddingsGenerated() + "}");
@@ -164,6 +166,7 @@ public class AiCopilotService {
     public void deleteConversation(String userEmail, UUID conversationId) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
         AiConversation conv = loadOwnedConversation(conversationId, business.getId(), user.getId());
         conv.setArchivedAt(Instant.now());
         conversationRepository.save(conv);
@@ -217,6 +220,7 @@ public class AiCopilotService {
     private PreparedTurn prepareTurn(String userEmail, AiChatRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         // Enforce BOTH monthly AI tokens and query count quotas upfront
         entitlementService.check(userEmail, FEATURE_AI_TOKENS);

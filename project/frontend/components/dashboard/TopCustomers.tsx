@@ -37,12 +37,12 @@ export function TopCustomers({ customers, currency = "USD" }: { customers: TopCu
   const list = customers && customers.length > 0 ? customers : storedCustomers;
 
   return (
-    <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-6">
+    <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-4 sm:p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h3 className="text-sm font-bold text-gray-900 dark:text-white">{tCust("title")}</h3>
         <Link
           href="/dashboard/customers"
-          className="text-xs font-semibold text-[#8b5cf6] hover:text-[#7c3aed] transition-colors"
+          className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors"
         >
           {tCust("viewAll")}
         </Link>
@@ -63,7 +63,7 @@ export function TopCustomers({ customers, currency = "USD" }: { customers: TopCu
           {list.map((customer) => (
             <div key={customer.id} className="flex items-center justify-between group">
               <Link href="/dashboard/customers" className="flex items-center gap-3 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#8b5cf6]/20 bg-[#8b5cf6]/10 text-xs font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[var(--primary)]/20 bg-[var(--primary)]/10 text-xs font-bold text-[var(--primary)]">
                   {customer.avatar && isAvatarImageUrl(customer.avatar) ? (
                     <img src={customer.avatar} alt={customer.name} className="h-full w-full object-cover" />
                   ) : (
@@ -75,7 +75,7 @@ export function TopCustomers({ customers, currency = "USD" }: { customers: TopCu
                   )}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[#8b5cf6] transition-colors truncate">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[var(--primary)] transition-colors truncate">
                     {customer.name}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
@@ -84,7 +84,7 @@ export function TopCustomers({ customers, currency = "USD" }: { customers: TopCu
                 </div>
               </Link>
 
-              <div className="text-end flex items-center gap-4 shrink-0">
+              <div className="text-end flex items-center gap-2 sm:gap-4 shrink-0">
                 <div>
                   <div className="text-sm font-bold text-gray-900 dark:text-white">
                     {formatCurrency(customer.revenue || 0, currency)}

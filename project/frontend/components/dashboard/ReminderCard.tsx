@@ -19,7 +19,7 @@ export function ReminderCard({ reminders }: { reminders: any[] }) {
     switch (type) {
       case "Tax": return "bg-orange-50 text-orange-600 dark:bg-orange-500/10 dark:text-orange-400";
       case "Meeting": return "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400";
-      case "Subscription": return "bg-purple-50 text-purple-600 dark:bg-[#8b5cf6]/10 dark:text-[#a78bfa]";
+      case "Subscription": return "bg-purple-50 text-[var(--primary)] dark:bg-[var(--primary)]/10 dark:text-[var(--primary)]";
       default: return "bg-gray-50 text-gray-600 dark:bg-gray-800 dark:text-gray-400";
     }
   };
@@ -28,7 +28,7 @@ export function ReminderCard({ reminders }: { reminders: any[] }) {
     <div className="rounded-2xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-sm font-bold text-gray-900 dark:text-white">{tReminders("title")}</h3>
-        <button className="text-xs font-semibold text-[#8b5cf6] hover:text-[#7c3aed] transition-colors">
+        <button className="text-xs font-semibold text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors">
           {tReminders("viewAll")}
         </button>
       </div>

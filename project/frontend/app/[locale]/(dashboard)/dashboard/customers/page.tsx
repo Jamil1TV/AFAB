@@ -147,14 +147,14 @@ export default function CustomersPage() {
       .catch((err) => console.error("Failed to load user profile:", err));
   }, []);
 
-  const currency = userProfile?.currency || "USD";
+  const currency = summary?.currency || userProfile?.currency || "USD";
 
   // Data loader
   const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [sumRes, pageRes] = await Promise.all([
-        CustomerService.getSummary(period, currency),
+        CustomerService.getSummary(period),
         CustomerService.getCustomers({
           search,
           status: statusFilter,
@@ -177,14 +177,14 @@ export default function CustomersPage() {
     } finally {
       setLoading(false);
     }
-  }, [period, currency, search, statusFilter, groupFilter, page, pageSize, tToasts]);
+  }, [period, search, statusFilter, groupFilter, page, pageSize]);
 
   useEffect(() => {
     let ignore = false;
     async function execute() {
       try {
         const [sumRes, pageRes] = await Promise.all([
-          CustomerService.getSummary(period, currency),
+          CustomerService.getSummary(period),
           CustomerService.getCustomers({
             search,
             status: statusFilter,
@@ -215,7 +215,7 @@ export default function CustomersPage() {
     return () => {
       ignore = true;
     };
-  }, [period, currency, search, statusFilter, groupFilter, page, pageSize, tToasts]);
+  }, [period, search, statusFilter, groupFilter, page, pageSize]);
 
   // Click outside listener for row menus
   useEffect(() => {
@@ -480,9 +480,9 @@ export default function CustomersPage() {
         title={t("title")}
         subtitle={t("subtitle")}
         actions={
-          <>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
             {/* Header Search Input with ⌘K badge */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-56 lg:w-64">
               <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 ref={searchInputRef}
@@ -493,7 +493,7 @@ export default function CustomersPage() {
                   setSearch(e.target.value);
                   setPage(0);
                 }}
-                className="afab-input ps-9 pe-12 py-2 text-xs font-medium"
+                className="afab-input ps-9 pe-12 py-2 text-xs font-medium w-full"
               />
               <kbd className="pointer-events-none absolute end-2.5 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-gray-400 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md">
                 ⌘K
@@ -501,13 +501,13 @@ export default function CustomersPage() {
             </div>
 
             {/* Period Selector Tabs */}
-            <div className="afab-segmented">
+            <div className="afab-segmented w-full sm:w-auto overflow-x-auto scrollbar-none justify-between sm:justify-start">
               {(["week", "month", "quarter", "year"] as const).map((p) => (
                 <button
                   key={p}
                   type="button"
                   onClick={() => setPeriod(p)}
-                  className={`afab-segment capitalize ${
+                  className={`afab-segment capitalize text-xs flex-1 sm:flex-initial text-center ${
                     period === p ? "afab-segment-active" : ""
                   }`}
                 >
@@ -519,31 +519,31 @@ export default function CustomersPage() {
             {/* Add Customer Button */}
             <button
               onClick={openAddModal}
-              className="afab-btn-primary"
+              className="afab-btn-primary w-full sm:w-auto justify-center"
             >
               <Plus className="h-4 w-4" />
               <span>{t("addCustomer")}</span>
             </button>
-          </>
+          </div>
         }
       />
 
       {/* ── Explicit Error Banner when backend request fails ── */}
       {loadError && (
-        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 flex items-center justify-between gap-3 text-sm text-rose-600 dark:text-rose-400">
+        <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm text-rose-600 dark:text-rose-400">
           <span>Unable to load customers from backend: {loadError}</span>
           <button
             type="button"
             onClick={loadData}
-            className="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold"
+            className="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-xs font-semibold self-start sm:self-auto"
           >
             Retry
           </button>
         </div>
       )}
 
-      {/* ── 5 Top KPI Cards (responsive 1/2/3/5 grid to prevent squeezing on narrow screens) ── */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+      {/* ── 5 Top KPI Cards (Fluid responsive 1/2/3/5 grid for Mobile, Tablet, Desktop) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
         <KpiCard
           title={tKpi("totalCustomers")}
           value={(summary?.totalCustomers ?? 0).toString()}
@@ -597,10 +597,10 @@ export default function CustomersPage() {
         <div className="lg:col-span-8 afab-card overflow-hidden">
           
           {/* Table Controls (Search, Filters, CSV Export) */}
-          <div className="p-5 border-b border-gray-100 dark:border-gray-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800/60 flex flex-col md:flex-row md:items-center justify-between gap-3">
             
             {/* Table inline search */}
-            <div className="relative flex-1 max-w-sm">
+            <div className="relative w-full md:max-w-xs">
               <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 type="text"
@@ -610,11 +610,11 @@ export default function CustomersPage() {
                   setSearch(e.target.value);
                   setPage(0);
                 }}
-                className="afab-input ps-9 pe-3 py-2 text-xs font-medium"
+                className="afab-input ps-9 pe-3 py-2 text-xs font-medium w-full"
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full md:w-auto">
               {/* Group Filter */}
               <select
                 value={groupFilter}
@@ -622,7 +622,7 @@ export default function CustomersPage() {
                   setGroupFilter(e.target.value);
                   setPage(0);
                 }}
-                className="afab-select"
+                className="afab-select w-full sm:w-auto text-xs"
               >
                 <option value="ALL">{tGroups("all")}</option>
                 <option value="Standard">{tGroups("standard")}</option>
@@ -638,7 +638,7 @@ export default function CustomersPage() {
                   setStatusFilter(e.target.value);
                   setPage(0);
                 }}
-                className="afab-select"
+                className="afab-select w-full sm:w-auto text-xs"
               >
                 <option value="ALL">{tStatuses("all")}</option>
                 <option value="Active">{tStatuses("active")}</option>
@@ -650,17 +650,17 @@ export default function CustomersPage() {
               {/* Export CSV Button */}
               <button
                 onClick={handleExportCsv}
-                className="afab-btn-secondary"
+                className="afab-btn-secondary col-span-2 sm:col-span-1 justify-center text-xs"
               >
                 <Download className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{tTable("export")}</span>
+                <span>{tTable("export")}</span>
               </button>
             </div>
           </div>
 
           {/* Active selection banner */}
           {selectedIds.length > 0 && (
-            <div className="px-6 py-2.5 bg-purple-500/10 border-b border-purple-500/20 flex items-center justify-between text-xs text-[#7c3aed] dark:text-[#a78bfa] font-medium">
+            <div className="px-4 sm:px-6 py-2.5 bg-[var(--primary)]/10 border-b border-[var(--primary)]/20 flex items-center justify-between text-xs text-[var(--primary-hover)] dark:text-[var(--primary)] font-medium">
               <span>{tTable("selected", { count: selectedIds.length })}</span>
               <button
                 onClick={() => setSelectedIds([])}
@@ -671,8 +671,155 @@ export default function CustomersPage() {
             </div>
           )}
 
-          {/* Customers Data Table */}
-          <div className="overflow-x-auto">
+          {/* Mobile Responsive Cards View (Mobile only: < 768px) */}
+          <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-800/60">
+            {loading && customers.length === 0 ? (
+              <div className="p-8 text-center">
+                <AfabLoader className="mx-auto" />
+                <p className="mt-2 text-xs text-gray-400">Loading customers...</p>
+              </div>
+            ) : customers.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  icon={Users}
+                  title={tTable("emptyTitle")}
+                  description={tTable("emptyDesc")}
+                  action={
+                    <button onClick={openAddModal} className="afab-btn-primary text-xs mt-3">
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>{t("addCustomer")}</span>
+                    </button>
+                  }
+                />
+              </div>
+            ) : (
+              customers.map((cust) => {
+                const initialLetter = cust.name ? cust.name.charAt(0).toUpperCase() : "C";
+                const code = cust.customerCode || `CST-${cust.id.slice(-4).toUpperCase()}`;
+                const isSelected = selectedIds.includes(cust.id);
+                return (
+                  <div
+                    key={cust.id}
+                    onClick={() => setSelectedCustomer(cust)}
+                    className={`p-4 transition-colors cursor-pointer active:bg-gray-50 dark:active:bg-white/[0.03] ${
+                      isSelected ? "bg-[var(--primary)]/5" : ""
+                    }`}
+                  >
+                    {/* Top: Avatar, Name, Code & Checkbox */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => toggleSelectOne(cust.id)}
+                          className="rounded border-gray-300 dark:border-gray-700 text-[var(--primary)] focus:ring-[var(--primary)]"
+                        />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] font-bold text-xs">
+                          {initialLetter}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate">
+                            {cust.name}
+                          </h4>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(code);
+                                toast.success(tDrawer("idCopied", { code }));
+                              }}
+                              className="afab-badge afab-badge-primary font-mono text-[10px]"
+                            >
+                              {code}
+                              <Copy className="h-2 w-2 opacity-60" />
+                            </span>
+                            <span className={getStatusBadge(cust.status)}>
+                              {tStatuses(cust.status.toLowerCase()) || cust.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Group pill */}
+                      <span className={getGroupBadge(cust.group)}>
+                        {tGroups(cust.group.toLowerCase()) || cust.group}
+                      </span>
+                    </div>
+
+                    {/* Metrics Row: Revenue & Orders */}
+                    <div className="grid grid-cols-2 gap-2 mt-3 p-2.5 rounded-xl bg-gray-50/80 dark:bg-white/[0.03] border border-gray-100 dark:border-gray-800/60">
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-medium block">{tTable("totalRevenue")}</span>
+                        <span className="text-xs font-bold text-gray-900 dark:text-white font-mono">
+                          {formatCurrency(cust.totalRevenue, currency)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-medium block">{tTable("orders")}</span>
+                        <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                          {cust.ordersCount} {tTable("orders")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Contact & Quick Actions Strip */}
+                    <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-gray-100 dark:border-gray-800/40 text-xs">
+                      <div className="flex items-center gap-3">
+                        {cust.phone && (
+                          <a
+                            href={`tel:${cust.phone}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-[var(--primary)]"
+                          >
+                            <Phone className="h-3 w-3" />
+                            <span className="truncate max-w-[100px]">{cust.phone}</span>
+                          </a>
+                        )}
+                        {cust.email && (
+                          <a
+                            href={`mailto:${cust.email}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-[var(--primary)]"
+                          >
+                            <Mail className="h-3 w-3" />
+                            <span className="truncate max-w-[120px]">{cust.email}</span>
+                          </a>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openAddOrderModal(cust);
+                          }}
+                          className="afab-btn-soft px-2.5 py-1 text-[11px] font-semibold"
+                        >
+                          <Receipt className="h-3 w-3" />
+                          <span>{tTable("addOrder")}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(cust);
+                          }}
+                          className="afab-icon-btn p-1.5"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Customers Data Table (Desktop & Tablet only: ≥ 768px) */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="afab-table border-collapse">
               <thead className="afab-thead">
                 <tr>
@@ -681,7 +828,7 @@ export default function CustomersPage() {
                       type="checkbox"
                       checked={customers.length > 0 && selectedIds.length === customers.length}
                       onChange={toggleSelectAll}
-                      className="rounded border-gray-300 dark:border-gray-700 text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                      className="rounded border-gray-300 dark:border-gray-700 text-[var(--primary)] focus:ring-[var(--primary)]"
                     />
                   </th>
                   <th className="afab-th px-4">{tTable("customer")}</th>
@@ -732,7 +879,7 @@ export default function CustomersPage() {
                         key={cust.id}
                         onClick={() => setSelectedCustomer(cust)}
                         className={`afab-tr group cursor-pointer ${
-                          isSelected ? "bg-[#8b5cf6]/5 dark:bg-[#8b5cf6]/10" : ""
+                          isSelected ? "bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10" : ""
                         }`}
                       >
                         {/* Checkbox */}
@@ -744,19 +891,19 @@ export default function CustomersPage() {
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleSelectOne(cust.id)}
-                            className="rounded border-gray-300 dark:border-gray-700 text-[#8b5cf6] focus:ring-[#8b5cf6]"
+                            className="rounded border-gray-300 dark:border-gray-700 text-[var(--primary)] focus:ring-[var(--primary)]"
                           />
                         </td>
 
                         {/* Customer Avatar, Name & Customer ID Badge */}
                         <td className="afab-td px-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold text-xs">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-bold text-xs">
                               {initialLetter}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-[#8b5cf6] transition-colors">
+                                <span className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-[var(--primary)] transition-colors">
                                   {cust.name}
                                 </span>
                                 <span 
@@ -766,7 +913,7 @@ export default function CustomersPage() {
                                     toast.success(tDrawer("idCopied", { code }));
                                   }}
                                   title={tDrawer("copyId")}
-                                  className="afab-badge afab-badge-primary font-mono hover:bg-purple-500/20 transition-colors"
+                                  className="afab-badge afab-badge-primary font-mono hover:bg-[var(--primary)]/20 transition-colors"
                                 >
                                   {code}
                                   <Copy className="h-2.5 w-2.5 opacity-60" />
@@ -804,7 +951,7 @@ export default function CustomersPage() {
                               e.stopPropagation();
                               setSelectedCustomer(cust);
                             }}
-                            className="inline-flex items-center gap-1 font-semibold text-gray-700 dark:text-gray-300 hover:text-[#7c3aed] dark:hover:text-[#a78bfa] px-2 py-0.5 rounded-md hover:bg-purple-500/10 transition-colors"
+                            className="inline-flex items-center gap-1 font-semibold text-gray-700 dark:text-gray-300 hover:text-[var(--primary-hover)] dark:hover:text-[var(--primary)] px-2 py-0.5 rounded-md hover:bg-[var(--primary)]/10 transition-colors"
                           >
                             <Receipt className="h-3 w-3 text-gray-400" />
                             <span>{cust.ordersCount}</span>
@@ -850,7 +997,7 @@ export default function CustomersPage() {
                               </button>
                               <button
                                 onClick={() => openAddOrderModal(cust)}
-                                className="flex items-center gap-2 w-full rounded-xl px-3 py-2 text-[#7c3aed] dark:text-[#a78bfa] hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors font-semibold"
+                                className="flex items-center gap-2 w-full rounded-xl px-3 py-2 text-[var(--primary-hover)] dark:text-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:bg-[var(--primary)]/10 transition-colors font-semibold"
                               >
                                 <Receipt className="h-3.5 w-3.5" />
                                 <span>{tTable("addOrder")}</span>
@@ -937,20 +1084,20 @@ export default function CustomersPage() {
 
         </div>
 
-        {/* Right Column: 3 Analytics & Insight Widgets (4 Cols) */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* Right Column: 3 Analytics & Insight Widgets (4 Cols on Desktop, 3 Cols on Tablet, 1 Col on Mobile) */}
+        <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6">
           
           {/* Widget 1: Customer Overview Donut Chart */}
-          <div className="afab-card p-6">
+          <div className="afab-card p-4 sm:p-6 flex flex-col justify-between">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
               {tWidgets("overviewTitle")}
             </h3>
 
-            <div className="flex flex-col sm:flex-row items-center gap-4 mt-4">
+            <div className="flex flex-col sm:flex-row md:flex-col xl:flex-row items-center gap-4 mt-4">
               {/* Donut with Total in Center */}
               <div className="relative w-36 h-36 shrink-0">
-                <ChartContainer className="h-full w-full">
-                  <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 144, height: 144 }}>
+                <ChartContainer className="h-full w-full" minHeight={144}>
+                  <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 144, height: 144 }}>
                     <PieChart>
                       <Tooltip
                         formatter={(val) => [`${val} customers`, ""]}
@@ -998,7 +1145,7 @@ export default function CustomersPage() {
 
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2 font-medium text-gray-600 dark:text-gray-300">
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#8b5cf6]" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-[var(--primary)]" />
                     <span>{tStatuses("inactive")}</span>
                   </span>
                   <span className="font-bold text-gray-900 dark:text-white">
@@ -1020,7 +1167,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Widget 2: Top Customers by Revenue */}
-          <div className="afab-card p-6">
+          <div className="afab-card p-4 sm:p-6 flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-gray-900 dark:text-white">
                 {tWidgets("topCustomersTitle")}
@@ -1030,7 +1177,7 @@ export default function CustomersPage() {
                   setGroupFilter("Premium");
                   setPage(0);
                 }}
-                className="text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline"
+                className="text-xs font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)] hover:underline"
               >
                 {tWidgets("viewAll")}
               </button>
@@ -1050,7 +1197,7 @@ export default function CustomersPage() {
                     className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50/80 dark:hover:bg-white/[0.02] transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#8b5cf6]/10 text-[#8b5cf6] font-bold text-xs">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary)]/10 text-[var(--primary)] font-bold text-xs">
                         {top.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
@@ -1077,7 +1224,7 @@ export default function CustomersPage() {
           </div>
 
           {/* Widget 3: Recent Activity Log */}
-          <div className="afab-card p-6">
+          <div className="afab-card p-4 sm:p-6 flex flex-col justify-between">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
               {tWidgets("activityTitle")}
             </h3>
@@ -1087,7 +1234,7 @@ export default function CustomersPage() {
                 <p className="text-xs text-gray-400 py-3 text-center">{tWidgets("noActivity")}</p>
               ) : (
                 summary.recentActivity.map((act) => {
-                  let iconColor = "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] border-[#8b5cf6]/20";
+                  let iconColor = "bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)] border-[var(--primary)]/20";
                   let IconComponent = UserPlus;
                   let actionText = tWidgets("newCustomerActivity");
 
@@ -1100,7 +1247,7 @@ export default function CustomersPage() {
                     IconComponent = CreditCard;
                     actionText = tWidgets("paymentReceivedActivity");
                   } else if (act.type === "NEW_ORDER") {
-                    iconColor = "bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa] border-[#8b5cf6]/20";
+                    iconColor = "bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)] border-[var(--primary)]/20";
                     IconComponent = Receipt;
                     actionText = tWidgets("newOrderActivity");
                   }
@@ -1138,12 +1285,12 @@ export default function CustomersPage() {
       {/* ── Slide-Over Customer Details Drawer ── */}
       {selectedCustomer && (
         <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in">
-          <div className={`w-full max-w-md bg-white dark:bg-[#0c101c] h-full shadow-2xl border-s border-gray-200 dark:border-gray-800/80 p-6 overflow-y-auto animate-in ${isRtl ? "slide-in-from-left" : "slide-in-from-right"} duration-200 flex flex-col justify-between`}>
+          <div className={`w-full sm:max-w-md bg-white dark:bg-[#0c101c] h-full shadow-2xl border-s border-gray-200 dark:border-gray-800/80 p-4 sm:p-6 overflow-y-auto animate-in ${isRtl ? "slide-in-from-left" : "slide-in-from-right"} duration-200 flex flex-col justify-between`}>
             <div>
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
                 <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-sm bg-[#8b5cf6]/10 text-[#8b5cf6] border border-[#8b5cf6]/20">
+                  <div className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-sm bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
                     {selectedCustomer.name.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -1239,7 +1386,7 @@ export default function CustomersPage() {
               <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-800/60">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Receipt className="h-4 w-4 text-[#8b5cf6]" />
+                    <Receipt className="h-4 w-4 text-[var(--primary)]" />
                     <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-white">
                       {tDrawer("invoicesAndOrders")}
                     </h4>
@@ -1262,7 +1409,7 @@ export default function CustomersPage() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">{tDrawer("noOrders")}</p>
                     <button
                       onClick={() => openAddOrderModal(selectedCustomer)}
-                      className="mt-2 text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline"
+                      className="mt-2 text-xs font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)] hover:underline"
                     >
                       {tDrawer("addOrderBtn")}
                     </button>
@@ -1272,7 +1419,7 @@ export default function CustomersPage() {
                     {selectedCustomer.orders.map((ord: CustomerOrder) => (
                       <div
                         key={ord.id}
-                        className="afab-inset p-3.5 hover:border-[#8b5cf6]/40 transition-all text-xs"
+                        className="afab-inset p-3.5 hover:border-[var(--primary)]/40 transition-all text-xs"
                       >
                         <div className="flex items-center justify-between">
                           <span className="afab-badge afab-badge-neutral font-mono">
@@ -1547,11 +1694,11 @@ export default function CustomersPage() {
             <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800/60">
               <div>
                 <h3 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
-                  <Receipt className="h-5 w-5 text-[#8b5cf6]" />
+                  <Receipt className="h-5 w-5 text-[var(--primary)]" />
                   <span>{tOrderModal("title")}</span>
                 </h3>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {orderTargetCustomer.name} • <span className="font-mono text-[#7c3aed] dark:text-[#a78bfa]">{orderTargetCustomer.customerCode}</span>
+                  {orderTargetCustomer.name} • <span className="font-mono text-[var(--primary-hover)] dark:text-[var(--primary)]">{orderTargetCustomer.customerCode}</span>
                 </p>
               </div>
               <button

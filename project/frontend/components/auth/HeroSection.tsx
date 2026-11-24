@@ -2,7 +2,6 @@
 
 import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname, Link } from "@/i18n/routing";
-import Image from "next/image";
 import { Play, Globe } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DashboardMockup } from "@/components/home/dashboard-mockup";
@@ -38,22 +37,16 @@ export function HeroSection() {
          ═══════════════════════════════════════════════════ */}
       <div className="relative z-20 flex items-center justify-between px-8 pt-6 pb-2 xl:px-10">
         <Link href="/" className="inline-flex items-center gap-3 group">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm transition-transform duration-200 group-hover:scale-105">
-            <Image
-              src="/assets/afablogo.png"
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#050814] shadow-sm transition-transform duration-200 group-hover:scale-105">
+            <img
+              src="/assets/afab-logo-light.png"
               alt="AFAB Logo"
-              width={32}
-              height={32}
-              className="object-contain dark:hidden"
-              priority
+              className="h-full w-full object-cover dark:hidden"
             />
-            <Image
-              src="/assets/afablogo_dark.png"
+            <img
+              src="/assets/afab-logo-dark.png"
               alt="AFAB Logo Dark"
-              width={32}
-              height={32}
-              className="object-contain hidden dark:block"
-              priority
+              className="h-full w-full object-cover hidden dark:block"
             />
           </div>
           <span className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-white">

@@ -542,8 +542,8 @@ export function SecuritySettings({ profile }: { profile: any }) {
 
         {/* Support */}
         <div className="afab-card p-6 text-center">
-          <div className="w-12 h-12 bg-[#8b5cf6]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="w-6 h-6 text-[#7c3aed] dark:text-[#a78bfa]" />
+          <div className="w-12 h-12 bg-[var(--primary)]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <ShieldCheck className="w-6 h-6 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
           </div>
           <h3 className="afab-card-title mb-2">{t("security.needHelp")}</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-6 leading-relaxed">
@@ -560,7 +560,7 @@ export function SecuritySettings({ profile }: { profile: any }) {
         <DialogContent className="sm:max-w-[480px] rounded-3xl border-gray-200 dark:border-gray-800/80 bg-white dark:bg-[#0c101c] p-6 sm:p-8 shadow-2xl">
           <DialogHeader>
             <DialogTitle className="afab-card-title flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-[#8b5cf6]" />
+              <ShieldCheck className="w-5 h-5 text-[var(--primary)]" />
               {t("security.setup2FATitle")}
             </DialogTitle>
           </DialogHeader>

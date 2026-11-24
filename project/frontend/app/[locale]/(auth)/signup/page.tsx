@@ -95,11 +95,11 @@ export default function SignupPage() {
           >
             {t("loginTab")}
           </Link>
-          <div className="relative w-1/2 pb-3 text-center text-sm font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
+          <div className="relative w-1/2 pb-3 text-center text-sm font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)]">
             {t("signupTab")}
             <motion.div 
               layoutId="activeTab" 
-              className="absolute bottom-0 start-0 w-full h-[2px] bg-[#8b5cf6] z-10" 
+              className="absolute bottom-0 start-0 w-full h-[2px] bg-[var(--primary)] z-10" 
             />
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function SignupPage() {
               {t("firstName")}
             </label>
             <div className="relative group">
-              <User className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+              <User className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
               <input
                 type="text"
                 placeholder={t("firstNamePlaceholder")}
@@ -166,7 +166,7 @@ export default function SignupPage() {
             {t("businessName")}
           </label>
           <div className="relative group">
-            <Building className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+            <Building className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
             <input
               type="text"
               placeholder={t("businessNamePlaceholder")}
@@ -184,7 +184,7 @@ export default function SignupPage() {
             {t("email")}
           </label>
           <div className="relative group">
-            <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+            <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
             <input
               type="email"
               placeholder={t("emailPlaceholder")}
@@ -204,7 +204,7 @@ export default function SignupPage() {
             </label>
           </div>
           <div className="relative group">
-            <Lock className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+            <Lock className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
             <input
               type={showPassword ? "text" : "password"}
               placeholder={t("passwordSignupPlaceholder")}
@@ -277,7 +277,7 @@ export default function SignupPage() {
 
       {/* Bottom Link */}
       <motion.p variants={itemVariants} className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-        {t("hasAccount")} <Link href="/login" className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all">{t("loginTab")}</Link>
+        {t("hasAccount")} <Link href="/login" className="font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-all">{t("loginTab")}</Link>
       </motion.p>
     </motion.div>
   );

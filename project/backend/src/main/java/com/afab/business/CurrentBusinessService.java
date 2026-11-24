@@ -59,27 +59,38 @@ public class CurrentBusinessService {
             if (!"ACTIVE".equalsIgnoreCase(member.getStatus()) || member.getBusiness().getArchivedAt() != null) {
                 throw new ForbiddenException("Unauthorized: Membership in business is inactive or business is archived.");
             }
+            BusinessAccessGuard.assertEditable(member.getBusiness());
             return member.getBusiness();
         }
 
-        // 2. If user has activeBusinessId saved
+        // 2. If user has activeBusinessId saved and it is unlocked
         if (user.getActiveBusinessId() != null) {
             Optional<BusinessMember> memberOpt = businessMemberRepository
                     .findWithBusinessByBusinessIdAndUserId(user.getActiveBusinessId(), user.getId());
-            if (memberOpt.isPresent() && "ACTIVE".equalsIgnoreCase(memberOpt.get().getStatus()) && memberOpt.get().getBusiness().getArchivedAt() == null) {
+            if (memberOpt.isPresent()
+                    && "ACTIVE".equalsIgnoreCase(memberOpt.get().getStatus())
+                    && memberOpt.get().getBusiness().getArchivedAt() == null
+                    && memberOpt.get().getBusiness().isEditable()) {
                 return memberOpt.get().getBusiness();
             }
         }
 
-        // 3. Fallback: Find user's first active business membership
+        // 3. Fallback: Find user's primary or first unlocked active business membership
         List<BusinessMember> members = businessMemberRepository.findAllActiveByUserIdWithBusiness(user.getId());
         if (!members.isEmpty()) {
-            return members.get(0).getBusiness();
+            return members.stream()
+                    .map(BusinessMember::getBusiness)
+                    .filter(Business::isEditable)
+                    .sorted((a, b) -> Boolean.compare(b.isPrimary(), a.isPrimary()))
+                    .findFirst()
+                    .orElseThrow(() -> new BusinessReadOnlyException(members.get(0).getBusiness()));
         }
 
         // 4. Legacy fallback: findFirstByUserIdAndArchivedAtIsNull
-        return businessRepository.findFirstByUserIdAndArchivedAtIsNull(user.getId())
+        Business legacy = businessRepository.findFirstByUserIdAndArchivedAtIsNull(user.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("No active business found for user: " + userEmail));
+        BusinessAccessGuard.assertEditable(legacy);
+        return legacy;
     }
 
     @Transactional(readOnly = true)
@@ -131,6 +142,7 @@ public class CurrentBusinessService {
         if (!"ACTIVE".equalsIgnoreCase(member.getStatus()) || member.getBusiness().getArchivedAt() != null) {
             throw new ForbiddenException("Cannot switch to an inactive or archived business.");
         }
+        BusinessAccessGuard.assertEditable(member.getBusiness());
 
         user.setActiveBusinessId(businessId);
         userRepository.save(user);

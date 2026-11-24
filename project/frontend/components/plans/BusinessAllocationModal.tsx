@@ -150,12 +150,12 @@ export function BusinessAllocationModal({
             </DialogTitle>
             <DialogDescription className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {isAr
-                ? `تدعم باقة ${targetPlanName} عدد ${maxAllowed} شركات قابلة للتعديل. اختر ${requiredCount} شركات ترغب في الاستمرار بإدارتها، وستبقى باقي الشركات محفوظة بالكامل في وضع القراءة فقط.`
-                : `Your ${targetPlanName} plan supports ${maxAllowed} editable business${
+                ? `تدعم باقة ${targetPlanName} عدد ${maxAllowed} شركات نشطة ومفتوحة. اختر ${requiredCount} شركات ترغب في الاستمرار بإدارتها، وستُقفل باقي الشركات مع حفظ كافة بياناتها بالكامل حتى تقوم بالترقية أو تبديل التخصيص.`
+                : `Your ${targetPlanName} plan supports ${maxAllowed} active unlocked business${
                     maxAllowed > 1 ? "es" : ""
                   }. Choose which ${requiredCount} business${
                     requiredCount > 1 ? "es" : ""
-                  } you want to continue managing.`}
+                  } to keep unlocked; the remaining businesses will be locked with all data safely preserved.`}
             </DialogDescription>
           </div>
         </DialogHeader>
@@ -236,11 +236,11 @@ export function BusinessAllocationModal({
                       {" • "}
                       {biz.editable
                         ? isAr
-                          ? "الحالة الحالية: قابلة للتعديل"
-                          : "Current: Editable"
+                          ? "الحالة الحالية: مفتوحة (نشطة)"
+                          : "Current: Active (Unlocked)"
                         : isAr
-                        ? "الحالة الحالية: قراءة فقط"
-                        : "Current: Read-Only"}
+                        ? "الحالة الحالية: مقفلة (البيانات محفوظة)"
+                        : "Current: Locked (Data Saved)"}
                     </p>
                   </div>
                 </div>
@@ -249,12 +249,12 @@ export function BusinessAllocationModal({
                   {checked ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                       <Check className="w-3 h-3" />
-                      {isAr ? "قابلة للتعديل" : "Editable"}
+                      {isAr ? "نشطة ومفتوحة" : "Unlocked"}
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                       <Lock className="w-2.5 h-2.5" />
-                      {isAr ? "قراءة فقط" : "Read-Only"}
+                      {isAr ? "مقفلة" : "Locked"}
                     </span>
                   )}
                 </div>
@@ -265,33 +265,33 @@ export function BusinessAllocationModal({
 
         {/* Summary of Editable vs Read-Only Outcome */}
         <div className="rounded-2xl bg-gray-50 dark:bg-[#080c18] border border-gray-200 dark:border-gray-800 p-3.5 space-y-2 text-xs">
-          <div className="flex items-start gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-            <p className="text-gray-700 dark:text-gray-300">
-              <strong className="text-gray-900 dark:text-white">
-                {isAr ? "ستبقى قابلة للتعديل بالكامل:" : "Will remain fully Editable:"}
-              </strong>{" "}
-              {editableBusinesses.length > 0
-                ? editableBusinesses.map((b) => b.name).join(", ")
-                : isAr
-                ? "لم يتم الاختيار بعد"
-                : "None selected"}
-            </p>
-          </div>
-
-          {readOnlyBusinesses.length > 0 && (
             <div className="flex items-start gap-2">
-              <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
               <p className="text-gray-700 dark:text-gray-300">
                 <strong className="text-gray-900 dark:text-white">
-                  {isAr
-                    ? "ستتحول إلى وضع القراءة فقط (مع حفظ كافة البيانات):"
-                    : "Will become Read-Only (all data & exports preserved):"}
+                  {isAr ? "ستبقى مفتوحة ونشطة:" : "Will remain Active (Unlocked):"}
                 </strong>{" "}
-                {readOnlyBusinesses.map((b) => b.name).join(", ")}
+                {editableBusinesses.length > 0
+                  ? editableBusinesses.map((b) => b.name).join(", ")
+                  : isAr
+                  ? "لم يتم الاختيار بعد"
+                  : "None selected"}
               </p>
             </div>
-          )}
+
+            {readOnlyBusinesses.length > 0 && (
+              <div className="flex items-start gap-2">
+                <Lock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <p className="text-gray-700 dark:text-gray-300">
+                  <strong className="text-gray-900 dark:text-white">
+                    {isAr
+                      ? "ستُقفل مع حفظ كافة البيانات بداخلها:"
+                      : "Will be Locked (all data safely vaulted until you upgrade or swap):"}
+                  </strong>{" "}
+                  {readOnlyBusinesses.map((b) => b.name).join(", ")}
+                </p>
+              </div>
+            )}
 
           {!isValid && (
             <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold pt-1">

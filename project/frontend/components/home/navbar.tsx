@@ -6,7 +6,6 @@ import { Link, useRouter, usePathname } from "@/i18n/routing";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown, Globe } from "lucide-react";
-import Image from "next/image";
 
 export function Navbar() {
   const t = useTranslations("Common.nav");
@@ -34,22 +33,16 @@ export function Navbar() {
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm">
-              <Image 
-                src="/assets/afablogo.png" 
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#050814] shadow-sm">
+              <img 
+                src="/assets/afab-logo-light.png" 
                 alt="AFAB Logo" 
-                width={32}
-                height={32}
-                className="object-contain dark:hidden"
-                priority
+                className="h-full w-full object-cover dark:hidden"
               />
-              <Image 
-                src="/assets/afablogo_dark.png" 
+              <img 
+                src="/assets/afab-logo-dark.png" 
                 alt="AFAB Logo Dark" 
-                width={32}
-                height={32}
-                className="object-contain hidden dark:block"
-                priority
+                className="h-full w-full object-cover hidden dark:block"
               />
             </div>
             <span className="text-[22px] font-bold tracking-tight text-gray-900 dark:text-white">AFAB</span>
@@ -90,7 +83,7 @@ export function Navbar() {
               </Button>
             </Link>
             <Link href="/signup">
-              <Button size="sm" className="rounded-full bg-[#8b5cf6] hover:bg-[#7c3aed] px-6 text-white font-medium border-0">
+              <Button size="sm" className="rounded-full bg-[var(--primary)] hover:bg-[var(--primary-hover)] px-6 text-white font-medium border-0">
                 {t("getStarted")}
               </Button>
             </Link>
@@ -162,7 +155,7 @@ export function Navbar() {
                 </Link>
                 <Link href="/signup" className="w-full" onClick={() => setMobileOpen(false)}>
                   <Button 
-                    className="w-full h-11 rounded-xl text-[15px] font-semibold bg-[#8b5cf6] hover:bg-[#7c3aed] text-white"
+                    className="w-full h-11 rounded-xl text-[15px] font-semibold bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white"
                   >
                     {t("getStarted")}
                   </Button>

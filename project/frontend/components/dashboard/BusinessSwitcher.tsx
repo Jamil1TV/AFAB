@@ -4,12 +4,14 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Link, useRouter } from "@/i18n/routing";
 import { useLocale } from "next-intl";
 import { BusinessService } from "@/lib/api/business";
+import { SubscriptionService } from "@/lib/api/subscription";
 import { AuthStore } from "@/lib/auth-store";
 import {
   Building2,
   Plus,
   Check,
   Crown,
+  Zap,
   Lock,
   Sparkles,
   Settings,
@@ -56,14 +58,27 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [lockedBusinessTarget, setLockedBusinessTarget] = useState<BusinessItem | null>(null);
+  const [currentPlanSlug, setCurrentPlanSlug] = useState<string | null>(null);
   const [newBusinessName, setNewBusinessName] = useState("");
   const [newBusinessCurrency, setNewBusinessCurrency] = useState("USD");
   const switcherRef = useRef<HTMLDivElement>(null);
 
   // Active plan & business limits (FREE: 1, PLUS: 3, PRO: 5)
-  const planTier = (profile?.planTier || profile?.planType || "FREE").toUpperCase();
+  const planTier = (
+    currentPlanSlug ||
+    profile?.planTier ||
+    profile?.planType ||
+    "FREE"
+  ).toUpperCase();
   const maxBusinesses = planTier.includes("PRO") ? 5 : planTier.includes("PLUS") ? 3 : 1;
   const isFreePlan = planTier.includes("FREE");
+  const resolvedBadgeSlug =
+    currentPlanSlug ||
+    (profile?.planTier || profile?.planType || "").toLowerCase() ||
+    null;
+  const showPlanBadge = resolvedBadgeSlug === "plus" || resolvedBadgeSlug === "pro";
+  const isProPlan = resolvedBadgeSlug === "pro";
 
   // Multi-business storage with primary business default
   const primaryBusinessName = profile?.businessName || profile?.workspaceName || "My Business";
@@ -84,6 +99,18 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
     try {
       const list = await BusinessService.list();
       if (list && list.length > 0) {
+        const activeFromApi = list.find((b) => Boolean(b.active) && b.editable !== false);
+        const currentStoredId = AuthStore.getActiveBusinessId();
+        if (currentStoredId) {
+          const storedBiz = list.find((b) => b.id === currentStoredId);
+          if (storedBiz && storedBiz.editable === false) {
+            const unlocked = activeFromApi || list.find((b) => b.editable !== false);
+            AuthStore.setActiveBusinessId(unlocked ? unlocked.id : null);
+          }
+        } else if (activeFromApi) {
+          AuthStore.setActiveBusinessId(activeFromApi.id);
+        }
+
         setBusinesses(
           list.map((b) => ({
             id: b.id,
@@ -102,9 +129,40 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
     }
   }, [planTier]);
 
+  const fetchPlan = useCallback(async () => {
+    const cachedTier = AuthStore.getUser()?.planTier;
+    if (cachedTier) {
+      setCurrentPlanSlug(cachedTier.toLowerCase());
+    }
+    try {
+      const sub = await SubscriptionService.getMySubscription();
+      const slug = sub?.planSlug?.toLowerCase() || "free";
+      setCurrentPlanSlug(slug);
+      AuthStore.updateUser({ planTier: slug.toUpperCase() });
+    } catch {
+      if (!cachedTier) {
+        setCurrentPlanSlug((profile?.planTier || profile?.planType || "free").toLowerCase());
+      }
+    }
+  }, [profile?.planTier, profile?.planType]);
+
   useEffect(() => {
     fetchBusinesses();
-  }, [fetchBusinesses]);
+    fetchPlan();
+    const handleSubUpdated = () => {
+      fetchBusinesses();
+      fetchPlan();
+    };
+    const handleProfileUpdated = () => {
+      fetchPlan();
+    };
+    window.addEventListener("afab:subscription-updated", handleSubUpdated);
+    window.addEventListener("afab_profile_updated", handleProfileUpdated);
+    return () => {
+      window.removeEventListener("afab:subscription-updated", handleSubUpdated);
+      window.removeEventListener("afab_profile_updated", handleProfileUpdated);
+    };
+  }, [fetchBusinesses, fetchPlan]);
 
   const editableBusinessesCount = useMemo(
     () => businesses.filter((b) => b.editable).length,
@@ -113,7 +171,11 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
   const isAtLimit = editableBusinessesCount >= maxBusinesses;
 
   const activeBusiness = useMemo(() => {
-    return businesses.find((b) => b.isActive) || businesses[0];
+    return (
+      businesses.find((b) => b.isActive && b.editable) ||
+      businesses.find((b) => b.editable) ||
+      businesses[0]
+    );
   }, [businesses]);
 
   // Click outside to close switcher popover
@@ -131,10 +193,15 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
     };
   }, [isOpen]);
 
-  const handleSelectBusiness = async (id: string) => {
+  const handleSelectBusiness = async (biz: BusinessItem) => {
+    if (!biz.editable) {
+      setIsOpen(false);
+      setLockedBusinessTarget(biz);
+      return;
+    }
     try {
-      await BusinessService.switchActive(id);
-      AuthStore.setActiveBusinessId(id);
+      await BusinessService.switchActive(biz.id);
+      AuthStore.setActiveBusinessId(biz.id);
       setIsOpen(false);
       window.location.reload();
     } catch (err) {
@@ -182,33 +249,49 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         aria-label="Workspace & Business Selector"
         className={`flex w-full items-center ${
           collapsed ? "justify-center p-1.5" : "justify-between p-2"
-        } rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group select-none border border-transparent hover:border-purple-200 dark:hover:border-purple-500/20`}
+        } rounded-xl hover:bg-gray-100 dark:hover:bg-white/[0.06] transition-all cursor-pointer group select-none border border-transparent hover:border-purple-200 dark:hover:border-[var(--primary)]/20`}
       >
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-2.5"} overflow-hidden min-w-0`}>
           {/* Official AFAB Logo (Light & Dark variants) */}
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#0c101c] shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-gray-200 dark:border-gray-800/60 bg-white dark:bg-[#050814] shadow-sm group-hover:scale-105 transition-transform overflow-hidden">
             <img
-              src="/assets/afablogo.png"
+              src="/assets/afab-logo-light.png"
               alt="AFAB Logo"
-              className="h-7 w-7 object-contain dark:hidden"
+              className="h-full w-full object-cover dark:hidden"
             />
             <img
-              src="/assets/afablogo_dark.png"
+              src="/assets/afab-logo-dark.png"
               alt="AFAB Logo Dark"
-              className="h-7 w-7 object-contain hidden dark:block"
+              className="h-full w-full object-cover hidden dark:block"
             />
           </div>
 
           {!collapsed && (
             <div className="flex flex-col overflow-hidden min-w-0 text-start">
-              <div className="flex items-center gap-1.5">
-                <span className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="truncate text-sm font-bold text-gray-900 dark:text-white group-hover:text-[var(--primary)] dark:group-hover:text-purple-400 transition-colors">
                   {activeBusiness.name}
                 </span>
+                {showPlanBadge && (
+                  <span
+                    className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-wide shrink-0 ${
+                      isProPlan
+                        ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm shadow-amber-500/20"
+                        : "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm shadow-purple-500/20"
+                    }`}
+                  >
+                    {isProPlan ? (
+                      <Crown className="h-2.5 w-2.5 fill-current" />
+                    ) : (
+                      <Zap className="h-2.5 w-2.5 fill-current" />
+                    )}
+                    <span>{isProPlan ? "Pro" : "Plus"}</span>
+                  </span>
+                )}
                 {!activeBusiness.editable && (
                   <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 shrink-0">
                     <Lock className="w-2.5 h-2.5" />
-                    {isArabic ? "قراءة" : "RO"}
+                    {isArabic ? "مقفلة" : "Locked"}
                   </span>
                 )}
               </div>
@@ -222,7 +305,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
         {!collapsed && (
           <ChevronsUpDown
             className={`h-4 w-4 text-gray-400 group-hover:text-purple-500 shrink-0 ms-1 transition-transform duration-200 ${
-              isOpen ? "rotate-180 text-purple-600 dark:text-purple-400" : ""
+              isOpen ? "rotate-180 text-[var(--primary)] dark:text-[var(--primary)]" : ""
             }`}
           />
         )}
@@ -243,19 +326,19 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <span
               className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                 isAtLimit
-                  ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20"
+                  ? "bg-[var(--primary)]/10 text-[var(--primary)] dark:text-[var(--primary)] border border-[var(--primary)]/20"
                   : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
               }`}
             >
               {isAtLimit ? (
                 <>
                   <Lock className="w-2.5 h-2.5 shrink-0" />
-                  <span>{businesses.length} / {maxBusinesses} {isArabic ? "الحد الأقصى" : "Max"}</span>
+                  <span>{editableBusinessesCount} / {maxBusinesses} {isArabic ? "الحد الأقصى" : "Max"}</span>
                 </>
               ) : (
                 <>
                   <Crown className="w-2.5 h-2.5 shrink-0" />
-                  <span>{businesses.length} / {maxBusinesses} {isArabic ? "نشطة" : "Active"}</span>
+                  <span>{editableBusinessesCount} / {maxBusinesses} {isArabic ? "نشطة" : "Active"}</span>
                 </>
               )}
             </span>
@@ -264,16 +347,25 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
           {/* Businesses List */}
           <div className="py-1.5 space-y-1 max-h-56 overflow-y-auto custom-scrollbar">
             {businesses.map((biz) => {
-              const isSelected = biz.isActive;
+              const isSelected = biz.isActive && biz.editable;
+              const isLocked = !biz.editable;
               return (
                 <div
                   key={biz.id}
-                  onClick={() => handleSelectBusiness(biz.id)}
+                  onClick={() => handleSelectBusiness(biz)}
                   role="button"
                   tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleSelectBusiness(biz);
+                    }
+                  }}
                   className={`flex items-center justify-between p-2 rounded-xl text-start cursor-pointer transition-all ${
                     isSelected
                       ? "bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60"
+                      : isLocked
+                      ? "bg-amber-50/40 dark:bg-amber-500/[0.04] hover:bg-amber-50/80 dark:hover:bg-amber-500/10 border border-amber-500/15 opacity-85"
                       : "hover:bg-gray-50 dark:hover:bg-white/[0.04] border border-transparent"
                   }`}
                 >
@@ -282,10 +374,12 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                       className={`h-7 w-7 rounded-lg flex items-center justify-center shrink-0 ${
                         isSelected
                           ? "bg-purple-600 text-white shadow-sm shadow-purple-500/30"
+                          : isLocked
+                          ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                           : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300"
                       }`}
                     >
-                      <Building2 className="w-3.5 h-3.5" />
+                      {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Building2 className="w-3.5 h-3.5" />}
                     </div>
                     <div className="truncate min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
@@ -294,17 +388,17 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                         </p>
                         {biz.editable ? (
                           <span className="px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-                            {isArabic ? "تعديل" : "Editable"}
+                            {isArabic ? "نشطة" : "Active"}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
                             <Lock className="w-2 h-2" />
-                            {isArabic ? "قراءة فقط" : "Read-Only"}
+                            {isArabic ? "مقفلة" : "Locked"}
                           </span>
                         )}
                       </div>
                       <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
-                        {biz.currency} • {biz.plan}
+                        {biz.currency} • {isLocked ? (isArabic ? "البيانات محفوظة" : "Data Saved") : biz.plan}
                       </p>
                     </div>
                   </div>
@@ -323,7 +417,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <button
               type="button"
               onClick={handleAddBusinessClick}
-              className="flex w-full items-center justify-between p-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-950/30 hover:text-purple-600 dark:hover:text-purple-400 transition-colors group cursor-pointer"
+              className="flex w-full items-center justify-between p-2 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30 hover:text-[var(--primary)] dark:hover:text-purple-400 transition-colors group cursor-pointer"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div className="h-6 w-6 rounded-lg border border-dashed border-gray-300 dark:border-gray-700 flex items-center justify-center group-hover:border-purple-500 text-gray-400 group-hover:text-purple-500 transition-colors shrink-0">
@@ -332,7 +426,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
                 <span className="truncate">{isArabic ? "إضافة عمل جديد" : "Add Business"}</span>
               </div>
               {isAtLimit ? (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-full border border-purple-500/20 shrink-0 ms-1.5">
+                <span className="flex items-center gap-1 text-[10px] font-bold text-[var(--primary)] dark:text-[var(--primary)] bg-[var(--primary)]/10 px-1.5 py-0.5 rounded-full border border-[var(--primary)]/20 shrink-0 ms-1.5">
                   <Crown className="w-2.5 h-2.5 shrink-0" />
                   UPGRADE
                 </span>
@@ -356,7 +450,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
             <Link
               href="/dashboard/settings/subscription"
               onClick={() => setIsOpen(false)}
-              className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 rounded-lg transition-colors cursor-pointer font-medium"
+              className="flex w-full items-center justify-between px-2.5 py-1.5 text-xs text-[var(--primary)] dark:text-[var(--primary)] hover:bg-[var(--primary)]/10 dark:hover:bg-purple-950/30 rounded-lg transition-colors cursor-pointer font-medium"
             >
               <span className="flex items-center gap-2 truncate">
                 <CreditCard className="w-3.5 h-3.5 shrink-0" />
@@ -389,20 +483,20 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
 
           {/* Features Highlights */}
           <div className="my-4 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 space-y-2.5">
-            <p className="text-xs font-bold text-purple-900 dark:text-purple-300 uppercase tracking-wider">
+            <p className="text-xs font-bold text-purple-900 dark:text-[var(--primary)] uppercase tracking-wider">
               {isArabic ? "ميزات الخطة المدفوعة:" : "What you get with Pro:"}
             </p>
             <div className="space-y-2 text-xs text-gray-700 dark:text-gray-300">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[var(--primary)] dark:text-[var(--primary)] shrink-0" />
                 <span>{isArabic ? "شركات ومساحات عمل متعددة وغير محدودة" : "Multiple independent businesses & workspaces"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[var(--primary)] dark:text-[var(--primary)] shrink-0" />
                 <span>{isArabic ? "محفظة مالية موحدة وتحويل مباشر للعملات" : "Consolidated multi-currency portfolio analytics"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />
+                <ShieldCheck className="w-4 h-4 text-[var(--primary)] dark:text-[var(--primary)] shrink-0" />
                 <span>{isArabic ? "مساعد الذكاء الاصطناعي بلا حدود للتقارير والفواتير" : "Unlimited AI Assistant queries & automated insights"}</span>
               </div>
             </div>
@@ -437,7 +531,7 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl">
           <DialogHeader className="text-start space-y-2">
-            <div className="h-10 w-10 rounded-xl bg-[#8b5cf6]/10 text-[#8b5cf6] flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
@@ -496,12 +590,84 @@ export function BusinessSwitcher({ collapsed, profile }: BusinessSwitcherProps) 
               </Button>
               <Button
                 type="submit"
-                className="rounded-xl bg-[#8b5cf6] hover:bg-[#7c3aed] text-white font-bold shadow-lg shadow-[#8b5cf6]/25"
+                className="rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white font-bold shadow-lg shadow-[var(--primary)]/25"
               >
                 {isArabic ? "إنشاء الشركة" : "Create Business"}
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Locked Business Modal (When clicking a locked workspace in navbar) ── */}
+      <Dialog
+        open={Boolean(lockedBusinessTarget)}
+        onOpenChange={(open) => {
+          if (!open) setLockedBusinessTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-md p-6 bg-white dark:bg-[#0c101c] border border-gray-200 dark:border-gray-800 shadow-2xl rounded-3xl">
+          <DialogHeader className="text-start space-y-3">
+            <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-600 dark:text-amber-400">
+              <Lock className="w-6 h-6" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
+                {isArabic
+                  ? `شركة "${lockedBusinessTarget?.name || ""}" مقفلة`
+                  : `"${lockedBusinessTarget?.name || "Business"}" is Locked`}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">
+                {isArabic
+                  ? `تتيح باقتك الحالية (${planTier}) فتح ${maxBusinesses} شركة نشطة فقط في نفس الوقت. تم قفل هذه الشركة ولا يمكن فتحها أو قراءة بياناتها حالياً، ولكن جميع بياناتها المالية (المعاملات والفواتير والعملاء والتقارير) محفوظة بالكامل بأمان.`
+                  : `Your current ${planTier} plan allows ${maxBusinesses} active unlocked business(es). This business is locked and cannot be opened or viewed right now, while all of its transactions, invoices, customers, and reports remain safely stored inside it.`}
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+
+          <div className="my-3 p-4 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-800/40 space-y-2 text-xs text-gray-700 dark:text-gray-300">
+            <div className="flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
+              <span>
+                {isArabic
+                  ? "ترقية الباقة إلى Plus (3 شركات) أو Pro (5 شركات) تعيد فتح الوصول فوراً إلى شركاتك وبياناتها."
+                  : "Upgrade to Plus (3 businesses) or Pro (5 businesses) to immediately unlock simultaneous access and restore all saved data."}
+              </span>
+            </div>
+            <div className="flex items-start gap-2">
+              <Briefcase className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+              <span>
+                {isArabic
+                  ? "أو يمكنك تبديل الشركة النشطة في إعدادات الاشتراك لقفل شركة أخرى وفتح هذه الشركة بدلاً منها."
+                  : "Or swap your active business allocation in Subscription Settings to lock another business and unlock this one instead."}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-end gap-2.5 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setLockedBusinessTarget(null);
+                router.push("/dashboard/settings/subscription");
+              }}
+              className="border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xs"
+            >
+              {isArabic ? "تبديل الشركة النشطة" : "Swap Active Business"}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setLockedBusinessTarget(null);
+                router.push("/dashboard/settings/subscription");
+              }}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold shadow-md shadow-purple-500/25 text-xs"
+            >
+              <Crown className="w-4 h-4 ltr:mr-1.5 rtl:ml-1.5" />
+              {isArabic ? "ترقية الباقة لفتح الشركة" : "Upgrade to Unlock"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

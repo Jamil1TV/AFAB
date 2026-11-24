@@ -1,6 +1,7 @@
 package com.afab.invoices.service;
 
 import com.afab.business.Business;
+import com.afab.business.BusinessAccessGuard;
 import com.afab.business.CurrentBusinessService;
 import com.afab.common.exception.ConflictException;
 import com.afab.common.exception.ForbiddenException;
@@ -268,6 +269,7 @@ public class InvoiceService {
     public InvoiceDTO createInvoice(String userEmail, CreateInvoiceRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         validateDates(request.getIssueDate(), request.getDueDate());
         Customer customer = resolveAndValidateCustomer(business, request.getCustomerId());
@@ -303,6 +305,7 @@ public class InvoiceService {
     public InvoiceDTO updateDraftInvoice(String userEmail, UUID invoiceId, CreateInvoiceRequest request) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         Invoice invoice = invoiceRepository.findWithDetailsById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with ID: " + invoiceId));
@@ -342,6 +345,7 @@ public class InvoiceService {
     public InvoiceDTO issueInvoice(String userEmail, UUID invoiceId, boolean markAsSent) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         Invoice invoice = invoiceRepository.findWithDetailsById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with ID: " + invoiceId));
@@ -371,6 +375,7 @@ public class InvoiceService {
     public InvoiceDTO cancelInvoice(String userEmail, UUID invoiceId) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         Invoice invoice = invoiceRepository.findWithDetailsById(invoiceId)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found with ID: " + invoiceId));
@@ -408,6 +413,7 @@ public class InvoiceService {
     ) {
         User user = currentBusinessService.getCurrentUser(userEmail);
         Business business = currentBusinessService.getCurrentBusiness(userEmail);
+        BusinessAccessGuard.assertEditable(business);
 
         String idempotencyKey = (headerIdempotencyKey != null && !headerIdempotencyKey.isBlank())
                 ? headerIdempotencyKey.trim()

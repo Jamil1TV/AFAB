@@ -139,4 +139,46 @@ class CurrentBusinessServiceTest {
         assertThat(testUser.getActiveBusinessId()).isEqualTo(b2Id);
         verify(userRepository).save(testUser);
     }
+
+    @Test
+    @DisplayName("getCurrentBusiness & switchActiveBusiness: block opening or reading a locked (READ_ONLY) business")
+    void testLockedBusinessCannotBeOpenedOrRead() {
+        testBusiness2.setAccessMode("READ_ONLY");
+        BusinessMember member2 = new BusinessMember(testBusiness2, testUser, "OWNER", "ACTIVE");
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+        when(businessMemberRepository.findWithBusinessByBusinessIdAndUserId(b2Id, testUser.getId()))
+                .thenReturn(Optional.of(member2));
+
+        assertThatThrownBy(() -> currentBusinessService.getCurrentBusiness(userEmail, b2Id))
+                .isInstanceOf(BusinessReadOnlyException.class)
+                .hasMessageContaining("locked");
+
+        assertThatThrownBy(() -> currentBusinessService.switchActiveBusiness(userEmail, b2Id))
+                .isInstanceOf(BusinessReadOnlyException.class)
+                .hasMessageContaining("locked");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("getCurrentBusiness: auto-falls back to unlocked primary business if activeBusinessId is locked")
+    void testGetCurrentBusiness_fallsBackWhenActiveBusinessLocked() {
+        testUser.setActiveBusinessId(b2Id);
+        testBusiness2.setAccessMode("READ_ONLY");
+        testBusiness1.setPrimary(true);
+        testBusiness1.setAccessMode("EDITABLE");
+
+        BusinessMember member1 = new BusinessMember(testBusiness1, testUser, "OWNER", "ACTIVE");
+        BusinessMember member2 = new BusinessMember(testBusiness2, testUser, "OWNER", "ACTIVE");
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(testUser));
+        when(businessMemberRepository.findWithBusinessByBusinessIdAndUserId(b2Id, testUser.getId()))
+                .thenReturn(Optional.of(member2));
+        when(businessMemberRepository.findAllActiveByUserIdWithBusiness(testUser.getId()))
+                .thenReturn(java.util.List.of(member2, member1));
+
+        Business resolved = currentBusinessService.getCurrentBusiness(userEmail, null);
+
+        assertThat(resolved.getId()).isEqualTo(b1Id);
+        assertThat(resolved.isEditable()).isTrue();
+    }
 }

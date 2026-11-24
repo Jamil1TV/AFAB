@@ -286,8 +286,8 @@ export function BusinessProfile({ business }: { business: any }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#8b5cf6]/10 flex items-center justify-center shrink-0">
-                <Building className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa]" />
+              <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
+                <Building className="w-4 h-4 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.summaryIndustry")}</p>
@@ -322,8 +322,8 @@ export function BusinessProfile({ business }: { business: any }) {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#8b5cf6]/10 flex items-center justify-center shrink-0">
-                <Globe className="w-4 h-4 text-[#7c3aed] dark:text-[#a78bfa]" />
+              <div className="w-9 h-9 rounded-xl bg-[var(--primary)]/10 flex items-center justify-center shrink-0">
+                <Globe className="w-4 h-4 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t("businessProfile.summaryTimezone")}</p>

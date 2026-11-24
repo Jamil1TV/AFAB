@@ -372,11 +372,30 @@ Priority: **P0** fix before more features · **P1** fix in the phase shown · **
 
 **Goal:** replace the "Coming soon" catch-all for the tabs that are cheap and PRD-relevant.
 
-**Steps**
-1. **Appearance:** reuse `theme-provider`/`theme-toggle`; persist the choice in user preferences (V6 exists).
-2. **Language:** reuse `language-switcher`; persist `locale`; apply it at login. **Add French (`fr`)** next to `en`/`ar` — `next-intl` is already set up.
-3. **Data & Export:** export all transactions as CSV (reuses Phase 6, consumes quota) and **Delete account** (PRD in scope; not found in the backend) with re-authentication, confirmation, and a clear data-retention rule.
-4. Give each tab its own `page.tsx` (like `general/` and `security/`) and remove it from the catch-all. Notifications / Integrations / Users & Permissions stay "Coming soon" honestly until Phases 14 / 21 / 17.
+**Delivered Modules:**
+- [x] **Appearance (`/dashboard/settings/appearance`)**:
+  - Implemented standalone `app/[locale]/(dashboard)/dashboard/settings/appearance/page.tsx` replacing the generic catch-all placeholder.
+  - Comprehensive theming engine (`lib/appearance.ts`) injecting CSS variables (`--primary`, `--primary-hover`, `--background`, `--card`, `--radius`, `--glow-color`) into `#afab-appearance-theme`.
+  - **Theme Modes**: Light, Dark, and System with interactive visual mini-mockup preview cards.
+  - **Brand Accent Palette**: 8 curated fintech presets (Electric Violet `#8b5cf6`, Ocean Sapphire `#3b82f6`, Emerald Wealth `#10b981`, Sunset Amber `#f59e0b`, Crimson Ruby `#f43f5e`, Cyber Cyan `#06b6d4`, Neon Magenta `#d946ef`, Titanium Slate `#64748b`) plus custom HTML5 hex color picker with automated harmonic shade computation.
+  - **Corner Rounding (Border Radius)**: 3 refined presets (Sharp 8px, Balanced 12px, Modern 16px) — oversized pill option removed to maintain clean enterprise layout.
+  - **Typography & Distinct Font Families (Site-Wide)**: 6 radically distinct typographic personalities providing immediate, unmistakable visual transformation across all Latin and Arabic text:
+    1. Modern Clean Sans (`inter`): Inter & Poppins standard fintech clarity
+    2. Luxury Editorial Serif (`serif`): Playfair Display & Amiri classical private banking elegance
+    3. Cyber Terminal Monospace (`mono`): JetBrains Mono & Courier New trading terminal / code aesthetic
+    4. Bold Geometric Impact (`geometric`): Cairo & Montserrat heavy geometric punch
+    5. Monumental Kufic & Roman (`kufi`): Cinzel & Reem Kufi monumental stone & heritage script
+    6. System Native UI (`system`): Zero-latency native operating system typography
+  - **Writing / Font Size Scale (Site-Wide)**: 4 proportional typography scales (Compact 14px / 87.5%, Standard 16px / 100%, Comfortable 18px / 112.5%, Accessible 20px / 125%) that dynamically scale typography, tables, buttons, inputs, and layouts proportionally site-wide.
+  - **Visual Effects**: Ambient Neon Glow toggle and Smooth Transitions toggle.
+  - **Interactive Live Preview Sandbox**: Real-time interactive AFAB dashboard card demonstrating instant color, SVG sparkline, action buttons, status badge, and input changes.
+  - **Zero FOUC**: Synchronous `<head>` bootstrapper in `app/[locale]/layout.tsx`.
+  - **Bilingual & Responsive**: English and Arabic RTL translations in `messages/{en,ar}/settings.json`.
+
+**Remaining Steps**
+1. **Language:** reuse `language-switcher`; persist `locale`; apply it at login. **Add French (`fr`)** next to `en`/`ar` — `next-intl` is already set up.
+2. **Data & Export:** export all transactions as CSV (reuses Phase 6, consumes quota) and **Delete account** (PRD in scope; not found in the backend) with re-authentication, confirmation, and a clear data-retention rule.
+3. Give each tab its own `page.tsx` (like `general/`, `security/`, and `appearance/`) and remove it from the catch-all. Notifications / Integrations / Users & Permissions stay "Coming soon" honestly until Phases 14 / 21 / 17.
 
 **Done when:** these tabs persist across sessions/devices and no longer show the placeholder.
 

@@ -32,7 +32,7 @@ interface ManageCategoriesModalProps {
 const AVAILABLE_COLORS = [
   "#10b981", // Emerald
   "#06b6d4", // Cyan
-  "#8b5cf6", // Purple
+  "var(--primary)", // Purple
   "#3b82f6", // Blue
   "#f59e0b", // Amber
   "#ef4444", // Red
@@ -213,13 +213,13 @@ export function ManageCategoriesModal({
                 setIsAdding(true);
                 setError(null);
               }}
-              className="flex w-full items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-[#8b5cf6] hover:text-[#8b5cf6] dark:hover:border-[#8b5cf6] dark:hover:text-[#8b5cf6] transition-colors"
+              className="flex w-full items-center justify-center gap-2 py-3 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800 text-xs font-bold text-gray-600 dark:text-gray-300 hover:border-[var(--primary)] hover:text-[var(--primary)] dark:hover:border-[var(--primary)] dark:hover:text-[var(--primary)] transition-colors"
             >
               <Plus className="h-4 w-4" />
               {t("newCategory")}
             </button>
           ) : (
-            <form onSubmit={handleCreate} className="rounded-2xl border border-[#8b5cf6]/40 bg-[#8b5cf6]/5 p-4 space-y-3">
+            <form onSubmit={handleCreate} className="rounded-2xl border border-[var(--primary)]/40 bg-[var(--primary)]/5 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-900 dark:text-white">
                   {t("newCategory")} ({activeTab})
@@ -244,7 +244,7 @@ export function ManageCategoriesModal({
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder={t("namePlaceholder")}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-3 py-2 text-xs text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none"
                 />
               </div>
 
@@ -283,7 +283,7 @@ export function ManageCategoriesModal({
                         onClick={() => setNewIcon(item.name)}
                         className={`flex h-7 w-7 items-center justify-center rounded-lg border text-xs transition-all ${
                           newIcon === item.name
-                            ? "border-[#8b5cf6] bg-[#8b5cf6] text-white"
+                            ? "border-[var(--primary)] bg-[var(--primary)] text-white"
                             : "border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] text-gray-600 dark:text-gray-400"
                         }`}
                       >
@@ -305,7 +305,7 @@ export function ManageCategoriesModal({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-1.5 rounded-lg text-xs font-bold bg-[#8b5cf6] text-white hover:bg-[#7c3aed] disabled:opacity-50"
+                  className="px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] disabled:opacity-50"
                 >
                   {submitting ? "..." : t("createBtn")}
                 </button>
@@ -322,7 +322,7 @@ export function ManageCategoriesModal({
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-9 w-9 items-center justify-center rounded-xl text-white shadow-sm"
-                  style={{ backgroundColor: cat.color || "#8b5cf6" }}
+                  style={{ backgroundColor: cat.color || "var(--primary)" }}
                 >
                   <Tag className="h-4 w-4" />
                 </div>
@@ -344,7 +344,7 @@ export function ManageCategoriesModal({
                   </span>
                 ) : (
                   <>
-                    <span className="rounded-full bg-purple-100 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-semibold text-purple-600 dark:text-purple-400">
+                    <span className="rounded-full bg-purple-100 dark:bg-purple-950/40 px-2 py-0.5 text-[10px] font-semibold text-[var(--primary)] dark:text-[var(--primary)]">
                       {t("custom")}
                     </span>
                     <button

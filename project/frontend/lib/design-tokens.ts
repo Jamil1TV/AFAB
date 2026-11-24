@@ -148,15 +148,15 @@ export const darkPalette = {
    Series order follows the reference charts: revenue purple, expenses sky,
    then emerald / amber / pink / indigo for categorical breakdowns. */
 export const chartColors = {
-  light: ["#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#6366f1"],
-  dark: ["#8b5cf6", "#38bdf8", "#34d399", "#fbbf24", "#f472b6", "#818cf8"],
+  light: ["var(--primary)", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#6366f1"],
+  dark: ["var(--primary)", "#38bdf8", "#34d399", "#fbbf24", "#f472b6", "#818cf8"],
 } as const;
 
 /** Single categorical palette that reads well on both themes. */
-export const CHART_PALETTE = ["#8b5cf6", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#6366f1"] as const;
+export const CHART_PALETTE = ["var(--primary)", "#0ea5e9", "#10b981", "#f59e0b", "#ec4899", "#6366f1"] as const;
 
 export const chartSemantic = {
-  revenue: "#8b5cf6",
+  revenue: "var(--primary)",
   expenses: "#0ea5e9",
   positive: "#10b981",
   negative: "#ef4444",
@@ -167,7 +167,7 @@ export const chartSemantic = {
 export const chartTooltipStyle = {
   contentStyle: {
     backgroundColor: "rgba(12, 16, 28, 0.9)",
-    borderColor: "rgba(139, 92, 246, 0.2)",
+    borderColor: "var(--primary)",
     borderRadius: "12px",
     color: "#fff",
     fontSize: "12px",

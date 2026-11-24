@@ -1,4 +1,5 @@
 import { fetchClient, fetchRawClient, ApiError } from "./client";
+import { AuthStore } from "@/lib/auth-store";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
 
@@ -191,6 +192,22 @@ export class AiService {
               limit: errorDetails?.limit,
               used: errorDetails?.used,
               upgradeTo: errorDetails?.upgradeTo,
+              message: errorMsg,
+            },
+          })
+        );
+      }
+
+      if (response.status === 403 && errorCode === "BUSINESS_READ_ONLY" && typeof window !== "undefined") {
+        const currentBizId = AuthStore.getActiveBusinessId();
+        if (currentBizId && (!errorDetails?.businessId || errorDetails.businessId === currentBizId)) {
+          AuthStore.setActiveBusinessId(null);
+        }
+        window.dispatchEvent(
+          new CustomEvent("afab:business-read-only", {
+            detail: {
+              businessId: errorDetails?.businessId,
+              businessName: errorDetails?.businessName,
               message: errorMsg,
             },
           })

@@ -160,8 +160,8 @@ export default function LoginPage() {
           >
             {/* 2FA Header */}
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 shadow-sm">
-                <ShieldCheck className="h-7 w-7 text-[#7c3aed] dark:text-[#a78bfa]" />
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 shadow-sm">
+                <ShieldCheck className="h-7 w-7 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">
                 {t("twoFactorTitle")}
@@ -187,12 +187,12 @@ export default function LoginPage() {
                     containerClassName="justify-center"
                   >
                     <InputOTPGroup className="gap-1.5 sm:gap-2">
-                      <InputOTPSlot index={0} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
-                      <InputOTPSlot index={1} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
-                      <InputOTPSlot index={2} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
-                      <InputOTPSlot index={3} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
-                      <InputOTPSlot index={4} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
-                      <InputOTPSlot index={5} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[#8b5cf6]" />
+                      <InputOTPSlot index={0} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[var(--primary)]" />
+                      <InputOTPSlot index={1} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[var(--primary)]" />
+                      <InputOTPSlot index={2} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[var(--primary)]" />
+                      <InputOTPSlot index={3} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[var(--primary)]" />
+                      <InputOTPSlot index={4} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[var(--primary)]" />
+                      <InputOTPSlot index={5} className="h-11 w-10 sm:h-12 sm:w-11 rounded-xl text-lg font-bold border-gray-200 bg-gray-50/50 text-gray-900 dark:border-gray-800 dark:bg-[#080c18] dark:text-white focus:border-[var(--primary)]" />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
@@ -202,7 +202,7 @@ export default function LoginPage() {
                     {t("backupCodeLabel")}
                   </label>
                   <div className="relative group">
-                    <KeyRound className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+                    <KeyRound className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
                     <input
                       type="text"
                       placeholder={t("backupCodePlaceholder")}
@@ -226,7 +226,7 @@ export default function LoginPage() {
                     setUseBackupCode(!useBackupCode);
                     setTwoFactorCode("");
                   }}
-                  className="text-xs font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-colors"
+                  className="text-xs font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-colors"
                 >
                   {useBackupCode ? t("useTotpCode") : t("useBackupCode")}
                 </button>
@@ -279,11 +279,11 @@ export default function LoginPage() {
             <motion.div variants={itemVariants} className="mb-8 relative flex justify-center">
               <div className="absolute bottom-0 w-full h-[1px] bg-gray-200 dark:bg-gray-800"></div>
               <div className="flex w-full max-w-[280px]">
-                <div className="relative w-1/2 pb-3 text-center text-sm font-semibold text-[#7c3aed] dark:text-[#a78bfa]">
+                <div className="relative w-1/2 pb-3 text-center text-sm font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)]">
                   {t("loginTab")}
                   <motion.div 
                     layoutId="activeTab" 
-                    className="absolute bottom-0 start-0 w-full h-[2px] bg-[#8b5cf6] z-10" 
+                    className="absolute bottom-0 start-0 w-full h-[2px] bg-[var(--primary)] z-10" 
                   />
                 </div>
                 <Link
@@ -308,7 +308,7 @@ export default function LoginPage() {
                   {t("email")}
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+                  <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
                   <input
                     type="email"
                     placeholder={t("emailPlaceholder")}
@@ -328,7 +328,7 @@ export default function LoginPage() {
                   {t("password")}
                 </label>
                 <div className="relative group">
-                  <Lock className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+                  <Lock className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder={t("passwordPlaceholder")}
@@ -359,7 +359,7 @@ export default function LoginPage() {
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
                       id="login-remember"
-                      className="peer h-[18px] w-[18px] cursor-pointer appearance-none rounded-[4px] border border-gray-300 bg-gray-50/50 checked:border-[#8b5cf6] checked:bg-[#8b5cf6] transition-all dark:border-gray-700 dark:bg-[#080c18] dark:checked:border-[#8b5cf6] dark:checked:bg-[#8b5cf6]"
+                      className="peer h-[18px] w-[18px] cursor-pointer appearance-none rounded-[4px] border border-gray-300 bg-gray-50/50 checked:border-[var(--primary)] checked:bg-[var(--primary)] transition-all dark:border-gray-700 dark:bg-[#080c18] dark:checked:border-[var(--primary)] dark:checked:bg-[var(--primary)]"
                     />
                     <svg className="absolute h-3 w-3 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity duration-200" viewBox="0 0 14 10" fill="none">
                       <path d="M1 5L4.5 8.5L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -369,7 +369,7 @@ export default function LoginPage() {
                     {t("rememberMe")}
                   </span>
                 </label>
-                <Link href="/forgot-password" className="text-xs font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all">
+                <Link href="/forgot-password" className="text-xs font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-all">
                   {t("forgotPassword")}
                 </Link>
               </motion.div>
@@ -428,7 +428,7 @@ export default function LoginPage() {
 
             {/* Bottom Link */}
             <motion.p variants={itemVariants} className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-              {t("noAccount")} <Link href="/signup" className="font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all">{t("signupTab")}</Link>
+              {t("noAccount")} <Link href="/signup" className="font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-all">{t("signupTab")}</Link>
             </motion.p>
           </motion.div>
         )}

@@ -208,7 +208,7 @@ export default function ExpensesPage() {
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8b5cf6] text-white text-xs font-bold hover:bg-[#7c3aed] transition-all shadow-lg shadow-[#8b5cf6]/25"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--primary)] text-white text-xs font-bold hover:bg-[var(--primary-hover)] transition-all shadow-lg shadow-[var(--primary)]/25"
           >
             <Plus className="h-4 w-4" />
             {t("createExpense")}
@@ -284,12 +284,12 @@ export default function ExpensesPage() {
 
           <div className="h-64 w-full">
             <ChartContainer className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 520, height: 256 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 520, height: 256 }}>
                 <AreaChart data={overviewChartData}>
                   <defs>
                     <linearGradient id="expenseChartGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
-                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                      <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.35} />
+                      <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <Tooltip
@@ -305,7 +305,7 @@ export default function ExpensesPage() {
                   <Area
                     type="monotone"
                     dataKey="amount"
-                    stroke="#8b5cf6"
+                    stroke="var(--primary)"
                     strokeWidth={2.5}
                     fillOpacity={1}
                     fill="url(#expenseChartGrad)"
@@ -326,7 +326,7 @@ export default function ExpensesPage() {
 
           <div className="relative h-44 w-full flex items-center justify-center my-2">
             <ChartContainer className="h-full w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 520, height: 256 }}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1} initialDimension={{ width: 520, height: 256 }}>
                 <PieChart>
                   <Pie
                     data={categoryPieData}
@@ -401,7 +401,7 @@ export default function ExpensesPage() {
                     setPage(0);
                   }}
                   placeholder={tFilters("searchPlaceholder")}
-                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-12 py-2 text-xs font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[#8b5cf6] focus:outline-none"
+                  className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] pl-9 pr-12 py-2 text-xs font-semibold text-gray-900 dark:text-white placeholder-gray-400 focus:border-[var(--primary)] focus:outline-none"
                 />
                 <span className="absolute inset-y-0 right-3 top-1/2 -translate-y-1/2 text-[10px] font-mono text-gray-400">
                   ⌘K
@@ -415,7 +415,7 @@ export default function ExpensesPage() {
                     setCategoryFilter(e.target.value);
                     setPage(0);
                   }}
-                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 focus:border-[#8b5cf6] focus:outline-none"
+                  className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-[#080c18] px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 focus:border-[var(--primary)] focus:outline-none"
                 >
                   <option value="">{tFilters("allCategories")}</option>
                   {categories.map((cat) => (
@@ -464,7 +464,7 @@ export default function ExpensesPage() {
                               <ArrowDownLeft className="h-4 w-4" />
                             </div>
                             <div>
-                              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[#8b5cf6] transition-colors">
+                              <p className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-[var(--primary)] transition-colors">
                                 {tx.description}
                               </p>
                               <p className="text-[10px] text-gray-400 font-normal">Ref: #{tx.id.substring(0, 8)}</p>
@@ -586,7 +586,7 @@ export default function ExpensesPage() {
             <div className="space-y-3">
               {(!summary?.recurringList || summary.recurringList.length === 0) ? (
                 <div className="py-6 text-center text-gray-400">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 mb-2">
+                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-purple-400 mb-2">
                     <Repeat className="h-5 w-5 opacity-60" />
                   </div>
                   <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">No recurring rules yet</p>
@@ -596,7 +596,7 @@ export default function ExpensesPage() {
                 summary.recurringList.map((item) => (
                   <div key={item.name} className="flex items-center justify-between p-2 rounded-xl hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/10 text-purple-400 font-bold text-xs border border-purple-500/20">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-purple-400 font-bold text-xs border border-[var(--primary)]/20">
                         <Repeat className="h-4 w-4" />
                       </div>
                       <div>

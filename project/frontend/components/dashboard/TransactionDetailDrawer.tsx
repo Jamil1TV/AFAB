@@ -252,7 +252,7 @@ export function TransactionDetailDrawer({
                 <span className="font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
                   <span
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: transaction.categoryColor || "#8b5cf6" }}
+                    style={{ backgroundColor: transaction.categoryColor || "var(--primary)" }}
                   />
                   {transaction.categoryName || t("uncategorized")}
                 </span>
@@ -299,13 +299,13 @@ export function TransactionDetailDrawer({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <Paperclip className="h-3.5 w-3.5 text-[#8b5cf6]" /> {t("receipts")} ({receipts.length})
+                  <Paperclip className="h-3.5 w-3.5 text-[var(--primary)]" /> {t("receipts")} ({receipts.length})
                 </h4>
                 <button
                   type="button"
                   disabled={uploadingReceipt}
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#7c3aed] dark:text-[#a78bfa] hover:underline disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--primary-hover)] dark:text-[var(--primary)] hover:underline disabled:opacity-50"
                 >
                   {uploadingReceipt ? (
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -355,7 +355,7 @@ export function TransactionDetailDrawer({
                           type="button"
                           onClick={() => handleDownloadReceipt(r)}
                           title={t("downloadReceipt")}
-                          className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-[#7c3aed] dark:hover:text-[#a78bfa] hover:bg-purple-500/10 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-500 dark:text-gray-400 hover:text-[var(--primary-hover)] dark:hover:text-[var(--primary)] hover:bg-[var(--primary)]/10 transition-colors"
                         >
                           <Download className="h-3.5 w-3.5" />
                         </button>
@@ -377,7 +377,7 @@ export function TransactionDetailDrawer({
             {transaction.isSplit && transaction.splitItems && transaction.splitItems.length > 0 && (
               <div>
                 <h4 className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Layers className="h-3.5 w-3.5 text-[#8b5cf6]" /> {t("splitAllocation")}
+                  <Layers className="h-3.5 w-3.5 text-[var(--primary)]" /> {t("splitAllocation")}
                 </h4>
                 <div className="space-y-2">
                   {transaction.splitItems.map((item, idx) => (
@@ -388,7 +388,7 @@ export function TransactionDetailDrawer({
                       <div className="flex items-center gap-2 min-w-0">
                         <span
                           className="w-2 h-2 rounded-full shrink-0"
-                          style={{ backgroundColor: item.categoryColor || "#8b5cf6" }}
+                          style={{ backgroundColor: item.categoryColor || "var(--primary)" }}
                         />
                         <div className="min-w-0">
                           <p className="font-semibold text-gray-900 dark:text-white truncate">{item.categoryName}</p>
@@ -442,7 +442,7 @@ export function TransactionDetailDrawer({
             </button>
             <button
               onClick={() => onEdit(transaction)}
-              className="flex-1 py-2.5 px-3 rounded-xl bg-[#8b5cf6] text-white text-xs font-bold hover:bg-[#7c3aed] transition-colors flex items-center justify-center gap-1.5 shadow-md shadow-[#8b5cf6]/20"
+              className="flex-1 py-2.5 px-3 rounded-xl bg-[var(--primary)] text-white text-xs font-bold hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-1.5 shadow-md shadow-[var(--primary)]/20"
             >
               <Pencil className="h-3.5 w-3.5" /> {t("edit")}
             </button>

@@ -134,8 +134,8 @@ export function CancelSubscriptionModal({
                 </p>
                 <p className="text-gray-600 dark:text-gray-400 mt-0.5">
                   {isAr
-                    ? "لن يتم حذف أي شركة أو سجل مالي. عند التحول للخطة المجانية، ستبقى شركة واحدة قابلة للتعديل، وتتحول باقي الشركات إلى وضع القراءة فقط (مع إمكانية العرض والتصدير)."
-                    : "Zero data is deleted. When your account moves to Free, 1 business remains editable and any additional businesses switch to Read-Only mode (full viewing and exporting preserved)."}
+                    ? "لن يتم حذف أي شركة أو سجل مالي. عند التحول للخطة المجانية، تبقى شركة واحدة نشطة ومفتوحة، وتُقفل باقي الشركات (تظهر في شريط التنقل فقط وتبقى كافة بياناتها محفوظة حتى الترقية أو التبديل)."
+                    : "Zero data is deleted. When your account moves to Free, 1 business remains active and additional businesses are locked (visible in the navbar with all financial data safely stored until you upgrade or swap)."}
                 </p>
               </div>
             </div>
@@ -203,12 +203,12 @@ export function CancelSubscriptionModal({
                         {isSelected ? (
                           <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
                             <Check className="w-3 h-3" />
-                            {isAr ? "قابلة للتعديل" : "Remains Editable"}
+                            {isAr ? "تبقى نشطة" : "Remains Active"}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
                             <Lock className="w-2.5 h-2.5" />
-                            {isAr ? "قراءة فقط" : "Becomes Read-Only"}
+                            {isAr ? "تُقفل (البيانات محفوظة)" : "Becomes Locked"}
                           </span>
                         )}
                       </div>

@@ -95,14 +95,37 @@ public class BusinessController {
     @GetMapping
     public ResponseEntity<List<BusinessDTO>> listMyBusinesses(Authentication authentication) {
         String email = authentication.getName();
-        Business activeBusiness = currentBusinessService.getCurrentBusiness(email);
+        UUID activeBusinessId = null;
+        try {
+            activeBusinessId = currentBusinessService.getCurrentBusiness(email).getId();
+        } catch (BusinessReadOnlyException ignored) {
+            // Keep navbar switcher functional even if client sent a locked X-Business-Id header
+        }
         List<BusinessMember> memberships = currentBusinessService.getUserMemberships(email);
+        if (activeBusinessId == null) {
+            User user = currentBusinessService.getCurrentUser(email);
+            UUID savedId = user.getActiveBusinessId();
+            activeBusinessId = memberships.stream()
+                    .map(BusinessMember::getBusiness)
+                    .filter(Business::isEditable)
+                    .filter(b -> b.getId().equals(savedId))
+                    .map(Business::getId)
+                    .findFirst()
+                    .or(() -> memberships.stream()
+                            .map(BusinessMember::getBusiness)
+                            .filter(Business::isEditable)
+                            .sorted((a, b) -> Boolean.compare(b.isPrimary(), a.isPrimary()))
+                            .map(Business::getId)
+                            .findFirst())
+                    .orElse(null);
+        }
 
+        final UUID resolvedActiveId = activeBusinessId;
         List<BusinessDTO> dtos = memberships.stream().map(m -> {
             Business b = m.getBusiness();
             BusinessDTO dto = toDTO(b);
             dto.setUserRole(m.getRole());
-            dto.setActive(b.getId().equals(activeBusiness.getId()));
+            dto.setActive(b.getId().equals(resolvedActiveId));
             return dto;
         }).collect(Collectors.toList());
 
@@ -225,6 +248,7 @@ public class BusinessController {
         User user = currentBusinessService.getCurrentUser(authentication.getName());
 
         BusinessMember member = requireActiveMember(id, user.getId());
+        BusinessAccessGuard.assertEditable(member.getBusiness());
 
         BusinessDTO dto = toDTO(member.getBusiness());
         dto.setUserRole(member.getRole());
@@ -240,7 +264,8 @@ public class BusinessController {
     @Transactional(readOnly = true)
     public ResponseEntity<List<BusinessMemberDTO>> listMembers(@PathVariable UUID id, Authentication authentication) {
         User user = currentBusinessService.getCurrentUser(authentication.getName());
-        requireActiveMember(id, user.getId());
+        BusinessMember member = requireActiveMember(id, user.getId());
+        BusinessAccessGuard.assertEditable(member.getBusiness());
 
         List<BusinessMemberDTO> members = businessMemberRepository.findAllActiveMembersWithUserByBusinessId(id)
                 .stream()

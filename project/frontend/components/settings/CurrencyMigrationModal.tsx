@@ -94,7 +94,7 @@ export function CurrencyMigrationModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/60 px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#8b5cf6]/10 text-[#7c3aed] dark:text-[#a78bfa]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary-hover)] dark:text-[var(--primary)]">
               <ArrowRightLeft className="h-5 w-5" />
             </div>
             <div>
@@ -126,7 +126,7 @@ export function CurrencyMigrationModal({
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
-              <RefreshCw className="h-8 w-8 text-[#8b5cf6] animate-spin" />
+              <RefreshCw className="h-8 w-8 text-[var(--primary)] animate-spin" />
               <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                 Fetching real-time market exchange rate...
               </p>
@@ -140,17 +140,17 @@ export function CurrencyMigrationModal({
                   <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">{oldCurrency}</span>
                 </div>
                 <div className="flex flex-col items-center px-2">
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#8b5cf6] text-white text-xs font-bold shadow-sm">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--primary)] text-white text-xs font-bold shadow-sm">
                     <span>1 {oldCurrency} = {rate.toFixed(4)} {newCurrency}</span>
                   </div>
-                  <span className="text-[10px] text-[#7c3aed] dark:text-[#a78bfa] font-medium mt-1 flex items-center gap-1">
+                  <span className="text-[10px] text-[var(--primary-hover)] dark:text-[var(--primary)] font-medium mt-1 flex items-center gap-1">
                     <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Live Market Rate
                   </span>
                 </div>
                 <div className="flex flex-col items-end">
                   <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">To</span>
-                  <span className="text-xl font-bold text-[#7c3aed] dark:text-[#a78bfa] tracking-tight">{newCurrency}</span>
+                  <span className="text-xl font-bold text-[var(--primary-hover)] dark:text-[var(--primary)] tracking-tight">{newCurrency}</span>
                 </div>
               </div>
 
@@ -165,11 +165,11 @@ export function CurrencyMigrationModal({
                   </span>
                 </div>
 
-                <div className="p-3.5 rounded-2xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 dark:bg-[#8b5cf6]/10">
-                  <span className="text-xs text-[#7c3aed] dark:text-[#a78bfa] font-medium block mb-1">
+                <div className="p-3.5 rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10">
+                  <span className="text-xs text-[var(--primary-hover)] dark:text-[var(--primary)] font-medium block mb-1">
                     {t("projectedBalance")}
                   </span>
-                  <span className="text-lg font-bold text-[#7c3aed] dark:text-[#a78bfa]">
+                  <span className="text-lg font-bold text-[var(--primary-hover)] dark:text-[var(--primary)]">
                     {projectedBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {newCurrency}
                   </span>
                 </div>
@@ -178,7 +178,7 @@ export function CurrencyMigrationModal({
               {/* Transactions count badge */}
               <div className="afab-inset flex items-center justify-between text-xs px-3.5 py-2.5 text-gray-600 dark:text-gray-300">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <Coins className="h-4 w-4 text-[#8b5cf6]" />
+                  <Coins className="h-4 w-4 text-[var(--primary)]" />
                   {t("transactionsAffected")}:
                 </span>
                 <span className="afab-badge afab-badge-neutral">
@@ -187,7 +187,7 @@ export function CurrencyMigrationModal({
               </div>
 
               {/* Historical Immutability Policy Notice */}
-              <div className="rounded-2xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/5 dark:bg-[#8b5cf6]/10 p-4 space-y-1.5">
+              <div className="rounded-2xl border border-[var(--primary)]/30 bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10 p-4 space-y-1.5">
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-emerald-500 shrink-0" />
                   <span className="text-sm font-bold text-gray-900 dark:text-white">

@@ -49,7 +49,7 @@ export function RevenueChart({ data, currency = "USD" }: { data: any[]; currency
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#8b5cf6]"></span>
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--primary)]"></span>
             <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{tCharts("revenueLabel")}</span>
           </div>
           <div className="flex items-center gap-2">
@@ -59,13 +59,13 @@ export function RevenueChart({ data, currency = "USD" }: { data: any[]; currency
         </div>
       </div>
 
-      <ChartContainer className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%" minHeight={300} minWidth={0} initialDimension={{ width: 600, height: 300 }}>
+      <ChartContainer className="h-[300px] w-full" minHeight={300}>
+        <ResponsiveContainer width="100%" height="100%" minHeight={300} minWidth={1} initialDimension={{ width: 600, height: 300 }}>
           <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.3} />
@@ -94,7 +94,7 @@ export function RevenueChart({ data, currency = "USD" }: { data: any[]; currency
               formatter={(value: any) => [formatCurrency(value, currency), ""]}
               contentStyle={{ 
                 backgroundColor: 'rgba(12, 16, 28, 0.9)', 
-                borderColor: 'rgba(139, 92, 246, 0.2)',
+                borderColor: 'var(--primary)',
                 borderRadius: '12px',
                 color: '#fff',
                 boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
@@ -104,7 +104,7 @@ export function RevenueChart({ data, currency = "USD" }: { data: any[]; currency
             <Area 
               type="monotone" 
               dataKey="revenue" 
-              stroke="#8b5cf6" 
+              stroke="var(--primary)" 
               strokeWidth={3}
               fillOpacity={1} 
               fill="url(#colorRevenue)" 

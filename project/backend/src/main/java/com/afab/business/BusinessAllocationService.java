@@ -209,6 +209,11 @@ public class BusinessAllocationService {
         }
         businessRepository.saveAll(owned);
 
+        if (user.getActiveBusinessId() == null || !uniqueSelected.contains(user.getActiveBusinessId())) {
+            user.setActiveBusinessId(resolvedPrimaryId);
+            userRepository.save(user);
+        }
+
         sub.setAllocationAttentionRequired(false);
         subscriptionRepository.save(sub);
 
@@ -347,6 +352,12 @@ public class BusinessAllocationService {
             b.setPrimary(b.getId().equals(resolvedPrimaryId));
         }
         businessRepository.saveAll(owned);
+
+        if (user.getActiveBusinessId() == null || !editableSet.contains(user.getActiveBusinessId())) {
+            user.setActiveBusinessId(resolvedPrimaryId);
+            userRepository.save(user);
+        }
+
         clearPendingAllocation(user);
         sub.setAllocationAttentionRequired(attentionRequired);
         return attentionRequired;

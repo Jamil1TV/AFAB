@@ -112,8 +112,8 @@ export default function ForgotPasswordPage() {
           >
             {/* Title */}
             <motion.div variants={itemVariants} className="mb-6">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#8b5cf6]/10">
-                <Mail className="h-7 w-7 text-[#7c3aed] dark:text-[#a78bfa]" />
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--primary)]/10">
+                <Mail className="h-7 w-7 text-[var(--primary-hover)] dark:text-[var(--primary)]" />
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight dark:text-white">
                 {t("forgotPasswordTitle")}
@@ -133,7 +133,7 @@ export default function ForgotPasswordPage() {
                   {t("email")}
                 </label>
                 <div className="relative group">
-                  <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[#7c3aed] dark:group-focus-within:text-[#a78bfa] transition-colors z-10" />
+                  <Mail className="absolute start-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-400 group-focus-within:text-[var(--primary-hover)] dark:group-focus-within:text-[var(--primary)] transition-colors z-10" />
                   <input
                     id="forgot-email"
                     type="email"
@@ -224,7 +224,7 @@ export default function ForgotPasswordPage() {
 
             <Link
               href="/login"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-[#7c3aed] hover:underline dark:text-[#a78bfa] transition-all"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary-hover)] hover:underline dark:text-[var(--primary)] transition-all"
             >
               <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
               {t("backToLogin")}

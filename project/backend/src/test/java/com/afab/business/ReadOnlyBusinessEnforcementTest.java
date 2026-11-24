@@ -1,6 +1,12 @@
 package com.afab.business;
 
+import com.afab.budgets.dto.BudgetRequest;
+import com.afab.budgets.repository.BudgetRepository;
+import com.afab.budgets.service.BudgetService;
 import com.afab.business.dto.UpdateBusinessRequest;
+import com.afab.customers.dto.CreateCustomerRequest;
+import com.afab.customers.repository.CustomerRepository;
+import com.afab.customers.service.CustomerService;
 import com.afab.finance.currency.CurrencyConversionService;
 import com.afab.finance.currency.ExchangeRateService;
 import com.afab.finance.domain.Category;
@@ -11,6 +17,20 @@ import com.afab.finance.repository.TransactionRepository;
 import com.afab.finance.service.CategoryService;
 import com.afab.finance.service.TransactionService;
 import com.afab.finance.stats.FinanceStatsService;
+import com.afab.invoices.dto.CreateInvoiceRequest;
+import com.afab.invoices.repository.InvoiceRepository;
+import com.afab.invoices.repository.PaymentRepository;
+import com.afab.invoices.service.InvoiceNumberGenerator;
+import com.afab.invoices.service.InvoiceService;
+import com.afab.receipts.repository.ReceiptRepository;
+import com.afab.receipts.service.ObjectStorageService;
+import com.afab.receipts.service.ReceiptService;
+import com.afab.recurring.domain.RecurringTransaction;
+import com.afab.recurring.dto.RecurringTransactionRequest;
+import com.afab.recurring.repository.RecurringTransactionExecutionRepository;
+import com.afab.recurring.repository.RecurringTransactionRepository;
+import com.afab.recurring.service.RecurringExecutionProcessor;
+import com.afab.recurring.service.RecurringTransactionService;
 import com.afab.security.AuditService;
 import com.afab.subscription.EntitlementService;
 import com.afab.user.User;
@@ -122,7 +142,7 @@ class ReadOnlyBusinessEnforcementTest {
 
         assertThatThrownBy(() -> transactionService.createTransaction(userEmail, createReq))
                 .isInstanceOf(BusinessReadOnlyException.class)
-                .hasMessageContaining("read-only mode");
+                .hasMessageContaining("locked");
 
         UpdateTransactionRequest updateReq = new UpdateTransactionRequest();
         updateReq.setDescription("Modified description");
@@ -216,5 +236,81 @@ class ReadOnlyBusinessEnforcementTest {
         assertThat(txResponse.getTotalInflow()).isEqualByComparingTo("4800.00");
         assertThat(categories).hasSize(1);
         assertThat(categories.get(0).getName()).isEqualTo("Consulting Revenue");
+    }
+
+    @Test
+    @DisplayName("Locked business blocks writes across Customers, Invoices, Budgets, Recurring, and Receipts")
+    void testLockedBusinessBlocksAllNewerDomainModulesAndBackgroundExecutions() {
+        CustomerRepository customerRepo = mock(CustomerRepository.class);
+        CustomerService customerService = new CustomerService(customerRepo, currentBusinessService, auditService, null);
+
+        InvoiceRepository invoiceRepo = mock(InvoiceRepository.class);
+        PaymentRepository paymentRepo = mock(PaymentRepository.class);
+        InvoiceNumberGenerator numberGen = mock(InvoiceNumberGenerator.class);
+        InvoiceService invoiceService = new InvoiceService(
+                invoiceRepo, paymentRepo, customerRepo, transactionRepository,
+                transactionService, numberGen, currentBusinessService, auditService
+        );
+
+        BudgetRepository budgetRepo = mock(BudgetRepository.class);
+        BudgetService budgetService = new BudgetService(
+                budgetRepo, categoryRepository, transactionRepository, currentBusinessService, auditService
+        );
+
+        RecurringTransactionRepository recurringRepo = mock(RecurringTransactionRepository.class);
+        RecurringTransactionExecutionRepository execRepo = mock(RecurringTransactionExecutionRepository.class);
+        RecurringExecutionProcessor processor = new RecurringExecutionProcessor(
+                recurringRepo, execRepo, transactionRepository, transactionService
+        );
+        RecurringTransactionService recurringService = new RecurringTransactionService(
+                recurringRepo, execRepo, categoryRepository, currentBusinessService, processor, auditService
+        );
+
+        ReceiptRepository receiptRepo = mock(ReceiptRepository.class);
+        ObjectStorageService storageService = mock(ObjectStorageService.class);
+        ReceiptService receiptService = new ReceiptService(
+                receiptRepo, transactionRepository, currentBusinessService, storageService, auditService, 10_485_760L, 300
+        );
+
+        CreateCustomerRequest custReq = new CreateCustomerRequest();
+        custReq.setName("Blocked Customer");
+        assertThatThrownBy(() -> customerService.createCustomer(userEmail, custReq))
+                .isInstanceOf(BusinessReadOnlyException.class);
+
+        CreateInvoiceRequest invReq = new CreateInvoiceRequest();
+        invReq.setIssueDate(LocalDate.now());
+        invReq.setDueDate(LocalDate.now().plusDays(15));
+        assertThatThrownBy(() -> invoiceService.createInvoice(userEmail, invReq))
+                .isInstanceOf(BusinessReadOnlyException.class);
+
+        BudgetRequest budgetReq = new BudgetRequest();
+        budgetReq.setName("Blocked Budget");
+        budgetReq.setAmount(new BigDecimal("100.00"));
+        budgetReq.setPeriodType("MONTHLY");
+        assertThatThrownBy(() -> budgetService.create(userEmail, budgetReq))
+                .isInstanceOf(BusinessReadOnlyException.class);
+
+        RecurringTransactionRequest recReq = new RecurringTransactionRequest();
+        recReq.setType("EXPENSE");
+        recReq.setDescription("Blocked Recurring");
+        recReq.setAmount(new BigDecimal("50.00"));
+        recReq.setFrequency("MONTHLY");
+        recReq.setStartDate(LocalDate.now());
+        assertThatThrownBy(() -> recurringService.create(userEmail, recReq))
+                .isInstanceOf(BusinessReadOnlyException.class);
+
+        assertThatThrownBy(() -> receiptService.delete(userEmail, UUID.randomUUID()))
+                .isInstanceOf(BusinessReadOnlyException.class);
+
+        // Background recurring processor also skips locked businesses cleanly
+        RecurringTransaction lockedRule = new RecurringTransaction();
+        lockedRule.setId(UUID.randomUUID());
+        lockedRule.setBusiness(readOnlyBusiness);
+        lockedRule.setActive(true);
+        lockedRule.setNextExecutionDate(LocalDate.now());
+        when(recurringRepo.findByIdForUpdate(lockedRule.getId())).thenReturn(Optional.of(lockedRule));
+
+        assertThat(processor.executeSingleDueOccurrence(lockedRule.getId(), LocalDate.now())).isEmpty();
+        verify(transactionRepository, never()).save(any());
     }
 }

@@ -170,7 +170,7 @@ export function SplitTransactionModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800/60 pb-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-500/10 text-[#8b5cf6] border border-purple-500/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20">
               <Layers className="h-5 w-5" />
             </div>
             <div>
@@ -211,7 +211,7 @@ export function SplitTransactionModal({
                 value={totalAmount}
                 onChange={(e) => setTotalAmount(e.target.value)}
                 placeholder="1000.00"
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm font-bold text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm font-bold text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none"
               />
             </div>
             <div>
@@ -224,7 +224,7 @@ export function SplitTransactionModal({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Amazon, Office Depot, etc."
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none"
               />
             </div>
             <div>
@@ -236,7 +236,7 @@ export function SplitTransactionModal({
                 required
                 value={transactionDate}
                 onChange={(e) => setTransactionDate(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] px-3 py-2 text-sm text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none"
               />
             </div>
           </div>
@@ -250,7 +250,7 @@ export function SplitTransactionModal({
               <button
                 type="button"
                 onClick={handleAddLine}
-                className="text-xs font-bold text-[#8b5cf6] hover:text-[#7c3aed] flex items-center gap-1 transition-colors"
+                className="text-xs font-bold text-[var(--primary)] hover:text-[var(--primary-hover)] flex items-center gap-1 transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" /> Add Line
               </button>
@@ -270,7 +270,7 @@ export function SplitTransactionModal({
                   <select
                     value={line.categoryId}
                     onChange={(e) => handleLineChange(line.id, "categoryId", e.target.value)}
-                    className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-3 py-1.5 text-xs text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                    className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-3 py-1.5 text-xs text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none"
                   >
                     {availableCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
@@ -285,7 +285,7 @@ export function SplitTransactionModal({
                     value={line.description}
                     onChange={(e) => handleLineChange(line.id, "description", e.target.value)}
                     placeholder="Memo (optional)"
-                    className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-3 py-1.5 text-xs text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none"
+                    className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-3 py-1.5 text-xs text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none"
                   />
 
                   {/* Amount Input */}
@@ -297,7 +297,7 @@ export function SplitTransactionModal({
                       value={line.amount}
                       onChange={(e) => handleLineChange(line.id, "amount", e.target.value)}
                       placeholder="0.00"
-                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white focus:border-[#8b5cf6] focus:outline-none text-right"
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-[#0c101c] px-2.5 py-1.5 text-xs font-bold text-gray-900 dark:text-white focus:border-[var(--primary)] focus:outline-none text-right"
                     />
                   </div>
 
@@ -307,7 +307,7 @@ export function SplitTransactionModal({
                       type="button"
                       onClick={() => handleFillRemaining(line.id)}
                       title="Adjust line to balance remaining amount"
-                      className="px-2 py-1 rounded-lg text-[10px] font-bold text-[#8b5cf6] bg-purple-500/10 hover:bg-purple-500/20 transition-colors shrink-0"
+                      className="px-2 py-1 rounded-lg text-[10px] font-bold text-[var(--primary)] bg-[var(--primary)]/10 hover:bg-[var(--primary)]/20 transition-colors shrink-0"
                     >
                       Fill
                     </button>
@@ -338,7 +338,7 @@ export function SplitTransactionModal({
               </div>
               <div>
                 <span className="text-gray-400 block text-[10px] uppercase">Allocated</span>
-                <span className="font-bold text-[#8b5cf6]">
+                <span className="font-bold text-[var(--primary)]">
                   {formatCurrency(allocatedSum, currency)}
                 </span>
               </div>
@@ -374,7 +374,7 @@ export function SplitTransactionModal({
             <button
               type="submit"
               disabled={submitting || !isBalanced}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold bg-[#8b5cf6] text-white hover:bg-[#7c3aed] disabled:opacity-50 transition-all shadow-lg shadow-[#8b5cf6]/25"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold bg-[var(--primary)] text-white hover:bg-[var(--primary-hover)] disabled:opacity-50 transition-all shadow-lg shadow-[var(--primary)]/25"
             >
               {submitting ? "Saving Split..." : "Confirm Split Transaction"}
             </button>
