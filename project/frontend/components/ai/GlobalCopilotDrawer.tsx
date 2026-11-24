@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  ArrowUp,
   Brain,
   ExternalLink,
   Loader2,
   Paperclip,
-  Send,
   Sparkles,
   Square,
   Upload,
@@ -275,7 +275,7 @@ export function GlobalCopilotDrawer() {
                 stageFiles(e.dataTransfer.files);
               }
             }}
-            className="relative flex h-full w-full max-w-xl flex-col bg-[var(--card)] border-s border-gray-200 dark:border-gray-800 shadow-2xl"
+            className="relative flex h-full w-full max-w-xl flex-col bg-[var(--card)] border-s border-[var(--border)] shadow-2xl"
           >
             {dragActive && (
               <div className="pointer-events-none absolute inset-3 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--primary)] bg-[var(--card)]/90 backdrop-blur-md text-center p-6">
@@ -290,7 +290,7 @@ export function GlobalCopilotDrawer() {
             )}
 
             {/* Header */}
-            <div className="flex items-center justify-between gap-2 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+            <div className="flex items-center justify-between gap-2 border-b border-[var(--border)] px-4 py-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/15 text-[var(--primary)] border border-[var(--primary)]/25">
                   <Sparkles className="h-4 w-4" />
@@ -393,60 +393,58 @@ export function GlobalCopilotDrawer() {
               <div ref={bottomRef} />
             </div>
 
-            {/* Composer */}
-            <div className="border-t border-gray-200 dark:border-gray-800 p-3 bg-[var(--card)] space-y-2">
-              {staged.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {staged.map((s) => (
-                    <AttachmentPreviewChip
-                      key={s.attachment.id}
-                      attachment={s.attachment}
-                      localPreviewUrl={s.localPreviewUrl}
-                      compact
-                      onRemove={() => {
-                        if (s.localPreviewUrl) URL.revokeObjectURL(s.localPreviewUrl);
-                        setStaged((prev) =>
-                          prev.filter((item) => item.attachment.id !== s.attachment.id)
-                        );
-                      }}
-                    />
-                  ))}
-                </div>
-              )}
-
+            {/* Two-Zone Composer */}
+            <div className="border-t border-[var(--border)] p-3 bg-[var(--card)] space-y-1.5">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSend();
                 }}
-                className="rounded-2xl border border-gray-200 dark:border-gray-800 bg-[var(--surface-inset)] p-2 space-y-2"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-inset)] shadow-sm focus-within:border-[var(--primary)]/70 focus-within:ring-2 focus-within:ring-[var(--primary)]/15 transition-all"
               >
-                <div className="flex items-end gap-1.5">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    multiple
-                    accept={ACCEPTED_FILE_TYPES}
-                    onChange={(e) => {
-                      if (e.target.files?.length) stageFiles(e.target.files);
-                      e.target.value = "";
-                    }}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={sending || uploadingFile}
-                    title={t("attachments.attachTitle")}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-500 hover:bg-[var(--primary)]/10 hover:text-[var(--primary)] disabled:opacity-50"
-                  >
-                    {uploadingFile ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Paperclip className="h-4 w-4" />
-                    )}
-                  </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept={ACCEPTED_FILE_TYPES}
+                  onChange={(e) => {
+                    if (e.target.files?.length) stageFiles(e.target.files);
+                    e.target.value = "";
+                  }}
+                  className="hidden"
+                />
 
+                {staged.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 px-2.5 pt-2.5">
+                    {staged.map((s) => (
+                      <AttachmentPreviewChip
+                        key={s.attachment.id}
+                        attachment={s.attachment}
+                        localPreviewUrl={s.localPreviewUrl}
+                        compact
+                        onRemove={() => {
+                          if (s.localPreviewUrl) URL.revokeObjectURL(s.localPreviewUrl);
+                          setStaged((prev) =>
+                            prev.filter((item) => item.attachment.id !== s.attachment.id)
+                          );
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {interimVoice && (
+                  <div className="px-3 pt-2">
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-2 py-0.5 text-[10.5px] font-medium text-red-500 max-w-full">
+                      <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                      <span className="font-bold shrink-0">{t("listeningLabel")}:</span>
+                      <span className="truncate">{interimVoice}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Zone 1: Full-width non-clipping textarea */}
+                <div className="px-3 pt-2 pb-1">
                   <textarea
                     rows={1}
                     value={input}
@@ -464,71 +462,100 @@ export function GlobalCopilotDrawer() {
                         handleSend();
                       }
                     }}
-                    placeholder={interimVoice || t("placeholder")}
+                    placeholder={t("placeholder")}
                     disabled={sending}
-                    className="flex-1 min-h-[36px] max-h-28 bg-transparent px-1 py-1.5 text-xs text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none resize-none"
+                    className="w-full min-h-[36px] max-h-28 bg-transparent py-1 text-xs leading-5 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none resize-none"
                     dir={isAr ? "rtl" : "auto"}
                   />
-
-                  <VoiceDictationButton
-                    defaultLocale={locale}
-                    disabled={sending}
-                    onInterimChange={setInterimVoice}
-                    onTranscript={(spoken) =>
-                      setInput((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
-                    }
-                  />
-
-                  {sending ? (
-                    <button
-                      type="button"
-                      onClick={() => abortRef.current?.abort()}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-red-600 text-white"
-                      aria-label={t("stop")}
-                    >
-                      <Square className="h-3.5 w-3.5 fill-current" />
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      disabled={!input.trim() && staged.length === 0}
-                      className="afab-btn-primary h-9 px-3 text-xs shrink-0"
-                    >
-                      <Send className="h-3.5 w-3.5 rtl:rotate-180" />
-                    </button>
-                  )}
                 </div>
 
-                <div className="flex items-center justify-between gap-2 px-1 text-[10.5px] text-gray-400">
-                  <div className="inline-flex items-center gap-1 rounded-lg bg-[var(--card)] border border-gray-200 dark:border-gray-800 p-0.5">
+                {/* Zone 2: Unified Bottom Action Bar */}
+                <div className="px-2 pb-2 pt-0.5 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => setReasoningMode("fast")}
-                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-semibold transition-colors ${
-                        reasoningMode === "fast"
-                          ? "bg-[var(--primary)] text-white"
-                          : "text-gray-500"
-                      }`}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={sending || uploadingFile}
+                      title={t("attachments.attachTitle")}
+                      aria-label={t("attachments.attachTitle")}
+                      className="h-8 px-2 rounded-xl border border-[var(--border)] bg-[var(--card)] text-[11px] font-medium inline-flex items-center gap-1 text-gray-600 dark:text-gray-300 hover:border-[var(--primary)]/45 hover:text-[var(--primary)] disabled:opacity-50 transition-colors"
                     >
-                      <Zap className="h-2.5 w-2.5" />
-                      <span>{t("fastMode")}</span>
+                      {uploadingFile ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--primary)]" />
+                      ) : (
+                        <Paperclip className="h-3.5 w-3.5" />
+                      )}
+                      <span className="hidden sm:inline">{t("attachLabel")}</span>
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setReasoningMode("deep")}
-                      className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-semibold transition-colors ${
-                        reasoningMode === "deep"
-                          ? "bg-[var(--primary)] text-white"
-                          : "text-gray-500"
-                      }`}
-                    >
-                      <Brain className="h-2.5 w-2.5" />
-                      <span>{t("deepMode")}</span>
-                    </button>
+
+                    <div className="h-8 inline-flex items-center rounded-xl border border-[var(--border)] bg-[var(--card)] p-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setReasoningMode("fast")}
+                        className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[10.5px] transition-colors ${
+                          reasoningMode === "fast"
+                            ? "bg-[var(--primary)]/15 text-[var(--primary)] ring-1 ring-[var(--primary)]/25 font-semibold"
+                            : "font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                        }`}
+                      >
+                        <Zap className="h-2.5 w-2.5" />
+                        <span>{t("fastMode")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setReasoningMode("deep")}
+                        className={`inline-flex h-7 items-center gap-1 rounded-lg px-2 text-[10.5px] transition-colors ${
+                          reasoningMode === "deep"
+                            ? "bg-[var(--primary)]/15 text-[var(--primary)] ring-1 ring-[var(--primary)]/25 font-semibold"
+                            : "font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                        }`}
+                      >
+                        <Brain className="h-2.5 w-2.5" />
+                        <span>{t("deepMode")}</span>
+                      </button>
+                    </div>
                   </div>
-                  <span className="truncate">{t("attachments.supportedHint")}</span>
+
+                  <div className="flex items-center gap-1.5">
+                    <VoiceDictationButton
+                      defaultLocale={locale}
+                      disabled={sending}
+                      onInterimChange={setInterimVoice}
+                      onTranscript={(spoken) =>
+                        setInput((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
+                      }
+                    />
+
+                    {sending ? (
+                      <button
+                        type="button"
+                        onClick={() => abortRef.current?.abort()}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-red-500/15 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                        aria-label={t("stop")}
+                      >
+                        <Square className="h-3 w-3 fill-current" />
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        disabled={!input.trim() && staged.length === 0}
+                        className={
+                          input.trim() || staged.length > 0
+                            ? "h-8 px-3 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-semibold shadow-sm shadow-[var(--glow-color)] inline-flex items-center gap-1 shrink-0 transition-all"
+                            : "h-8 px-3 rounded-xl bg-gray-200/80 dark:bg-white/[0.06] text-gray-400 dark:text-gray-500 text-xs font-semibold inline-flex items-center gap-1 shrink-0 cursor-not-allowed"
+                        }
+                        aria-label={t("send")}
+                      >
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </form>
+
+              <p className="px-1 text-[10px] text-gray-400 dark:text-gray-500 truncate">
+                {t("attachments.supportedHint")}
+              </p>
             </div>
           </motion.div>
         </motion.div>

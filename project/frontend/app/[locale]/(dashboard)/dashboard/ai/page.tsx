@@ -7,6 +7,7 @@ import { Link } from "@/i18n/routing";
 import {
   AlertTriangle,
   ArrowDown,
+  ArrowUp,
   Brain,
   ExternalLink,
   Loader2,
@@ -18,10 +19,8 @@ import {
   Plus,
   RefreshCw,
   Search,
-  Send,
   Sparkles,
   Square,
-  Sunrise,
   Trash2,
   Upload,
   X,
@@ -639,8 +638,8 @@ export default function AfabCopilotPage() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] px-3 sm:px-5 py-3 sm:py-4">
-      <div className="flex h-[calc(100vh-5.75rem)] min-h-[580px] gap-4 relative">
+    <div className="mx-auto w-full max-w-[1440px] px-3 sm:px-5 py-2.5 sm:py-3.5">
+      <div className="flex h-[calc(100vh-5rem)] min-h-[580px] gap-3.5 relative">
         {/* Mobile Conversation Sidebar Overlay */}
         <AnimatePresence>
           {mobileHistoryOpen && (
@@ -657,7 +656,7 @@ export default function AfabCopilotPage() {
                 exit={{ x: isAr ? 300 : -300 }}
                 transition={{ type: "spring", stiffness: 360, damping: 34 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-76 h-full bg-[var(--card)] border-e border-gray-200 dark:border-gray-800 p-4 flex flex-col shadow-2xl"
+                className="w-76 h-full bg-[var(--card)] border-e border-[var(--border)] p-4 flex flex-col shadow-2xl"
               >
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-bold text-gray-900 dark:text-white">
@@ -675,10 +674,13 @@ export default function AfabCopilotPage() {
                 <button
                   type="button"
                   onClick={handleNewChat}
-                  className="afab-btn-primary w-full py-2.5 text-xs mb-3"
+                  className="w-full flex items-center justify-between gap-2 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/[0.09] hover:bg-[var(--primary)] hover:text-white px-3 py-2 text-xs font-semibold text-[var(--primary)] transition-all group mb-3"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>{t("newChat")}</span>
+                  <span className="flex items-center gap-2">
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>{t("newChat")}</span>
+                  </span>
+                  <Sparkles className="h-3 w-3 opacity-65 group-hover:opacity-100" />
                 </button>
 
                 <div className="relative mb-3">
@@ -688,7 +690,7 @@ export default function AfabCopilotPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={t("searchConversations")}
-                    className="afab-input ps-8 py-1.5 text-xs"
+                    className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] ps-8 pe-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[var(--primary)]/60 focus:outline-none"
                   />
                 </div>
 
@@ -702,15 +704,18 @@ export default function AfabCopilotPage() {
 
         {/* Desktop Collapsible Conversation History Sidebar */}
         {sidebarOpen && (
-          <aside className="hidden lg:flex w-72 shrink-0 flex-col afab-card p-3.5 bg-[var(--card)]/95 backdrop-blur-xl">
+          <aside className="hidden lg:flex w-[264px] shrink-0 flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)]/95 p-3.5 shadow-sm backdrop-blur-xl">
             <motion.button
               whileTap={{ scale: 0.985 }}
               type="button"
               onClick={handleNewChat}
-              className="afab-btn-primary w-full py-2.5 text-xs mb-3"
+              className="w-full flex items-center justify-between gap-2 rounded-xl border border-[var(--primary)]/30 bg-[var(--primary)]/[0.09] hover:bg-[var(--primary)] hover:text-white px-3 py-2 text-xs font-semibold text-[var(--primary)] transition-all group mb-3"
             >
-              <Plus className="h-3.5 w-3.5" />
-              <span>{t("newChat")}</span>
+              <span className="flex items-center gap-2">
+                <Plus className="h-3.5 w-3.5" />
+                <span>{t("newChat")}</span>
+              </span>
+              <Sparkles className="h-3 w-3 opacity-65 group-hover:opacity-100" />
             </motion.button>
 
             <div className="relative mb-3">
@@ -720,7 +725,7 @@ export default function AfabCopilotPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t("searchConversations")}
-                className="afab-input ps-8 py-1.5 text-xs"
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] ps-8 pe-3 py-1.5 text-xs text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-[var(--primary)]/60 focus:outline-none"
               />
             </div>
 
@@ -738,7 +743,7 @@ export default function AfabCopilotPage() {
             </div>
 
             {quota && (
-              <div className="mt-3 rounded-2xl border border-gray-200/80 dark:border-gray-800/80 bg-[var(--surface-inset)] p-3 space-y-2.5">
+              <div className="mt-3 rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] p-3 space-y-2">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
                     <Zap className="h-3.5 w-3.5 text-[var(--primary)]" />
@@ -802,7 +807,7 @@ export default function AfabCopilotPage() {
               stageFiles(e.dataTransfer.files);
             }
           }}
-          className="relative flex-1 flex flex-col afab-card overflow-hidden bg-[var(--card)]"
+          className="relative flex-1 flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm overflow-hidden"
         >
           {dragActive && (
             <div className="pointer-events-none absolute inset-3 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--primary)] bg-[var(--card)]/90 backdrop-blur-md text-center p-6">
@@ -816,13 +821,13 @@ export default function AfabCopilotPage() {
             </div>
           )}
 
-          {/* Header */}
-          <header className="flex items-center justify-between gap-3 border-b border-gray-200/80 dark:border-gray-800/80 bg-[var(--card)]/90 backdrop-blur-xl px-4 sm:px-6 py-3 shrink-0">
+          {/* Clean Single-Row Studio Header */}
+          <header className="h-14 flex items-center justify-between gap-3 border-b border-[var(--border)] bg-[var(--card)]/90 backdrop-blur-xl px-4 sm:px-5 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <button
                 type="button"
                 onClick={() => setMobileHistoryOpen(true)}
-                className="lg:hidden rounded-xl p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5"
+                className="lg:hidden rounded-xl p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5"
                 aria-label={t("historyTitle")}
               >
                 <Menu className="h-4 w-4" />
@@ -831,7 +836,7 @@ export default function AfabCopilotPage() {
               <button
                 type="button"
                 onClick={() => setSidebarOpen((prev) => !prev)}
-                className="hidden lg:inline-flex rounded-xl p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-colors"
+                className="hidden lg:inline-flex rounded-xl p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white transition-colors"
                 title={t("toggleSidebar")}
                 aria-label={t("toggleSidebar")}
               >
@@ -842,54 +847,47 @@ export default function AfabCopilotPage() {
                 )}
               </button>
 
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--primary)]/15 to-[#10b981]/10 border border-[var(--primary)]/25 text-[var(--primary)]">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--primary)]/12 border border-[var(--primary)]/25 text-[var(--primary)] shadow-2xs">
                 <Sparkles className="h-4 w-4" />
               </div>
 
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap min-w-0">
-                  <h1 className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate max-w-[260px]">
-                    {activeConversation ? activeConversation.title : t("title")}
-                  </h1>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/20 shrink-0">
-                    {t("badge")}
-                  </span>
-                  {activeLanguage && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--surface-inset)] text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-800 shrink-0">
-                      {t(`languageLabel.${activeLanguage}`)}
-                    </span>
-                  )}
-                  <AiModelStatusBadge
-                    health={health}
-                    backendConnected={backendConnected}
-                    checking={checkingHealth}
-                    onManualCheck={handleManualHealthCheck}
-                    locale={locale}
-                  />
-                </div>
-                <p className="text-[11px] text-gray-500 dark:text-gray-400 hidden sm:block whitespace-normal">
-                  {t("subtitle")}
-                </p>
-              </div>
+              <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate max-w-[200px] sm:max-w-[300px]">
+                {activeConversation ? activeConversation.title : t("title")}
+              </h1>
+
+              <AiModelStatusBadge
+                health={health}
+                backendConnected={backendConnected}
+                checking={checkingHealth}
+                onManualCheck={handleManualHealthCheck}
+                locale={locale}
+              />
+
+              {activeLanguage && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[var(--surface-inset)] text-gray-700 dark:text-gray-300 border border-[var(--border)] shrink-0">
+                  {t(`languageLabel.${activeLanguage}`)}
+                </span>
+              )}
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => handleSend(t("morningBriefPrompt"))}
-                disabled={sending}
-                className="hidden md:inline-flex afab-btn-secondary px-3 py-1.5 text-xs"
-                title={t("morningBriefButton")}
-              >
-                <Sunrise className="h-3.5 w-3.5 text-amber-500" />
-                <span>{t("morningBriefButton")}</span>
-              </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {(!sidebarOpen || messages.length > 0) && (
+                <button
+                  type="button"
+                  onClick={handleNewChat}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] px-2.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:border-[var(--primary)]/45 hover:text-[var(--primary)] transition-colors"
+                  title={t("newChat")}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline">{t("newChat")}</span>
+                </button>
+              )}
 
               <button
                 type="button"
                 onClick={handleSyncIndex}
                 disabled={syncingIndex}
-                className="afab-btn-secondary px-3 py-1.5 text-xs"
+                className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] px-2.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:border-[var(--primary)]/45 hover:text-[var(--primary)] disabled:opacity-50 transition-colors"
                 title={t("syncIndexButton")}
               >
                 <RefreshCw className={`h-3.5 w-3.5 ${syncingIndex ? "animate-spin" : ""}`} />
@@ -897,7 +895,7 @@ export default function AfabCopilotPage() {
                   {syncingIndex ? t("syncing") : t("syncIndexButton")}
                 </span>
                 {status && (
-                  <span className="text-[10px] tabular-nums opacity-75">
+                  <span className="text-[10px] tabular-nums opacity-70">
                     ({status.indexedChunks})
                   </span>
                 )}
@@ -906,11 +904,12 @@ export default function AfabCopilotPage() {
               <button
                 type="button"
                 onClick={() => setMemoryDrawerOpen(true)}
-                className="afab-btn-secondary px-3 py-1.5 text-xs"
+                className="inline-flex h-8 items-center gap-1.5 rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] px-2.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:border-[var(--primary)]/45 hover:text-[var(--primary)] transition-colors"
+                title={t("memoryButton")}
               >
                 <Brain className="h-3.5 w-3.5 text-[var(--primary)]" />
                 <span className="hidden sm:inline">{t("memoryButton")}</span>
-                <span className="px-1.5 py-0.2 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] text-[10px] font-bold tabular-nums">
+                <span className="px-1.5 py-0.2 rounded-full bg-[var(--primary)]/12 text-[var(--primary)] text-[10px] font-bold tabular-nums">
                   {memories.length}
                 </span>
               </button>
@@ -987,10 +986,18 @@ export default function AfabCopilotPage() {
           >
             {loadingPage ? (
               <div className="flex h-full items-center justify-center">
-                <AfabLoader size="md" text={t("loading") || "Loading AFAB Copilot..."} />
+                <AfabLoader size="md" text={t("loading")} />
               </div>
             ) : messages.length === 0 && !sending ? (
-              <CopilotWelcome onSelectPrompt={(text) => handleSend(text)} disabled={sending} />
+              <CopilotWelcome
+                onSelectPrompt={(text) => handleSend(text)}
+                onPrefillPrompt={(text) => {
+                  setInput(text);
+                  requestAnimationFrame(() => textareaRef.current?.focus());
+                }}
+                onAttachClick={() => fileInputRef.current?.click()}
+                disabled={sending}
+              />
             ) : (
               <div className="max-w-3xl mx-auto space-y-5 pb-4">
                 {messages.map((msg, idx) => (
@@ -1066,17 +1073,29 @@ export default function AfabCopilotPage() {
             )}
           </AnimatePresence>
 
-          {/* Floating Glass Command Composer */}
-          <div className="px-4 sm:px-6 pb-4 pt-2 bg-gradient-to-t from-[var(--card)] via-[var(--card)]/95 to-transparent shrink-0">
+          {/* Flagship Two-Zone Command Composer */}
+          <div className="px-4 sm:px-6 pb-3.5 pt-1.5 bg-gradient-to-t from-[var(--card)] via-[var(--card)]/95 to-transparent shrink-0">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSend();
               }}
-              className="max-w-3xl mx-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-[var(--surface-inset)] shadow-sm focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[var(--primary)]/15 transition-all p-2.5 sm:p-3 space-y-2"
+              className="max-w-3xl mx-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-inset)] shadow-lg shadow-black/[0.04] dark:shadow-black/30 focus-within:border-[var(--primary)]/70 focus-within:ring-2 focus-within:ring-[var(--primary)]/15 transition-all"
             >
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept={ACCEPTED_FILE_TYPES}
+                onChange={(e) => {
+                  if (e.target.files?.length) stageFiles(e.target.files);
+                  e.target.value = "";
+                }}
+                className="hidden"
+              />
+
               {stagedAttachments.length > 0 && (
-                <div className="flex flex-wrap gap-2 pb-1">
+                <div className="flex flex-wrap gap-2 px-3 pt-2.5">
                   {stagedAttachments.map((chip) => (
                     <AttachmentPreviewChip
                       key={chip.attachment.id}
@@ -1093,33 +1112,18 @@ export default function AfabCopilotPage() {
                 </div>
               )}
 
-              <div className="flex items-end gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept={ACCEPTED_FILE_TYPES}
-                  onChange={(e) => {
-                    if (e.target.files?.length) stageFiles(e.target.files);
-                    e.target.value = "";
-                  }}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={sending || uploadingFile}
-                  title={t("attachments.attachTitle")}
-                  aria-label={t("attachments.attachTitle")}
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 dark:border-gray-800 bg-[var(--card)] text-gray-500 hover:border-[var(--primary)]/40 hover:text-[var(--primary)] disabled:opacity-50 transition-colors"
-                >
-                  {uploadingFile ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-[var(--primary)]" />
-                  ) : (
-                    <Paperclip className="h-4 w-4" />
-                  )}
-                </button>
+              {interimVoice && (
+                <div className="px-3.5 pt-2.5">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/10 px-2.5 py-1 text-[11px] font-medium text-red-500 max-w-full">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-ping shrink-0" />
+                    <span className="font-bold shrink-0">{t("listeningLabel")}:</span>
+                    <span className="truncate">{interimVoice}</span>
+                  </div>
+                </div>
+              )}
 
+              {/* Zone 1: Full-width non-clipping textarea */}
+              <div className="px-3.5 pt-2.5 pb-1">
                 <textarea
                   ref={textareaRef}
                   rows={1}
@@ -1138,55 +1142,41 @@ export default function AfabCopilotPage() {
                       handleSend();
                     }
                   }}
-                  placeholder={interimVoice || t("placeholder")}
+                  placeholder={t("placeholder")}
                   disabled={sending}
                   maxLength={4000}
-                  className="flex-1 min-h-[38px] max-h-40 bg-transparent px-1.5 py-1.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none resize-none leading-relaxed"
+                  className="w-full min-h-[38px] max-h-40 bg-transparent py-1 text-[14px] leading-6 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none resize-none"
                   dir={isAr ? "rtl" : "auto"}
                 />
-
-                <VoiceDictationButton
-                  defaultLocale={locale}
-                  disabled={sending}
-                  onInterimChange={setInterimVoice}
-                  onTranscript={(spoken) =>
-                    setInput((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
-                  }
-                />
-
-                {sending ? (
-                  <motion.button
-                    whileTap={{ scale: 0.96 }}
-                    type="button"
-                    onClick={handleStopStream}
-                    className="h-10 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold inline-flex items-center gap-1.5 shrink-0 shadow-md shadow-red-600/20"
-                  >
-                    <Square className="h-3.5 w-3.5 fill-current" />
-                    <span>{t("stop")}</span>
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    whileTap={{ scale: 0.96 }}
-                    type="submit"
-                    disabled={!input.trim() && stagedAttachments.length === 0}
-                    className="afab-btn-primary h-10 px-4 text-xs shrink-0"
-                  >
-                    <Send className="h-3.5 w-3.5 rtl:rotate-180" />
-                    <span>{t("send")}</span>
-                  </motion.button>
-                )}
               </div>
 
-              <div className="pt-2 border-t border-gray-200/70 dark:border-gray-800/70 flex flex-wrap items-center justify-between gap-2 px-1 text-[10.5px] text-gray-400 dark:text-gray-500">
-                <div className="flex items-center gap-2.5 flex-wrap">
-                  <div className="inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-800 bg-[var(--card)] p-0.5">
+              {/* Zone 2: Unified Bottom Action Bar */}
+              <div className="px-2.5 pb-2.5 pt-1 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sending || uploadingFile}
+                    title={t("attachments.attachTitle")}
+                    aria-label={t("attachments.attachTitle")}
+                    className="h-8 px-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-xs font-medium inline-flex items-center gap-1.5 text-gray-600 dark:text-gray-300 hover:border-[var(--primary)]/45 hover:text-[var(--primary)] disabled:opacity-50 transition-colors"
+                  >
+                    {uploadingFile ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--primary)]" />
+                    ) : (
+                      <Paperclip className="h-3.5 w-3.5" />
+                    )}
+                    <span className="hidden sm:inline">{t("attachLabel")}</span>
+                  </button>
+
+                  <div className="h-8 inline-flex items-center rounded-xl border border-[var(--border)] bg-[var(--card)] p-0.5">
                     <button
                       type="button"
                       onClick={() => setReasoningMode("fast")}
-                      className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10.5px] font-semibold transition-colors ${
+                      className={`inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-[11px] transition-colors ${
                         reasoningMode === "fast"
-                          ? "bg-[var(--primary)] text-white"
-                          : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                          ? "bg-[var(--primary)]/15 text-[var(--primary)] ring-1 ring-[var(--primary)]/25 font-semibold"
+                          : "font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                       }`}
                     >
                       <Zap className="h-3 w-3" />
@@ -1195,25 +1185,64 @@ export default function AfabCopilotPage() {
                     <button
                       type="button"
                       onClick={() => setReasoningMode("deep")}
-                      className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10.5px] font-semibold transition-colors ${
+                      className={`inline-flex h-7 items-center gap-1 rounded-lg px-2.5 text-[11px] transition-colors ${
                         reasoningMode === "deep"
-                          ? "bg-[var(--primary)] text-white"
-                          : "text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                          ? "bg-[var(--primary)]/15 text-[var(--primary)] ring-1 ring-[var(--primary)]/25 font-semibold"
+                          : "font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                       }`}
                     >
                       <Brain className="h-3 w-3" />
                       <span>{t("deepMode")}</span>
                     </button>
                   </div>
-
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
-                    <span>{t("composerLanguages")}</span>
-                  </span>
                 </div>
-                <span className="hidden sm:inline">{t("composerHint")}</span>
+
+                <div className="flex items-center gap-1.5">
+                  <VoiceDictationButton
+                    defaultLocale={locale}
+                    disabled={sending}
+                    onInterimChange={setInterimVoice}
+                    onTranscript={(spoken) =>
+                      setInput((prev) => (prev.trim() ? `${prev.trim()} ${spoken}` : spoken))
+                    }
+                  />
+
+                  {sending ? (
+                    <motion.button
+                      whileTap={{ scale: 0.96 }}
+                      type="button"
+                      onClick={handleStopStream}
+                      className="h-8 px-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-500 hover:bg-red-500 hover:text-white text-xs font-semibold inline-flex items-center gap-1.5 shrink-0 transition-colors"
+                    >
+                      <Square className="h-3 w-3 fill-current" />
+                      <span>{t("stop")}</span>
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      whileTap={input.trim() || stagedAttachments.length > 0 ? { scale: 0.96 } : undefined}
+                      type="submit"
+                      disabled={!input.trim() && stagedAttachments.length === 0}
+                      className={
+                        input.trim() || stagedAttachments.length > 0
+                          ? "h-8 px-3.5 rounded-xl bg-[var(--primary)] hover:bg-[var(--primary-hover)] text-white text-xs font-semibold shadow-sm shadow-[var(--glow-color)] inline-flex items-center gap-1.5 shrink-0 transition-all"
+                          : "h-8 px-3.5 rounded-xl bg-gray-200/80 dark:bg-white/[0.06] text-gray-400 dark:text-gray-500 text-xs font-semibold inline-flex items-center gap-1.5 shrink-0 cursor-not-allowed"
+                      }
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                      <span>{t("send")}</span>
+                    </motion.button>
+                  )}
+                </div>
               </div>
             </form>
+
+            <div className="max-w-3xl mx-auto mt-1.5 px-1 flex items-center justify-between gap-2 text-[10.5px] text-gray-400 dark:text-gray-500">
+              <span className="inline-flex items-center gap-1.5 truncate">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80 shrink-0" />
+                <span className="truncate">{t("composerFooter")}</span>
+              </span>
+              <span className="hidden sm:inline shrink-0">{t("composerHint")}</span>
+            </div>
           </div>
         </section>
       </div>

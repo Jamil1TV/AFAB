@@ -287,7 +287,7 @@ export function CopilotMarkdown({
             return (
               <div
                 key={block.key}
-                className="my-3 overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#080c18] shadow-xs"
+                className="my-3 overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] shadow-xs"
               >
                 <table className="w-full text-start text-xs tabular-nums">
                   <thead className="border-b border-gray-200 dark:border-gray-800 bg-gray-50/90 dark:bg-white/[0.03] text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">

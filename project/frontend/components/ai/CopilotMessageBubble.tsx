@@ -164,7 +164,7 @@ export function CopilotMessageBubble({
       <Link
         key={`${ev.type}-${ev.id}-${idx}`}
         href={href}
-        className="group flex items-center justify-between gap-2.5 rounded-xl border border-gray-200/80 dark:border-gray-800/90 bg-[var(--surface-inset)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/5 px-3 py-2.5 text-xs transition-all"
+        className="group flex items-center justify-between gap-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-inset)] hover:border-[var(--primary)]/50 hover:bg-[var(--primary)]/5 px-3 py-2.5 text-xs transition-all"
       >
         <div className="min-w-0">
           <div className="flex items-center gap-1.5">
@@ -214,7 +214,7 @@ export function CopilotMessageBubble({
       </div>
 
       {/* Assistant Card */}
-      <div className="flex-1 min-w-0 space-y-3 rounded-2xl rounded-ss-md border border-gray-200/90 dark:border-gray-800/80 bg-[var(--card)] p-4 sm:p-5 shadow-xs">
+      <div className="flex-1 min-w-0 space-y-3 rounded-2xl rounded-ss-md border border-[var(--border)] bg-[var(--card)] p-4 sm:p-5 shadow-xs">
         {/* Meta Header */}
         <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-gray-100 dark:border-gray-800/70">
           <div className="flex items-center gap-2 flex-wrap">

@@ -153,13 +153,13 @@ export function VoiceDictationButton({
   const activeLabel = SPEECH_LANGS.find((s) => s.code === langCode)?.label || "EN";
 
   return (
-    <div className="inline-flex items-center rounded-xl border border-gray-200 dark:border-gray-800 bg-[var(--card)] p-0.5 shrink-0">
+    <div className="inline-flex h-8 items-center rounded-xl border border-[var(--border)] bg-[var(--card)] p-0.5 shrink-0">
       <button
         type="button"
         onClick={cycleLang}
         disabled={listening || disabled}
         title={t("switchLang")}
-        className="px-1.5 py-1 text-[10px] font-bold text-gray-500 dark:text-gray-400 hover:text-[var(--primary)] disabled:opacity-50 rounded-lg transition-colors"
+        className="px-1.5 py-0.5 text-[10px] font-bold text-gray-500 dark:text-gray-400 hover:text-[var(--primary)] disabled:opacity-50 rounded-lg transition-colors"
       >
         {activeLabel}
       </button>
@@ -169,9 +169,9 @@ export function VoiceDictationButton({
         disabled={disabled}
         title={listening ? t("stop") : t("start")}
         aria-label={listening ? t("stop") : t("start")}
-        className={`relative flex h-8 w-8 items-center justify-center rounded-lg transition-all ${
+        className={`relative flex h-7 w-7 items-center justify-center rounded-lg transition-all ${
           listening
-            ? "bg-red-500 text-white shadow-sm shadow-red-500/30 animate-pulse"
+            ? "bg-red-500 text-white shadow-sm shadow-red-500/30 ring-2 ring-red-500/25 animate-pulse"
             : "text-gray-500 dark:text-gray-400 hover:bg-[var(--primary)]/10 hover:text-[var(--primary)]"
         }`}
       >

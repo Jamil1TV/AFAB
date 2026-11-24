@@ -60,10 +60,10 @@ export function AiModelStatusBadge({
   let showPing = true;
   let pillLabel = health
     ? isBusy
-      ? `${health.chatModel} • ${t("liveStatus.busy")}`
+      ? `${health.chatModel} · ${t("liveStatus.busy")}`
       : isHotInGpu
-      ? `${health.chatModel} • ${t("liveStatus.hotInGpu")}`
-      : `${health.chatModel} • ${t("modelReady")}`
+      ? `${health.chatModel} · ${t("liveStatus.hotShort")}`
+      : `${health.chatModel} · ${t("liveStatus.readyShort")}`
     : t("liveStatus.checking");
 
   if (isBackendDown) {
@@ -117,7 +117,7 @@ export function AiModelStatusBadge({
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold border transition-colors cursor-pointer ${pillClass}`}
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-semibold border transition-colors cursor-pointer ${pillClass}`}
         title={t("liveStatus.title")}
       >
         <span className="relative flex h-1.5 w-1.5 shrink-0">
@@ -149,7 +149,7 @@ export function AiModelStatusBadge({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.98 }}
             transition={{ duration: 0.16 }}
-            className="absolute start-0 top-full mt-2 z-50 w-76 rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0c101c] p-3.5 shadow-2xl shadow-black/25 space-y-3 text-xs"
+            className="absolute start-0 top-full mt-2 z-50 w-76 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3.5 shadow-2xl shadow-black/25 space-y-3 text-xs"
           >
             {/* Header */}
             <div className="flex items-center justify-between gap-2 pb-2 border-b border-gray-100 dark:border-gray-800/80">
