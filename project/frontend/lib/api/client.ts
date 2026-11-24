@@ -4,21 +4,20 @@ import { AuthStore } from "@/lib/auth-store";
  * Dynamically resolves the backend API base URL:
  * 1. Honors explicit NEXT_PUBLIC_API_URL environment variable if set.
  * 2. In browser environments:
- *    - If accessed over LAN/Wi-Fi (e.g. 192.168.x.x, 10.x.x.x), targets port 8080 on that same host IP.
- *    - On local machine, prioritizes 127.0.0.1 over localhost to prevent Windows WSL2 / wslrelay IPv6 [::1] connection drops.
- * 3. In server environments (SSR), defaults to 127.0.0.1:8080.
+ *    - Always uses the same-origin relative path `/api/v1`.
+ *    - Next.js server proxies `/api/v1/:path*` directly to `http://127.0.0.1:8080/api/v1/:path*` via rewrites.
+ *    - Completely eliminates cross-origin preflight overhead (OPTIONS), CORS rejections,
+ *      cookie domain isolation issues, and Windows WSL2/Docker IPv6 [::1] connection drops.
+ * 3. In server environments (SSR), defaults to direct IPv4 `http://127.0.0.1:8080/api/v1`.
  */
 export function getApiBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
   if (typeof window !== "undefined") {
-    const { protocol, hostname } = window.location;
-    if (hostname) {
-      return `${protocol}//${hostname}:8080/api/v1`;
-    }
+    return "/api/v1";
   }
-  return "http://localhost:8080/api/v1";
+  return "http://127.0.0.1:8080/api/v1";
 }
 
 const API_BASE_URL = getApiBaseUrl();
@@ -64,13 +63,35 @@ export async function tryRefreshToken(): Promise<boolean> {
 
     try {
       const baseUrl = getApiBaseUrl();
-      const res = await fetch(`${baseUrl}/auth/refresh`, {
+      let res = await fetch(`${baseUrl}/auth/refresh`, {
         method: "POST",
         credentials: "include",
         headers,
       });
 
-      if (!res.ok) return false;
+      // If relative proxy /api/v1 failed, attempt direct port 8080 in browser as fallback
+      if (!res.ok && typeof window !== "undefined" && baseUrl.startsWith("/")) {
+        try {
+          const directBase = `${window.location.protocol}//${window.location.hostname}:8080/api/v1`;
+          const directRes = await fetch(`${directBase}/auth/refresh`, {
+            method: "POST",
+            credentials: "include",
+            headers,
+          });
+          if (directRes.ok) {
+            res = directRes;
+          }
+        } catch {
+          // ignore direct fallback error
+        }
+      }
+
+      if (!res.ok) {
+        if (res.status === 401 || res.status === 403) {
+          AuthStore.clearAuth();
+        }
+        return false;
+      }
 
       const data = await res.json();
       if (data?.accessToken) {
@@ -80,8 +101,8 @@ export async function tryRefreshToken(): Promise<boolean> {
         }
         return true;
       }
-    } catch {
-      // refresh attempt failed
+    } catch (refreshErr) {
+      console.warn("[AFAB API] Silent token refresh network exception:", refreshErr);
     }
     return false;
   })();
@@ -161,10 +182,8 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
   if (requireAuth && !AuthStore.getAccessToken() && !endpoint.includes("/auth/")) {
     const refreshed = await tryRefreshToken();
     if (!refreshed && !AuthStore.getAccessToken()) {
-      if (redirectToLogin()) {
-        return new Promise<Response>(() => {});
-      }
-      throw new ApiError("Authentication required. Please sign in again.", "UNAUTHORIZED", 401);
+      redirectToLogin();
+      return new Promise<Response>(() => {});
     }
   }
 
@@ -189,11 +208,14 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
 
   let response: Response;
   const primaryBase = getApiBaseUrl();
-  const secondaryBase = primaryBase.includes("127.0.0.1")
-    ? primaryBase.replace("127.0.0.1", "localhost")
-    : primaryBase.includes("localhost")
-    ? primaryBase.replace("localhost", "127.0.0.1")
-    : primaryBase;
+  const secondaryBase =
+    typeof window !== "undefined" && primaryBase.startsWith("/")
+      ? `${window.location.protocol}//${window.location.hostname}:8080/api/v1`
+      : primaryBase.includes("127.0.0.1")
+      ? primaryBase.replace("127.0.0.1", "localhost")
+      : primaryBase.includes("localhost")
+      ? primaryBase.replace("localhost", "127.0.0.1")
+      : primaryBase;
 
   try {
     response = await fetch(`${primaryBase}${endpoint}`, buildConfig());
@@ -201,6 +223,7 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
     if (customConfig.signal?.aborted || (err instanceof Error && err.name === "AbortError")) {
       throw err;
     }
+    console.warn(`[AFAB API] Primary base (${primaryBase}) failed for ${endpoint}. Retrying secondary base (${secondaryBase})...`, err);
     // Attempt 2: quick retry after 200ms using secondary host resolution
     await new Promise((resolve) => setTimeout(resolve, 200));
     try {
@@ -209,6 +232,7 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
       if (customConfig.signal?.aborted || (secondErr instanceof Error && secondErr.name === "AbortError")) {
         throw secondErr;
       }
+      console.warn(`[AFAB API] Secondary base (${secondaryBase}) failed for ${endpoint}. Retrying primary base...`, secondErr);
       // Attempt 3: retry after 500ms using primary host resolution
       await new Promise((resolve) => setTimeout(resolve, 500));
       try {
@@ -217,6 +241,7 @@ export async function fetchRawClient(endpoint: string, options: FetchOptions = {
         if (customConfig.signal?.aborted || (retryErr instanceof Error && retryErr.name === "AbortError")) {
           throw retryErr;
         }
+        console.error(`[AFAB API] All connection attempts failed for ${endpoint}:`, retryErr);
         throw new ApiError(
           "Unable to connect to the server. Please try again.",
           "NETWORK_ERROR",

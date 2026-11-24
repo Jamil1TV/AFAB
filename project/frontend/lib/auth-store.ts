@@ -24,6 +24,7 @@ export interface AuthResponseData {
 const USER_SESSION_KEY = "afab_user";
 const ACTIVE_BUSINESS_KEY = "afab_active_business_id";
 const CSRF_COOKIE_NAME = "afab_csrf";
+const SESSION_COOKIE_NAME = "afab_session";
 
 // Short-lived access token & CSRF token live ONLY in JS memory — NEVER in localStorage.
 // The long-lived refresh token lives EXCLUSIVELY in an HttpOnly cookie set by the backend.
@@ -74,9 +75,13 @@ export class AuthStore {
     }
 
     // Set non-sensitive session presence cookie for Next.js proxy / middleware
-    const csrfVal = data.csrfToken || inMemoryCsrfToken || "session_active";
     const maxAge = _rememberMe ? "; max-age=2592000" : "";
-    document.cookie = `${CSRF_COOKIE_NAME}=${encodeURIComponent(csrfVal)}; path=/; SameSite=Lax${maxAge}`;
+    document.cookie = `${SESSION_COOKIE_NAME}=1; path=/; SameSite=Lax${maxAge}`;
+
+    // ONLY set afab_csrf cookie if backend returned an explicit CSRF token
+    if (data.csrfToken) {
+      document.cookie = `${CSRF_COOKIE_NAME}=${encodeURIComponent(data.csrfToken)}; path=/; SameSite=Lax${maxAge}`;
+    }
 
     if (data.user) {
       try {
@@ -95,11 +100,10 @@ export class AuthStore {
     if (typeof window === "undefined") return;
     purgeLegacyLocalStorageTokens();
     inMemoryAccessToken = newToken;
+    document.cookie = `${SESSION_COOKIE_NAME}=1; path=/; SameSite=Lax`;
     if (csrfToken) {
       inMemoryCsrfToken = csrfToken;
       document.cookie = `${CSRF_COOKIE_NAME}=${encodeURIComponent(csrfToken)}; path=/; SameSite=Lax`;
-    } else if (!readCookie(CSRF_COOKIE_NAME)) {
-      document.cookie = `${CSRF_COOKIE_NAME}=session_active; path=/; SameSite=Lax`;
     }
   }
 
@@ -123,6 +127,8 @@ export class AuthStore {
 
     document.cookie =
       "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax";
+    document.cookie =
+      `${SESSION_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax`;
     document.cookie =
       `${CSRF_COOKIE_NAME}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0; SameSite=Lax`;
   }

@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { ScrollToTop } from "@/components/scroll-to-top";
 import { ChunkErrorRecovery } from "@/components/ChunkErrorRecovery";
+import { AppearanceInitializer } from "@/components/AppearanceInitializer";
 import "../globals.css";
 
 /* ──────────────────────────────────────────────────────
@@ -186,6 +187,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <AppearanceInitializer />
             <TooltipProvider>
               <ChunkErrorRecovery />
               {children}

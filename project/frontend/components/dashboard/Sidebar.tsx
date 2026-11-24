@@ -287,7 +287,7 @@ export function Sidebar() {
       {/* ── Upgrade Card (shown ONLY for Free plan when sidebar is expanded) ── */}
       {!collapsed && planSlug === "free" && (
         <div className="px-3 py-3 shrink-0">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[var(--primary)]/10 via-[var(--primary)]/5 to-white dark:from-[#131735] dark:via-[#0f132b] dark:to-[#090c1e] border border-[var(--primary)]/25 p-4 shadow-md shadow-[var(--glow-color)]/10 dark:shadow-2xl dark:shadow-black/60 transition-all">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-b from-[var(--primary)]/10 via-[var(--primary)]/5 to-white dark:from-[var(--card)] dark:via-[var(--surface-inset)] dark:to-[var(--background)] border border-[var(--primary)]/25 p-4 shadow-md shadow-[var(--glow-color)]/10 dark:shadow-2xl dark:shadow-black/60 transition-all">
             {/* Ambient decorative lighting */}
             <div className="absolute -end-4 -top-4 h-24 w-24 rounded-full bg-[var(--primary)]/15 dark:bg-[var(--primary)]/25 blur-2xl pointer-events-none" />
             <div className="absolute -start-4 -bottom-4 h-20 w-20 rounded-full bg-[var(--primary-hover)]/10 dark:bg-[var(--primary-hover)]/20 blur-xl pointer-events-none" />
@@ -302,7 +302,7 @@ export function Sidebar() {
             <div className="relative my-2.5 h-20 w-full flex items-center justify-center">
               {/* Radial glow halo */}
               <div className="absolute h-16 w-16 rounded-full bg-[var(--primary)]/25 dark:bg-[var(--primary)]/35 blur-xl pointer-events-none" />
-              <div className="relative rounded-2xl p-1 bg-[#090d20] border border-[var(--primary)]/40 shadow-md shadow-[var(--glow-color)] dark:shadow-[0_0_25px_var(--glow-color)] overflow-hidden">
+              <div className="relative rounded-2xl p-1 bg-[var(--surface-inset)] border border-[var(--primary)]/40 shadow-md shadow-[var(--glow-color)] dark:shadow-[0_0_25px_var(--glow-color)] overflow-hidden">
                 <img 
                   src="/images/plans/crystal-cube.jpg" 
                   alt="Pro Crystal"

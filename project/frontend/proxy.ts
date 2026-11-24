@@ -5,10 +5,11 @@ import { NextRequest, NextResponse } from 'next/server';
 const intlMiddleware = createMiddleware(routing);
 
 export function proxy(req: NextRequest) {
-  // Check session presence via afab_csrf, refreshToken, or accessToken cookie.
+  // Check session presence via afab_session, afab_csrf, refreshToken, or accessToken cookie.
   // Refresh tokens are HttpOnly on /api/v1 and access tokens live in JS memory only.
   // Backend Spring Security strictly enforces JWT authorization on every API call.
   const hasSessionCookie = Boolean(
+    req.cookies.get('afab_session')?.value ||
     req.cookies.get('afab_csrf')?.value ||
     req.cookies.get('refreshToken')?.value ||
     req.cookies.get('accessToken')?.value
