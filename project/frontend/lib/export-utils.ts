@@ -8,6 +8,7 @@ export interface MasterExportData {
   businessName: string;
   fiscalMatricule?: string;
   businessAddress?: string;
+  businessLogoUrl?: string;
   currency: string;
   generatedAt: string;
   dateRange: string;
@@ -69,11 +70,23 @@ export function formatBusinessAddress(b?: any): string {
 let cachedLogoBase64: string | null = null;
 
 /**
- * Loads the AFAB logo from /assets/afab-logo-light.png and converts to Base64 PNG.
+ * Loads the business or AFAB logo and converts to Base64 PNG/JPEG.
+ * Accepts a custom data URL or image path, with graceful fallback.
  */
-export async function getLogoBase64(): Promise<string | null> {
-  if (cachedLogoBase64) return cachedLogoBase64;
+export async function getLogoBase64(customUrl?: string): Promise<string | null> {
+  const targetUrl =
+    customUrl ||
+    (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "") ||
+    "/assets/afab-logo-light.png";
+
+  if (!targetUrl) return null;
+  // If targetUrl is already a data URL (e.g. data:image/png;base64,...), return it directly
+  if (targetUrl.startsWith("data:")) return targetUrl;
   if (typeof window === "undefined") return null;
+
+  if (targetUrl === "/assets/afab-logo-light.png" && cachedLogoBase64) {
+    return cachedLogoBase64;
+  }
 
   return new Promise((resolve) => {
     const img = new Image();
@@ -90,14 +103,23 @@ export async function getLogoBase64(): Promise<string | null> {
         }
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/png");
-        cachedLogoBase64 = dataUrl;
+        if (targetUrl === "/assets/afab-logo-light.png") {
+          cachedLogoBase64 = dataUrl;
+        }
         resolve(dataUrl);
       } catch {
         resolve(null);
       }
     };
-    img.onerror = () => resolve(null);
-    img.src = "/assets/afab-logo-light.png";
+    img.onerror = () => {
+      // If custom image failed (e.g. CORS or dead link), fallback to default logo
+      if (targetUrl !== "/assets/afab-logo-light.png") {
+        getLogoBase64("/assets/afab-logo-light.png").then(resolve);
+      } else {
+        resolve(null);
+      }
+    };
+    img.src = targetUrl;
   });
 }
 
@@ -233,6 +255,7 @@ export function exportMasterToExcel(
     ["Business Name", data.businessName || "My Business"],
     ...(data.fiscalMatricule ? [["Fiscal Matricule (MF)", data.fiscalMatricule]] : []),
     ...(data.businessAddress ? [["Business Address", data.businessAddress]] : []),
+    ...(data.businessLogoUrl ? [["Business Logo", data.businessLogoUrl.startsWith("data:") ? "Custom Business Logo Configured" : data.businessLogoUrl]] : []),
     ["Selected Period", data.dateRange || "All Time"],
     ["Reporting Currency", data.currency || "USD"],
     ["Export Date & Time", data.generatedAt || new Date().toLocaleString()],
@@ -440,7 +463,7 @@ export async function exportMasterToPdf(
   doc.rect(0, 0, pageWidth, 38, "F");
 
   // Fetch & Embed Logo
-  const logoData = includeLogo ? await getLogoBase64() : null;
+  const logoData = includeLogo ? await getLogoBase64(data.businessLogoUrl) : null;
   let textStartX = margin;
 
   if (logoData) {
@@ -448,7 +471,8 @@ export async function exportMasterToPdf(
       // White rounded background container for logo
       doc.setFillColor(255, 255, 255);
       doc.roundedRect(margin, 5, 24, 24, 3, 3, "F");
-      doc.addImage(logoData, "PNG", margin + 1.5, 6.5, 21, 21);
+      const fmt = (typeof logoData === "string" && (logoData.startsWith("data:image/jpeg") || logoData.startsWith("data:image/jpg"))) ? "JPEG" : "PNG";
+      doc.addImage(logoData, fmt, margin + 1.5, 6.5, 21, 21);
       textStartX = margin + 28;
     } catch (e) {
       console.warn("Could not render logo in PDF, falling back to vector text", e);
@@ -714,6 +738,7 @@ export function openPrintableReportWindow(options: {
   businessName: string;
   fiscalMatricule?: string;
   businessAddress?: string;
+  businessLogoUrl?: string;
   currency: string;
   dateRange?: string;
   kpis?: Array<{ label: string; value: string }>;
@@ -730,6 +755,10 @@ export function openPrintableReportWindow(options: {
   const align = options.isAr ? "right" : "left";
   const showLogo = options.includeLogo !== false;
   const signature = options.includeSignature !== false ? getWetSignature() : null;
+  const resolvedLogo =
+    options.businessLogoUrl ||
+    (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "") ||
+    "/assets/afab-logo-light.png";
 
   const win = window.open("", "_blank");
   if (!win) {
@@ -871,10 +900,10 @@ export function openPrintableReportWindow(options: {
         <div style="display:flex; align-items:center; gap:16px;">
           ${showLogo ? `
           <div class="logo-box">
-            <img src="/assets/afab-logo-light.png" alt="AFAB Logo" />
+            <img src="${resolvedLogo}" alt="Business Logo" style="max-height:100%; max-width:100%; object-fit:contain;" />
           </div>` : ""}
           <div>
-            <h1 style="font-size:20px; font-weight:800; color:#7c3aed; margin:0;">AFAB Enterprise</h1>
+            <h1 style="font-size:20px; font-weight:800; color:#7c3aed; margin:0;">${options.businessName || "AFAB Enterprise"}</h1>
             <p style="font-size:12px; color:#64748b; margin:4px 0 0 0;">${options.subtitle || "Official Financial & Data Record"}</p>
           </div>
         </div>
@@ -916,6 +945,7 @@ export function openPrintableInvoiceWindow(options: {
   business?: any;
   fiscalMatricule?: string;
   businessAddress?: string;
+  businessLogoUrl?: string;
   isAr?: boolean;
   includeSignature?: boolean;
 }) {
@@ -925,6 +955,11 @@ export function openPrintableInvoiceWindow(options: {
   const signature = options.includeSignature !== false ? getWetSignature(business?.id) : null;
   const mf = options.fiscalMatricule || business?.taxId || (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : "");
   const addr = options.businessAddress || formatBusinessAddress(business) || (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "");
+  const logo =
+    options.businessLogoUrl ||
+    business?.logoUrl ||
+    (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "") ||
+    "/assets/afab-logo-light.png";
 
   const win = window.open("", "_blank");
   if (!win) {
@@ -1031,8 +1066,8 @@ export function openPrintableInvoiceWindow(options: {
 
       <div class="header">
         <div style="display:flex; align-items:center; gap:16px;">
-          <div style="height:52px; width:52px; border-radius:12px; border:1px solid #e2e8f0; padding:4px; display:flex; align-items:center; justify-content:center;">
-            <img src="/assets/afab-logo-light.png" alt="Logo" style="max-height:100%; max-width:100%; object-fit:contain;" />
+          <div style="height:54px; width:54px; border-radius:12px; border:1px solid #e2e8f0; padding:4px; display:flex; align-items:center; justify-content:center; background:#ffffff; overflow:hidden;">
+            <img src="${logo}" alt="${business?.name || 'Business'} Logo" style="max-height:100%; max-width:100%; object-fit:contain;" />
           </div>
           <div>
             <h1 style="font-size:22px; font-weight:800; color:#7c3aed; margin:0;">${business?.name || "AFAB Enterprise"}</h1>

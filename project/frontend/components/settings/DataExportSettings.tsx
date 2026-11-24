@@ -265,11 +265,13 @@ export function DataExportSettings({
 
     const mf = (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : "") || business?.taxId;
     const addr = (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "") || formatBusinessAddress(business);
+    const logo = (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "") || business?.logoUrl || "/assets/afab-logo-light.png";
 
     return {
       businessName: business?.name || profile?.companyName || "AFAB Business",
       fiscalMatricule: mf,
       businessAddress: addr,
+      businessLogoUrl: logo,
       currency: currencyToUse,
       generatedAt: new Date().toLocaleString(isAr ? "ar-EG" : "en-US"),
       dateRange: range.label,
@@ -318,6 +320,7 @@ export function DataExportSettings({
     includeSignature: boolean;
     fiscalMatricule?: string;
     businessAddress?: string;
+    businessLogoUrl?: string;
   }) => {
     if (!modalAction) return;
 
@@ -328,6 +331,9 @@ export function DataExportSettings({
       }
       if (config.businessAddress) {
         data.businessAddress = config.businessAddress;
+      }
+      if (config.businessLogoUrl) {
+        data.businessLogoUrl = config.businessLogoUrl;
       }
 
       if (modalAction === "master-excel") {
@@ -347,6 +353,7 @@ export function DataExportSettings({
           businessName: data.businessName,
           fiscalMatricule: data.fiscalMatricule,
           businessAddress: data.businessAddress,
+          businessLogoUrl: data.businessLogoUrl,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -433,6 +440,7 @@ export function DataExportSettings({
           businessName: data.businessName,
           fiscalMatricule: data.fiscalMatricule,
           businessAddress: data.businessAddress,
+          businessLogoUrl: data.businessLogoUrl,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -459,6 +467,7 @@ export function DataExportSettings({
           businessName: data.businessName,
           fiscalMatricule: data.fiscalMatricule,
           businessAddress: data.businessAddress,
+          businessLogoUrl: data.businessLogoUrl,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -485,6 +494,7 @@ export function DataExportSettings({
           businessName: data.businessName,
           fiscalMatricule: data.fiscalMatricule,
           businessAddress: data.businessAddress,
+          businessLogoUrl: data.businessLogoUrl,
           currency: data.currency,
           dateRange: data.dateRange,
           isAr,
@@ -1016,6 +1026,7 @@ export function DataExportSettings({
         defaultCurrency={selectedCurrency}
         defaultFiscalMatricule={business?.taxId || (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : "")}
         defaultBusinessAddress={formatBusinessAddress(business) || (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "")}
+        defaultBusinessLogo={business?.logoUrl || (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "")}
         onConfirm={handleConfirmModal}
       />
     </div>

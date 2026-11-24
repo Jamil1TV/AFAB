@@ -52,6 +52,14 @@ export function BusinessProfile({ business }: { business: any }) {
 
     try {
       await SettingsService.updateBusiness(business.id, formData);
+      if (typeof window !== "undefined") {
+        if (formData.logoUrl) localStorage.setItem("afab_business_logo", formData.logoUrl);
+        if (formData.taxId) localStorage.setItem("afab_fiscal_matricule", formData.taxId);
+        const addr = [formData.addressLine, formData.city, formData.state, formData.postalCode, formData.country]
+          .filter(Boolean)
+          .join(", ");
+        if (addr) localStorage.setItem("afab_business_address", addr);
+      }
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
@@ -105,7 +113,11 @@ export function BusinessProfile({ business }: { business: any }) {
                       const reader = new FileReader();
                       reader.onloadend = () => {
                         if (typeof reader.result === "string") {
-                          setFormData(prev => ({ ...prev, logoUrl: reader.result as string }));
+                          const res = reader.result as string;
+                          setFormData(prev => ({ ...prev, logoUrl: res }));
+                          if (typeof window !== "undefined") {
+                            localStorage.setItem("afab_business_logo", res);
+                          }
                         }
                       };
                       reader.readAsDataURL(file);

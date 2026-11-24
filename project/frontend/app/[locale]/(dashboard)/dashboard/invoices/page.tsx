@@ -961,36 +961,49 @@ export default function InvoicesPage() {
             ) : (
               <>
                 <div className="flex items-start justify-between gap-3 pb-4 border-b border-gray-100 dark:border-gray-800">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold font-mono text-gray-900 dark:text-white">
-                        {selectedInvoice.invoiceNumber}
-                      </h2>
-                      <span
-                        className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusBadgeStyle(selectedInvoice.status)}`}
-                      >
-                        {selectedInvoice.status.replace("_", " ")}
-                      </span>
+                  <div className="flex items-start gap-3.5">
+                    <div className="h-12 w-12 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black/30 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
+                      <img
+                        src={
+                          currentBusiness?.logoUrl ||
+                          (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "") ||
+                          "/assets/afab-logo-light.png"
+                        }
+                        alt={currentBusiness?.name || "Business Logo"}
+                        className="max-h-full max-w-full object-contain"
+                      />
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {selectedInvoice.customerName || "Walk-in / General"} · Issued {selectedInvoice.issueDate} · Due {selectedInvoice.dueDate}
-                    </p>
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
-                        {isAr ? "المعرف الجبائي (MF):" : "Fiscal Matricule (MF):"}
-                      </span>
-                      {currentBusiness?.taxId ? (
-                        <span className="text-[11px] font-mono font-bold text-[var(--primary)] bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
-                          {currentBusiness.taxId}
-                        </span>
-                      ) : (
-                        <Link
-                          href="/dashboard/settings/business-profile"
-                          className="text-[11px] font-semibold text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-bold font-mono text-gray-900 dark:text-white">
+                          {selectedInvoice.invoiceNumber}
+                        </h2>
+                        <span
+                          className={`rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${statusBadgeStyle(selectedInvoice.status)}`}
                         >
-                          {isAr ? "إضافة المعرف الجبائي من الإعدادات +" : "Set in Business Settings +"}
-                        </Link>
-                      )}
+                          {selectedInvoice.status.replace("_", " ")}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {selectedInvoice.customerName || "Walk-in / General"} · Issued {selectedInvoice.issueDate} · Due {selectedInvoice.dueDate}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+                          {isAr ? "المعرف الجبائي (MF):" : "Fiscal Matricule (MF):"}
+                        </span>
+                        {currentBusiness?.taxId ? (
+                          <span className="text-[11px] font-mono font-bold text-[var(--primary)] bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
+                            {currentBusiness.taxId}
+                          </span>
+                        ) : (
+                          <Link
+                            href="/dashboard/settings/business-profile"
+                            className="text-[11px] font-semibold text-[var(--primary)] hover:underline inline-flex items-center gap-1"
+                          >
+                            {isAr ? "إضافة المعرف الجبائي من الإعدادات +" : "Set in Business Settings +"}
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <button
@@ -1011,6 +1024,7 @@ export default function InvoicesPage() {
                         business: currentBusiness,
                         fiscalMatricule: currentBusiness?.taxId || (typeof window !== "undefined" ? localStorage.getItem("afab_fiscal_matricule") || "" : ""),
                         businessAddress: formatBusinessAddress(currentBusiness) || (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : ""),
+                        businessLogoUrl: currentBusiness?.logoUrl || (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : ""),
                         isAr,
                       })
                     }

@@ -49,6 +49,7 @@ interface ExportPeriodModalProps {
   defaultCurrency?: string;
   defaultFiscalMatricule?: string;
   defaultBusinessAddress?: string;
+  defaultBusinessLogo?: string;
   onConfirm: (config: {
     period: string;
     customStart?: string;
@@ -58,6 +59,7 @@ interface ExportPeriodModalProps {
     includeSignature: boolean;
     fiscalMatricule?: string;
     businessAddress?: string;
+    businessLogoUrl?: string;
   }) => Promise<void> | void;
 }
 
@@ -69,6 +71,7 @@ export function ExportPeriodModal({
   defaultCurrency = "USD",
   defaultFiscalMatricule = "",
   defaultBusinessAddress = "",
+  defaultBusinessLogo = "",
   onConfirm,
 }: ExportPeriodModalProps) {
   const locale = useLocale();
@@ -80,6 +83,7 @@ export function ExportPeriodModal({
   const [currency, setCurrency] = useState<string>(defaultCurrency);
   const [fiscalMatricule, setFiscalMatricule] = useState<string>(defaultFiscalMatricule);
   const [businessAddress, setBusinessAddress] = useState<string>(defaultBusinessAddress);
+  const [businessLogo, setBusinessLogo] = useState<string>(defaultBusinessLogo);
   const [includeLogo, setIncludeLogo] = useState<boolean>(true);
   const [includeSignature, setIncludeSignature] = useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -97,9 +101,13 @@ export function ExportPeriodModal({
         defaultBusinessAddress ||
         (typeof window !== "undefined" ? localStorage.getItem("afab_business_address") || "" : "")
       );
+      setBusinessLogo(
+        defaultBusinessLogo ||
+        (typeof window !== "undefined" ? localStorage.getItem("afab_business_logo") || "" : "")
+      );
       setIsSubmitting(false);
     }
-  }, [open, defaultPeriod, defaultCurrency, defaultFiscalMatricule, defaultBusinessAddress]);
+  }, [open, defaultPeriod, defaultCurrency, defaultFiscalMatricule, defaultBusinessAddress, defaultBusinessLogo]);
 
   const activeRange = calculateDateRange(period, customStart, customEnd, isAr);
 
@@ -140,6 +148,7 @@ export function ExportPeriodModal({
       if (typeof window !== "undefined") {
         if (cleanMf) localStorage.setItem("afab_fiscal_matricule", cleanMf);
         if (cleanAddr) localStorage.setItem("afab_business_address", cleanAddr);
+        if (businessLogo) localStorage.setItem("afab_business_logo", businessLogo);
       }
       await onConfirm({
         period,
@@ -150,6 +159,7 @@ export function ExportPeriodModal({
         includeSignature,
         fiscalMatricule: cleanMf,
         businessAddress: cleanAddr,
+        businessLogoUrl: businessLogo || undefined,
       });
       onOpenChange(false);
     } catch (e) {
@@ -301,19 +311,71 @@ export function ExportPeriodModal({
 
             <div>
               <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                {isAr ? "الشعار والعلامة التجارية:" : "Logo & Branding:"}
+                {isAr ? "الشعار والعلامة التجارية:" : "Business Logo & Branding:"}
               </label>
-              <label className="flex items-center gap-2 h-9 px-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.03] cursor-pointer hover:bg-gray-100/60 dark:hover:bg-white/[0.05]">
-                <input
-                  type="checkbox"
-                  checked={includeLogo}
-                  onChange={(e) => setIncludeLogo(e.target.checked)}
-                  className="rounded text-[var(--primary)] focus:ring-[var(--primary)] h-4 w-4"
-                />
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {isAr ? "تضمين شعار AFAB الرسمي" : "Include Official AFAB Logo"}
-                </span>
-              </label>
+              <div className="space-y-2">
+                <label className="flex items-center gap-2 h-9 px-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-white/[0.03] cursor-pointer hover:bg-gray-100/60 dark:hover:bg-white/[0.05]">
+                  <input
+                    type="checkbox"
+                    checked={includeLogo}
+                    onChange={(e) => setIncludeLogo(e.target.checked)}
+                    className="rounded text-[var(--primary)] focus:ring-[var(--primary)] h-4 w-4"
+                  />
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                    {isAr ? "تضمين شعار المؤسسة في الملفات" : "Include Business Logo in Exports"}
+                  </span>
+                </label>
+
+                {includeLogo && (
+                  <div className="flex items-center justify-between gap-3 p-2 rounded-xl bg-gray-50/80 dark:bg-white/[0.02] border border-gray-200/80 dark:border-gray-800/80">
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <div className="h-8 w-8 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-black/40 flex items-center justify-center p-1 overflow-hidden shrink-0">
+                        <img
+                          src={businessLogo || "/assets/afab-logo-light.png"}
+                          alt="Logo Preview"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      </div>
+                      <span className="text-[11px] font-medium text-gray-600 dark:text-gray-400 truncate">
+                        {businessLogo
+                          ? (isAr ? "شعار مخصص مدرج" : "Custom Logo Active")
+                          : (isAr ? "شعار AFAB الافتراضي" : "Default AFAB Logo")}
+                      </span>
+                    </div>
+
+                    <div>
+                      <input
+                        type="file"
+                        id="modal-logo-upload"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              if (typeof reader.result === "string") {
+                                setBusinessLogo(reader.result);
+                                if (typeof window !== "undefined") {
+                                  localStorage.setItem("afab_business_logo", reader.result);
+                                }
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById("modal-logo-upload")?.click()}
+                        className="px-2.5 py-1 text-[11px] font-semibold text-[var(--primary)] border border-purple-200 dark:border-purple-800/80 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors"
+                      >
+                        {isAr ? "تغيير الشعار" : "Upload / Change"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
