@@ -377,7 +377,7 @@ export default function AfabCopilotPage() {
     setSuggestedFollowUps([]);
 
     const optimisticUserMsg: AiMessageItem = {
-      id: `local-user-${Date.now()}`,
+      id: `local-user-${new Date().getTime()}`,
       role: "user",
       content: text || `[Attached ${attached.map((a) => a.attachment.originalFilename).join(", ")}]`,
       evidence: [],

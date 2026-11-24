@@ -44,12 +44,15 @@ export function CopilotActionDraftCard({
 
   // Invoice state
   const [invCustomerId, setInvCustomerId] = useState<string>(String(p.customerId || ""));
-  const [invIssueDate, setInvIssueDate] = useState<string>(
+  const [invIssueDate, setInvIssueDate] = useState<string>(() =>
     String(p.issueDate || new Date().toISOString().slice(0, 10))
   );
-  const [invDueDate, setInvDueDate] = useState<string>(
-    String(p.dueDate || new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10))
-  );
+  const [invDueDate, setInvDueDate] = useState<string>(() => {
+    if (p.dueDate) return String(p.dueDate);
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().slice(0, 10);
+  });
   const [invCurrency, setInvCurrency] = useState<string>(String(p.currency || "USD"));
   const [invNotes, setInvNotes] = useState<string>(String(p.notes || ""));
   const [invIssueImmediately, setInvIssueImmediately] = useState<boolean>(false);
