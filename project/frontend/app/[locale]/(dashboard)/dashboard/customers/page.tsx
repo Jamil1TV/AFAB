@@ -2,24 +2,24 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { 
-  Users, 
-  UserPlus, 
-  Search, 
-  Download, 
-  ChevronLeft, 
-  ChevronRight, 
-  MoreVertical, 
-  Plus, 
-  Eye, 
-  Pencil, 
-  Trash2, 
-  X, 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Calendar, 
-  CreditCard, 
+import {
+  Users,
+  UserPlus,
+  Search,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Plus,
+  Eye,
+  Pencil,
+  Trash2,
+  X,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  CreditCard,
   FileText,
   Copy,
   Wallet,
@@ -36,15 +36,15 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { CHART_PALETTE, chartSemantic, chartTooltipStyle } from "@/lib/design-tokens";
-import { 
-  CustomerService, 
-  Customer, 
+import {
+  CustomerService,
+  Customer,
   CustomerOrder,
-  CustomerSummaryDTO, 
-  CustomerGroup, 
-  CustomerStatus, 
+  CustomerSummaryDTO,
+  CustomerGroup,
+  CustomerStatus,
   OrderStatus,
-  CreateCustomerRequest 
+  CreateCustomerRequest
 } from "@/lib/api/customers";
 import { UserService } from "@/lib/api/dashboard";
 import { formatCurrency } from "@/lib/currency";
@@ -474,7 +474,7 @@ export default function CustomersPage() {
 
   return (
     <div className="afab-page animate-in fade-in duration-700">
-      
+
       {/* ── Page Header ── */}
       <PageHeader
         title={t("title")}
@@ -507,9 +507,8 @@ export default function CustomersPage() {
                   key={p}
                   type="button"
                   onClick={() => setPeriod(p)}
-                  className={`afab-segment capitalize text-xs flex-1 sm:flex-initial text-center ${
-                    period === p ? "afab-segment-active" : ""
-                  }`}
+                  className={`afab-segment capitalize text-xs flex-1 sm:flex-initial text-center ${period === p ? "afab-segment-active" : ""
+                    }`}
                 >
                   {t(`period.${p}`)}
                 </button>
@@ -592,13 +591,13 @@ export default function CustomersPage() {
 
       {/* ── Main Layout: 2/3 Directory Table & 1/3 Analytics Widgets ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
+
         {/* Left Column: Customer Directory Table (8 Cols) */}
         <div className="lg:col-span-8 afab-card overflow-hidden">
-          
+
           {/* Table Controls (Search, Filters, CSV Export) */}
           <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-800/60 flex flex-col md:flex-row md:items-center justify-between gap-3">
-            
+
             {/* Table inline search */}
             <div className="relative w-full md:max-w-xs">
               <Search className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -701,9 +700,8 @@ export default function CustomersPage() {
                   <div
                     key={cust.id}
                     onClick={() => setSelectedCustomer(cust)}
-                    className={`p-4 transition-colors cursor-pointer active:bg-gray-50 dark:active:bg-white/[0.03] ${
-                      isSelected ? "bg-[var(--primary)]/5" : ""
-                    }`}
+                    className={`p-4 transition-colors cursor-pointer active:bg-gray-50 dark:active:bg-white/[0.03] ${isSelected ? "bg-[var(--primary)]/5" : ""
+                      }`}
                   >
                     {/* Top: Avatar, Name, Code & Checkbox */}
                     <div className="flex items-start justify-between gap-3">
@@ -886,9 +884,8 @@ export default function CustomersPage() {
                       <tr
                         key={cust.id}
                         onClick={() => setSelectedCustomer(cust)}
-                        className={`afab-tr group cursor-pointer ${
-                          isSelected ? "bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10" : ""
-                        }`}
+                        className={`afab-tr group cursor-pointer ${isSelected ? "bg-[var(--primary)]/5 dark:bg-[var(--primary)]/10" : ""
+                          }`}
                       >
                         {/* Checkbox */}
                         <td
@@ -914,7 +911,7 @@ export default function CustomersPage() {
                                 <span className="font-semibold text-gray-900 dark:text-white truncate group-hover:text-[var(--primary)] transition-colors">
                                   {cust.name}
                                 </span>
-                                <span 
+                                <span
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     navigator.clipboard.writeText(code);
@@ -1094,7 +1091,7 @@ export default function CustomersPage() {
 
         {/* Right Column: 3 Analytics & Insight Widgets (4 Cols on Desktop, 3 Cols on Tablet, 1 Col on Mobile) */}
         <div className="lg:col-span-4 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-1 gap-6">
-          
+
           {/* Widget 1: Customer Overview Donut Chart */}
           <div className="afab-card p-4 sm:p-6 flex flex-col justify-between">
             <h3 className="text-sm font-bold text-gray-900 dark:text-white">
@@ -1127,7 +1124,7 @@ export default function CustomersPage() {
                     </PieChart>
                   </ResponsiveContainer>
                 </ChartContainer>
-                
+
                 {/* Center metric */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-[10px] uppercase font-semibold text-gray-400">
@@ -1369,7 +1366,7 @@ export default function CustomersPage() {
                 <h4 className="text-xs font-bold uppercase tracking-wider text-gray-400">
                   {tDrawer("contactInfo")}
                 </h4>
-                
+
                 <div className="space-y-2.5 text-xs">
                   <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
                     <Mail className="h-4 w-4 text-gray-400 shrink-0" />
@@ -1433,15 +1430,14 @@ export default function CustomersPage() {
                           <span className="afab-badge afab-badge-neutral font-mono">
                             {ord.orderNumber}
                           </span>
-                          <span className={`afab-badge ${
-                            ord.status === "COMPLETED"
+                          <span className={`afab-badge ${ord.status === "COMPLETED"
                               ? "afab-badge-success"
                               : ord.status === "PENDING"
-                              ? "afab-badge-warning"
-                              : ord.status === "PROCESSING"
-                              ? "afab-badge-info"
-                              : "afab-badge-danger"
-                          }`}>
+                                ? "afab-badge-warning"
+                                : ord.status === "PROCESSING"
+                                  ? "afab-badge-info"
+                                  : "afab-badge-danger"
+                            }`}>
                             {tOrderStatuses(ord.status.toLowerCase()) || ord.status}
                           </span>
                         </div>
@@ -1460,8 +1456,8 @@ export default function CustomersPage() {
                             <CreditCard className="h-3 w-3" />
                             <span>{tPaymentMethods(
                               ord.paymentMethod === "CREDIT_CARD" ? "creditCard" :
-                              ord.paymentMethod === "CASH" ? "cash" :
-                              ord.paymentMethod === "STRIPE" ? "stripe" : "bankTransfer"
+                                ord.paymentMethod === "CASH" ? "cash" :
+                                  ord.paymentMethod === "STRIPE" ? "stripe" : "bankTransfer"
                             )}</span>
                           </div>
                           {ord.invoiceNumber && (
@@ -1547,7 +1543,7 @@ export default function CustomersPage() {
             </div>
 
             <form onSubmit={handleSaveCustomer} className="mt-6 space-y-4">
-              
+
               {/* Customer ID & Name in 2 columns */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-1">
@@ -1685,8 +1681,8 @@ export default function CustomersPage() {
                   {formSubmitting
                     ? "Saving..."
                     : customerToEdit
-                    ? tModal("update")
-                    : tModal("save")}
+                      ? tModal("update")
+                      : tModal("save")}
                 </button>
               </div>
 

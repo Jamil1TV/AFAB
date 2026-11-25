@@ -234,7 +234,7 @@ export function calculateDateRange(
  * Features an executive corporate branding header on every sheet.
  */
 export function exportMasterToExcel(
-  data: MasterExportData, 
+  data: MasterExportData,
   filenamePrefix: string = "AFAB_Complete_Archive",
   includeLogo: boolean = true,
   includeSignature: boolean = true
@@ -247,14 +247,14 @@ export function exportMasterToExcel(
   const summaryAoa = [
     ["═══════════════════════════════════════════════════════════════════════"],
     ["✨  AFAB ENTERPRISE — OFFICIAL FINANCIAL RECORD"],
-    includeLogo 
+    includeLogo
       ? ["Brand Identity: AFAB AI Finance Platform | Logo: /assets/afab-logo-light.png"]
       : ["Brand Identity: AFAB AI Finance Platform"],
     ["═══════════════════════════════════════════════════════════════════════"],
     [],
     ["METADATA", "DETAILS"],
     ["Business Name", data.businessName || "My Business"],
-    ...(data.fiscalMatricule ? [["Fiscal Matricule (MF)", data.fiscalMatricule]] : []),
+    ...(data.fiscalMatricule ? [["Tax ID", data.fiscalMatricule]] : []),
     ...(data.businessPurpose ? [["Business Purpose / Activity", data.businessPurpose]] : []),
     ...(data.businessAddress ? [["Business Address", data.businessAddress]] : []),
     ...(data.businessLogoUrl ? [["Business Logo", data.businessLogoUrl.startsWith("data:") ? "Custom Business Logo Configured" : data.businessLogoUrl]] : []),
@@ -814,14 +814,14 @@ export function openPrintableReportWindow(options: {
         </thead>
         <tbody>
           ${s.rows
-            .map(
-              (r, idx) => `
+          .map(
+            (r, idx) => `
             <tr style="background:${idx % 2 === 1 ? "#f8fafc" : "#ffffff"}; border-bottom:1px solid #f1f5f9;">
               ${r.map((c) => `<td style="padding:8px 12px; color:#334155;">${c ?? "-"}</td>`).join("")}
             </tr>
           `
-            )
-            .join("")}
+          )
+          .join("")}
         </tbody>
       </table>
     </div>
