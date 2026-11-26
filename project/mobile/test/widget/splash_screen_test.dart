@@ -136,5 +136,47 @@ void main() {
       expect(stub.restoreCalls, 2);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets(
+      'selects splash_logo_light.png in Light Mode and splash_logo_dark.png in Dark Mode',
+      (tester) async {
+        _setViewport(tester, const Size(390, 844));
+        final stubLight = _SplashAuthStub(
+          const SessionState(status: SessionStatus.restoring),
+        );
+
+        await tester.pumpWidget(
+          _wrapSplash(
+            prefs: prefs,
+            authStub: stubLight,
+            brightness: Brightness.light,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 700));
+        final lightImage = tester.widget<Image>(find.byType(Image).first);
+        expect(
+          (lightImage.image as AssetImage).assetName,
+          'assets/branding/splash_logo_light.png',
+        );
+
+        final stubDark = _SplashAuthStub(
+          const SessionState(status: SessionStatus.restoring),
+        );
+        await tester.pumpWidget(
+          _wrapSplash(
+            prefs: prefs,
+            authStub: stubDark,
+            brightness: Brightness.dark,
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 700));
+        final darkImage = tester.widget<Image>(find.byType(Image).first);
+        expect(
+          (darkImage.image as AssetImage).assetName,
+          'assets/branding/splash_logo_dark.png',
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 }

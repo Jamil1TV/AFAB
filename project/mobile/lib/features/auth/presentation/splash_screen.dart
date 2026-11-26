@@ -2,6 +2,7 @@ import 'package:afab_mobile/core/l10n/l10n_extension.dart';
 import 'package:afab_mobile/core/theme/afab_colors.dart';
 import 'package:afab_mobile/features/auth/domain/auth_notifier.dart';
 import 'package:afab_mobile/features/auth/domain/session_state.dart';
+import 'package:afab_mobile/shared/widgets/afab_brand_logo.dart';
 import 'package:afab_mobile/shared/widgets/afab_button.dart';
 import 'package:afab_mobile/shared/widgets/afab_card.dart';
 import 'package:flutter/material.dart';
@@ -69,68 +70,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           : const [Color(0xFFF8FAFC), Color(0xFFEFF6FF), Color(0xFFF8FAFC)],
     );
 
-    final logoAsset = isDark
-        ? 'assets/branding/splash_logo_dark.png'
-        : 'assets/branding/splash_logo_light.png';
-    final fallbackAsset = isDark
-        ? 'assets/images/afab-logo-dark.png'
-        : 'assets/images/logo.png';
-
-    Widget buildLogoBadge(double size) {
-      return Container(
-        width: size,
-        height: size,
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colors.primary.withValues(alpha: isDark ? 0.65 : 0.35),
-              const Color(0xFF0EA5E9).withValues(alpha: isDark ? 0.45 : 0.25),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: colors.primary.withValues(alpha: isDark ? 0.28 : 0.16),
-              blurRadius: 32,
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isDark ? const Color(0xFF020817) : Colors.white,
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Image.asset(
-            logoAsset,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Image.asset(
-              fallbackAsset,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Center(
-                child: Text(
-                  l10n.appTitle,
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: colors.primary,
-                        fontWeight: FontWeight.w800,
-                      ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
     Widget heroContent = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (session.status == SessionStatus.biometricLocked) ...[
-          buildLogoBadge(84),
+          const AfabBrandLogo(size: 84),
           const SizedBox(height: 20),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 380),
@@ -182,7 +126,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             ),
           ),
         ] else if (session.status == SessionStatus.offlineError) ...[
-          buildLogoBadge(76),
+          const AfabBrandLogo(size: 76),
           const SizedBox(height: 20),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 380),
@@ -235,7 +179,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             ),
           ),
         ] else ...[
-          buildLogoBadge(124),
+          const AfabBrandLogo(size: 124),
           const SizedBox(height: 22),
           Text(
             l10n.appTitle,

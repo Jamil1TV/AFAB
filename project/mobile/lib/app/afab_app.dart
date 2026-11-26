@@ -6,6 +6,7 @@ import 'package:afab_mobile/core/network/dio_client.dart';
 import 'package:afab_mobile/core/network/global_events.dart';
 import 'package:afab_mobile/core/theme/appearance_settings.dart';
 import 'package:afab_mobile/core/theme/appearance_theme_builder.dart';
+import 'package:afab_mobile/core/theme/native_theme_sync.dart';
 import 'package:afab_mobile/features/app_states/business_read_only_sheet.dart';
 import 'package:afab_mobile/features/app_states/plan_limit_sheet.dart';
 import 'package:afab_mobile/features/auth/domain/auth_notifier.dart';
@@ -34,6 +35,9 @@ class _AfabAppState extends ConsumerState<AfabApp> {
   void initState() {
     super.initState();
     _eventSub = ref.read(globalEventBusProvider).stream.listen(_onGlobalEvent);
+    unawaited(
+      NativeThemeSync.sync(ref.read(appearanceNotifierProvider).themeMode),
+    );
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:afab_mobile/core/l10n/l10n_extension.dart';
 import 'package:afab_mobile/core/theme/afab_colors.dart';
 import 'package:afab_mobile/core/theme/appearance_settings.dart';
 import 'package:afab_mobile/core/utils/responsive.dart';
+import 'package:afab_mobile/shared/widgets/afab_brand_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -202,7 +203,7 @@ class AuthScaffold extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             Center(
-                              child: _AuthBrandEmblem(
+                              child: AfabBrandLogo(
                                 size: isTight ? 68 : 92,
                               ),
                             ),
@@ -292,7 +293,7 @@ class AuthScaffold extends ConsumerWidget {
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const _AuthBrandEmblem(size: 62),
+                                    const AfabBrandLogo(size: 62),
                                     const SizedBox(width: 14),
                                     Flexible(
                                       child: Text(
@@ -433,70 +434,6 @@ class _UtilityPill extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: child,
-    );
-  }
-}
-
-class _AuthBrandEmblem extends StatelessWidget {
-  const _AuthBrandEmblem({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.afabColors;
-    final isDark = colors.isDark;
-    final logoAsset = isDark
-        ? 'assets/branding/splash_logo_dark.png'
-        : 'assets/branding/splash_logo_light.png';
-    final fallbackAsset = isDark
-        ? 'assets/images/afab-logo-dark.png'
-        : 'assets/images/logo.png';
-
-    return Container(
-      width: size,
-      height: size,
-      padding: const EdgeInsets.all(3.5),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colors.primary.withValues(alpha: isDark ? 0.78 : 0.45),
-            const Color(0xFF0EA5E9).withValues(alpha: isDark ? 0.55 : 0.30),
-          ],
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.primary.withValues(alpha: isDark ? 0.34 : 0.18),
-            blurRadius: 28,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isDark ? const Color(0xFF020817) : Colors.white,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Image.asset(
-          logoAsset,
-          fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Image.asset(
-            fallbackAsset,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => Center(
-              child: Icon(
-                LucideIcons.sparkles,
-                size: size * 0.42,
-                color: colors.primary,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

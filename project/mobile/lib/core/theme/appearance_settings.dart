@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 
 import 'package:afab_mobile/core/network/dio_client.dart';
+import 'package:afab_mobile/core/theme/native_theme_sync.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -358,6 +360,7 @@ class AppearanceNotifier extends Notifier<AppearanceSettings> {
 
   Future<void> update(AppearanceSettings next) async {
     state = next;
+    unawaited(NativeThemeSync.sync(next.themeMode));
     await ref.read(prefsStoreProvider).setAppearanceJson(jsonEncode(next.toJson()));
   }
 
