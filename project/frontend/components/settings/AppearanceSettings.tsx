@@ -68,7 +68,11 @@ export function AppearanceSettings({ profile, onRefresh }: AppearanceSettingsPro
   // Synchronize on mount
   useEffect(() => {
     const stored = getStoredAppearance();
-    setSettings(stored);
+    const activeTheme =
+      theme === "light" || theme === "dark" || theme === "system"
+        ? (theme as ThemeMode)
+        : stored.themeMode;
+    setSettings({ ...stored, themeMode: activeTheme });
     setCustomHexInput(stored.customPrimaryColor || "#8b5cf6");
     setMounted(true);
   }, []);

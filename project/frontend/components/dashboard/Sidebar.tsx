@@ -17,8 +17,6 @@ import {
   CalendarDays, 
   Settings,
   Coins,
-  PiggyBank,
-  Repeat,
   ChevronsUpDown,
   PanelLeftClose,
   PanelLeftOpen,
@@ -208,8 +206,6 @@ export function Sidebar() {
     { name: tSidebar("revenue"), href: "/dashboard/revenue", icon: TrendingUp },
     { name: tSidebar("invoices"), href: "/dashboard/invoices", icon: FileText },
     { name: tSidebar("customers"), href: "/dashboard/customers", icon: Users },
-    { name: tSidebar("budgets"), href: "/dashboard/budgets", icon: PiggyBank },
-    { name: tSidebar("recurring"), href: "/dashboard/recurring", icon: Repeat },
     { name: tSidebar("reports"), href: "/dashboard/reports", icon: BarChart3 },
     { name: tSidebar("currencies") || "Currencies", href: "/dashboard/currencies", icon: Coins, badge: "FX" },
   ];

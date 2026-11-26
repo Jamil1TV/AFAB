@@ -8,7 +8,6 @@ import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
 import { ExpenseCategories } from "@/components/dashboard/ExpenseCategories";
 import { ReminderCard } from "@/components/dashboard/ReminderCard";
 import { TopCustomers } from "@/components/dashboard/TopCustomers";
-import { BudgetOverviewCard } from "@/components/dashboard/BudgetOverviewCard";
 import { UpgradeBanner } from "@/components/dashboard/UpgradeBanner";
 import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { useState, useEffect, useCallback } from "react";
@@ -231,9 +230,6 @@ export default function DashboardPage() {
           <ExpenseCategories categories={data.expenseCategories || []} currency={currency} />
         </div>
       </div>
-
-      {/* ── Budgets Overview Row ── */}
-      <BudgetOverviewCard budgets={data.budgets} currency={currency} />
 
       {/* ── Tertiary Data Row ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

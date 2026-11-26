@@ -13,8 +13,8 @@ export function AppearanceInitializer() {
   const { setTheme } = useTheme();
 
   useEffect(() => {
-    // Synchronously apply appearance on initial client hydration without rebroadcasting
-    applyAppearance(getStoredAppearance(), setTheme, { persist: false, broadcast: false });
+    // Synchronously apply appearance CSS tokens on hydration without overriding next-themes
+    applyAppearance(getStoredAppearance(), undefined, { persist: false, broadcast: false });
 
     // React only to cross-tab storage updates
     const handleStorage = (e: StorageEvent) => {

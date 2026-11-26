@@ -1,5 +1,4 @@
 import { fetchClient, fetchCachedClient } from "./client";
-import type { BudgetSummary } from "./budgets";
 
 export interface KpiMetric {
   value: string;
@@ -69,7 +68,6 @@ export interface DashboardSummaryResponse {
   customers: CustomerItem[];
   currency: string;
   businessName: string;
-  budgets?: BudgetSummary | null;
 }
 
 export class DashboardService {
