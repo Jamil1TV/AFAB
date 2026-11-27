@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:afab_mobile/app/afab_app.dart';
+import 'package:afab_mobile/app/shell/afab_floating_nav_dock.dart';
 import 'package:afab_mobile/core/network/connectivity_provider.dart';
 import 'package:afab_mobile/core/network/dio_client.dart';
 import 'package:afab_mobile/core/theme/appearance_settings.dart';
@@ -250,8 +251,8 @@ void main() {
       await tester.pumpWidget(_buildTestApp(prefs));
       await tester.pumpAndSettle();
 
-      // Adaptive phone navigation bar
-      expect(find.byType(NavigationBar), findsOneWidget);
+      // Adaptive phone floating dock
+      expect(find.byType(AfabFloatingNavDock), findsOneWidget);
       expect(find.byType(NavigationRail), findsNothing);
 
       // Non-zero ExpenseCategories total fixes Web's $0.00 bug
@@ -283,7 +284,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationRail), findsOneWidget);
-      expect(find.byType(NavigationBar), findsNothing);
+      expect(find.byType(AfabFloatingNavDock), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });

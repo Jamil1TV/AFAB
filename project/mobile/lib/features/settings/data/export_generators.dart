@@ -48,7 +48,7 @@ abstract final class ExportGenerators {
       ]);
       if (branding.fiscalMatricule.isNotEmpty) {
         overview.appendRow([
-          TextCellValue('Fiscal Matricule (MF)'),
+          TextCellValue('Tax ID'),
           TextCellValue(branding.fiscalMatricule),
         ]);
       }
@@ -220,7 +220,7 @@ abstract final class ExportGenerators {
               style: baseStyle,
             ),
             if (branding.fiscalMatricule.isNotEmpty)
-              pw.Text('MF: ${branding.fiscalMatricule}', style: baseStyle),
+              pw.Text('Tax ID: ${branding.fiscalMatricule}', style: baseStyle),
             if (branding.officialAddress.isNotEmpty)
               pw.Text(branding.officialAddress, style: baseStyle),
             pw.SizedBox(height: 12),

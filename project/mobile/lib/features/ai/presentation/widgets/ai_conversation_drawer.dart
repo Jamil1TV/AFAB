@@ -20,12 +20,14 @@ class AiConversationDrawerPanel extends ConsumerWidget {
     required this.isReadOnly,
     required this.onSelectConversation,
     required this.onNewChat,
+    this.onNavigateRoute,
   });
 
   final String? activeConversationId;
   final bool isReadOnly;
   final ValueChanged<String> onSelectConversation;
   final VoidCallback onNewChat;
+  final ValueChanged<String>? onNavigateRoute;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -50,6 +52,34 @@ class AiConversationDrawerPanel extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (onNavigateRoute != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 10, 10, 2),
+            child: Row(
+              children: [
+                _DrawerNavShortcut(
+                  icon: LucideIcons.layoutDashboard,
+                  label: l10n.navHome,
+                  onTap: () => onNavigateRoute!('/dashboard'),
+                ),
+                _DrawerNavShortcut(
+                  icon: LucideIcons.arrowRightLeft,
+                  label: l10n.navFinance,
+                  onTap: () => onNavigateRoute!('/transactions'),
+                ),
+                _DrawerNavShortcut(
+                  icon: LucideIcons.fileText,
+                  label: l10n.navInvoices,
+                  onTap: () => onNavigateRoute!('/invoices'),
+                ),
+                _DrawerNavShortcut(
+                  icon: LucideIcons.layoutGrid,
+                  label: l10n.navMore,
+                  onTap: () => onNavigateRoute!('/more'),
+                ),
+              ],
+            ),
+          ),
         Padding(
           padding: const EdgeInsets.fromLTRB(14, 14, 14, 8),
           child: AfabButton(
@@ -351,6 +381,49 @@ class _QuotaMeterCard extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DrawerNavShortcut extends StatelessWidget {
+  const _DrawerNavShortcut({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.afabColors;
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 17, color: colors.textMuted),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 10.5,
+                      color: colors.textMuted,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );

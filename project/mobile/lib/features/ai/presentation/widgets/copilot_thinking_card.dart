@@ -7,7 +7,6 @@ import 'package:afab_mobile/features/ai/presentation/widgets/copilot_markdown.da
 import 'package:afab_mobile/shared/widgets/afab_card.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:shimmer/shimmer.dart';
 
 class CopilotThinkingCard extends StatefulWidget {
   const CopilotThinkingCard({
@@ -31,15 +30,15 @@ class CopilotThinkingCard extends StatefulWidget {
 
 class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
   Timer? _ticker;
-  int _elapsedTenths = 0;
-  bool _traceExpanded = true;
+  final ValueNotifier<int> _elapsedTenths = ValueNotifier<int>(0);
+  bool _traceExpanded = false;
 
   @override
   void initState() {
     super.initState();
     _ticker = Timer.periodic(const Duration(milliseconds: 200), (_) {
       if (mounted) {
-        setState(() => _elapsedTenths += 2);
+        _elapsedTenths.value += 2;
       }
     });
   }
@@ -48,10 +47,11 @@ class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
   void dispose() {
     _ticker?.cancel();
     _ticker = null;
+    _elapsedTenths.dispose();
     super.dispose();
   }
 
-  String _headline(BuildContext context) {
+  String _headline(BuildContext context, int elapsedTenths) {
     final l10n = context.l10n;
     if (widget.activeTools.isNotEmpty) {
       return '${localizedToolLabel(l10n, widget.activeTools.last)}...';
@@ -62,7 +62,7 @@ class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
     if (widget.streamPhase == 'warming_model') {
       return l10n.aiPhaseWarmingModel;
     }
-    final phaseIdx = (_elapsedTenths ~/ 18) % 3;
+    final phaseIdx = (elapsedTenths ~/ 18) % 3;
     return switch (phaseIdx) {
       0 => l10n.aiPhaseMemory,
       1 => l10n.aiPhaseLedger,
@@ -75,58 +75,82 @@ class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
     final l10n = context.l10n;
     final colors = context.afabColors;
     final reduceMotion = MediaQuery.disableAnimationsOf(context);
-    final elapsedStr = (_elapsedTenths / 10).toStringAsFixed(1);
     final isLiveStreaming = widget.streamingText.isNotEmpty;
+    final hasThinkingTrace = widget.thinkingText.trim().isNotEmpty;
 
-    return AfabCard(
-      borderColor: colors.primary.withValues(alpha: 0.3),
-      padding: const EdgeInsets.all(14),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 10, 4, 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: isLiveStreaming ? colors.success : colors.primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  isLiveStreaming ? l10n.aiStreamingLabel : _headline(context),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: colors.primary,
+          InkWell(
+            onTap: hasThinkingTrace
+                ? () => setState(() => _traceExpanded = !_traceExpanded)
+                : null,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: ValueListenableBuilder<int>(
+                valueListenable: _elapsedTenths,
+                builder: (context, elapsedTenths, _) {
+                  final elapsedStr = (elapsedTenths / 10).toStringAsFixed(1);
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _AuroraConstellationDots(
+                        tick: elapsedTenths,
+                        activeColor:
+                            isLiveStreaming ? colors.success : colors.primary,
+                        reduceMotion: reduceMotion,
                       ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colors.surfaceInset,
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(color: colors.border),
-                  ),
-                  child: Text(
-                    l10n.aiElapsedSeconds(elapsedStr),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          isLiveStreaming
+                              ? l10n.aiStreamingLabel
+                              : _headline(context, elapsedTenths),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w500,
+                                    height: 1.45,
+                                    color: colors.textPrimary
+                                        .withValues(alpha: 0.92),
+                                  ),
                         ),
-                  ),
-                ),
+                      ),
+                      const SizedBox(width: 8),
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          l10n.aiElapsedSeconds(elapsedStr),
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    fontSize: 11.5,
+                                    color: colors.textMuted,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                        ),
+                      ),
+                      if (hasThinkingTrace) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          _traceExpanded
+                              ? LucideIcons.chevronUp
+                              : LucideIcons.chevronDown,
+                          size: 15,
+                          color: colors.textMuted,
+                        ),
+                      ],
+                    ],
+                  );
+                },
               ),
-            ],
+            ),
           ),
           if (widget.completedTools.isNotEmpty ||
               widget.activeTools.isNotEmpty) ...[
@@ -143,7 +167,7 @@ class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
                     ),
                     decoration: BoxDecoration(
                       color: colors.successBg,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(99),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -171,8 +195,8 @@ class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: colors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      color: colors.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(99),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -199,46 +223,20 @@ class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
               ],
             ),
           ],
-          if (widget.thinkingText.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            InkWell(
-              onTap: () => setState(() => _traceExpanded = !_traceExpanded),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.brain, size: 14, color: colors.textMuted),
-                    const SizedBox(width: 6),
-                    Text(
-                      l10n.aiReasoningTrace,
-                      style: Theme.of(context).textTheme.labelMedium,
+          if (hasThinkingTrace && _traceExpanded) ...[
+            const SizedBox(height: 8),
+            AfabInsetPanel(
+              padding: const EdgeInsets.all(10),
+              child: Text(
+                widget.thinkingText,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      height: 1.45,
                     ),
-                    const Spacer(),
-                    Icon(
-                      _traceExpanded
-                          ? LucideIcons.chevronUp
-                          : LucideIcons.chevronDown,
-                      size: 15,
-                      color: colors.textMuted,
-                    ),
-                  ],
-                ),
               ),
             ),
-            if (_traceExpanded)
-              AfabInsetPanel(
-                padding: const EdgeInsets.all(10),
-                child: Text(
-                  widget.thinkingText,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        height: 1.45,
-                      ),
-                ),
-              ),
           ],
-          const SizedBox(height: 10),
-          if (isLiveStreaming)
+          if (isLiveStreaming) ...[
+            const SizedBox(height: 10),
             Directionality(
               textDirection: MessageDirectionResolver.resolveForMessage(
                 widget.streamingText,
@@ -247,49 +245,59 @@ class _CopilotThinkingCardState extends State<CopilotThinkingCard> {
                 content: widget.streamingText,
                 isStreaming: true,
               ),
-            )
-          else
-            _SkeletonShimmerLines(reduceMotion: reduceMotion),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _SkeletonShimmerLines extends StatelessWidget {
-  const _SkeletonShimmerLines({required this.reduceMotion});
+class _AuroraConstellationDots extends StatelessWidget {
+  const _AuroraConstellationDots({
+    required this.tick,
+    required this.activeColor,
+    required this.reduceMotion,
+  });
+
+  final int tick;
+  final Color activeColor;
   final bool reduceMotion;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.afabColors;
-    final bars = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _bar(colors, widthFactor: 0.92),
-        const SizedBox(height: 8),
-        _bar(colors, widthFactor: 0.78),
-        const SizedBox(height: 8),
-        _bar(colors, widthFactor: 0.56),
-      ],
-    );
-    if (reduceMotion) return bars;
-    return Shimmer.fromColors(
-      baseColor: colors.border,
-      highlightColor: colors.surface,
-      child: bars,
-    );
-  }
+    final step = reduceMotion ? 0 : (tick ~/ 2) % 3;
 
-  Widget _bar(AfabColors colors, {required double widthFactor}) {
-    return FractionallySizedBox(
-      widthFactor: widthFactor,
-      child: Container(
-        height: 11,
-        decoration: BoxDecoration(
-          color: colors.surfaceInset,
-          borderRadius: BorderRadius.circular(6),
-        ),
+    Color dotColor(int idx) {
+      final alpha = step == idx ? 1.0 : 0.34;
+      return activeColor.withValues(alpha: alpha);
+    }
+
+    Widget dot(int idx) => AnimatedContainer(
+          duration: reduceMotion
+              ? Duration.zero
+              : const Duration(milliseconds: 180),
+          width: 4,
+          height: 4,
+          decoration: BoxDecoration(
+            color: dotColor(idx),
+            shape: BoxShape.circle,
+          ),
+        );
+
+    return SizedBox(
+      width: 14,
+      height: 12,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [dot(0), dot(1)],
+          ),
+          const SizedBox(height: 3),
+          dot(2),
+        ],
       ),
     );
   }

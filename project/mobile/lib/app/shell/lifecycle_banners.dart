@@ -8,7 +8,12 @@ import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class LifecycleBanners extends ConsumerWidget {
-  const LifecycleBanners({super.key});
+  const LifecycleBanners({
+    super.key,
+    this.includeTopSafeArea = false,
+  });
+
+  final bool includeTopSafeArea;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -63,7 +68,11 @@ class LifecycleBanners extends ConsumerWidget {
     }
 
     if (banners.isEmpty) return const SizedBox.shrink();
-    return Column(mainAxisSize: MainAxisSize.min, children: banners);
+    final content = Column(mainAxisSize: MainAxisSize.min, children: banners);
+    if (includeTopSafeArea) {
+      return SafeArea(top: true, bottom: false, child: content);
+    }
+    return content;
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:afab_mobile/app/shell/afab_floating_nav_dock.dart';
 import 'package:afab_mobile/app/shell/lifecycle_banners.dart';
 import 'package:afab_mobile/app/shell/shell_app_bar.dart';
 import 'package:afab_mobile/core/l10n/l10n_extension.dart';
@@ -27,6 +28,7 @@ class AdaptiveShell extends ConsumerStatefulWidget {
 class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
   bool _sheetOpen = false;
   bool _navBarVisible = true;
+  bool _dockManuallyHidden = false;
   String? _lastPath;
 
   void _openSheetIfNeeded() {
@@ -53,8 +55,11 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
       setState(() => _navBarVisible = false);
     } else if ((notification.direction == ScrollDirection.forward ||
             notification.metrics.pixels <= 12) &&
-        !_navBarVisible) {
-      setState(() => _navBarVisible = true);
+        (!_navBarVisible || _dockManuallyHidden)) {
+      setState(() {
+        _navBarVisible = true;
+        _dockManuallyHidden = false;
+      });
     }
     return false;
   }
@@ -69,6 +74,7 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     if (currentPath != _lastPath) {
       _lastPath = currentPath;
       _navBarVisible = true;
+      _dockManuallyHidden = false;
     }
 
     ref.listen<CopilotLauncherState>(copilotLauncherProvider, (prev, next) {
@@ -80,55 +86,74 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
     final Widget scaffold;
     if (AfabBreakpoints.isPhone(width)) {
       final isPhoneCopilot = currentPath == '/copilot';
-      scaffold = Scaffold(
-        appBar: isPhoneCopilot ? null : ShellAppBar(currentPath: currentPath),
-        body: SafeArea(
-          top: isPhoneCopilot,
-          bottom: false,
-          child: NotificationListener<UserScrollNotification>(
-            onNotification: _handleUserScroll,
-            child: Column(
-              children: [
-                const LifecycleBanners(),
-                Expanded(child: widget.navigationShell),
-              ],
+      scaffold = PopScope(
+        canPop: !isPhoneCopilot,
+        onPopInvokedWithResult: (didPop, _) {
+          if (!didPop && isPhoneCopilot) {
+            widget.navigationShell.goBranch(0);
+          }
+        },
+        child: Scaffold(
+          appBar: isPhoneCopilot ? null : ShellAppBar(currentPath: currentPath),
+          body: SafeArea(
+            top: false,
+            bottom: false,
+            child: NotificationListener<UserScrollNotification>(
+              onNotification: _handleUserScroll,
+              child: Column(
+                children: [
+                  LifecycleBanners(includeTopSafeArea: isPhoneCopilot),
+                  Expanded(child: widget.navigationShell),
+                ],
+              ),
             ),
           ),
-        ),
-        bottomNavigationBar: _AutoHideBottomNavBar(
-          scrollVisible: _navBarVisible,
-          borderColor: colors.border,
-          child: NavigationBar(
-            selectedIndex: widget.navigationShell.currentIndex,
-            onDestinationSelected: (idx) {
-              setState(() => _navBarVisible = true);
-              widget.navigationShell.goBranch(
-                idx,
-                initialLocation: idx == widget.navigationShell.currentIndex,
-              );
-            },
-            destinations: [
-              NavigationDestination(
-                icon: const Icon(LucideIcons.layoutDashboard),
-                label: l10n.navHome,
-              ),
-              NavigationDestination(
-                icon: const Icon(LucideIcons.arrowRightLeft),
-                label: l10n.navFinance,
-              ),
-              NavigationDestination(
-                icon: Icon(LucideIcons.sparkles, color: colors.primary),
-                label: l10n.navCopilot,
-              ),
-              NavigationDestination(
-                icon: const Icon(LucideIcons.fileText),
-                label: l10n.navInvoices,
-              ),
-              NavigationDestination(
-                icon: const Icon(LucideIcons.layoutGrid),
-                label: l10n.navMore,
-              ),
-            ],
+          bottomNavigationBar: _AutoHideBottomNavBar(
+            scrollVisible: _navBarVisible,
+            manuallyHidden: _dockManuallyHidden,
+            colors: colors,
+            onRestore: () => setState(() {
+              _dockManuallyHidden = false;
+              _navBarVisible = true;
+            }),
+            child: AfabFloatingNavDock(
+              selectedIndex: widget.navigationShell.currentIndex,
+              onDestinationSelected: (idx) {
+                setState(() {
+                  _navBarVisible = true;
+                  _dockManuallyHidden = false;
+                });
+                widget.navigationShell.goBranch(
+                  idx,
+                  initialLocation: idx == widget.navigationShell.currentIndex,
+                );
+              },
+              onSwipeDownToHide: () =>
+                  setState(() => _dockManuallyHidden = true),
+              destinations: [
+                AfabNavDockItem(
+                  icon: LucideIcons.layoutDashboard,
+                  label: l10n.navHome,
+                ),
+                AfabNavDockItem(
+                  icon: LucideIcons.arrowRightLeft,
+                  label: l10n.navFinance,
+                ),
+                AfabNavDockItem(
+                  icon: LucideIcons.sparkles,
+                  label: l10n.navCopilot,
+                  isPrimaryAccent: true,
+                ),
+                AfabNavDockItem(
+                  icon: LucideIcons.fileText,
+                  label: l10n.navInvoices,
+                ),
+                AfabNavDockItem(
+                  icon: LucideIcons.layoutGrid,
+                  label: l10n.navMore,
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -141,8 +166,6 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
         ('/revenue', l10n.navRevenue, LucideIcons.trendingUp),
         ('/invoices', l10n.navInvoices, LucideIcons.fileText),
         ('/customers', l10n.navCustomers, LucideIcons.users),
-        ('/budgets', l10n.navBudgets, LucideIcons.piggyBank),
-        ('/recurring', l10n.navRecurring, LucideIcons.repeat),
         ('/reports', l10n.navReports, LucideIcons.chartBar),
         ('/currencies', l10n.navCurrencies, LucideIcons.coins),
         ('/copilot', l10n.navAiAssistant, LucideIcons.sparkles),
@@ -229,37 +252,71 @@ class _AdaptiveShellState extends ConsumerState<AdaptiveShell> {
 class _AutoHideBottomNavBar extends StatelessWidget {
   const _AutoHideBottomNavBar({
     required this.scrollVisible,
-    required this.borderColor,
+    required this.manuallyHidden,
+    required this.colors,
+    required this.onRestore,
     required this.child,
   });
 
   final bool scrollVisible;
-  final Color borderColor;
+  final bool manuallyHidden;
+  final AfabColors colors;
+  final VoidCallback onRestore;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final visible = scrollVisible && !keyboardOpen;
+    final visible = scrollVisible && !manuallyHidden && !keyboardOpen;
 
-    return ClipRect(
-      child: AnimatedAlign(
-        duration: keyboardOpen
-            ? Duration.zero
-            : const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
-        alignment: Alignment.topCenter,
-        heightFactor: visible ? 1.0 : 0.0,
-        child: IgnorePointer(
-          ignoring: !visible,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: borderColor)),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (manuallyHidden && !keyboardOpen)
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 6),
+              child: GestureDetector(
+                onTap: onRestore,
+                child: Container(
+                  width: 48,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: colors.isDark
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : colors.surface,
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(
+                      color: colors.isDark
+                          ? Colors.white.withValues(alpha: 0.14)
+                          : colors.border,
+                    ),
+                  ),
+                  child: Icon(
+                    LucideIcons.chevronUp,
+                    size: 14,
+                    color: colors.textMuted,
+                  ),
+                ),
+              ),
             ),
-            child: child,
+          ),
+        ClipRect(
+          child: AnimatedAlign(
+            duration: keyboardOpen
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.topCenter,
+            heightFactor: visible ? 1.0 : 0.0,
+            child: IgnorePointer(
+              ignoring: !visible,
+              child: child,
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
 }

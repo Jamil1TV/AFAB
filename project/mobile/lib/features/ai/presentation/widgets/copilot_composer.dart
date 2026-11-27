@@ -163,14 +163,13 @@ class _CopilotComposerState extends ConsumerState<CopilotComposer> {
         !disabled && (_hasText || widget.stagedAttachments.isNotEmpty);
 
     return _KeyboardAwareBottomInset(
-      child: Container(
+      child: Padding(
         padding: EdgeInsets.fromLTRB(
-          widget.compact ? 10 : 12,
+          widget.compact ? 12 : 14,
           6,
-          widget.compact ? 10 : 12,
-          widget.compact ? 8 : 8,
+          widget.compact ? 12 : 14,
+          widget.compact ? 12 : 16,
         ),
-        color: colors.background,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -195,10 +194,10 @@ class _CopilotComposerState extends ConsumerState<CopilotComposer> {
             if (_interimVoice.isNotEmpty) ...[
               Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: colors.dangerBg,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
@@ -221,162 +220,167 @@ class _CopilotComposerState extends ConsumerState<CopilotComposer> {
               const SizedBox(height: 8),
             ],
             Container(
+              constraints: const BoxConstraints(minHeight: 56),
               decoration: BoxDecoration(
-                color: colors.surface,
-                borderRadius: BorderRadius.circular(22),
+                color: colors.isDark
+                    ? const Color(0xFF141821)
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(28),
                 border: Border.all(
                   color: _isFocused
-                      ? colors.primary.withValues(alpha: 0.55)
-                      : colors.border,
+                      ? colors.primary.withValues(alpha: 0.50)
+                      : (colors.isDark
+                          ? Colors.white.withValues(alpha: 0.09)
+                          : colors.border),
                 ),
-                boxShadow: colors.isDark
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 12,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: colors.isDark ? 0.34 : 0.06,
+                    ),
+                    blurRadius: 18,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
-              padding: const EdgeInsets.fromLTRB(12, 4, 8, 6),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              padding: const EdgeInsets.all(6),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  TextField(
-                    controller: widget.controller,
-                    focusNode: widget.focusNode,
-                    enabled: !disabled,
-                    minLines: 1,
-                    maxLines: 4,
-                    maxLength: 4000,
-                    textDirection: _composerDir,
-                    keyboardType: TextInputType.multiline,
-                    textInputAction: TextInputAction.newline,
-                    scrollPadding: const EdgeInsets.only(bottom: 24),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontSize: 15.5,
-                          height: 1.4,
+                  IconButton(
+                    tooltip: l10n.aiAttachLabel,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 40,
+                      height: 40,
+                    ),
+                    padding: EdgeInsets.zero,
+                    style: IconButton.styleFrom(
+                      shape: const CircleBorder(),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: (disabled ||
+                            widget.sending ||
+                            widget.uploadingAttachment)
+                        ? null
+                        : () => CopilotComposer.showAttachmentSourceSheet(
+                              context,
+                              currentCount: widget.stagedAttachments.length,
+                              onStage: widget.onStageAttachment,
+                            ),
+                    icon: widget.uploadingAttachment
+                        ? SizedBox(
+                            width: 17,
+                            height: 17,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: colors.primary,
+                            ),
+                          )
+                        : Icon(
+                            LucideIcons.plus,
+                            size: 22,
+                            color: colors.textMuted,
+                          ),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      controller: widget.controller,
+                      focusNode: widget.focusNode,
+                      enabled: !disabled,
+                      minLines: 1,
+                      maxLines: 5,
+                      maxLength: 4000,
+                      textDirection: _composerDir,
+                      keyboardType: TextInputType.multiline,
+                      textInputAction: TextInputAction.newline,
+                      scrollPadding: const EdgeInsets.only(bottom: 24),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontSize: 16,
+                            height: 1.38,
+                          ),
+                      decoration: InputDecoration(
+                        hintText: disabled
+                            ? (widget.isReadOnly
+                                ? l10n.planReadOnlyTitle
+                                : l10n.commonOfflineBanner)
+                            : l10n.aiPlaceholder,
+                        hintMaxLines: 1,
+                        hintStyle: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                              color: colors.textMuted,
+                              fontSize: 15.5,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                        counterText: '',
+                        isDense: true,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        filled: false,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 10,
                         ),
-                    decoration: InputDecoration(
-                      hintText: disabled
-                          ? (widget.isReadOnly
-                              ? l10n.planReadOnlyTitle
-                              : l10n.commonOfflineBanner)
-                          : l10n.aiPlaceholder,
-                      counterText: '',
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: 2,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      return Row(
-                        children: [
-                          // Left: Attach + Fast/Deep mode
-                          IconButton(
-                            tooltip: l10n.aiAttachLabel,
-                            constraints: const BoxConstraints.tightFor(
-                              width: 34,
-                              height: 34,
-                            ),
-                            padding: EdgeInsets.zero,
-                            style: IconButton.styleFrom(
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            onPressed: (disabled ||
-                                    widget.sending ||
-                                    widget.uploadingAttachment)
-                                ? null
-                                : () =>
-                                    CopilotComposer.showAttachmentSourceSheet(
-                                      context,
-                                      currentCount:
-                                          widget.stagedAttachments.length,
-                                      onStage: widget.onStageAttachment,
-                                    ),
-                            icon: widget.uploadingAttachment
-                                ? SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: colors.primary,
-                                    ),
-                                  )
-                                : Icon(
-                                    LucideIcons.paperclip,
-                                    size: 18,
-                                    color: colors.textMuted,
-                                  ),
-                          ),
-                          const SizedBox(width: 2),
-                          _ModeToggle(
-                            mode: widget.reasoningMode,
-                            compact:
-                                widget.compact || constraints.maxWidth < 430,
-                            disabled: disabled || widget.sending,
-                            onChanged: widget.onReasoningModeChanged,
-                          ),
-                          const Spacer(),
-                          // Right: Voice + Send/Stop
-                          VoiceDictationButton(
-                            uiLocale: uiLocale,
-                            disabled: disabled || widget.sending,
-                            onInterimChanged: (interim) {
-                              if (mounted) {
-                                setState(() => _interimVoice = interim);
-                              }
-                            },
-                            onFinalTranscript: (transcript) {
-                              final prev = widget.controller.text.trimRight();
-                              widget.controller.text = prev.isEmpty
-                                  ? transcript
-                                  : '$prev $transcript';
-                              widget.controller.selection =
-                                  TextSelection.collapsed(
-                                offset: widget.controller.text.length,
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 4),
-                          if (widget.sending)
-                            IconButton.filled(
-                              tooltip: l10n.aiStop,
-                              onPressed: widget.onStop,
-                              style: IconButton.styleFrom(
-                                backgroundColor: colors.danger,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(36, 36),
-                                padding: EdgeInsets.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              icon: const Icon(LucideIcons.square, size: 15),
-                            )
-                          else
-                            IconButton.filled(
-                              tooltip: l10n.aiSend,
-                              onPressed: canSend ? widget.onSend : null,
-                              style: IconButton.styleFrom(
-                                backgroundColor: colors.primary,
-                                foregroundColor: Colors.white,
-                                minimumSize: const Size(36, 36),
-                                padding: EdgeInsets.zero,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              ),
-                              icon: const Icon(LucideIcons.arrowUp, size: 18),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
+                  const SizedBox(width: 4),
+                  if (widget.sending)
+                    IconButton(
+                      tooltip: l10n.aiStop,
+                      onPressed: widget.onStop,
+                      constraints: const BoxConstraints.tightFor(
+                        width: 40,
+                        height: 40,
+                      ),
+                      padding: EdgeInsets.zero,
+                      style: IconButton.styleFrom(
+                        backgroundColor: colors.isDark
+                            ? Colors.white.withValues(alpha: 0.10)
+                            : colors.dangerBg,
+                        foregroundColor:
+                            colors.isDark ? Colors.white : colors.danger,
+                        shape: const CircleBorder(),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: const Icon(LucideIcons.square, size: 15),
+                    )
+                  else if (canSend)
+                    IconButton.filled(
+                      tooltip: l10n.aiSend,
+                      onPressed: widget.onSend,
+                      style: IconButton.styleFrom(
+                        backgroundColor: colors.primary,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(40, 40),
+                        padding: EdgeInsets.zero,
+                        shape: const CircleBorder(),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      icon: const Icon(LucideIcons.arrowUp, size: 19),
+                    )
+                  else
+                    VoiceDictationButton(
+                      uiLocale: uiLocale,
+                      disabled: disabled || widget.sending,
+                      borderless: true,
+                      onInterimChanged: (interim) {
+                        if (mounted) {
+                          setState(() => _interimVoice = interim);
+                        }
+                      },
+                      onFinalTranscript: (transcript) {
+                        final prev = widget.controller.text.trimRight();
+                        widget.controller.text =
+                            prev.isEmpty ? transcript : '$prev $transcript';
+                        widget.controller.selection =
+                            TextSelection.collapsed(
+                          offset: widget.controller.text.length,
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -395,123 +399,13 @@ class _KeyboardAwareBottomInset extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
     return Padding(
-      padding: EdgeInsets.only(bottom: keyboardOpen ? 0.0 : bottomPadding),
+      padding: EdgeInsets.only(
+        bottom:
+            keyboardOpen ? 4.0 : (safeBottom > 0 ? safeBottom + 6.0 : 0.0),
+      ),
       child: child,
-    );
-  }
-}
-
-class _ModeToggle extends StatelessWidget {
-  const _ModeToggle({
-    required this.mode,
-    required this.compact,
-    required this.disabled,
-    required this.onChanged,
-  });
-
-  final AiReasoningMode mode;
-  final bool compact;
-  final bool disabled;
-  final ValueChanged<AiReasoningMode> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    final colors = context.afabColors;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      padding: const EdgeInsets.all(2),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _ModePill(
-            icon: LucideIcons.zap,
-            label: compact ? '' : l10n.aiFastMode,
-            tooltip: l10n.aiFastMode,
-            selected: mode == AiReasoningMode.fast,
-            disabled: disabled,
-            colors: colors,
-            onTap: () => onChanged(AiReasoningMode.fast),
-          ),
-          _ModePill(
-            icon: LucideIcons.brain,
-            label: compact ? '' : l10n.aiDeepMode,
-            tooltip: l10n.aiDeepMode,
-            selected: mode == AiReasoningMode.deep,
-            disabled: disabled,
-            colors: colors,
-            onTap: () => onChanged(AiReasoningMode.deep),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ModePill extends StatelessWidget {
-  const _ModePill({
-    required this.icon,
-    required this.label,
-    required this.tooltip,
-    required this.selected,
-    required this.disabled,
-    required this.colors,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final String tooltip;
-  final bool selected;
-  final bool disabled;
-  final AfabColors colors;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip,
-      child: InkWell(
-        onTap: disabled ? null : onTap,
-        borderRadius: BorderRadius.circular(9),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: label.isEmpty ? 8 : 9,
-            vertical: 6,
-          ),
-          decoration: BoxDecoration(
-            color: selected ? colors.primary : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 13,
-                color: selected ? Colors.white : colors.textMuted,
-              ),
-              if (label.isNotEmpty) ...[
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: selected ? Colors.white : colors.textMuted,
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:afab_mobile/app/afab_app.dart';
+import 'package:afab_mobile/app/shell/afab_floating_nav_dock.dart';
 import 'package:afab_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:afab_mobile/core/network/dio_client.dart';
 import 'package:afab_mobile/core/network/global_events.dart';
@@ -143,7 +144,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(NavigationBar), findsNothing);
+      expect(find.byType(AfabFloatingNavDock), findsNothing);
       await tester.ensureVisible(find.text('Check Server Health'));
       await tester.tap(find.text('Check Server Health'));
       await tester.pumpAndSettle();

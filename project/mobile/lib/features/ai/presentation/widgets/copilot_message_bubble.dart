@@ -9,6 +9,7 @@ import 'package:afab_mobile/features/ai/presentation/widgets/copilot_chart_card.
 import 'package:afab_mobile/features/ai/presentation/widgets/copilot_markdown.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/copilot_memory_proposal_card.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/copilot_reminder_card.dart';
+import 'package:afab_mobile/shared/widgets/afab_brand_logo.dart';
 import 'package:afab_mobile/shared/widgets/afab_card.dart';
 import 'package:afab_mobile/shared/widgets/afab_status_badge.dart';
 import 'package:afab_mobile/shared/widgets/afab_toast.dart';
@@ -83,57 +84,69 @@ class _CopilotMessageBubbleState extends State<CopilotMessageBubble> {
         padding: const EdgeInsets.only(bottom: 16),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                if (msg.attachments.isNotEmpty) ...[
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      for (final att in msg.attachments)
-                        AttachmentPreviewChip(attachment: att, compact: true),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                ],
-                ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: constraints.maxWidth * 0.82,
-                  ),
-                  child: GestureDetector(
-                    onLongPress: _copyMessage,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 11,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colors.primary,
-                        borderRadius: const BorderRadiusDirectional.only(
-                          topStart: Radius.circular(20),
-                          topEnd: Radius.circular(20),
-                          bottomStart: Radius.circular(20),
-                          bottomEnd: Radius.circular(6),
+            return SizedBox(
+              width: constraints.maxWidth,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (msg.attachments.isNotEmpty) ...[
+                    Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final att in msg.attachments)
+                          AttachmentPreviewChip(attachment: att, compact: true),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth * 0.82,
+                    ),
+                    child: GestureDetector(
+                      onLongPress: _copyMessage,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 17,
+                          vertical: 13,
                         ),
-                      ),
-                      child: Directionality(
-                        textDirection: msgDir,
-                        child: SelectableText(
-                          msg.content,
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 15,
-                                    height: 1.45,
-                                  ),
+                        decoration: BoxDecoration(
+                          color: colors.isDark
+                              ? Colors.white.withValues(alpha: 0.085)
+                              : colors.primary.withValues(alpha: 0.09),
+                          border: Border.all(
+                            color: colors.isDark
+                                ? Colors.white.withValues(alpha: 0.07)
+                                : colors.primary.withValues(alpha: 0.16),
+                          ),
+                          borderRadius: const BorderRadiusDirectional.only(
+                            topStart: Radius.circular(24),
+                            topEnd: Radius.circular(24),
+                            bottomStart: Radius.circular(24),
+                            bottomEnd: Radius.circular(8),
+                          ),
+                        ),
+                        child: Directionality(
+                          textDirection: msgDir,
+                          child: SelectableText(
+                            msg.content,
+                            style:
+                                Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: colors.isDark
+                                          ? Colors.white.withValues(alpha: 0.94)
+                                          : colors.textPrimary,
+                                      fontSize: 15.5,
+                                      height: 1.45,
+                                    ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),
@@ -154,19 +167,7 @@ class _CopilotMessageBubbleState extends State<CopilotMessageBubble> {
           // Minimal Assistant Header
           Row(
             children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  LucideIcons.sparkles,
-                  size: 13,
-                  color: colors.primary,
-                ),
-              ),
+              const AfabBrandLogo(size: 22, showGlowRing: false),
               const SizedBox(width: 8),
               Flexible(
                 child: Text(
@@ -175,7 +176,8 @@ class _CopilotMessageBubbleState extends State<CopilotMessageBubble> {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textMuted,
                       ),
                 ),
               ),

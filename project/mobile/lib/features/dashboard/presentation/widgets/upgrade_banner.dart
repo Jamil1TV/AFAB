@@ -29,12 +29,17 @@ class UpgradeBanner extends StatelessWidget {
       backgroundColor: colors.secondaryBg.withValues(alpha: 0.55),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          final dpr = MediaQuery.devicePixelRatioOf(context);
+          final thumbPx = (56 * dpr).round().clamp(64, 256);
           final artwork = ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
               'assets/images/crystal-cube.jpg',
               width: 56,
               height: 56,
+              cacheWidth: thumbPx,
+              cacheHeight: thumbPx,
+              filterQuality: FilterQuality.medium,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => Container(
                 width: 56,

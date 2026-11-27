@@ -4315,11 +4315,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get businessProfileWebsite => 'Website';
 
   @override
-  String get businessProfileTaxId => 'Fiscal Matricule / Tax ID (MF)';
+  String get businessProfileTaxId => 'Tax ID';
 
   @override
   String get businessProfileTaxIdHelp =>
-      'Displayed on invoices and certified financial exports.';
+      'Your official Tax ID printed on invoices, Excel exports, and PDF reports.';
 
   @override
   String get businessProfileAddress => 'Street Address';
@@ -4778,7 +4778,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataExportSheetTitle => 'Confirm Export Scope';
 
   @override
-  String get dataExportFiscalMatricule => 'Fiscal Matricule / Tax ID (MF)';
+  String get dataExportFiscalMatricule => 'Tax ID';
 
   @override
   String get dataExportBusinessPurpose => 'Activity / Purpose';

@@ -3887,7 +3887,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsTabBusinessProfileSub =>
-      'بيانات الشركة، المعرف الجبائي، والعنوان';
+      'بيانات الشركة، الرقم الضريبي، والعنوان';
 
   @override
   String get settingsTabSubscription => 'الاشتراك والفوترة';
@@ -4282,7 +4282,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get businessProfileWebsite => 'الموقع الإلكتروني';
 
   @override
-  String get businessProfileTaxId => 'المعرف الجبائي / الضريبي (MF)';
+  String get businessProfileTaxId => 'الرقم الضريبي';
 
   @override
   String get businessProfileTaxIdHelp =>
@@ -4741,7 +4741,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dataExportSheetTitle => 'تأكيد نطاق التصدير';
 
   @override
-  String get dataExportFiscalMatricule => 'المعرف الجبائي (MF)';
+  String get dataExportFiscalMatricule => 'الرقم الضريبي';
 
   @override
   String get dataExportBusinessPurpose => 'النشاط / الغرض التجاري';

@@ -27,8 +27,6 @@ class MoreHubScreen extends ConsumerWidget {
       (l10n.navRevenue, LucideIcons.trendingUp, '/revenue', colors.success),
       (l10n.navCategories, LucideIcons.tag, '/categories', colors.primary),
       (l10n.navCustomers, LucideIcons.users, '/customers', colors.info),
-      (l10n.navBudgets, LucideIcons.piggyBank, '/budgets', colors.warning),
-      (l10n.navRecurring, LucideIcons.repeat, '/recurring', colors.primary),
       (l10n.navCalendar, LucideIcons.calendarDays, '/calendar', colors.info),
     ];
 

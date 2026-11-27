@@ -3,11 +3,13 @@ import 'package:afab_mobile/core/l10n/l10n_extension.dart';
 import 'package:afab_mobile/core/navigation/copilot_prompt_request.dart';
 import 'package:afab_mobile/core/theme/afab_colors.dart';
 import 'package:afab_mobile/core/utils/responsive.dart';
+import 'package:afab_mobile/features/ai/data/ai_dtos.dart';
 import 'package:afab_mobile/features/ai/domain/ai_providers.dart';
 import 'package:afab_mobile/features/ai/domain/message_direction_resolver.dart';
 import 'package:afab_mobile/features/ai/presentation/business_memory_screen.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/ai_conversation_drawer.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/ai_model_status_badge.dart';
+import 'package:afab_mobile/features/ai/presentation/widgets/copilot_aurora_backdrop.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/copilot_composer.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/copilot_message_bubble.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/copilot_thinking_card.dart';
@@ -222,8 +224,136 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
     }
   }
 
+  void _openModeAndWorkspaceSheet({
+    required BuildContext context,
+    required AiReasoningMode currentMode,
+    required bool sending,
+    String? businessName,
+  }) {
+    final l10n = context.l10n;
+    final colors = context.afabColors;
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withValues(alpha: colors.isDark ? 0.60 : 0.34),
+      builder: (dialogCtx) => Align(
+        alignment: const Alignment(0, -0.35),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Material(
+              color: colors.isDark ? const Color(0xFF191C22) : Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              elevation: colors.isDark ? 12 : 6,
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ListTile(
+                      enabled: !sending,
+                      leading: Icon(
+                        LucideIcons.zap,
+                        size: 19,
+                        color: currentMode == AiReasoningMode.fast
+                            ? colors.primary
+                            : colors.textMuted,
+                      ),
+                      title: Text(
+                        l10n.aiFastMode,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        l10n.aiLiveTitle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: colors.textMuted, fontSize: 12),
+                      ),
+                      trailing: currentMode == AiReasoningMode.fast
+                          ? Icon(
+                              LucideIcons.check,
+                              size: 18,
+                              color: colors.primary,
+                            )
+                          : null,
+                      onTap: sending
+                          ? null
+                          : () {
+                              ref
+                                  .read(aiStudioControllerProvider.notifier)
+                                  .setReasoningMode(AiReasoningMode.fast);
+                              Navigator.of(dialogCtx).pop();
+                            },
+                    ),
+                    ListTile(
+                      enabled: !sending,
+                      leading: Icon(
+                        LucideIcons.brain,
+                        size: 19,
+                        color: currentMode == AiReasoningMode.deep
+                            ? colors.primary
+                            : colors.textMuted,
+                      ),
+                      title: Text(
+                        l10n.aiDeepMode,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      trailing: currentMode == AiReasoningMode.deep
+                          ? Icon(
+                              LucideIcons.check,
+                              size: 18,
+                              color: colors.primary,
+                            )
+                          : null,
+                      onTap: sending
+                          ? null
+                          : () {
+                              ref
+                                  .read(aiStudioControllerProvider.notifier)
+                                  .setReasoningMode(AiReasoningMode.deep);
+                              Navigator.of(dialogCtx).pop();
+                            },
+                    ),
+                    if (businessName != null && businessName.isNotEmpty) ...[
+                      Divider(height: 12, color: colors.border),
+                      ListTile(
+                        leading: Icon(
+                          LucideIcons.building2,
+                          size: 18,
+                          color: colors.textMuted,
+                        ),
+                        title: Text(
+                          businessName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: Icon(
+                          LucideIcons.chevronsUpDown,
+                          size: 15,
+                          color: colors.textMuted,
+                        ),
+                        onTap: () {
+                          Navigator.of(dialogCtx).pop();
+                          showBusinessSwitcherSheet(context);
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _openMobileOptionsSheet({
     required BuildContext context,
+    required AiReasoningMode currentMode,
+    required bool sending,
     required bool isReadOnly,
     required int indexedCount,
     required int memoriesCount,
@@ -253,6 +383,40 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
             ),
           ),
           Divider(height: 16, color: colors.border),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            enabled: !sending,
+            leading: Icon(
+              currentMode == AiReasoningMode.deep
+                  ? LucideIcons.brain
+                  : LucideIcons.zap,
+              size: 19,
+              color: colors.primary,
+            ),
+            title: Text(
+              currentMode == AiReasoningMode.deep
+                  ? l10n.aiDeepMode
+                  : l10n.aiFastMode,
+            ),
+            trailing: TextButton(
+              onPressed: sending
+                  ? null
+                  : () {
+                      final next = currentMode == AiReasoningMode.deep
+                          ? AiReasoningMode.fast
+                          : AiReasoningMode.deep;
+                      ref
+                          .read(aiStudioControllerProvider.notifier)
+                          .setReasoningMode(next);
+                      Navigator.of(sheetCtx).pop();
+                    },
+              child: Text(
+                currentMode == AiReasoningMode.deep
+                    ? l10n.aiFastMode
+                    : l10n.aiDeepMode,
+              ),
+            ),
+          ),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(LucideIcons.brain, size: 19, color: colors.primary),
@@ -325,10 +489,7 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
 
     final chatState = ref.watch(aiStudioControllerProvider);
     final statusAsync = ref.watch(aiStatusProvider);
-    final memoriesCount =
-        ref.watch(aiMemoryProvider('ALL')).value?.length ??
-            statusAsync.value?.approvedMemories ??
-            0;
+    final memoriesCount = statusAsync.value?.approvedMemories ?? 0;
     final indexedCount = statusAsync.value?.indexedChunks ?? 0;
     final langLabel =
         localizedAiLanguageLabel(l10n, chatState.activeLanguage);
@@ -374,6 +535,12 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
         final drawerPanel = AiConversationDrawerPanel(
           activeConversationId: chatState.activeConversationId,
           isReadOnly: isReadOnly,
+          onNavigateRoute: hasParentScaffold && !isExpandedSidebar
+              ? (route) {
+                  _scaffoldKey.currentState?.closeDrawer();
+                  context.go(route);
+                }
+              : null,
           onSelectConversation: (id) {
             ref.read(aiStudioControllerProvider.notifier).loadConversation(id);
             if (!isExpandedSidebar) {
@@ -398,25 +565,133 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
         final listItemCount =
             chatState.messages.length + thinkingCount + followUpsCount;
 
-        final studioMain = Column(
-          children: [
-            // Single Slim Header Bar
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: wideHeader ? 12 : 6,
-                vertical: wideHeader ? 6 : 4,
+        final modeLabel = chatState.reasoningMode == AiReasoningMode.deep
+            ? l10n.aiDeepMode
+            : l10n.aiFastMode;
+
+        final Widget headerBar;
+        if (wideHeader) {
+          headerBar = Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: colors.surface.withValues(alpha: 0.72),
+              border: Border(
+                bottom: BorderSide(
+                  color: colors.border.withValues(alpha: 0.7),
+                ),
               ),
-              decoration: BoxDecoration(
-                color: colors.surface,
-                border: Border(bottom: BorderSide(color: colors.border)),
-              ),
-              child: Row(
-                children: [
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: l10n.aiToggleSidebar,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 38,
+                    height: 38,
+                  ),
+                  padding: EdgeInsets.zero,
+                  icon: Icon(
+                    isExpandedSidebar
+                        ? (_sidebarOpen
+                            ? LucideIcons.panelLeftClose
+                            : LucideIcons.panelLeftOpen)
+                        : LucideIcons.menu,
+                    size: 19,
+                  ),
+                  onPressed: () {
+                    if (isExpandedSidebar) {
+                      setState(() => _sidebarOpen = !_sidebarOpen);
+                    } else {
+                      _scaffoldKey.currentState?.openDrawer();
+                    }
+                  },
+                ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          chatState.activeConversationTitle ?? l10n.aiTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontSize: 15.5,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                        ),
+                      ),
+                      if (langLabel.isNotEmpty) ...[
+                        const SizedBox(width: 6),
+                        AfabStatusBadge(
+                          label: langLabel,
+                          variant: AfabBadgeVariant.primary,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const AiModelStatusBadge(),
+                const SizedBox(width: 4),
+                if (!isExpandedSidebar ||
+                    !_sidebarOpen ||
+                    chatState.messages.isNotEmpty)
                   IconButton(
-                    tooltip: l10n.aiToggleSidebar,
+                    tooltip: l10n.aiNewChat,
                     constraints: const BoxConstraints.tightFor(
                       width: 38,
                       height: 38,
+                    ),
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(LucideIcons.plus, size: 19),
+                    onPressed: () => ref
+                        .read(aiStudioControllerProvider.notifier)
+                        .startNewConversation(),
+                  ),
+                TextButton.icon(
+                  onPressed:
+                      (isReadOnly || _syncingIndex) ? null : _syncIndex,
+                  icon: _syncingIndex
+                      ? SizedBox(
+                          width: 13,
+                          height: 13,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: colors.primary,
+                          ),
+                        )
+                      : const Icon(LucideIcons.refreshCw, size: 14),
+                  label: Text('${l10n.aiSyncIndexButton} ($indexedCount)'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _openMemory(canDockPane: canDockMemory),
+                  icon: const Icon(LucideIcons.brain, size: 15),
+                  label: Text('${l10n.aiMemoryButton} ($memoriesCount)'),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          headerBar = Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 6),
+            child: Row(
+              children: [
+                _FloatingGlassPill(
+                  colors: colors,
+                  child: IconButton(
+                    tooltip: l10n.aiToggleSidebar,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 40,
+                      height: 40,
                     ),
                     padding: EdgeInsets.zero,
                     icon: Icon(
@@ -424,8 +699,9 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
                           ? (_sidebarOpen
                               ? LucideIcons.panelLeftClose
                               : LucideIcons.panelLeftOpen)
-                          : LucideIcons.menu,
+                          : LucideIcons.equal,
                       size: 19,
+                      color: colors.textPrimary,
                     ),
                     onPressed: () {
                       if (isExpandedSidebar) {
@@ -435,152 +711,154 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
                       }
                     },
                   ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
-                      onTap: (wideHeader || biz == null)
-                          ? null
-                          : () => showBusinessSwitcherSheet(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 4,
-                          vertical: 4,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                if (!wideHeader) ...[
-                                  const _CopilotLiveStatusDot(),
-                                  const SizedBox(width: 7),
-                                ],
-                                Flexible(
-                                  child: Text(
-                                    chatState.activeConversationTitle ??
-                                        l10n.aiTitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleSmall
-                                        ?.copyWith(
-                                          fontSize: 15.5,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => _openModeAndWorkspaceSheet(
+                      context: context,
+                      currentMode: chatState.reasoningMode,
+                      sending: chatState.sending,
+                      businessName: biz?.name,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 4,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  l10n.appTitle,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
-                                if (langLabel.isNotEmpty) ...[
-                                  const SizedBox(width: 6),
-                                  AfabStatusBadge(
-                                    label: langLabel,
-                                    variant: AfabBadgeVariant.primary,
-                                  ),
-                                ],
-                              ],
-                            ),
-                            if (!wideHeader && biz != null)
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      biz.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            fontSize: 11.5,
-                                            color: colors.textMuted,
-                                          ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Icon(
-                                    LucideIcons.chevronDown,
-                                    size: 11,
+                              ),
+                              const SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  modeLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontSize: 15.5,
+                                        fontWeight: FontWeight.w500,
+                                        color: colors.textMuted,
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              Icon(
+                                LucideIcons.chevronDown,
+                                size: 15,
+                                color: colors.textMuted,
+                              ),
+                              const SizedBox(width: 6),
+                              const _CopilotLiveStatusDot(),
+                            ],
+                          ),
+                          if ((chatState.activeConversationTitle ??
+                                  biz?.name) !=
+                              null)
+                            Text(
+                              chatState.activeConversationTitle ?? biz!.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    fontSize: 11.5,
                                     color: colors.textMuted,
                                   ),
-                                ],
-                              ),
-                          ],
-                        ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
-                  if (wideHeader) ...[
-                    const AiModelStatusBadge(),
-                    const SizedBox(width: 4),
-                  ],
-                  if (!isExpandedSidebar ||
-                      !_sidebarOpen ||
-                      chatState.messages.isNotEmpty)
-                    IconButton(
-                      tooltip: l10n.aiNewChat,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 38,
-                        height: 38,
+                ),
+                const SizedBox(width: 6),
+                _FloatingGlassPill(
+                  colors: colors,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: l10n.aiNewChat,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 38,
+                          height: 40,
+                        ),
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          LucideIcons.squarePen,
+                          size: 17,
+                          color: colors.textPrimary,
+                        ),
+                        onPressed: () => ref
+                            .read(aiStudioControllerProvider.notifier)
+                            .startNewConversation(),
                       ),
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(LucideIcons.plus, size: 19),
-                      onPressed: () => ref
-                          .read(aiStudioControllerProvider.notifier)
-                          .startNewConversation(),
-                    ),
-                  if (wideHeader) ...[
-                    TextButton.icon(
-                      onPressed:
-                          (isReadOnly || _syncingIndex) ? null : _syncIndex,
-                      icon: _syncingIndex
-                          ? SizedBox(
-                              width: 13,
-                              height: 13,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: colors.primary,
-                              ),
-                            )
-                          : const Icon(LucideIcons.refreshCw, size: 14),
-                      label: Text('${l10n.aiSyncIndexButton} ($indexedCount)'),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        visualDensity: VisualDensity.compact,
+                      IconButton(
+                        tooltip: l10n.aiLiveTitle,
+                        constraints: const BoxConstraints.tightFor(
+                          width: 38,
+                          height: 40,
+                        ),
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          LucideIcons.ellipsis,
+                          size: 18,
+                          color: colors.textPrimary,
+                        ),
+                        onPressed: () => _openMobileOptionsSheet(
+                          context: context,
+                          currentMode: chatState.reasoningMode,
+                          sending: chatState.sending,
+                          isReadOnly: isReadOnly,
+                          indexedCount: indexedCount,
+                          memoriesCount: memoriesCount,
+                          langLabel: langLabel,
+                          businessName: biz?.name,
+                        ),
                       ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _openMemory(canDockPane: canDockMemory),
-                      icon: const Icon(LucideIcons.brain, size: 15),
-                      label: Text('${l10n.aiMemoryButton} ($memoriesCount)'),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                  ] else
-                    IconButton(
-                      tooltip: l10n.aiLiveTitle,
-                      constraints: const BoxConstraints.tightFor(
-                        width: 38,
-                        height: 38,
-                      ),
-                      padding: EdgeInsets.zero,
-                      icon: const Icon(LucideIcons.ellipsisVertical, size: 19),
-                      onPressed: () => _openMobileOptionsSheet(
-                        context: context,
-                        isReadOnly: isReadOnly,
-                        indexedCount: indexedCount,
-                        memoriesCount: memoriesCount,
-                        langLabel: langLabel,
-                        businessName: biz?.name,
-                      ),
-                    ),
-                ],
-              ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+          );
+        }
+
+        final studioMain = Stack(
+          fit: StackFit.expand,
+          children: [
+            DecoratedBox(decoration: BoxDecoration(color: colors.background)),
+            const Positioned.fill(
+              child: _CopilotAuroraLayer(),
+            ),
+            SafeArea(
+              top: AfabBreakpoints.isPhone(width) || !hasParentScaffold,
+              bottom: false,
+              child: Column(
+                children: [
+                  headerBar,
 
             // Conditional Banners (isolated from root health polling)
             const _CopilotOfflineBanner(),
@@ -755,10 +1033,15 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
                           );
                         }
 
-                        return Center(
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 768),
-                            child: itemChild,
+                        return RepaintBoundary(
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 768),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: itemChild,
+                              ),
+                            ),
                           ),
                         );
                       },
@@ -780,7 +1063,47 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
               ),
             ),
 
-            // Two-Zone Command Composer
+            if (chatState.sending)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: _FloatingGlassPill(
+                  colors: colors,
+                  child: InkWell(
+                    onTap: () => ref
+                        .read(aiStudioControllerProvider.notifier)
+                        .stopStreaming(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            LucideIcons.square,
+                            size: 12,
+                            color: colors.textMuted,
+                          ),
+                          const SizedBox(width: 7),
+                          Text(
+                            l10n.aiStop,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+            // Single-Row Floating Pill Composer
             Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 768),
@@ -815,6 +1138,9 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
                       .read(aiStudioControllerProvider.notifier)
                       .removeStagedAttachment(id),
                 ),
+              ),
+            ),
+                ],
               ),
             ),
           ],
@@ -862,6 +1188,51 @@ class _AiCopilotScreenState extends ConsumerState<AiCopilotScreen>
           ),
         );
       },
+    );
+  }
+}
+
+class _CopilotAuroraLayer extends ConsumerWidget {
+  const _CopilotAuroraLayer();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(
+      aiStudioControllerProvider.select(
+        (s) => (sending: s.sending, hasMessages: s.messages.isNotEmpty),
+      ),
+    );
+    return CopilotAuroraBackdrop(
+      sending: state.sending,
+      activeMode: state.hasMessages || state.sending,
+    );
+  }
+}
+
+class _FloatingGlassPill extends StatelessWidget {
+  const _FloatingGlassPill({
+    required this.colors,
+    required this.child,
+  });
+
+  final AfabColors colors;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: colors.isDark
+          ? Colors.black.withValues(alpha: 0.62)
+          : Colors.white.withValues(alpha: 0.88),
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: colors.isDark
+              ? Colors.white.withValues(alpha: 0.08)
+              : colors.border,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: child,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:afab_mobile/app/afab_app.dart';
 import 'package:afab_mobile/app/router/app_router.dart';
+import 'package:afab_mobile/app/shell/afab_floating_nav_dock.dart';
 import 'package:afab_mobile/core/config/env.dart';
 import 'package:afab_mobile/core/network/auth_interceptor.dart';
 import 'package:afab_mobile/core/network/connectivity_provider.dart';
@@ -618,10 +619,16 @@ Future<void> runAllAfabE2eJourneys(WidgetTester tester) async {
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Copilot').last);
-    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('Morning CFO Brief'), findsOneWidget);
 
-    await tester.tap(find.text('More').last);
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AfabFloatingNavDock),
+        matching: find.text('More'),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(
       find.text('Settings'),

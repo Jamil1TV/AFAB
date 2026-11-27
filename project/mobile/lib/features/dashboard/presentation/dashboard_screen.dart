@@ -6,7 +6,6 @@ import 'package:afab_mobile/features/auth/domain/auth_notifier.dart';
 import 'package:afab_mobile/features/dashboard/data/dashboard_dtos.dart';
 import 'package:afab_mobile/features/dashboard/domain/dashboard_providers.dart';
 import 'package:afab_mobile/features/dashboard/presentation/widgets/ai_insights_card.dart';
-import 'package:afab_mobile/features/dashboard/presentation/widgets/budget_overview_card.dart';
 import 'package:afab_mobile/features/dashboard/presentation/widgets/expense_categories_card.dart';
 import 'package:afab_mobile/features/dashboard/presentation/widgets/recent_transactions_card.dart';
 import 'package:afab_mobile/features/dashboard/presentation/widgets/reminder_card.dart';
@@ -250,8 +249,6 @@ class DashboardScreen extends ConsumerWidget {
                     categories: data.expenseCategories,
                     currency: data.currency,
                   );
-                  final budgetOverview =
-                      BudgetOverviewCard(budgets: data.budgets);
                   final reminders = ReminderCard(reminders: data.reminders);
                   final topCustomers = TopCustomersCard(
                     customers: data.customers,
@@ -284,8 +281,6 @@ class DashboardScreen extends ConsumerWidget {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        budgetOverview,
-                        const SizedBox(height: 16),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -302,8 +297,6 @@ class DashboardScreen extends ConsumerWidget {
                         expenseCategories,
                         const SizedBox(height: 16),
                         recentTx,
-                        const SizedBox(height: 16),
-                        budgetOverview,
                         const SizedBox(height: 16),
                         reminders,
                         const SizedBox(height: 16),

@@ -13,12 +13,14 @@ class VoiceDictationButton extends ConsumerStatefulWidget {
     required this.disabled,
     required this.onFinalTranscript,
     required this.onInterimChanged,
+    this.borderless = false,
   });
 
   final String uiLocale;
   final bool disabled;
   final ValueChanged<String> onFinalTranscript;
   final ValueChanged<String> onInterimChanged;
+  final bool borderless;
 
   @override
   ConsumerState<VoiceDictationButton> createState() =>
@@ -97,11 +99,13 @@ class _VoiceDictationButtonState extends ConsumerState<VoiceDictationButton> {
     final colors = context.afabColors;
 
     return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
+      decoration: widget.borderless
+          ? null
+          : BoxDecoration(
+              color: colors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colors.border),
+            ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -112,7 +116,10 @@ class _VoiceDictationButtonState extends ConsumerState<VoiceDictationButton> {
               onTap: (_listening || widget.disabled) ? null : _cycleLocale,
               borderRadius: BorderRadius.circular(11),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: widget.borderless ? 6 : 8,
+                  vertical: 8,
+                ),
                 child: Directionality(
                   textDirection: TextDirection.ltr,
                   child: Text(
@@ -128,20 +135,27 @@ class _VoiceDictationButtonState extends ConsumerState<VoiceDictationButton> {
           ),
           IconButton(
             tooltip: _listening ? l10n.aiVoiceStop : l10n.aiVoiceStart,
-            constraints: const BoxConstraints.tightFor(width: 36, height: 36),
+            constraints: BoxConstraints.tightFor(
+              width: widget.borderless ? 38 : 36,
+              height: widget.borderless ? 38 : 36,
+            ),
             padding: EdgeInsets.zero,
             onPressed: widget.disabled ? null : _toggle,
             style: IconButton.styleFrom(
-              backgroundColor: _listening ? colors.danger : Colors.transparent,
+              backgroundColor: _listening
+                  ? colors.danger
+                  : (widget.borderless
+                      ? (colors.isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : colors.surfaceInset)
+                      : Colors.transparent),
               foregroundColor:
                   _listening ? Colors.white : colors.textMuted,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              shape: const CircleBorder(),
             ),
             icon: Icon(
               _listening ? LucideIcons.micOff : LucideIcons.mic,
-              size: 16,
+              size: 17,
             ),
           ),
         ],

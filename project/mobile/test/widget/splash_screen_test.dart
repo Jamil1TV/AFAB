@@ -153,9 +153,13 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 700));
+        AssetImage unwrapAsset(ImageProvider provider) => provider is ResizeImage
+            ? provider.imageProvider as AssetImage
+            : provider as AssetImage;
+
         final lightImage = tester.widget<Image>(find.byType(Image).first);
         expect(
-          (lightImage.image as AssetImage).assetName,
+          unwrapAsset(lightImage.image).assetName,
           'assets/branding/splash_logo_light.png',
         );
 
@@ -172,7 +176,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 700));
         final darkImage = tester.widget<Image>(find.byType(Image).first);
         expect(
-          (darkImage.image as AssetImage).assetName,
+          unwrapAsset(darkImage.image).assetName,
           'assets/branding/splash_logo_dark.png',
         );
         expect(tester.takeException(), isNull);

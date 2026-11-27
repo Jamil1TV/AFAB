@@ -18,6 +18,8 @@ class AfabBrandLogo extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.afabColors;
     final isDark = colors.isDark;
+    final dpr = MediaQuery.devicePixelRatioOf(context);
+    final cachePx = (size * dpr).round().clamp(48, 512);
     final logoAsset = isDark
         ? 'assets/branding/splash_logo_dark.png'
         : 'assets/branding/splash_logo_light.png';
@@ -34,9 +36,15 @@ class AfabBrandLogo extends StatelessWidget {
       child: Image.asset(
         logoAsset,
         fit: BoxFit.cover,
+        cacheWidth: cachePx,
+        cacheHeight: cachePx,
+        filterQuality: FilterQuality.medium,
         errorBuilder: (_, _, _) => Image.asset(
           fallbackAsset,
           fit: BoxFit.cover,
+          cacheWidth: cachePx,
+          cacheHeight: cachePx,
+          filterQuality: FilterQuality.medium,
           errorBuilder: (_, _, _) => Center(
             child: Icon(
               LucideIcons.sparkles,

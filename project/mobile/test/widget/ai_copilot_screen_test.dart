@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:afab_mobile/app/shell/adaptive_shell.dart';
+import 'package:afab_mobile/app/shell/afab_floating_nav_dock.dart';
 import 'package:afab_mobile/app/shell/shell_app_bar.dart';
 import 'package:afab_mobile/core/l10n/generated/app_localizations.dart';
 import 'package:afab_mobile/core/network/connectivity_provider.dart';
@@ -14,6 +15,7 @@ import 'package:afab_mobile/features/ai/data/sse_parser.dart';
 import 'package:afab_mobile/features/ai/domain/ai_providers.dart';
 import 'package:afab_mobile/features/ai/domain/speech_dictation_service.dart';
 import 'package:afab_mobile/features/ai/presentation/ai_copilot_screen.dart';
+import 'package:afab_mobile/features/ai/presentation/widgets/copilot_aurora_backdrop.dart';
 import 'package:afab_mobile/features/ai/presentation/widgets/copilot_composer.dart';
 import 'package:afab_mobile/features/auth/data/auth_dtos.dart';
 import 'package:afab_mobile/features/auth/domain/auth_notifier.dart';
@@ -356,6 +358,12 @@ Widget _wrap({
   );
 }
 
+Future<void> _pumpUi(WidgetTester tester) async {
+  for (var i = 0; i < 12; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+}
+
 void main() {
   setUpAll(() {
     GoogleFonts.config.allowRuntimeFetching = false;
@@ -389,7 +397,7 @@ void main() {
         await tester.pumpWidget(
           _wrap(prefs: prefs, repo: repo, health: readyHealth),
         );
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
 
         expect(find.text('Morning CFO Brief'), findsOneWidget);
         expect(find.text('Monthly Profit & Loss'), findsOneWidget);
@@ -404,7 +412,7 @@ void main() {
         );
         await tester.pump();
         await tester.tap(find.byTooltip('Send'));
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
 
         expect(find.text('Monthly Cash Flow'), findsOneWidget);
         expect(find.text('SaaS Retainer'), findsOneWidget);
@@ -413,12 +421,21 @@ void main() {
         // Approve CREATE_TRANSACTION draft
         final approveBtn = find.text('Approve & Save');
         await tester.ensureVisible(approveBtn);
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
         await tester.tap(approveBtn);
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
 
         expect(repo.approveTxCalled, isTrue);
         expect(find.textContaining('Saved · Office Supplies'), findsOneWidget);
+
+        // User message bubble aligns to trailing edge (right side in LTR, not centered)
+        final userMsgFinder = find.byWidgetPredicate(
+          (w) => w is SelectableText && w.data == 'Summarize revenue',
+        );
+        await tester.drag(find.byType(ListView).first, const Offset(0, 700));
+        await _pumpUi(tester);
+        final userBubbleRect = tester.getRect(userMsgFinder);
+        expect(userBubbleRect.center.dx, greaterThan(195));
         expect(tester.takeException(), isNull);
 
         // Tablet Dark AR RTL
@@ -432,7 +449,7 @@ void main() {
             brightness: Brightness.dark,
           ),
         );
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
         expect(tester.takeException(), isNull);
       },
     );
@@ -457,7 +474,7 @@ void main() {
         await tester.pumpWidget(
           _wrap(prefs: prefs, repo: repo, health: offlineHealth),
         );
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
 
         expect(
           find.textContaining('ollama pull gemma4:e4b'),
@@ -564,22 +581,59 @@ void main() {
             ),
           ),
         );
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
 
         expect(find.byType(ShellAppBar), findsNothing);
-        expect(find.byType(NavigationBar), findsOneWidget);
+        expect(find.byType(AfabFloatingNavDock), findsOneWidget);
         expect(find.byType(CopilotComposer), findsOneWidget);
+
+        final initialNavAlign = tester.widget<AnimatedAlign>(
+          find
+              .ancestor(
+                of: find.byType(AfabFloatingNavDock),
+                matching: find.byType(AnimatedAlign),
+              )
+              .first,
+        );
+        expect(initialNavAlign.heightFactor, 1.0);
+
+        // Open drawer on full-screen phone Copilot and verify workspace shortcuts
+        await tester.tap(find.byTooltip('Toggle history sidebar'));
+        await _pumpUi(tester);
+        expect(
+          find.descendant(of: find.byType(Drawer), matching: find.text('Home')),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(Drawer),
+            matching: find.text('Finance'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(Drawer),
+            matching: find.text('Invoices'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: find.byType(Drawer), matching: find.text('More')),
+          findsOneWidget,
+        );
+        Navigator.of(tester.element(find.byType(Drawer))).pop();
+        await _pumpUi(tester);
 
         // Simulate keyboard opening (300px bottom inset)
         tester.view.viewInsets = const FakeViewPadding(bottom: 300);
-        await tester.pump();
-        await tester.pumpAndSettle();
+        await _pumpUi(tester);
 
-        final navRect = tester.getRect(find.byType(NavigationBar));
+        final navRect = tester.getRect(find.byType(AfabFloatingNavDock));
         final animatedAlign = tester.widget<AnimatedAlign>(
           find
               .ancestor(
-                of: find.byType(NavigationBar),
+                of: find.byType(AfabFloatingNavDock),
                 matching: find.byType(AnimatedAlign),
               )
               .first,
@@ -587,6 +641,83 @@ void main() {
         expect(animatedAlign.heightFactor, 0.0);
         expect(navRect.top, greaterThanOrEqualTo(544));
         expect(find.byType(CopilotComposer), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+
+    testWidgets(
+      'CopilotAuroraBackdrop cycles distinct Light and Dark palettes and respects disableAnimations',
+      (tester) async {
+        final dark0 = CopilotAuroraBackdrop.samplePalette(0.0, isDark: true);
+        final light0 = CopilotAuroraBackdrop.samplePalette(0.0, isDark: false);
+        expect(dark0.primary, isNot(equals(light0.primary)));
+        expect(dark0.secondary, isNot(equals(light0.secondary)));
+        expect(dark0.accent, isNot(equals(light0.accent)));
+
+        final darkQuarter =
+            CopilotAuroraBackdrop.samplePalette(0.25, isDark: true);
+        final darkHalf = CopilotAuroraBackdrop.samplePalette(0.5, isDark: true);
+        final darkWrap = CopilotAuroraBackdrop.samplePalette(1.0, isDark: true);
+        expect(dark0.primary, isNot(equals(darkQuarter.primary)));
+        expect(darkQuarter.primary, isNot(equals(darkHalf.primary)));
+        expect(dark0, equals(darkWrap));
+
+        // Pump Dark & Light across multiple animation frames (welcome bottom-fog & active top-fog)
+        for (final brightness in [Brightness.dark, Brightness.light]) {
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppearanceThemeBuilder.build(
+                settings: const AppearanceSettings(),
+                brightness: brightness,
+                locale: const Locale('en'),
+              ),
+              home: const Scaffold(
+                body: SizedBox.expand(
+                  child: CopilotAuroraBackdrop(sending: false, activeMode: false),
+                ),
+              ),
+            ),
+          );
+          await tester.pump(const Duration(milliseconds: 250));
+          await tester.pump(const Duration(milliseconds: 500));
+
+          await tester.pumpWidget(
+            MaterialApp(
+              theme: AppearanceThemeBuilder.build(
+                settings: const AppearanceSettings(),
+                brightness: brightness,
+                locale: const Locale('en'),
+              ),
+              home: const Scaffold(
+                body: SizedBox.expand(
+                  child: CopilotAuroraBackdrop(sending: true, activeMode: true),
+                ),
+              ),
+            ),
+          );
+          await tester.pump(const Duration(milliseconds: 350));
+          expect(tester.takeException(), isNull);
+        }
+
+        // Reduced motion disables continuous ticker so pumpAndSettle completes cleanly
+        await tester.pumpWidget(
+          MediaQuery(
+            data: const MediaQueryData(disableAnimations: true),
+            child: MaterialApp(
+              theme: AppearanceThemeBuilder.build(
+                settings: const AppearanceSettings(),
+                brightness: Brightness.dark,
+                locale: const Locale('en'),
+              ),
+              home: const Scaffold(
+                body: SizedBox.expand(
+                  child: CopilotAuroraBackdrop(sending: false),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
       },
     );

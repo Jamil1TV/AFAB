@@ -349,12 +349,15 @@ class AppearanceNotifier extends Notifier<AppearanceSettings> {
       try {
         final decoded = jsonDecode(raw);
         if (decoded is Map<String, dynamic>) {
-          return AppearanceSettings.fromJson(decoded);
+          final loaded = AppearanceSettings.fromJson(decoded);
+          Future.microtask(() => NativeThemeSync.sync(loaded.themeMode));
+          return loaded;
         }
       } catch (_) {
         // Fallback to default appearance settings.
       }
     }
+    Future.microtask(() => NativeThemeSync.sync(ThemeMode.system));
     return const AppearanceSettings();
   }
 

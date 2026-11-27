@@ -7837,13 +7837,13 @@ abstract class AppLocalizations {
   /// No description provided for @businessProfileTaxId.
   ///
   /// In en, this message translates to:
-  /// **'Fiscal Matricule / Tax ID (MF)'**
+  /// **'Tax ID'**
   String get businessProfileTaxId;
 
   /// No description provided for @businessProfileTaxIdHelp.
   ///
   /// In en, this message translates to:
-  /// **'Displayed on invoices and certified financial exports.'**
+  /// **'Your official Tax ID printed on invoices, Excel exports, and PDF reports.'**
   String get businessProfileTaxIdHelp;
 
   /// No description provided for @businessProfileAddress.
@@ -8689,7 +8689,7 @@ abstract class AppLocalizations {
   /// No description provided for @dataExportFiscalMatricule.
   ///
   /// In en, this message translates to:
-  /// **'Fiscal Matricule / Tax ID (MF)'**
+  /// **'Tax ID'**
   String get dataExportFiscalMatricule;
 
   /// No description provided for @dataExportBusinessPurpose.

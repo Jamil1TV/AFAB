@@ -224,6 +224,7 @@ Future<void> _pumpSweep({
   required AppearanceSettings appearance,
   required Brightness brightness,
   required Widget screen,
+  bool settle = true,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -405,7 +406,14 @@ Future<void> _pumpSweep({
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      await tester.pump();
+      for (var i = 0; i < 4; i++) {
+        await tester.pump(const Duration(milliseconds: 150));
+      }
+    }
   } finally {
     FlutterError.onError = prevOnError;
   }
@@ -440,6 +448,7 @@ void main() {
           SharedPreferences.setMockInitialValues({});
           final prefs = await SharedPreferences.getInstance();
 
+          final shouldSettle = entry.name != 'AiCopilotScreen';
           await _pumpSweep(
             tester: tester,
             prefs: prefs,
@@ -449,6 +458,7 @@ void main() {
             appearance: const AppearanceSettings(),
             brightness: Brightness.light,
             screen: entry.screen,
+            settle: shouldSettle,
           );
           await _pumpSweep(
             tester: tester,
@@ -461,6 +471,7 @@ void main() {
             ),
             brightness: Brightness.dark,
             screen: entry.screen,
+            settle: shouldSettle,
           );
         },
       );
